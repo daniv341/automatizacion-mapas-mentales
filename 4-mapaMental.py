@@ -1,3 +1,70 @@
+from tkinter import Tk, Toplevel, Button, Label, Frame  # NUEVO
+
+# NUEVO: escapa los caracteres especiales para que el XML de draw.io no se rompa
+def escapar_texto(texto):
+    """Convierte los símbolos peligrosos en entidades seguras para el XML
+    de draw.io. El '&' se reemplaza primero para no doble-escapar."""
+    reemplazos = {
+        "&": "&amp;",     # entidad XML (siempre primero)
+        "<": "&lt;",      # inicio de etiqueta XML
+        ">": "&gt;",      # fin de etiqueta XML
+        '"': "&quot;",    # rompería el atributo value="..."
+        "'": "&apos;",    # por seguridad
+        "{": "&#123;",    # draw.io usa {} como placeholders
+        "}": "&#125;",
+    }
+    for simbolo, entidad in reemplazos.items():
+        texto = texto.replace(simbolo, entidad)
+    return texto
+
+
+# NUEVO: ventanita modal para elegir la paleta de colores
+def elegir_color(root, colores):
+    """Muestra una ventana para elegir la paleta de colores del diagrama.
+    Devuelve el nombre de la paleta, o None si se cierra la ventana sin
+    elegir (se cancela el script)."""
+    eleccion = {"color": None}
+
+    ventana = Toplevel(root)
+    ventana.title("Color del diagrama")
+    ventana.attributes("-topmost", True)  # aparece siempre al frente
+    ventana.resizable(False, False)
+    ventana.grab_set()  # modal: obliga a elegir antes de continuar
+
+    Label(ventana, text="Selecciona un color:",
+          font=("Arial", 12, "bold")).pack(pady=(10, 5))
+
+    frame = Frame(ventana)
+    frame.pack(padx=10, pady=5)
+
+    def seleccionar(nombre):
+        eleccion["color"] = nombre
+        ventana.destroy()
+
+    # Botones pintados con su propio color, en grilla de 3 columnas
+    # OJO: acá los valores son atributos completos ('fillColor=#XXXXXX'),
+    # así que extraemos el hex con split('=')
+    COLUMNAS = 3
+    for i, (nombre, valores) in enumerate(colores.items()):
+        fill = valores[1].split('=')[1]  # color de cuadros (el predominante)
+        font = valores[4].split('=')[1]  # color de fuente
+        Button(
+            frame,
+            text=nombre,
+            bg=fill,
+            fg=font,
+            activebackground=fill,
+            activeforeground=font,
+            width=14,
+            relief="groove",
+            bd=2,
+            command=lambda n=nombre: seleccionar(n),
+        ).grid(row=i // COLUMNAS, column=i % COLUMNAS, padx=4, pady=4)
+
+    root.wait_window(ventana)  # espera hasta que se cierre la ventana
+    return eleccion["color"]
+
+
 def generar_diagrama():
     # Leer el contenido del archivo texto.txt y separarlo en renglones
     txt="texto.txt"
@@ -110,8 +177,17 @@ def generar_diagrama():
        "marronClaro" : ['fillColor=#9C6530','fillColor=#CD853F','strokeColor=#9C6530','gradientColor=#4F4F4F','fontColor=#FFFFFF'],
        "amarilloClaro" : ['fillColor=#E3E372','fillColor=#FFFF80','strokeColor=#E3E372','gradientColor=#FFFFFF','fontColor=#5C5C5C'],
     }
+
+    # (CAMBIADO) en lugar del color hardcodeado, se abre la ventanita modal
     #elegir color de cuadros, si usas uno de los colores claros debes cambiar de forma manual el color de los "temaP"
-    opciones="naranja" #aqui debes poner el color que quieras
+    root = Tk()
+    root.withdraw()  # oculta la ventana principal vacía de tkinter
+    opciones = elegir_color(root, colores)
+    root.destroy()
+    if opciones is None:
+        print("Selección de color cancelada.")
+        return
+
     color1= colores[opciones][0]#color de flechas y temas principales
     color2= colores[opciones][1]#color de cuadros
     color3= colores[opciones][2]#color de flechas
@@ -145,7 +221,7 @@ def generar_diagrama():
 
         # Añadir el cuadro con la posición ajustada
         contenido += f'''
-        <mxCell id="{id_counter}" value="{renglon}" style="{estilo}" vertex="1" parent="1">
+        <mxCell id="{id_counter}" value="{escapar_texto(renglon)}" style="{estilo}" vertex="1" parent="1">
           <mxGeometry x="{x_pos}" y="{y_pos}" width="{tamaño[0]}" height="{tamaño[1]}" as="geometry" />
         </mxCell>'''
 
@@ -304,4 +380,3 @@ def extraer_subT():
 # Llamada a la función
 generar_diagrama()
 extraer_subT()
-

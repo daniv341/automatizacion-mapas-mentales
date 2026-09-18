@@ -7,6 +7,14 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from tkinter import Tk, filedialog
 
+# ---------------- CONFIG EVALUACIÓN DE RESPUESTAS ESCRITAS ----------------
+# Fracción de claves del 'segundo' para llegar a "Casi"
+# (100% = "Bien"; por debajo de UMBRAL_CASI = "Mal")
+UMBRAL_CASI = 0.5
+# Similitud (Dice) con el contenido del bloque que, combinada con claves
+# >= UMBRAL_CASI, premia parafrasear bien y da "Bien"
+SIM_ALTA = 0.7
+
 # ============================================================
 # UTILIDADES DE RESALTADO (claves extraídas del campo 'segundo')
 # ============================================================
@@ -118,7 +126,7 @@ def parsear_respuestas(txt):
 
 # '&' + números al final; tolera coma/punto/punto y coma sueltos al final:
 # '&1,4' / '&1, 23, 24, 46,' / '&3.'
-PATRON_RUTAS_TARJETA = re.compile(r'&\s*([0-9]+(?:\s*,\s*[0-9]+)*)\s*[.,;]?\s*$')
+PATRON_RUTAS_TARJETA = re.compile(r'&\s*([0-9]+(?:\s*,\s*[0-9]+)*)\s*[.,;]*\s*$')
 # '&' suelto al final (también tolera comas sobrantes: '&,' o '& , ')
 PATRON_AMPERSAND_SUELTO = re.compile(r'&[\s,;]*$')
 
@@ -207,7 +215,7 @@ def reportar_asociaciones(tarjetas, rutas):
 # ============================================================
 
 # Color del marcador sobre el diagrama (cambialo acá si querés otro)
-COLOR_RESALTADO = "#0052CC"  # usa #0052CC cuando sean letras blancas y #FFFF00 letras oscuras
+COLOR_RESALTADO = "#FFFF00"
 
 PATRON_PALABRA = re.compile(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+')
 # Limpieza: quita exactamente los tags <font style="background-color:...">...</font>
@@ -243,7 +251,7 @@ def cargar_generador_respuestas():
     try:
         spec = importlib.util.spec_from_file_location("generador_respuestas", ruta_modulo)
         modulo = importlib.util.module_from_spec(spec)
-        sys.modules["generador_respuestas"] = modulo  # <-- LINEA CLAVE (fix dataclasses)
+        sys.modules["generador_respuestas"] = modulo  # CLAVE: fix crash de dataclasses
         spec.loader.exec_module(modulo)
         return modulo.get_routes_id_map
     except Exception as error:
@@ -477,17 +485,20 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
 # GENERACIÓN DEL HTML
 # ============================================================
 
-def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio):
+def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, ruta_drawio):
     datos = {"tarjetas": tarjetas, "rutas": rutas}
     datos_json = json.dumps(datos, ensure_ascii=False)
+    nombre_base = Path(ruta_drawio).stem
 
     html = HTML_TEMPLATE
     html = html.replace("__FILL_COLOR__", fill_color)
     html = html.replace("__STROKE_COLOR__", stroke_color)
     html = html.replace("__DATOS_JSON__", datos_json)
     html = html.replace("__MODO_ALEATORIO__", "true" if modo_aleatorio else "false")
+    html = html.replace("__UMBRAL_CASI__", str(UMBRAL_CASI))
+    html = html.replace("__SIM_ALTA__", str(SIM_ALTA))
 
-    with open("guardados/html/evaluador_ Gestion Desempeño.html", "w", encoding="utf-8") as archivo:
+    with open(f"guardados/html/evaluador_{nombre_base}.html", "w", encoding="utf-8") as archivo:
         archivo.write(html)
 
     print("evaluador creado")
@@ -733,6 +744,38 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     color: var(--stroke-color);
     line-height: 1.5;
   }
+
+  /* ---------- Evaluación de respuesta escrita ---------- */
+
+  .zona-eval { display:none; margin-top: 14px; text-align:left; }
+
+  .zona-eval textarea {
+    width: 100%; min-height: 74px; resize: vertical;
+    border: 2px solid var(--stroke-color); border-radius: 10px;
+    padding: 10px 12px; font-family: inherit; font-size: 14px; color: #333;
+    background: #fff;
+  }
+
+  .zona-eval textarea:focus {
+    outline: 2px solid var(--stroke-color); outline-offset: 1px;
+  }
+
+  .zona-eval .fila-eval { display: flex; justify-content: center; margin-top: 8px; }
+
+  .resultado-eval {
+    display: none; min-height: 18px;
+    font-size: 13px; font-weight: 600; margin-top: 10px;
+  }
+
+  .resultado-eval.bien { color: #3aa76d; }
+  .resultado-eval.casi { color: #e0a030; }
+  .resultado-eval.mal  { color: #e0574c; }
+
+  .item-escrito { display: block; color: #333; font-style: italic; margin-top: 3px; }
+  .item-resultado { display: block; font-weight: 700; font-size: 12px; margin-top: 3px; }
+  .item-resultado.bien { color: #3aa76d; }
+  .item-resultado.casi { color: #e0a030; }
+  .item-resultado.mal  { color: #e0574c; }
 
   /* ---------- Rutas (acordeón de respuestas) ---------- */
 
@@ -1124,9 +1167,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
     </div>
 
+    <div class="zona-eval" id="zona-eval">
+      <textarea id="texto-eval" placeholder="Escribí la respuesta con tus palabras (opcional)"></textarea>
+      <div class="fila-eval">
+        <button class="boton-pista" id="btn-evaluar">Evaluar respuesta</button>
+      </div>
+    </div>
+
     <div class="rutas-contenedor" id="rutas-contenedor"></div>
 
     <div class="estado-marca" id="estado-marca"></div>
+
+    <div class="resultado-eval" id="resultado-eval"></div>
 
     <div class="botonera">
       <button class="boton boton-circular boton-no" id="btn-no" title="No entendido">&#10007;</button>
@@ -1181,6 +1233,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <summary><span class="etiqueta-resumen">⏱ Tiempos por tarjeta</span></summary>
         <div class="lista-contenido" id="lista-tiempos"></div>
       </details>
+      <details class="lista-desplegable">
+        <summary><span class="etiqueta-resumen">📝 Respuestas escritas</span></summary>
+        <div class="lista-contenido" id="lista-escritas"></div>
+      </details>
     </div>
 
     <div class="acciones-resumen">
@@ -1201,6 +1257,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
   const modoAleatorio = __MODO_ALEATORIO__;
+  const UMBRAL_CASI = __UMBRAL_CASI__;
+  const SIM_ALTA = __SIM_ALTA__;
 
   // ---------- Estado de la ronda actual ----------
   let tarjetasSesion = [];
@@ -1208,6 +1266,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let tiempos = [];
   let revelado = [];
   let respuestaMostrada = [];
+  let escritos = [];       // texto escrito por tarjeta (aunque no se evalue)
+  let evaluaciones = [];   // {resultado:'bien'|'casi'|'mal', faltaron:[], sim} o null
   let indiceActual = 0;
   let indiceCongelado = -1;   // índice de la tarjeta cuya vista congela el cronómetro
   let tiempoInicioTarjeta = 0;
@@ -1231,6 +1291,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elBarraRelleno = document.getElementById('barra-relleno');
   const elCronometro = document.getElementById('cronometro');
   const elEstadoMarca = document.getElementById('estado-marca');
+
+  const elZonaEval = document.getElementById('zona-eval');
+  const elTextoEval = document.getElementById('texto-eval');
+  const elBtnEvaluar = document.getElementById('btn-evaluar');
+  const elResultadoEval = document.getElementById('resultado-eval');
 
   const elBtnSi = document.getElementById('btn-si');
   const elBtnNo = document.getElementById('btn-no');
@@ -1350,6 +1415,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     tiempos = new Array(lista.length).fill(0);
     revelado = new Array(lista.length).fill(false);
     respuestaMostrada = new Array(lista.length).fill(false);
+    escritos = new Array(lista.length).fill('');
+    evaluaciones = new Array(lista.length).fill(null);
     indiceActual = 0;
     indiceCongelado = -1;
     tiempoInicioTarjeta = Date.now();
@@ -1431,6 +1498,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     elBtnAnterior.disabled = indiceActual === 0;
     elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+
+    // Zona de respuesta escrita: visible solo si la tarjeta es evaluable
+    // y todavía no está marcada
+    const puedeEvaluar = (marcada === null) && evaluable(actual);
+    elZonaEval.style.display = puedeEvaluar ? 'block' : 'none';
+    elResultadoEval.style.display = evaluaciones[indiceActual] ? 'block' : 'none';
+    if (evaluaciones[indiceActual]) {
+      renderResultadoEval(evaluaciones[indiceActual]);
+    }
+    if (puedeEvaluar) {
+      elTextoEval.value = escritos[indiceActual] || '';
+      elBtnEvaluar.disabled = (elTextoEval.value.trim() === '');
+    }
 
     renderRutas(actual);
 
@@ -1522,6 +1602,143 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
   }
 
+  // ---------- Evaluación de respuesta escrita ----------
+
+  function tokenizar(texto) {
+    const salida = [];
+    for (const m of texto.matchAll(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g)) {
+      salida.push(normalizarPalabra(m[0]));
+    }
+    return salida;
+  }
+
+  function similitudDice(tokensA, tokensB) {
+    const a = new Set(tokensA), b = new Set(tokensB);
+    if (a.size === 0 || b.size === 0) return 0;
+    let inter = 0;
+    for (const w of a) if (b.has(w)) inter++;
+    return (2 * inter) / (a.size + b.size);
+  }
+
+  // Claves para evaluar: mismo criterio del resaltado, sin palabras de 1-2 letras
+  function clavesEvalDe(tarjeta) {
+    return (tarjeta.claves || []).filter((c) => c.length >= 3);
+  }
+
+  // Texto de referencia: contenido de las rutas válidas (sin imágenes);
+  // si no hay rutas, el propio 'segundo'
+  function textoReferenciaDe(tarjeta) {
+    const partes = [];
+    rutasValidasDe(tarjeta).forEach((id) => {
+      (rutasDisp[id].lineas || []).forEach((linea) => {
+        if (!esImagen(linea)) partes.push(linea);
+      });
+    });
+    return partes.length > 0 ? partes.join(' ') : (tarjeta.segundo || '');
+  }
+
+  function evaluable(tarjeta) {
+    return clavesEvalDe(tarjeta).length > 0 || textoReferenciaDe(tarjeta).length > 0;
+  }
+
+  function renderResultadoEval(ev) {
+    let texto;
+    if (ev.resultado === 'bien') texto = '✓ Bien';
+    else if (ev.resultado === 'casi') texto = '✗ Casi';
+    else texto = '✗ Mal';
+
+    if (ev.faltaron.length > 0) texto += ' — faltaron: ' + ev.faltaron.join(', ');
+    texto += ' — coincidencia con el contenido: ' + Math.round(ev.sim * 100) + '%';
+
+    elResultadoEval.textContent = texto;
+    elResultadoEval.className = 'resultado-eval ' + ev.resultado;
+  }
+
+  function evaluarRespuesta() {
+    if (resultados[indiceActual] !== null) return;
+    const texto = elTextoEval.value;
+    if (texto.trim() === '') return;
+
+    const actual = tarjetasSesion[indiceActual];
+    const claves = clavesEvalDe(actual);
+    const escritas = new Set(tokenizar(texto));
+
+    const faltaron = claves.filter((c) => !escritas.has(c));
+    const propClaves = claves.length > 0
+      ? (claves.length - faltaron.length) / claves.length : null;
+
+    const referencia = textoReferenciaDe(actual);
+    const sim = similitudDice([...escritas], tokenizar(referencia));
+
+    let resultado;
+    if (claves.length > 0) {
+      if (propClaves === 1 || (propClaves >= UMBRAL_CASI && sim >= SIM_ALTA)) resultado = 'bien';
+      else if (propClaves >= UMBRAL_CASI) resultado = 'casi';
+      else resultado = 'mal';
+    } else {
+      if (sim >= SIM_ALTA) resultado = 'bien';
+      else if (sim >= UMBRAL_CASI) resultado = 'casi';
+      else resultado = 'mal';
+    }
+
+    escritos[indiceActual] = texto;
+    evaluaciones[indiceActual] = { resultado, faltaron, sim };
+
+    // Auto-marca: bien -> Entendida; casi/mal -> No entendida.
+    // NO avanza: el feedback queda a la vista y el avance es manual.
+    acumularTiempo();
+    resultados[indiceActual] = (resultado === 'bien') ? 'si' : 'no';
+    revelado[indiceActual] = true;
+
+    renderTarjeta();
+  }
+
+  function llenarListaEscritas() {
+    const el = document.getElementById('lista-escritas');
+    el.innerHTML = '';
+
+    const filas = [];
+    tarjetasSesion.forEach((tarjeta, i) => {
+      if (evaluaciones[i]) filas.push({ tarjeta, i });
+    });
+
+    if (filas.length === 0) {
+      el.innerHTML = '<div class="lista-vacia">No se evaluó ninguna respuesta escrita</div>';
+      return;
+    }
+
+    filas.forEach(({ tarjeta, i }) => {
+      const ev = evaluaciones[i];
+      const item = document.createElement('div');
+      item.className = 'item-lista';
+
+      const tema = document.createElement('span');
+      tema.className = 'item-tema';
+      tema.textContent = nombreTema(tarjeta);
+      item.appendChild(tema);
+
+      const renglon = document.createElement('span');
+      renglon.className = 'item-renglon';
+      renglon.textContent = armarRenglon(tarjeta);
+      item.appendChild(renglon);
+
+      const escrito = document.createElement('span');
+      escrito.className = 'item-escrito';
+      escrito.textContent = '"' + (escritos[i] || '') + '"';
+      item.appendChild(escrito);
+
+      const resultado = document.createElement('span');
+      resultado.className = 'item-resultado ' + ev.resultado;
+      let txt = ev.resultado === 'bien' ? '✓ Bien' : (ev.resultado === 'casi' ? '✗ Casi' : '✗ Mal');
+      if (ev.faltaron.length > 0) txt += ' — faltaron: ' + ev.faltaron.join(', ');
+      txt += ' (coincidencia ' + Math.round(ev.sim * 100) + '%)';
+      resultado.textContent = txt;
+      item.appendChild(resultado);
+
+      el.appendChild(item);
+    });
+  }
+
   // ---------- Lightbox ----------
 
   function abrirLightbox(src) {
@@ -1607,6 +1824,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   elBtnRespuesta.addEventListener('click', () => mostrarRespuesta());
 
+  elBtnEvaluar.addEventListener('click', () => evaluarRespuesta());
+  elTextoEval.addEventListener('input', () => {
+    escritos[indiceActual] = elTextoEval.value;
+    elBtnEvaluar.disabled = (elTextoEval.value.trim() === '');
+  });
+
   elBtnSi.addEventListener('click', () => marcar('si'));
   elBtnNo.addEventListener('click', () => marcar('no'));
   elBtnSaltar.addEventListener('click', () => marcar('saltar'));
@@ -1619,6 +1842,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (evento.key === 'Escape') cerrarLightbox();
       return;
     }
+    if (evento.target === elTextoEval) return;  // no navegar mientras se escribe
     if (elAreaTarjeta.style.display === 'none') return;
     if (evento.key === 'ArrowLeft') navegar(-1);
     if (evento.key === 'ArrowRight') navegar(1);
@@ -1741,6 +1965,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     llenarLista('lista-no', listas.no);
     llenarLista('lista-saltar', listas.saltar);
     llenarListaTiempos();
+    llenarListaEscritas();
 
     const elBtnRepasarNo = document.getElementById('btn-repasar-no');
     elBtnRepasarNo.style.display = conteos.no > 0 ? 'block' : 'none';
@@ -1925,6 +2150,6 @@ if ruta_drawio:
 else:
     print("No se seleccionó drawio; se genera solo el evaluador.")
 
-generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2)
+generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, ruta_drawio)
 
 raiz.destroy()

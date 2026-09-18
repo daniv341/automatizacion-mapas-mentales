@@ -14,7 +14,7 @@ imP medible
 
 +@imP tecnologías y 
 
-+@imP metodologías
++@imP metodologías < < 
 
 $imP para garantizar
 imP que toda organización 
@@ -63,7 +63,7 @@ imP de fuerza laboral,
 imP por empleado
 
 
-^subTTRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO
+^subT TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO
 *nuM 1 
 
 +@imP Planificar y 
@@ -78,7 +78,7 @@ caR con objetivos organización
 -caR Asignar trabajo
 *caR que sea 
 
-+@caR significativo y 
++@caR significativo y > >
 
 +@caR satisfactorio
 
@@ -507,7 +507,7 @@ caR dentro organización
 +imP liderazgo
 
 
-^subTMÉTODO FEEDBACK
+^subT MÉTODO FEEDBACK
 imP Método SBI (Situación Comportamiento Impacto):
 imP modelo estructurado
 *imP para transmitir feedback 

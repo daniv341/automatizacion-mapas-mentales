@@ -37,7 +37,7 @@
         <mxCell id="12" value=" tecnologías y" style="shape=process;whiteSpace=wrap;backgroundOutline=1;strokeWidth=3;fillColor=#FF8000;fontSize=16;fontStyle=2;fontColor=#FFFFFF;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="820" y="20" width="151.12" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="13" value=" metodologías" style="shape=process;whiteSpace=wrap;backgroundOutline=1;strokeWidth=3;fillColor=#FF8000;fontSize=16;fontStyle=2;fontColor=#FFFFFF;overflow=block;" vertex="1" parent="1">
+        <mxCell id="13" value=" metodologías &lt; &lt;" style="shape=process;whiteSpace=wrap;backgroundOutline=1;strokeWidth=3;fillColor=#FF8000;fontSize=16;fontStyle=2;fontColor=#FFFFFF;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="1020" y="20" width="151.12" height="60" as="geometry" />
         </mxCell>
         <mxCell id="14" value=" para garantizar" style="shape=process;whiteSpace=wrap;backgroundOutline=1;strokeWidth=3;fillColor=#FF8000;fontSize=16;fontStyle=2;fontColor=#FFFFFF;overflow=block;" vertex="1" parent="1">
@@ -148,7 +148,7 @@
         <mxCell id="49" value=" que sea" style="shape=display;whiteSpace=wrap;strokeColor=none;fillColor=#FF8000;fontFamily=Helvetica;fontSize=16;fontColor=#FFFFFF;labelBackgroundColor=none;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="6220" y="130" width="160" height="68" as="geometry" />
         </mxCell>
-        <mxCell id="50" value=" significativo y" style="shape=display;whiteSpace=wrap;strokeColor=none;fillColor=#FF8000;fontFamily=Helvetica;fontSize=16;fontColor=#FFFFFF;labelBackgroundColor=none;overflow=block;" vertex="1" parent="1">
+        <mxCell id="50" value=" significativo y &gt; &gt;" style="shape=display;whiteSpace=wrap;strokeColor=none;fillColor=#FF8000;fontFamily=Helvetica;fontSize=16;fontColor=#FFFFFF;labelBackgroundColor=none;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="6420" y="20" width="160" height="68" as="geometry" />
         </mxCell>
         <mxCell id="51" value=" satisfactorio" style="shape=display;whiteSpace=wrap;strokeColor=none;fillColor=#FF8000;fontFamily=Helvetica;fontSize=16;fontColor=#FFFFFF;labelBackgroundColor=none;overflow=block;" vertex="1" parent="1">

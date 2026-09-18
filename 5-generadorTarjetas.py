@@ -32,6 +32,24 @@ colores = {
 }
 
 
+# NUEVO: escapa los caracteres especiales para que el XML no se rompa
+def escapar_texto(texto):
+    """Convierte los símbolos peligrosos en entidades seguras para el XML
+    de draw.io. El '&' se reemplaza primero para no doble-escapar."""
+    reemplazos = {
+        "&": "&amp;",     # entidad XML (siempre primero)
+        "<": "&lt;",      # inicio de etiqueta XML
+        ">": "&gt;",      # fin de etiqueta XML
+        '"': "&quot;",    # rompería el atributo value="..."
+        "'": "&apos;",    # por seguridad
+        "{": "&#123;",    # draw.io usa {} como placeholders
+        "}": "&#125;",
+    }
+    for simbolo, entidad in reemplazos.items():
+        texto = texto.replace(simbolo, entidad)
+    return texto
+
+
 # Ventanita para elegir el color
 def elegir_color(root, colores):
     """Muestra una ventana para elegir el color de las tarjetas.
@@ -117,10 +135,7 @@ def generar_tarjetas():
     ancho = 220
     alto = 100
 
-    # CORREGIDO: ahora el patrón acepta "&" seguido de UNA LISTA de números
-    # separados por comas y/o espacios: &2 | &20 | &1, 23, 24, 46 | &1,23,46
-    # Requiere al menos un dígito (un "&" solo o seguido de letras NO se toca,
-    # por eso "R&D + mantenimiento" queda intacto).
+    # Patrón para el sufijo "& números/lista de números" al final del renglón
     PATRON_AMP = re.compile(r'\s*&[\d,\s]*\d[\d,\s]*$')
 
     if opciones and opciones in colores:
@@ -138,6 +153,7 @@ def generar_tarjetas():
         renglon = renglon.strip()
 
         # Quitar el sufijo "& números/lista de números" del final (si existe)
+        # IMPORTANTE: se hace sobre el texto CRUDO, antes de escapar
         renglon = PATRON_AMP.sub('', renglon).strip()
 
         if not renglon:
@@ -152,13 +168,13 @@ def generar_tarjetas():
 
         if "+" in renglon:
             primero, segundo = renglon.split("+", 1)
-            primero = primero.strip().upper()
-            segundo = segundo.strip()
+            # NUEVO: se escapa DESPUÉS del upper() (si fuera al revés,
+            # las entidades como &lt; se convertirían en &LT; y se romperían)
+            primero = escapar_texto(primero.strip().upper())
+            segundo = escapar_texto(segundo.strip())
             valor = f"{primero}&lt;br&gt;&lt;br&gt;{segundo}"
         else:
-            primero = renglon.strip()
-            segundo = ""
-            valor = f"{primero}"
+            valor = escapar_texto(renglon.strip())
 
         estilo_final = estilo_subT if es_subT else estilo
 
@@ -178,7 +194,7 @@ def generar_tarjetas():
 
     with open("tarjetas.xml", "w", encoding="utf-8") as archivo:
         archivo.write(contenido)
-    print("tarjetas creadas")
+    print("diagrama creado")
 
 
 generar_tarjetas()

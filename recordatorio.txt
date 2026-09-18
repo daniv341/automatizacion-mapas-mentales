@@ -1,28 +1,8 @@
 subT DEFINICIÓN Y CONCEPTO
-que es? + monitorea trabajo 
-en que se basa? + combinacion, objetivos
-porque es bueno aplicarlo? + productividad, involucra
-
-subT TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO
-1 + planificar
-2 + monitorear
-3 + reconocer
-
-subT ROLES Y USUARIOS
-quien lo usa? + lider, garantizar, participen
-que otra responsabilidad tienen? + desempeño, objetivos
-con quienes trabajan? + gerentes, justos
-
-subT IMPORTANCIA Y PROBLEMAS QUE RESUELVE
-que importancia tiene? + interraciones, 
-que brinda? + vision, ayuda
-que problemas resuelve? + financieras, metodologia, incapacidad, perdida
-
+subTTRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO
+subT EVOLUCIÓN HISTÓRICA
+*subT ROLES Y USUARIOS
+*subT IMPORTANCIA Y PROBLEMAS QUE RESUELVE
+subT DEFINICIÓN
 subT TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA
-evaluacion 90 + directo, autoridad
-autoevaluacion + propio, discrepancias, complemento
-evaluacion por pares + compañeros, anonima
-assesment center + externos, objetivo
-evaluacion por equipo + colectivo, complementa
-evaluacion dle cliente + interactua, contacto clientes
-
+subTMÉTODO FEEDBACK
