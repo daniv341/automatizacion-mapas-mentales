@@ -111,7 +111,7 @@ def generar_diagrama():
        "amarilloClaro" : ['fillColor=#E3E372','fillColor=#FFFF80','strokeColor=#E3E372','gradientColor=#FFFFFF','fontColor=#5C5C5C'],
     }
     #elegir color de cuadros, si usas uno de los colores claros debes cambiar de forma manual el color de los "temaP"
-    opciones="verdeAgua" #aqui debes poner el color que quieras
+    opciones="naranja" #aqui debes poner el color que quieras
     color1= colores[opciones][0]#color de flechas y temas principales
     color2= colores[opciones][1]#color de cuadros
     color3= colores[opciones][2]#color de flechas

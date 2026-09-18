@@ -1,353 +1,527 @@
-temaP ITIL Y COBIT
+temaP GESTIÓN DEL DESEMPEÑO
 
-temaS ITIL
+temaS
 
-^subT ITIL
-imP Es 1 conjunto 
-imP buenas prácticas
-imP para gestión 
-imP servicios tecnologías información
+^subT DEFINICIÓN Y CONCEPTO
+imP Un sistema gestión del desempeño 
+imP monitorea 
+imP trabajo del personal
+imP en forma 
+imP consistente y 
+imP medible
 
-^subT Etapas del ciclo vida del servicio ITIL
-deF marco ITIL se estructura
-deF en varias etapas
-deF que conforman ciclo vida del servicio,
-deF permitiendo a empresas 
-deF gestionar sus servicios TI 
-*deF manera 
+~*imP Se basa en una combinación 
 
-+deF ordenada y 
++@imP tecnologías y 
 
-+deF eficaz
++@imP metodologías
 
-^subT Estrategia del servicio
-*imP define 
+$imP para garantizar
+imP que toda organización 
+*imP esté alineada
 
-+@imP objetivos y 
++imP con objetivos estratégicos del negocio y 
 
-+@imP valor
++imP contribuya a ellos
 
-$imP que servicios TI 
-imP aportarán al negocio
+~cuR sistema es colaborativo,
+*cuR ya que 
 
-~imP En esta etapa,
-imP se identifican servicios clave,
-*imP se analizan 
++@cuR gerentes y 
 
-+imP costes y 
++@cuR personal 
 
-+imP riesgos,
+$*cuR trabajan juntos
 
-+imP y se planifican 
-imP capacidades necesarias
-imP para su entrega correcta
++cuR para fijar expectativas,
 
-^subT Fundamentos ITIL
-imP Para implementar ITIL 
-imP manera efectiva,
-imP es fundamental comprender 
-imP sus principios clave
++cuR identificar objetivos del empleado,
 
-~`nuM 1
-imP Gestión del cambio
-caR permite introducir modificaciones
-caR en servicios TI 
-caR minimizando riesgos 
++cuR definir medidas del desempeño,
 
--*imP Se 
++cuR compartir revisiones y evaluaciones,
 
-+@imP evalúan impactos y 
++cuR y brindar feedback
 
-+@imP se planifican implementaciones 
+~*imP Cuando se 
 
-$imP manera controlada
++@imP define y 
 
-~nuM 2
-imP Gestión incidencias
-caR busca restaurar servicios 
-caR más rápido posible 
-caR ante fallos,
-caR asegurando una atención óptima
-caR a usuarios
++@imP aplica 
 
-~nuM 3
-imP Gestión problemas
-caR Mientras que gestión incidencias 
-caR resuelve problemas inmediatos,
-caR gestión problemas 
-*caR se enfoca en 
+$imP correctamente,
+imP un sistema gestión del desempeño 
+imP aumenta productividad general 
+imP de fuerza laboral,
+*imP el personal 
 
-+@caR identificar y 
++imP se involucra más en su trabajo,
 
-+@caR eliminar 
++imP hay menos rotación,
 
-$caR causa raíz fallos
-caR para prevenir
-caR futuras incidencias
++imP y se maximizan ingresos
+imP por empleado
 
-^subT Proposito itil
-imP ITIL tiene como fin 
-imP creación valor a empresa
-imP En gestión moderna,
-*imP es vital no confundir 
 
-+imP entregar 1 software con
+^subTTRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO
+*nuM 1 
 
-+imP entregar 1 servicio 
++@imP Planificar y 
 
-~deF 1 producto es 
-*deF una configuración recursos organización 
++@imP actuar
 
-+@deF (personas,
+$`imP con gestión objetivos:
 
-+@deF tecnología,
+-caR Alinear desempeño del personal
+caR con objetivos organización
 
-+@deF etc) 
+-caR Asignar trabajo
+*caR que sea 
 
-$deF diseñada para ofrecer valor 
-deF En cambio,
-deF un servicio es medio
-deF para permitir cocreación valor,
-deF facilitando resultados
-deF que clientes 
-deF quieren alcanzar 
-*deF sin tener que
++@caR significativo y 
 
-+deF gestionar costes y 
++@caR satisfactorio
 
-+deF riesgos específicos
+$caR para aumentar 
+caR compromiso del personal
 
-^subT sistema valor ITIL
-imP sistema valor 
-imP es modelo que integra 
-*imP todos 
+-imP Adaptar rápidamente objetivos 
+imP cuando cambian prioridades negocio
 
-+@imP componentes y
+~nuM 2 
+imP Monitorear
+`imP con gestión del desempeño continua:
 
-+@imP actividades 
+-caR Monitorear objetivos personales
+caR para garantizar
+caR que siempre estén alineados
+caR con corporativos
 
-$imP una organización
-imP para facilitar 
-imP cocreación valor
+-*imP Brindar 
 
-~nuM A 
-imP Entradas (Inputs):
-*caR sistema se activa
++@imP feedback y 
 
-+caR por Oportunidad 
-caR (una posibilidad aportar valor) y 
++@imP orientación
 
-+caR Demanda 
-caR (la necesidad 
-caR productos
-caR y servicios)
+$imP para mejorar desempeño
 
-~nuM B 
-imP Procesamiento:
-caR en centro, un conjunto 
-caR componentes interconectados 
-caR procesa esas entradas
+-caR Reconocer buenos resultados 
+caR cuando estos ocurren
 
-~nuM C 
-imP Salida (Output):
-caR resultado del procesamiento 
-caR es generación Valor
-*caR para 
+~*nuM 3 
 
-+caR organización y 
++@imP Evaluar y 
 
-+caR sus clientes
++@imP reconocer 
 
-temaS COBIT
+$`imP mediante evaluaciones desempeño:
 
-^subT Definición COBIT
-deF marco COBIT 
-deF (Objetivos control
+-*caR Evaluar desempeño manera 
+
++caR consistente y 
+
++caR precisa
+
+-*caR se debe
+
++@caR Reconocer y 
+
++@caR recompensar
+
+$caR a quienes tienen 
+caR 1 desempeño sólido
+
+-imP Usar información estratégica 
+imP del sistema
+imP para cuantificar valor 
+imP su fuerza laboral
+imP para negocio
+
+
+^subT EVOLUCIÓN HISTÓRICA
+deF Uno primeros modelos formalizados 
+*deF fue introducido durante 
+
++@deF Primera y 
+
++@deF Segunda 
+
+$deF Guerra Mundial,
+*deF para que ejércitos conocieran 
+
++@deF fortalezas y 
+
++@deF capacidades 
+
+$deF cada miembro
+deF para fundamentar 
+deF estrategias militares
+
+~deF A mediados siglo XX,
+deF empresas usaban evaluaciones desempeño
 *deF para 
 
-+@deF información y 
++@deF calificar y 
 
-+@deF tecnología
++@deF asignar 
 
-$deF relacionada) 
-deF está diseñado
-deF para facilitar 
-*deF forma en que se 
+$deF recompensas al personal
 
-+@deF desarrolla,
+~deF En década 1960,
+deF foco comenzó trasladarse 
+deF hacia desarrollo del personal,
+deF y había charlas
+*deF entre 
 
-+@deF mejora,
++@deF gerentes y 
 
-+@deF implementa y 
++@deF empleados
 
-+@deF administra 
+$deF para evaluar desempeño y 
+deF si era necesario 
+deF definir capacitación
+deF para que avanzaran
+deF en sus carreras
 
-$deF tecnología información
+~cuR Algunos aspectos 
+cuR del software tradicional
+cuR para gestión del desempeño 
+cuR han evolucionado
+cuR con mejores tecnologías 
+*cuR tales como 
 
-^subT ¿Cuáles son principios del marco COBIT?
-deF principios rectores 
-deF desempeñan 1 papel clave
-deF para garantizar 
-deF que soluciones TI 
-deF apoyen eficazmente
-deF a una organización 
-imP Existen cinco principios rectores COBIT
++@cuR computación en nube,
 
-~nuM 1
-imP Principios rectores (Guiding Principles):
-caR recomendaciones universales
-caR que guían a organización
-caR en cualquier circunstancia
++@cuR mejoras en interfaces usuario,
 
-~nuM 2
-imP Gobernanza (Governance):
-caR sistema por el que 
-*caR organización 
++@cuR inteligencia artificial (IA) y 
 
-+caR se dirige y 
++@cuR machine learning
 
-+caR controla
+$cuR empresas están adoptando 
+cuR 1 enfoque más holístico,
+*cuR que brinda 
 
-~nuM 3
-imP Cadena valor del servicio (Service Value Chain):
-caR Representa 
-caR 1 conjunto actividades interconectadas
-caR que organización realiza
-*caR para 
++@cuR feedback y 
 
-+@caR crear y 
++@cuR orientación 
 
-+@caR entregar 
+$cuR continuos
+cuR para ayudar a que personal 
+cuR logre sus objetivos
 
-$*caR 
 
-+caR productos y 
+^*subT ROLES Y USUARIOS
 
-+caR servicios
++@imP Líder equipo o 
 
-~nuM 4
-imP Prácticas gestión (Management Practices):
-caR conjuntos recursos organizativos 
-caR diseñados para 
-caR realizar 1 trabajo
++@imP gerente
 
-~nuM 5
-imP Mejora continua (Continual Improvement):
-caR una actividad recurrente
-caR a todos niveles
-caR para asegurar que 
-caR rendimiento 
-caR cumple forma constante 
-caR expectativas
+$imP con subordinados directos:
+imP son usuarios principales del sistema y 
+imP deben garantizar
+imP que todos empleados 
+imP participen activamente
+imP en proceso 
 
-^subT Marco
-imP marco COBIT organiza 
-imP objetivos gobernanza 
-imP 1 sistema TI,
-imP así como prácticas utilizadas
-imP para lograrlos 
+~deF También tienen responsabilidad final 
+deF del desempeño su(s) equipo(s)
+deF personal trabaja
+deF con gerentes
+deF para definir sus objetivos 
 
-~deF También conecta estas medidas 
-deF con necesidades empresa
+~deF Crean 
+deF evaluaciones desempeño individual 
+deF dentro del sistema,
+deF y participan
+deF en evaluaciones integrales 
+deF si modelo 
+deF está en uso
+*deF Profesionales RR HH definen 
 
-~cuR ayuda a gerentes
-*cuR a asignar 
++@deF procesos y 
 
-+cuR responsabilidades,
++@deF sistemas
 
-+cuR organizar
+$deF que dan soporte
+deF a gestión del desempeño 
 
-+cuR objetivos,
+~*imP Trabajan con 
 
-+cuR evaluar rendimiento y 
++@imP gerentes y 
 
-+cuR establecer conexiones
-cuR entre procesos 
-cuR que interactúan entre sí
++@imP empleados
 
-^subT Objetivos del marco COBIT
+$imP para garantizar que procesos 
+imP sean justos y
+imP que cada etapa 
+imP se cumpla a tiempo
 
-~nuM 1
-imP Intercambio de información simplificado
-caR COBIT simplifica 
-caR el proceso 
-caR de compartir información 
-*caR entre 
 
-+caR gerentes TI, 
+^*subT IMPORTANCIA Y PROBLEMAS QUE RESUELVE
 
-+caR trabajadores y 
++@imP Almacena y 
 
-+caR partes interesadas clave
++@imP cuantifica 
 
-~nuM 2
-imP Combinación equilibrada de estrategias de TI
-*caR se combinan 
+$*imP datos interacciones entre 
 
-+@caR estrategias comerciales y 
++@imP personal y 
 
-+@caR metodologías de TI, 
++@imP gerentes,
 
-$caR trabajando en conjunto 
-caR en lugar de por separado
+$imP incluyendo aspiraciones profesionales,
+imP habilidades apropiadas y 
+imP aptitudes
+imP para planificación sucesión
 
-~nuM 3
-imP Optimización de costos
-caR marcos COBIT 
-caR pueden optimizar los costos 
-caR al reducir 
-*caR la redundancia en 
+~*cuR Brinda una visión 
 
-+caR sistemas y 
++@cuR precisa y
 
-+caR capital humano.
++@cuR en tiempo real 
 
-^subT Diferencias ambas
-imP Una diferencias clave
-*imP entre 
+$cuR fuerza laboral
+*cuR que ayuda en su 
 
-+@imP ITIL y 
++cuR planificación y 
 
-+@imP COBIT es
++cuR estrategia
 
-$imP que mientras
-imP COBIT describe
-imP que se debe hacer,
-imP ITIL describe 
-imP formas hacerlo 
+~`imP Problemas que resuelve:
+imP Pérdida del mejor talento
+*imP por falta 
 
-~imP Con cada iteración ITIL,
-imP profesionales TI 
-*imP obtienen pasos 
++imP reconocimiento y 
 
-+@imP concretos y 
++imP recompensas
 
-+@imP procesables
+-deF Pérdidas financieras debido
+deF a prácticas trabajo ineficientes 
+deF no alineadas
+deF con objetivos del negocio
 
-$imP que pueden implementar
-imP para mejorar 
-imP su prestación servicios
+-deF Falta una metodología estandarizada
+*deF para guiar remuneración,
 
-~*preG ¿Pueden 
++deF ascensos y 
 
-+@preG COBIT e 
++deF desvinculación
 
-+@preG ITIL 
+-deF Incapacidad
+deF para demostrar
+deF que estas decisiones 
+deF son justificadas
+deF en caso ser 
+deF cuestionadas legalmente
 
-$preG funcionar en conjunto? 
-imP Sí Una formas más fáciles
-imP es identificar 
-*imP una forma mejorar servicios 
 
-+@imP utilizando COBIT y 
+^subT DEFINICIÓN
+*deF ejemplos evaluación del desempeño son 
 
-+@imP luego utilizar ITIL 
++@deF modelos,
 
-$*imP para definir 
++@deF técnicas y 
 
-+@imP estructura y
++@deF preguntas concretas
 
-+@imP procesos 
+$deF que RR HH usa
+deF para medir rendimiento plantilla 
+deF forma objetiva 
 
-$imP que utilizará 
-imP para realizar las mejoras.
+~*imP Sirven
+
++@imP para estructurar proceso,
+
++@imP reducir sesgos y 
+
++@imP convertir feedback
+
+$*imP en decisiones 
+
++imP desarrollo,
+
++imP compensación y 
+
++imP promoción interna
+
+~imP Diseñar una evaluación del desempeño 
+imP desde cero,
+imP sin referencias ni estructura,
+imP garantiza que 
+imP cada manager evalúe
+imP con criterios distintos y
+imP que feedback 
+imP que recibe empleado 
+imP dependa más 
+imP quién le evalúa
+imP que cómo trabaja
+
+
+^subT TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA
+`imP Evaluación del superior (90°):
+caR manager directo 
+caR evalúa al empleado
+*caR en función sus 
+
++caR objetivos,
+
++caR competencias y 
+
++caR resultados 
+
+-*imP Es modelo 
+
++@imP más extendido y
+
++@imP que mayor autoridad tiene
+
+$*imP en 
+
++imP decisiones 
+
++imP compensación y 
+
++imP promoción 
+
+-cuR Su principal limitación 
+cuR es que depende 
+cuR una sola perspectiva
+
+~`imP Autoevaluación:
+caR empleado valora 
+caR su propio desempeño
+caR con criterios predefinidos 
+
+-caR Sirve para detectar discrepancias
+caR entre 
+caR percepción propia y 
+caR del manager,
+caR y abre diálogo
+caR en reunión feedback 
+
+-cuR Funciona mejor como complemento 
+cuR otras evaluaciones,
+cuR no como sistema único
+
+~`imP Evaluación por pares:
+caR compañeros equipo 
+caR evalúan al empleado forma anónima 
+
+-*imP Aporta información sobre 
+
++@imP competencias relacionales y 
+
++@imP colaboración
+
+$*imP que manager no puede observar directamente,
+
++imP como fiabilidad en entregas o 
+
++imP apoyo al equipo
+
+~`imP Assessment center:
+caR observadores externos especializados 
+caR evalúan competencias del empleado
+caR en situaciones simuladas 
+
+-*imP Es método 
+
++imP más objetivo y 
+
++imP más costoso 
+
+-cuR Se usa principalmente
+*cuR en procesos 
+
++cuR selección interna o 
+
++cuR evaluación perfiles directivos
+
+~`imP Evaluación equipo:
+caR se evalúa rendimiento colectivo 
+caR del equipo, no individual 
+
+-*imP Útil para 
+
++imP medir cohesión,
+
++imP distribución carga trabajo y 
+
++imP clima laboral 
+
+-cuR No sustituye
+cuR a evaluación individual,
+cuR complementa
+
+-imP Evaluación del cliente:
+*caR cliente 
+
++@caR externo o 
+
++@caR interno 
+$caR valora desempeño del empleado
+caR con que interactúa 
+
+-caR Aporta una perspectiva
+caR que ningún evaluador interno 
+caR puede replicar 
+
+-deF Solo aplica en puestos
+*deF con contacto 
+
++@deF directo y 
+
++@deF frecuente
+
+$deF con clientes
+
+~`imP Evaluación 360°:
+caR recoge feedback 
+caR sobre desempeño 
+caR 1 empleado 
+*caR desde todas perspectivas posibles:
+
++caR manager directo,
+
++caR compañeros equipo,
+
++caR subordinados y,
+
++caR en algunos casos de clientes 
+
+-*caR Ofrece una imagen completa 
+
++@caR cómo trabaja y 
+
++@caR se relaciona 
+
+$caR esa persona 
+caR dentro organización 
+
+-imP Es modelo más adecuado
+*imP para evaluar competencias 
+
++imP relacionales y 
+
++imP liderazgo
+
+
+^subTMÉTODO FEEDBACK
+imP Método SBI (Situación Comportamiento Impacto):
+imP modelo estructurado
+*imP para transmitir feedback 
+
++@imP claro y 
+
++@imP objetivo,
+
+$*imP describiendo 
+
++imP situación exacta,
+
++imP comportamiento observado, 
+
++imP impacto o 
+
++imP consecuencia generada

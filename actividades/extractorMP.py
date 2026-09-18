@@ -1,55 +1,46 @@
 #!/usr/bin/env python3
-"""Parsea la Hoja 1 de un archivo .drawio y genera un TXT/JSON con:
-- vertices y aristas validos
-- DFS iterativo raiz -> hoja
-- colapso de cadenas consecutivas de rombos (look-ahead)
-- fusion de convergencias (multiples predecesores al mismo destino)
-- Trie para agrupar prefijos comunes
-- separacion entre arboles principales
-- v4.1: fusion de ramas hoja al bloque actual
-- v4.2: fusion de ramas 'cabeza + 1 hijo hoja' bajo padre no-rombo
-- v4.4: rombo contenedor (transparente) cuando su primera rama es otro rombo
-- v4.5: NUEVO - IMAGENES COMO RENGLONES:
-  * Las celdas con imagen embebida (style image=data:image/...) se registran
-    como nodos del grafo, asi el flujo cuadro1 -> imagen -> cuadro2 queda como
-    UNA sola rama (antes la imagen rompia la conectividad y el flujo se partia
-    en dos ramas distintas).
-  * Cada imagen sale en TXT/JSON como un renglon propio con el prefijo 'IMG:'
-    seguido del data URI EXACTO tal como viene en drawio (con o sin ';base64').
-    Convencion para el script lector: todo renglon que empieza con 'IMG:' es
-    una imagen; quitando 'IMG:' se obtiene el data URI usable en navegador, y
-    la parte posterior a la primera coma es el base64 decodificable.
-  * Detector generico: soporta cualquier formato data:image/... (png, jpeg,
-    jpg, gif, svg, ...), con o sin ';base64'.
-  * Si la celda-imagen ademas tiene texto (etiqueta), el renglon de la imagen
-    va primero y las lineas de texto despues.
-  * Imagenes sin ninguna conexion (decorativas) se descartan como huerfanas,
-    igual que cualquier nodo sin aristas.
+"""generadorTemas.py — Genera un TXT a partir de la Hoja 1 de un .drawio.
+
+Reutiliza la misma logica de analisis del generador de rutas v4.7 (parseo de
+la Hoja 1, DFS raiz -> hoja, colapso de cadenas de rombos, fusion de
+convergencias, trie y bloques), pero cambia SOLO el formato del TXT:
+
+- Sin numeracion "RUTA N".
+- El tema de cada bloque (rombo activo) se imprime una sola vez, como
+  "subT <tema>", cuando cambia respecto del bloque anterior.
+- Las convergencias (bifurcaciones) NO se unen en un solo renglon:
+  cada rama queda en su propio renglon. En vez de "mandan, dirigen o regulan":
+      mandan
+      dirigen o
+      regulan
+- Las imagenes embebidas se reemplazan por el marcador <imagen>.
+- NO modifica el .drawio: solo lo lee.
 """
 from __future__ import annotations
 
 import html
-import json
 import re
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+
 import tkinter as tk
 from tkinter import filedialog
 
 Graph = dict[str, list[str]]
 
-# Detector generico de imagenes embebidas en el style de drawio:
-# image=data:image/png,BASE64 | image=data:image/jpeg;base64,BASE64 | etc.
-# El payload admite el alfabeto base64 y tambien codificacion URL (%..),
-# y se detiene en el ';' que separa parametros del style.
+# --- configuracion de salida (editable) ---
+TOPIC_PREFIX = "subT "           # prefijo del renglon de tema
+IMAGE_PLACEHOLDER = "<imagen>"   # marcador donde habia una imagen
+STRIP_JOIN_COMMAS = True         # quita la coma final de cada rama al
+                                 # separar una bifurcacion en renglones
+OUTPUT_SUFFIX = "- MP"       # sufijo del nombre del txt generado
+
 IMAGE_URI_RE = re.compile(
     r"image=(data:image/[A-Za-z0-9.+\-]+(?:;base64)?,[A-Za-z0-9+/=%\-_.!~*'()]+)"
 )
-
-# Renglon que ES una imagen (data URI al inicio de la linea).
 IMAGE_LINE_RE = re.compile(r"^data:image/")
 
 
@@ -66,23 +57,12 @@ class RouteBlock:
     number: int
     subtitle: Optional[str]
     lines: list[str]
+    items: list[tuple[str, list[str]]] = field(default_factory=list)
 
 
 def extract_image_uri(style: str) -> Optional[str]:
-    """Extrae el data URI de la imagen embebida en el style de un mxCell.
-    Se devuelve EXACTO tal como viene (no se anade ni quita ';base64') para
-    que coincida con lo que drawio guarda y el usuario ya verifica en
-    navegador."""
     match = IMAGE_URI_RE.search(style or "")
     return match.group(1) if match else None
-
-
-def with_image_prefix(line: str) -> str:
-    """Marca los renglones-imagen con el prefijo 'IMG:' para que un script
-    lector pueda identificarlos y extraer el data URI sin ambiguedad."""
-    if IMAGE_LINE_RE.match(line):
-        return f"IMG:{line}"
-    return line
 
 
 def clean_drawio_value(value: str) -> str:
@@ -118,29 +98,56 @@ def parse_first_page(path: Path):
     styles: dict[str, str] = {}
     raw_edges: list[tuple[str, str]] = []
 
-    for cell in graph_model.iter("mxCell"):
-        cell_id = cell.get("id")
-        value = cell.get("value")
-        style = cell.get("style", "")
-
-        if cell.get("edge") == "1":
-            source = cell.get("source")
-            target = cell.get("target")
-            if source and target:
-                raw_edges.append((source, target))
-
-        if cell_id:
-            text = clean_drawio_value(value)
-            # v4.5: solo celdas-vertice pueden ser nodos-imagen.
-            image_uri = extract_image_uri(style) if cell.get("edge") != "1" else None
-            if image_uri is not None:
-                # Nodo-imagen: el data URI es un renglon propio; si ademas
-                # tiene etiqueta, va despues de la imagen.
-                vertices[cell_id] = f"{image_uri}\n{text}" if text else image_uri
-                styles[cell_id] = style
-            elif text:
+    def register_cell(cell_id, raw_value, style, is_edge, source, target):
+        if not cell_id:
+            return
+        style = style or ""
+        image_uri = None if is_edge else extract_image_uri(style)
+        if image_uri is not None:
+            text = clean_drawio_value(raw_value) if raw_value else ""
+            vertices[cell_id] = f"{image_uri}\n{text}" if text else image_uri
+            styles[cell_id] = style
+        elif raw_value is not None:
+            text = clean_drawio_value(raw_value)
+            if text:
                 vertices[cell_id] = text
                 styles[cell_id] = style
+        if is_edge and source and target:
+            raw_edges.append((source, target))
+
+    wrapper_elems = []
+    wrapped_inners: set[int] = set()
+    for elem in graph_model.iter():
+        if elem.tag in ("object", "UserObject"):
+            wrapper_elems.append(elem)
+            for child in elem:
+                if child.tag == "mxCell":
+                    wrapped_inners.add(id(child))
+
+    for obj in wrapper_elems:
+        inner = next((c for c in obj if c.tag == "mxCell"), None)
+        if inner is None:
+            continue
+        register_cell(
+            obj.get("id"),
+            obj.get("label", obj.get("value")),
+            inner.get("style", ""),
+            inner.get("edge") == "1",
+            inner.get("source"),
+            inner.get("target"),
+        )
+
+    for cell in graph_model.iter("mxCell"):
+        if id(cell) in wrapped_inners:
+            continue
+        register_cell(
+            cell.get("id"),
+            cell.get("value"),
+            cell.get("style", ""),
+            cell.get("edge") == "1",
+            cell.get("source"),
+            cell.get("target"),
+        )
 
     graph: Graph = defaultdict(list)
     valid_edges: list[tuple[str, str]] = []
@@ -192,9 +199,6 @@ def find_leaves(graph: Graph) -> list[str]:
 
 
 def collapse_rhombus_chain(path: list[str], styles: dict[str, str]) -> tuple[list[str], set[str]]:
-    """De una cadena consecutiva de rombos conserva solo el ultimo.
-    La raiz de la ruta nunca se descarta (proteccion historica). Marca los
-    sobrevivientes de colapsos reales (cadena >= 2)."""
     if not path:
         return path, set()
 
@@ -225,7 +229,6 @@ def find_paths_iterative(
     leaves: set[str],
     styles: dict[str, str],
 ) -> tuple[list[list[str]], set[str]]:
-    """DFS iterativo, sin recursividad."""
     paths: list[list[str]] = []
     chain_marks: set[str] = set()
     stack: list[tuple[str, list[str]]] = []
@@ -246,15 +249,21 @@ def find_paths_iterative(
     return paths, chain_marks
 
 
+def _fragment(text: str) -> str:
+    """Limpia una rama de bifurcacion antes de dejarla como renglon propio."""
+    text = text.strip()
+    if STRIP_JOIN_COMMAS:
+        text = text.rstrip(",").rstrip()
+    return text
+
+
 def build_convergence_map(
     vertices: dict[str, str],
     edges: list[tuple[str, str]],
 ) -> dict[str, tuple[str, str, list[str]]]:
-    """target -> (synthetic_key, synthetic_value, source_ids) para indegree > 1.
-
-    v4.5: si una fuente es una imagen (su valor es un data URI), no se mezcla
-    con el texto: los textos se unen con espacios y cada imagen se agrega como
-    renglon propio (linea separada por salto de linea)."""
+    """Igual que en el generador de rutas, pero el valor de la convergencia
+    une las ramas con saltos de linea (no con espacios), de modo que cada
+    rama queda como renglon propio."""
     predecessors: dict[str, list[str]] = defaultdict(list)
     for source, target in edges:
         predecessors[target].append(source)
@@ -270,8 +279,10 @@ def build_convergence_map(
                 if IMAGE_LINE_RE.match(source_value):
                     image_parts.append(source_value)
                 else:
-                    text_parts.append(source_value)
-            value = " ".join(text_parts)
+                    frag = _fragment(source_value)
+                    if frag:
+                        text_parts.append(frag)
+            value = "\n".join(text_parts)
             for image_value in image_parts:
                 value = f"{value}\n{image_value}" if value else image_value
             key = f"__CONVERGENCE__{target}"
@@ -346,8 +357,6 @@ def make_is_rhombus_lookup(styles: dict[str, str]):
 
 
 def _is_head_with_single_leaf(node: TrieNode) -> bool:
-    """True si 'node' es una rama de exactamente 2 nodos:
-    cabeza + 1 hijo hoja, sin mas descendencia."""
     if len(node.children) != 1:
         return False
     only_child = next(iter(node.children.values()))
@@ -358,150 +367,149 @@ def _split_into_blocks(
     node: TrieNode,
     active_rhombus: Optional[str],
     is_rhombus_key,
-) -> tuple[list[tuple[Optional[str], list[str]]], list[str], list[str]]:
-    """Descompone el sub-arbol de 'node' en bloques lineales.
-
-    Reglas para hermanos no-primeros:
-    - Hoja pura: se fusiona al bloque actual (v4.1). Tambien aplica a
-      imagenes (v4.5: una imagen es un renglon mas).
-    - Sobreviviente de cadena de rombos: abre bloque con su PROPIO texto
-      como subtitulo (v4.1).
-    - Rama de exactamente 'cabeza + 1 hijo hoja' cuyo padre NO es rombo:
-      se fusiona al bloque actual (v4.2).
-    - En otro caso: abre bloque nuevo con subtitulo = ultimo rombo ancestro
-      (v4.4: salvo que ese rombo sea transparente).
-    """
-    own_lines = node.value.splitlines() or [""]
+) -> tuple[
+    list[tuple[Optional[str], list[tuple[str, list[str]]]]],
+    list[tuple[str, list[str]]],
+    list[tuple[str, list[str]]],
+]:
+    """Descompone el sub-arbol de 'node' en bloques lineales (items)."""
+    own_item = (node.key, node.value.splitlines() or [""])
     node_is_rhombus = is_rhombus_key(node.key)
     next_active = node.value if node_is_rhombus else active_rhombus
 
     children = list(node.children.values())
     if not children:
-        return [], own_lines, []
+        return [], [own_item], []
 
     transparent = node_is_rhombus and is_rhombus_key(children[0].key)
-
     down_active = active_rhombus if transparent else next_active
 
-    closed: list[tuple[Optional[str], list[str]]] = []
-    first_closed, first_open, _ = _split_into_blocks(children[0], down_active, is_rhombus_key)
+    closed: list[tuple[Optional[str], list[tuple[str, list[str]]]]] = []
+    first_closed, first_items, first_cont = _split_into_blocks(children[0], down_active, is_rhombus_key)
     closed.extend(first_closed)
 
     if transparent:
-        open_lines = list(first_open)
+        open_items = list(first_items)
     else:
-        open_lines = own_lines + first_open
-    continuation = list(first_open)
+        open_items = [own_item] + list(first_items)
+    cont_items = list(first_items)
 
     for other in children[1:]:
-        other_closed, other_open, other_cont = _split_into_blocks(other, down_active, is_rhombus_key)
+        o_closed, o_items, o_cont = _split_into_blocks(other, down_active, is_rhombus_key)
 
         if not other.children:
-            open_lines.extend(other_open)
-            continuation.extend(other_open)
+            open_items.extend(o_items)
+            cont_items.extend(o_items)
         elif other.chain_marked:
-            closed.append((other.value, other_cont))
+            closed.append((other.value, list(o_cont)))
         elif not node_is_rhombus and _is_head_with_single_leaf(other):
-            open_lines.extend(other_open)
-            continuation.extend(other_open)
+            open_items.extend(o_items)
+            cont_items.extend(o_items)
         else:
-            closed.append((None if transparent else next_active, other_open))
+            closed.append((None if transparent else next_active, list(o_items)))
 
-        closed.extend(other_closed)
+        closed.extend(o_closed)
 
-    return closed, open_lines, continuation
+    return closed, open_items, cont_items
 
 
 def build_route_blocks(trie_root: TrieNode, is_rhombus_key) -> list[RouteBlock]:
-    """Recorre cada arbol principal y genera bloques numerados de forma
-    continua para todo el documento."""
     blocks: list[RouteBlock] = []
     number = 1
     for root_child in trie_root.children.values():
-        closed, open_lines, _ = _split_into_blocks(root_child, None, is_rhombus_key)
-        tree_blocks = [(None, open_lines)] + closed
-        for subtitle, lines in tree_blocks:
-            blocks.append(RouteBlock(number=number, subtitle=subtitle, lines=lines))
+        closed, open_items, _cont = _split_into_blocks(root_child, None, is_rhombus_key)
+        tree_blocks = [(None, open_items)] + closed
+        for subtitle, items in tree_blocks:
+            lines = [line for _key, item_lines in items for line in item_lines]
+            blocks.append(RouteBlock(number=number, subtitle=subtitle, lines=lines, items=items))
             number += 1
     return blocks
 
 
-def render_blocks_txt(blocks: list[RouteBlock]) -> str:
+# ---------- formato del TXT ----------
+
+def canonical_topic(text: str) -> str:
+    return " ".join(line.strip() for line in (text or "").splitlines() if line.strip())
+
+
+def block_topic_and_content(
+    block: RouteBlock,
+    is_rhombus_key,
+) -> tuple[Optional[str], list[str]]:
+    """Tema efectivo del bloque + renglones de contenido.
+
+    - Bloque con subtitle: tema = subtitle, contenido = todos los renglones.
+    - Bloque abierto (subtitle None) cuyo primer item es el rombo raiz del
+      arbol: ese rombo ES el tema; se imprime como subT y se omite de los
+      renglones para no duplicarlo.
+    - Bloque abierto sin rombo inicial: sin tema; todo es contenido.
+    """
+    if block.subtitle:
+        return canonical_topic(block.subtitle), list(block.lines)
+
+    if block.items:
+        first_key, first_lines = block.items[0]
+        if (
+            first_key
+            and not first_key.startswith("__CONVERGENCE__")
+            and is_rhombus_key(first_key)
+        ):
+            topic = canonical_topic("\n".join(first_lines))
+            content = [line for _key, lines in block.items[1:] for line in lines]
+            return (topic or None), content
+
+    return None, list(block.lines)
+
+
+def render_blocks_txt(blocks: list[RouteBlock], is_rhombus_key) -> str:
     chunks: list[str] = []
+    last_topic: Optional[str] = None
     for block in blocks:
-        piece: list[str] = [f"RUTA {block.number}"]
-        if block.subtitle:
-            piece.extend(block.subtitle.splitlines())
-        piece.extend(block.lines)
-        chunks.append("\n".join(piece))
-    text = "\n\n".join(chunks)
-    if chunks:
-        text += "\n\n"
-    return text
+        topic, content = block_topic_and_content(block, is_rhombus_key)
+        piece: list[str] = []
+        if topic and topic != last_topic:
+            piece.append(f"{TOPIC_PREFIX}{topic}")
+            last_topic = topic
+        for line in content:
+            piece.append(IMAGE_PLACEHOLDER if IMAGE_LINE_RE.match(line) else line)
+        if piece:
+            chunks.append("\n".join(piece))
+    if not chunks:
+        return ""
+    return "\n\n".join(chunks) + "\n\n"
 
 
 def postprocess_txt(text: str) -> str:
     return re.sub(r"^[ \t]+", "", text, flags=re.MULTILINE)
 
 
-def write_json(
-    output_path: Path,
-    input_path: Path,
-    diagram_name: str,
-    diagram_id: str,
-    route_blocks: list[RouteBlock],
-) -> None:
-    output = {
-        "version": "4.5",
-        "input": input_path.name,
-        "page": {
-            "number": 1,
-            "name": diagram_name,
-            "id": diagram_id,
-            "scope": "first_diagram_only",
-        },
-        "rutas": [
-            {
-                "ruta": block.number,
-                "subT": block.subtitle,
-                "renglones": {
-                    f"renglon{index}": line
-                    for index, line in enumerate(block.lines, start=1)
-                },
-            }
-            for block in route_blocks
-        ],
-    }
-    output_path.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+OUTPUT_DIR = Path(__file__).resolve().parent.parent / "guardados" / "plantilla"
 
 
 def main() -> None:
     root = tk.Tk()
     root.withdraw()
 
-    input = filedialog.askopenfilename(
+    input_file = filedialog.askopenfilename(
         title="Selecciona el archivo .drawio",
-        filetypes=[("Archivos Drawio", "*.drawio"), ("Todos los archivos", "*.*")]
+        filetypes=[("Archivos Drawio", "*.drawio"), ("Todos los archivos", "*.*")],
     )
-
-    if not input:
+    if not input_file:
         print("No se seleccionó ningún archivo. Saliendo...")
         return
 
-    input_path = Path(input)
-    script_dir = Path(__file__).parent.resolve()
-    txt_path = script_dir / f"{input_path.stem}.txt"
-    #json_path = script_dir / f"{input_path.stem}.json"
+    input_path = Path(input_file)
+    output_dir = OUTPUT_DIR if OUTPUT_DIR is not None else Path(__file__).parent.resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    txt_path = output_dir / f"{input_path.stem}{OUTPUT_SUFFIX}.txt"
 
-    vertices, styles, edges, graph, diagram_name, diagram_id, orphan_ids = parse_first_page(input_path)
+    vertices, styles, edges, graph, _diagram_name, _diagram_id, _orphan_ids = parse_first_page(input_path)
     roots = find_roots(vertices, edges)
     leaves = find_leaves(graph)
     original_paths, chain_marks = find_paths_iterative(graph, roots, set(leaves), styles)
 
     convergence_map = build_convergence_map(vertices, edges)
-    transformed_paths, convergence_values, convergence_metadata = apply_convergences(
-        original_paths, convergence_map
-    )
+    transformed_paths, convergence_values, _meta = apply_convergences(original_paths, convergence_map)
 
     trie_values = {**convergence_values, **vertices}
     trie = build_trie(transformed_paths, trie_values, vertices, chain_marks)
@@ -509,18 +517,13 @@ def main() -> None:
     is_rhombus_key = make_is_rhombus_lookup(styles)
     route_blocks = build_route_blocks(trie, is_rhombus_key)
 
-    # v4.5: los renglones-imagen se marcan con 'IMG:' en TXT y JSON.
-    for block in route_blocks:
-        block.lines = [with_image_prefix(line) for line in block.lines]
-
-    raw_txt = render_blocks_txt(route_blocks)
-    final_txt = postprocess_txt(raw_txt)
+    final_txt = postprocess_txt(render_blocks_txt(route_blocks, is_rhombus_key))
     txt_path.write_text(final_txt, encoding="utf-8")
 
-    #write_json(json_path, input_path, diagram_name, diagram_id, route_blocks)
-
     image_nodes = sum(1 for v in vertices.values() if IMAGE_LINE_RE.match(v))
-    print(f"archivos txt y json generados ({len(route_blocks)} rutas, {image_nodes} imagenes en el grafo)")
+    print(f"txt generado: {txt_path}")
+    print(f"{len(route_blocks)} bloques, {image_nodes} imagen(es) marcadas como {IMAGE_PLACEHOLDER}")
+    print("el .drawio no fue modificado")
 
 
 if __name__ == "__main__":

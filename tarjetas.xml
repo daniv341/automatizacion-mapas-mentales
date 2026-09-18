@@ -4,158 +4,74 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="2" value="definiciones" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="2" value="DEFINICIÓN Y CONCEPTO" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#FF8000;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="20" y="20" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="3" value="SISTEMAS&lt;br&gt;&lt;br&gt;unidad completa" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="3" value="QUE ES?&lt;br&gt;&lt;br&gt;monitorea trabajo" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="20" y="150" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="4" value="CONTROL&lt;br&gt;&lt;br&gt;asegurar" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="4" value="EN QUE SE BASA?&lt;br&gt;&lt;br&gt;combinacion, objetivos" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="20" y="280" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="5" value="SISTEMA CONTROL&lt;br&gt;&lt;br&gt;dirigen" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="5" value="PORQUE ES BUENO APLICARLO?&lt;br&gt;&lt;br&gt;productividad, involucra" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="20" y="410" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="6" value="ENTRADA&lt;br&gt;&lt;br&gt;estimulo" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="20" y="540" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="7" value="SALIDA&lt;br&gt;&lt;br&gt;respuesta real" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="20" y="670" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="8" value="PROPOSITO SISTEMA CONTROL&lt;br&gt;&lt;br&gt;identificar" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="20" y="800" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="9" value="SUBSISTEMA DE CONTROL&lt;br&gt;&lt;br&gt;internas" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="20" y="930" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="10" value="ANCHO BANDA&lt;br&gt;&lt;br&gt;medida" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="20" y="1060" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="11" value="tipos sistemas control segun naturaleza" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="6" value="TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#FF8000;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="280" y="20" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="12" value="NATURALES&lt;br&gt;&lt;br&gt;dedo" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="7" value="1&lt;br&gt;&lt;br&gt;planificar" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="280" y="150" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="13" value="ARTIFICIALES&lt;br&gt;&lt;br&gt;calentador" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="8" value="2&lt;br&gt;&lt;br&gt;monitorear" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="280" y="280" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="14" value="MIXTO&lt;br&gt;&lt;br&gt;manejar" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="9" value="3&lt;br&gt;&lt;br&gt;reconocer" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="280" y="410" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="15" value="importancia del control" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="10" value="ROLES Y USUARIOS" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#FF8000;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="540" y="20" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="16" value="1&lt;br&gt;&lt;br&gt;objetivos" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="11" value="QUIEN LO USA?&lt;br&gt;&lt;br&gt;lider, garantizar, participen" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="540" y="150" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="17" value="2&lt;br&gt;&lt;br&gt;aplica todo" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="12" value="QUE OTRA RESPONSABILIDAD TIENEN?&lt;br&gt;&lt;br&gt;desempeño, objetivos" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="540" y="280" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="18" value="3&lt;br&gt;&lt;br&gt;causas, desviaciones" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="13" value="CON QUIENES TRABAJAN?&lt;br&gt;&lt;br&gt;gerentes, justos" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="540" y="410" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="19" value="4&lt;br&gt;&lt;br&gt;reduce, ahorra" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="540" y="540" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="20" value="tipos sistemas control segun malla" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="14" value="IMPORTANCIA Y PROBLEMAS QUE RESUELVE" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#FF8000;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="800" y="20" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="21" value="QUE LOS DISTINGUE?&lt;br&gt;&lt;br&gt;accion control, no movimiento" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="15" value="QUE IMPORTANCIA TIENE?&lt;br&gt;&lt;br&gt;interraciones," style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="800" y="150" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="22" value="malla abierta" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="16" value="QUE BRINDA?&lt;br&gt;&lt;br&gt;vision, ayuda" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="800" y="280" width="220" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="QUE PROBLEMAS RESUELVE?&lt;br&gt;&lt;br&gt;financieras, metodologia, incapacidad, perdida" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="800" y="410" width="220" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#FF8000;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="1060" y="20" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="23" value="QUE NO TIENE?&lt;br&gt;&lt;br&gt;salida sin efecto" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="19" value="EVALUACION 90&lt;br&gt;&lt;br&gt;directo, autoridad" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="1060" y="150" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="24" value="caracteristicas malla abierta" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
-          <mxGeometry x="1320" y="20" width="220" height="100" as="geometry" />
+        <mxCell id="20" value="AUTOEVALUACION&lt;br&gt;&lt;br&gt;propio, discrepancias, complemento" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="280" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="25" value="A&lt;br&gt;&lt;br&gt;entrada, condicion" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1320" y="150" width="220" height="100" as="geometry" />
+        <mxCell id="21" value="EVALUACION POR PARES&lt;br&gt;&lt;br&gt;compañeros, anonima" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="410" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="26" value="B&lt;br&gt;&lt;br&gt;depende calibracion" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1320" y="280" width="220" height="100" as="geometry" />
+        <mxCell id="22" value="ASSESMENT CENTER&lt;br&gt;&lt;br&gt;externos, objetivo" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="540" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="27" value="C&lt;br&gt;&lt;br&gt;no adapta cambios" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1320" y="410" width="220" height="100" as="geometry" />
+        <mxCell id="23" value="EVALUACION POR EQUIPO&lt;br&gt;&lt;br&gt;colectivo, complementa" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="670" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="28" value="D&lt;br&gt;&lt;br&gt;conocer relacion, no perturbaciones" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1320" y="540" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="29" value="E&lt;br&gt;&lt;br&gt;depende criterio" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1320" y="670" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="30" value="malla cerrada" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
-          <mxGeometry x="1580" y="20" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="31" value="EN QUE SE DIFERENCIAN ?&lt;br&gt;&lt;br&gt;depende salida" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1580" y="150" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="32" value="RETROALIMENTACION&lt;br&gt;&lt;br&gt;propiedad, comparar" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1580" y="280" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="33" value="caracteristicas malla cerrada" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
-          <mxGeometry x="1840" y="20" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="34" value="A&lt;br&gt;&lt;br&gt;exactitud" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1840" y="150" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="35" value="B&lt;br&gt;&lt;br&gt;razon" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1840" y="280" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="36" value="C&lt;br&gt;&lt;br&gt;ancho banda" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1840" y="410" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="37" value="tipos sistemas control segun su senal" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
-          <mxGeometry x="2100" y="20" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="38" value="QUE ES?&lt;br&gt;&lt;br&gt;funcion, t" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2100" y="150" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="39" value="ANALOGICA&lt;br&gt;&lt;br&gt;continuum" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2100" y="280" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="40" value="DIGITAL&lt;br&gt;&lt;br&gt;discretos" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2100" y="410" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="41" value="otras definiciones" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
-          <mxGeometry x="2360" y="20" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="42" value="OBJETIVO INGENIERIA CONTROL&lt;br&gt;&lt;br&gt;analisis, diseño" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2360" y="150" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="43" value="ANALISIS&lt;br&gt;&lt;br&gt;investigacion" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2360" y="280" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="44" value="DISEÑO&lt;br&gt;&lt;br&gt;ordenamiento, tarea" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2360" y="410" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="45" value="DISEÑO ANALISIS&lt;br&gt;&lt;br&gt;modificar, existente" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2360" y="540" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="46" value="DISEÑO SINTESIS&lt;br&gt;&lt;br&gt;definir, especificaciones" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2360" y="670" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="47" value="modelos o representaciones sistemas control" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
-          <mxGeometry x="2620" y="20" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="48" value="COMO LOS RESUELVO?&lt;br&gt;&lt;br&gt;especificar, analisis" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2620" y="150" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="49" value="modelos representativos" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#696ADC;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
-          <mxGeometry x="2880" y="20" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="50" value="A&lt;br&gt;&lt;br&gt;relacion cuantitativa" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2880" y="150" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="51" value="B&lt;br&gt;&lt;br&gt;diagrama" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2880" y="280" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="52" value="C&lt;br&gt;&lt;br&gt;grafos" style="shape=card;whiteSpace=wrap;html=1;fillColor=#696ADC;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="2880" y="410" width="220" height="100" as="geometry" />
+        <mxCell id="24" value="EVALUACION DLE CLIENTE&lt;br&gt;&lt;br&gt;interactua, contacto clientes" style="shape=card;whiteSpace=wrap;html=1;fillColor=#FF8000;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="800" width="220" height="100" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

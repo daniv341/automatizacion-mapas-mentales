@@ -207,7 +207,7 @@ def reportar_asociaciones(tarjetas, rutas):
 # ============================================================
 
 # Color del marcador sobre el diagrama (cambialo acá si querés otro)
-COLOR_RESALTADO = "#FFFF00"
+COLOR_RESALTADO = "#0052CC"  # usa #0052CC cuando sean letras blancas y #FFFF00 letras oscuras
 
 PATRON_PALABRA = re.compile(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+')
 # Limpieza: quita exactamente los tags <font style="background-color:...">...</font>
@@ -487,7 +487,7 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio):
     html = html.replace("__DATOS_JSON__", datos_json)
     html = html.replace("__MODO_ALEATORIO__", "true" if modo_aleatorio else "false")
 
-    with open("guardados/html/evaluador_U1.html", "w", encoding="utf-8") as archivo:
+    with open("guardados/html/evaluador_ Gestion Desempeño.html", "w", encoding="utf-8") as archivo:
         archivo.write(html)
 
     print("evaluador creado")
