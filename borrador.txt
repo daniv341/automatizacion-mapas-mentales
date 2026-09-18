@@ -1,0 +1,351 @@
+temaP ITIL Y COBIT
+
+temaS
+
+^subT ITIL
+imP Es 1 conjunto 
+imP buenas prácticas
+imP para gestión 
+imP servicios tecnologías información
+
+^subT Etapas del ciclo vida del servicio ITIL
+deF marco ITIL se estructura
+deF en varias etapas
+deF que conforman ciclo vida del servicio,
+deF permitiendo a empresas 
+deF gestionar sus servicios TI 
+*deF manera 
+
++deF ordenada y 
+
++deF eficaz
+
+^subT Estrategia del servicio
+*imP define 
+
++@imP objetivos y 
+
++@imP valor
+
+$imP que servicios TI 
+imP aportarán al negocio
+
+~imP En esta etapa,
+imP se identifican servicios clave,
+*imP se analizan 
+
++imP costes y 
+
++imP riesgos,
+
++imP y se planifican 
+imP capacidades necesarias
+imP para su entrega correcta
+
+^subT Fundamentos ITIL
+imP Para implementar ITIL 
+imP manera efectiva,
+imP es fundamental comprender 
+imP sus principios clave
+
+~`nuM 1
+imP Gestión del cambio
+caR permite introducir modificaciones
+caR en servicios TI 
+caR minimizando riesgos 
+
+-*imP Se 
+
++@imP evalúan impactos y 
+
++@imP se planifican implementaciones 
+
+$imP manera controlada
+
+~nuM 2
+imP Gestión incidencias
+caR busca restaurar servicios 
+caR más rápido posible 
+caR ante fallos,
+caR asegurando una atención óptima
+caR a usuarios
+
+~nuM 3
+imP Gestión problemas
+caR Mientras que gestión incidencias 
+caR resuelve problemas inmediatos,
+caR gestión problemas 
+*caR se enfoca en 
+
++@caR identificar y 
+
++@caR eliminar 
+
+$caR causa raíz fallos
+caR para prevenir
+caR futuras incidencias
+
+^subT Proposito itil
+imP ITIL tiene como fin 
+imP creación valor a empresa
+imP En gestión moderna,
+*imP es vital no confundir 
+
++imP entregar 1 software con
+
++imP entregar 1 servicio 
+
+~deF 1 producto es 
+*deF una configuración recursos organización 
+
++@deF (personas,
+
++@deF tecnología,
+
++@deF etc) 
+
+$deF diseñada para ofrecer valor 
+deF En cambio,
+deF un servicio es medio
+deF para permitir cocreación valor,
+deF facilitando resultados
+deF que clientes 
+deF quieren alcanzar 
+*deF sin tener que
+
++deF gestionar costes y 
+
++deF riesgos específicos
+
+^subT sistema valor ITIL
+imP sistema valor 
+imP es modelo que integra 
+*imP todos 
+
++@imP componentes y
+
++@imP actividades 
+
+$imP una organización
+imP para facilitar 
+imP cocreación valor
+
+~nuM A 
+imP Entradas (Inputs):
+*caR sistema se activa
+
++caR por Oportunidad 
+caR (una posibilidad aportar valor) y 
+
++caR Demanda 
+caR (la necesidad 
+caR productos
+caR y servicios)
+
+~nuM B 
+imP Procesamiento:
+caR en centro, un conjunto 
+caR componentes interconectados 
+caR procesa esas entradas
+
+~nuM C 
+imP Salida (Output):
+caR resultado del procesamiento 
+caR es generación Valor
+*caR para 
+
++caR organización y 
+
++caR sus clientes
+
+^subT Definición COBIT
+deF marco COBIT 
+deF (Objetivos control
+*deF para 
+
++@deF información y 
+
++@deF tecnología
+
+$deF relacionada) 
+deF está diseñado
+deF para facilitar 
+*deF forma en que se 
+
++@deF desarrolla,
+
++@deF mejora,
+
++@deF implementa y 
+
++@deF administra 
+
+$deF tecnología información
+
+^subT ¿Cuáles son principios del marco COBIT?
+deF principios rectores 
+deF desempeñan 1 papel clave
+deF para garantizar 
+deF que soluciones TI 
+deF apoyen eficazmente
+deF a una organización 
+imP Existen cinco principios rectores COBIT
+
+~nuM 1
+imP Principios rectores (Guiding Principles):
+caR recomendaciones universales
+caR que guían a organización
+caR en cualquier circunstancia
+
+~nuM 2
+imP Gobernanza (Governance):
+caR sistema por el que 
+*caR organización 
+
++caR se dirige y 
+
++caR controla
+
+~nuM 3
+imP Cadena valor del servicio (Service Value Chain):
+caR Representa 
+caR 1 conjunto actividades interconectadas
+caR que organización realiza
+*caR para 
+
++@caR crear y 
+
++@caR entregar 
+
+$*caR 
+
++caR productos y 
+
++caR servicios
+
+~nuM 4
+imP Prácticas gestión (Management Practices):
+caR conjuntos recursos organizativos 
+caR diseñados para 
+caR realizar 1 trabajo
+
+~nuM 5
+imP Mejora continua (Continual Improvement):
+caR una actividad recurrente
+caR a todos niveles
+caR para asegurar que 
+caR rendimiento 
+caR cumple forma constante 
+caR expectativas
+
+^subT Marco
+imP marco COBIT organiza 
+imP objetivos gobernanza 
+imP 1 sistema TI,
+imP así como prácticas utilizadas
+imP para lograrlos 
+
+~deF También conecta estas medidas 
+deF con necesidades empresa
+
+~cuR ayuda a gerentes
+*cuR a asignar 
+
++cuR responsabilidades,
+
++cuR organizar
+
++cuR objetivos,
+
++cuR evaluar rendimiento y 
+
++cuR establecer conexiones
+cuR entre procesos 
+cuR que interactúan entre sí
+
+^subT Objetivos del marco COBIT
+
+~nuM 1
+imP Intercambio de información simplificado
+caR COBIT simplifica 
+caR el proceso 
+caR de compartir información 
+*caR entre 
+
++caR gerentes TI, 
+
++caR trabajadores y 
+
++caR partes interesadas clave
+
+~nuM 2
+imP Combinación equilibrada de estrategias de TI
+*caR se combinan 
+
++@caR estrategias comerciales y 
+
++@caR metodologías de TI, 
+
+$caR trabajando en conjunto 
+caR en lugar de por separado
+
+~nuM 3
+imP Optimización de costos
+caR marcos COBIT 
+caR pueden optimizar los costos 
+caR al reducir 
+*caR la redundancia en 
+
++caR sistemas y 
+
++caR capital humano.
+
+^subT Diferencias ambas
+imP Una diferencias clave
+*imP entre 
+
++@imP ITIL y 
+
++@imP COBIT es
+
+$imP que mientras
+imP COBIT describe
+imP que se debe hacer,
+imP ITIL describe 
+imP formas hacerlo 
+
+~imP Con cada iteración ITIL,
+imP profesionales TI 
+*imP obtienen pasos 
+
++@imP concretos y 
+
++@imP procesables
+
+$imP que pueden implementar
+imP para mejorar 
+imP su prestación servicios
+
+~*preG ¿Pueden 
+
++@preG COBIT e 
+
++@preG ITIL 
+
+$preG funcionar en conjunto? 
+imP Sí Una formas más fáciles
+imP es identificar 
+*imP una forma mejorar servicios 
+
++@imP utilizando COBIT y 
+
++@imP luego utilizar ITIL 
+
+$*imP para definir 
+
++@imP estructura y
+
++@imP procesos 
+
+$imP que utilizará 
+imP para realizar las mejoras.

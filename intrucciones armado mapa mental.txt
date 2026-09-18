@@ -1,0 +1,64 @@
+accion1: copias y pegas el pdf que del cual quieras extraer la informacion y las imagenes en la carpeta donde se encuentran los programas
+accion2: ejecutas el programa "extraerInformacionPDF.py" cambiando el nombre del primer parametro de la funcion "procesar_pdf" por el nombre del pdf a utilizar
+accion3: ejecutas primero "eliminarSobrantes.py" para que elimine de primera aquello que no te sirve y tambien caracteres que provoquen errores al convertirse al diagrama
+accion4: al generarte el txt de salida eliminas los conectores que creas necesario y separas con enter cuando se trate de otra rama, 2 enter si se trata de otro tema
+accion5: usas simbolos especiales primero si quieres para no tener que poner la palabra clave directamente, despues lo reemplazas con "ctrl F"
+accion6: le agregas las palabras claves a los renglones solamente al inicio de un parrafo(el parrafo termina en un enter) para que cambie su forma en el diagrama con "reemplazarInicio.py", 
+accion7: agregas los conectores con los cuales se separan y unen las flechas, para identificar donde van buscas las letras "y" "o" ","
+accion8: una vez hecho esto con "ctrl F" reemplazas el simbolo que representa la rama por la rama y un salto de linea al inicio, ejemplo "\+" -> "\n+" (activar expresiones regulares)
+accion9: lo mismo en el caso de unir las flechas, reemplazas el simbolo donde se unen por dicho simbolo y un salto de linea ejemplo "\$" -> "\n$" (activar expresiones regulares)
+accion10: eliminar las letras "y"
+accion11: ejecutas el programa "mapaMental.py", pero antes de ellos puedes cambiar la variable "opciones"  al color que desees
+accion12: lo importas en drawio al archivo "diagrama.xml"
+accion13: mueves los cuadros que sean necesarios luego los unes con las flechas que creas necesarias
+accion14: vas a la pestaña "organizar" en la opcion "diseño" eliges "arbol vertical" para que te forme el diagrama de forma automatica
+
+adiconal: puedes decirle a chat gpt que te resuma el texto, antes mandandole el msj de la siguiente forma:
+
+forma1: necesito que hagas 2 cosas con este texto que te dare a continuacion, primero que separes el texto en oraciones(cada oracion separada por un salto de linea), de tal forma que pueda entenderse aun con los saltos linea y segundo que elimines los conectores necesarios pero sin que se pierda la comprension del texto:(pasas el texto)
+
+forma2(recomendable): necesito que hagas 2 cosas con este texto que te dare a continuacion, primero que separes el texto en oraciones(cada oracion separada por un salto de linea), de tal forma que pueda entenderse aun con los saltos linea y segundo que elimines los articulos (la las lo los) que sean necesarios pero sin que se pierda la comprension del texto:(pasas el texto)
+
+nota: no usar '<', '>', '“', '”', '"', '&' y tambien fjarte en las letras VOCALES MAYUSCULAS CON ACENTO en el texto, provoca error en el codigo
+
+conectores que puedes eliminar: en, el, la, las, de, del, un, una, que
+
+palabras reservadas:
+temaP 
+clasP 
+temaS 
+subT 
+textS 
+deF 
+imP 
+cuR 
+clasS 
+caR 
+ejeM 
+recoR
+nuM 
+pasoS 
+preG 
+comP 
+tarJ 
+
+--Como Evaluarte con Tarjetas
+1- extrae las tarjetas de un drawio o xml con "extractorTarjetas.py" que se guardara en "recordatorio.txt"
+2- genera las tarjetas extrayendo la informacion de un txt con "5-generadorTarjetas.py" que se guardara en "tarjetas.xml"
+3- genera el evaluador extrayendo la informacion de un drawio o xml con "6-evaluadorTemas" que se guardara en "evaluadorTemas.html" que podras ejecutar, existen 2 modos 1 secuencual y 2 aleatorio
+
+
+instruccion para agente que deba extraer informacion de imagen de mapa mental:
+Actúa como un extractor de texto y estructurador de datos visuales. Analiza la imagen del mapa mental adjunto y realiza lo siguiente:
+
+1. Extrae únicamente el texto contenido en el gráfico, respetando fielmente las palabras de la imagen.
+2. Jerarquiza la información en niveles (Rama Principal → Ramas Secundarias → Ramas Terciarias → Ramas Finales / Hojas).
+3. Formato de salida estricto:
+   - Utiliza exclusivamente texto plano dentro de un bloque de código.
+   - NO incluyas ningún tipo de aditamento, como viñetas (*, -, •), símbolos, prefijos ("Rama 1:", "Sub-rama:"), etiquetas HTML o formato Markdown (como negritas).
+   - Mantén el texto limpio línea por línea.
+4. Espaciado y saltos de línea:
+   - Deja UN salto de línea doble (una línea en blanco) entre cada sub-rama/rama terciaria para delimitarlas visualmente.
+   - Deja DOS saltos de línea dobles (dos líneas en blanco) al cambiar de una rama secundaria principal a la siguiente.
+   - Dentro de un mismo bloque final (hojas agrupadas), coloca cada elemento en una nueva línea sin saltos en blanco intermedios.
+5 Por ultimo al inicio de cada renglon con contenido le agregas "comP ", no elimines ningun salto de linea

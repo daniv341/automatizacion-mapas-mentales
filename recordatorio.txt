@@ -1,0 +1,63 @@
+subT definiciones
+SISTEMAS + unidad completa
+CONTROL + asegurar
+SISTEMA CONTROL + dirigen
+ENTRADA + estimulo
+SALIDA + respuesta real
+PROPOSITO SISTEMA CONTROL + identificar
+SUBSISTEMA DE CONTROL + internas
+ANCHO BANDA + medida
+
+subT tipos sistemas control segun naturaleza
+NATURALES + dedo
+ARTIFICIALES + calentador
+MIXTO + manejar
+
+subT importancia del control
+1 + objetivos
+2 + aplica todo
+3 + causas, desviaciones
+4 + reduce, ahorra
+
+subT tipos sistemas control segun malla
+QUE LOS DISTINGUE? + accion control, no movimiento
+
+subT malla abierta
+QUE NO TIENE? + retroalimentacion, salida
+
+subT caracteristicas malla abierta
+A + entrada, condicion
+B + depende calibracion
+C + no adapta cambios
+D + conocer relacion, no perturbaciones
+E + depende criterio
+
+subT malla cerrada
+EN QUE SE DIFERENCIAN ? + depende salida
+QUE ES RETROALIMENTACION? + propiedad, comparar
+
+subT caracteristicas malla cerrada
+A + exactitud
+B + razon
+C + ancho banda
+
+subT tipos sistemas control segun su senal
+QUE ES? + funcion, t
+ANALOGICA + continuum
+DIGITAL + discretos
+
+subT otras definiciones
+OBJETIVO INGENIERIA CONTROL + analisis, diseño
+ANALISIS + investigacion
+DISEÑO + ordenamiento, tarea
+DISEÑO ANALISIS + modificar, existente
+DISEÑO SINTESIS + definir, especificaciones
+
+subT modelos o representaciones sistemas control
+COMO RESUELVO UN PROBLEMAS CON UN SC? + especificar, analisis
+
+subT modelos representativos
+A + relacion cuantitativa
+B + diagrama
+C + grafos
+

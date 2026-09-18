@@ -1,0 +1,271 @@
+temaP sistemas de control
+
+subT introduccion
+
+definicion sistemas
+
+conjunto arreglo o coleccion
+elementos
+unidso o relacionados
+tal manera
+forman entidad o un todo
+
+ordenamiento
+componentes fisicos
+unidos o relacionados
+tal manera forman y actuan
+como unidad completa
+
+definicion control
+proceso asegurar
+actividades reales
+se ajusten
+actividades planificadas
+
+sistemas control
+ordenamiento componentes fisicos
+unidos o relacionados
+tal manera
+dirigen
+regulan
+mandan
+mismo sistema o a otro
+
+definicion entrada
+estimulo o excitacion
+aplica sistema control
+desde
+fuente energia externa
+generalmente
+fin producir
+de parte sistema control
+una respuesta especificada
+
+definicion salida
+respuesta real
+obtiene sistema control
+
+puede o no ser igual
+respuesta implicita especificada
+por entrada
+
+recordar
+sistemas de la vida real
+son multivariables
+
+subT tipos sistemas control
+
+mixto
+hombre conduciendo automovil
+
+artificiales
+calentador u horno termostarico
+interruptor electrico
+
+naturales
+senalar objeto con el dedo
+transpiracion
+
+subT sistema control segun malla
+
+distincion determinada
+mediante
+accion de control
+
+cantidad o magnitud responsable
+activar sistema
+para producir salida
+
+accion de control
+no implica directamente
+cambio movimiento o actividad
+sistema disenado objeto de en el blanco
+accion de control
+distancia entre objeto y el blanco
+distancia es accion de control
+pero no es en si una accion
+implicita una accion(movimiento)
+objetivo sistema
+reducir distancia a 0
+
+sistemas control malla abierta
+
+<imagen>
+
+<imagen>
+
+tambien llamado lazo abierto
+
+accion de control
+independiente de salida
+
+no existe accion retroalimentacion comparar
+senal salida
+entrada referencia
+por lo tanto
+necesario medir
+variable salida
+
+sistemas control malla cerrada
+
+accion de control depende
+alguna manera de la salida
+
+generalmente llamados
+sistemas control retroalimentados
+
+tambien llamado lazo cerrado
+
+definicion retroalimentacion
+permite que salida
+compare
+entrada sistema
+tal manera
+accion control exprese
+funcion entrada y salida
+
+<imagen>
+
+<imagen>
+
+subT caracteristicas retroalimentacion
+
+o alguna variable controlada
+aumento exactitud
+
+habilidad reproducir
+entrada fielmente
+
+ancho de banda aumentado
+
+medida de respuesta
+en frecuencia
+
+de cuan bien responde
+
+filtra el sistema variaciones senal entrada
+
+es decir
+intervalo frecuencia
+sobre el cual el sistema
+responde satisfactoriamente
+
+diferencia fundamental
+es que
+sistemas cerrados
+se retroalimentan su salida
+para comparar
+con set point y
+que error tienda
+a cero
+a traves hacer diferencia
+entre
+
+salida y
+
+entrada
+
+no importa
+que unidad es
+salida o entrada
+para eso estan
+
+trasductores y
+
+transmisores
+
+subT sistemas analogicos y digitales
+
+definicion senal digital
+senal definida o interes solamente
+instantes discretos
+variable independiente t
+
+de la cual depende
+
+llamada
+
+senal discreta en tiempo
+datos discretos
+
+datos muestreados o digital
+
+senales de sistema control
+funciones con alguna variable independiente
+usualmente tiempo
+denotada t
+formas de onda entrada y salida
+
+definicion senal analogica
+senal dependiente
+de 1 continuum
+valores de variable independiente t
+llamada
+
+senal continua en tiempo
+senal datos continuos
+
+senal analogica
+
+con menor frecuencia
+
+subT formas representarlos
+
+<imagen>
+
+subT terminologia
+
+es ambos
+(exacto y preciso)
+cuando sistema
+no solo entrega
+
+lecturas o
+
+respuestas
+
+muy agrupadas sin dispersion
+(precision)
+sino que ademas
+este grupo respuestas
+da exactamente
+en valor
+
+real o
+
+referencia
+
+que deseamos
+(exactitud)
+exactitud
+
+un sistema es exacto
+cuando
+valor promedio su salida
+esta muy cerca
+
+del valor real o
+
+deseado
+
+(set point)
+
+no hay
+1 desvio sistematico
+
+precision
+
+un sistema es preciso
+cuando tiene
+1 alto grado repetibilidad
+
+es decir
+si se le da misma entrada
+varias veces
+entrega salidas
+con muy poca dispersion
+entre si
+(valores muy agrupados)
+aunque todos estos valores
+esten lejos
+del valor real deseado

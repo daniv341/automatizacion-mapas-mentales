@@ -1,0 +1,21 @@
+Dia 1 - Combinacion de estudio seleccionada:
+1. estudiar U1-1 redes - 1 horas, Aburrimiento: 7, Prioridad: 1, Contexto: Final Redes
+2. tarea Virtualizacion - 2 horas, Aburrimiento: 8, Prioridad: 2, Contexto: Vitualizacion
+
+Total de horas: 3
+Total de aburrimiento: 15
+
+Dia 2 - Combinacion de estudio seleccionada:
+1. estudiar U1-3 redes - 1 horas, Aburrimiento: 7, Prioridad: 1, Contexto: Final Redes
+2. MP pronostico - 1 horas, Aburrimiento: 6, Prioridad: 3, Contexto: MP IO
+
+Total de horas: 2
+Total de aburrimiento: 13
+
+Dia 3 - Combinacion de estudio seleccionada:
+1. estudiar U2-1 redes - 1 horas, Aburrimiento: 7, Prioridad: 1, Contexto: Final Redes
+2. MP virtualizacion - 1.5 horas, Aburrimiento: 7, Prioridad: 3, Contexto: Vitualizacion
+
+Total de horas: 2.5
+Total de aburrimiento: 14
+
