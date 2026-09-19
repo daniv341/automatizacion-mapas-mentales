@@ -16,18 +16,37 @@
   * Cada bloque conoce la secuencia de celdas (items) que producen sus
     renglones. El dato 'ruta' se coloca en la PRIMERA celda real NO-rombo
     de esa secuencia (se saltan rombos y nodos sinteticos de convergencia).
-  * Asi, en el tronco 'DEFINICIONES -> SISTEMAS -> ...' el dato va en
-    SISTEMAS (no en el rombo DEFINICIONES), y en bloques cuyo primer
-    renglon es un rombo (p.ej. 'MALLA ABIERTA') el dato va al cuadro
-    siguiente ('sistemas control').
   * El drawio anotado REEMPLAZA al original (misma ruta). Antes de anotar
     se eliminan los datos 'ruta' previos de la Hoja 1 (proceso idempotente).
+- v4.8: NUEVO - PASO OPCIONAL recordatorio.txt -> sufijos " & N,M"
+- v4.9: CORRECCIONES del paso recordatorio (producto de pruebas con U2):
+  * FIX 1: el rango de orden (ultima_ruta) se REINICIA en cada linea subT
+    (antes heredaba el rango de la seccion anterior y las tarjetas de un
+    tema con rutas numeradas antes que el tema previo quedaban sin
+    candidatas, ej. CLASIFICACION CONTROLADORES -> rutas 1-8).
+  * FIX 2: los renglones 'IMG:data:image/...' se excluyen del texto de
+    cada ruta (las imagenes ya no participan en el matching).
+  * FIX 3: el tema de una ruta tambien puede salir de un RENGLON que
+    coincida con algun subT del recordatorio (caso rutas 12/17: el rombo
+    de tema queda como renglon, no como subtitle). Ademas el subtitle se
+    separa por lineas (puede ser multilínea, ej. ruta 22).
+  * FIX 4: matching tolerante de claves: subcadena O similitud >= 0.85
+    contra palabras de la ruta (cualquiera~cualquier, entradas~entrada,
+    combinanciones~combinaciones, ocasionar~ocasione).
+  * NUEVO: validacion de anclas (solo avisos, nunca modifica): si para una
+    tarjeta con sufijo manual existe otra ruta que coincide mucho mejor
+    que la anclada (diferencia > UMBRAL_AVISO_ANCLA), se reporta a revision.
+  * En consola solo se listan las tarjetas PENDIENTES (revision), no las
+    asociadas. Sin copia de seguridad (.bak desactivado). Idempotente.
 """
 from __future__ import annotations
 
+import difflib
 import html
 import json
 import re
+# import shutil  # desactivado: ya no se crea copia de seguridad .bak
+import unicodedata
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -606,6 +625,361 @@ def write_json(
     output_path.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+# ======================================================================
+# v4.9: PASO OPCIONAL - sufijos " & N,M" en recordatorio.txt
+# ----------------------------------------------------------------------
+# Toma un recordatorio.txt (tarjetas "pregunta + pista"), asocia cada
+# tarjeta con la(s) ruta(s) ya generadas del .drawio y escribe el sufijo.
+# Aditivo: si se cancela el dialogo, el script sigue igual que antes.
+# SIN copia de seguridad: el archivo se sobreescribe directamente.
+# ======================================================================
+
+UMBRAL_CLAVES = 0.6       # puntaje minimo para asignar una ruta
+MARGEN = 0.1              # distancia maxima admitida al mejor puntaje
+MAX_RUTAS = 3             # maximo de rutas por tarjeta
+PESO_PREGUNTA = 0.25      # peso de las palabras del "primero" (senal debil; sola no supera el umbral)
+TOPIC_SIMILARIDAD = 0.8   # similitud minima subT <-> tema de ruta (0..1)
+MIN_LARGO_CLAVE = 3       # claves mas cortas que esto se descartan (nota: KD/KI caen aqui)
+SIMILITUD_CLAVE = 0.85    # matching tolerante: subcadena O similitud >= esto (cualquiera~cualquier)
+UMBRAL_AVISO_ANCLA = 0.25 # aviso si otra ruta supera a la anclada por mas de esto (solo aviso)
+
+STOPWORDS = frozenset({
+    "que", "como", "cual", "cuales", "cuando", "donde", "cuanto", "por",
+    "para", "con", "sin", "las", "los", "del", "al", "una", "unos",
+    "unas", "sus", "su", "es", "son", "ser", "esta", "este", "esto",
+    "estos", "estas", "hay", "mas", "muy", "the", "and", "de", "la",
+    "el", "en", "un", "y", "o", "se", "lo", "no", "si", "le", "les",
+    "haya", "sea", "fue", "tiene", "tienen", "hace", "hacen", "porque",
+    "entre", "sobre", "desde", "hasta", "segun", "todo", "toda", "todos",
+    "todas", "otro", "otra", "otros", "otras", "cada", "puede", "pueden",
+})
+
+# Lectura de sufijo: "&" + numeros separados por coma; tolera espacios
+# finales extra (ej. "& 39 "). Escritura canonica: " & 5" / " & 21, 22".
+SUFIJO_RUTAS_RE = re.compile(r"(?:^|\s)&\s*([0-9]+(?:\s*,\s*[0-9]+)*)\s*$")
+
+
+def normalizar_texto(texto: str) -> str:
+    """Minusculas, sin acentos, solo alfanumericos, espacios colapsados."""
+    s = unicodedata.normalize("NFD", (texto or "").lower())
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    s = re.sub(r"[^0-9a-z]+", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def extraer_claves(texto: str) -> list[str]:
+    """Claves: minusculas, sin acentos, solo letras, sin duplicados.
+    Descarta numeros solos (no sobreviven la normalizacion), palabras
+    muy cortas y stopwords."""
+    claves: list[str] = []
+    for palabra in normalizar_texto(texto).split():
+        if len(palabra) < MIN_LARGO_CLAVE or palabra in STOPWORDS:
+            continue
+        if palabra not in claves:
+            claves.append(palabra)
+    return claves
+
+
+def clave_presente(clave: str, texto_norm: str, palabras_ruta: frozenset[str]) -> bool:
+    """v4.9 FIX 4: la clave aparece por subcadena O por palabra similar
+    (tolera singulares/plurales y typos leves)."""
+    if clave in texto_norm:
+        return True
+    limite_len = len(clave) // 4 + 1
+    for palabra in palabras_ruta:
+        if abs(len(palabra) - len(clave)) <= limite_len and \
+           difflib.SequenceMatcher(None, clave, palabra).ratio() >= SIMILITUD_CLAVE:
+            return True
+    return False
+
+
+def temas_compatibles(tema_a: Optional[str], tema_b: Optional[str]) -> bool:
+    """Comparacion tolerante de temas normalizados."""
+    if not tema_a or not tema_b:
+        return False
+    if tema_a == tema_b:
+        return True
+    return difflib.SequenceMatcher(None, tema_a, tema_b).ratio() >= TOPIC_SIMILARIDAD
+
+
+def construir_temas_rutas(route_blocks: list[RouteBlock],
+                          temas_subt: list[str]) -> dict[int, frozenset[str]]:
+    """v4.9 FIX 3: numero de ruta -> CONJUNTO de temas normalizados.
+    Fuentes de temas:
+    (a) cada linea del subtitle por separado (puede ser multilínea, ej.
+        ruta 22: 'TERMINOLOGIA...' + 'DEFINICIONES');
+    (b) renglones de la ruta que coincidan con algun subT del recordatorio
+        (caso rutas 12/17: el rombo de tema queda como renglon, no como
+        subtitle);
+    (c) herencia del bloque sin temas mas cercano si el subtitle no aporta
+        nada: primero hacia ADELANTE, luego hacia atras."""
+    def temas_de_subtitle(subtitle: Optional[str]) -> list[str]:
+        out: list[str] = []
+        for linea in (subtitle or "").splitlines():
+            t = normalizar_texto(linea)
+            if t and t not in out:
+                out.append(t)
+        return out
+
+    crudos = [temas_de_subtitle(b.subtitle) for b in route_blocks]
+    n = len(route_blocks)
+    temas_por_bloque: list[list[str]] = []
+    for i in range(n):
+        if crudos[i]:
+            temas_por_bloque.append(list(crudos[i]))
+            continue
+        heredado: Optional[list[str]] = None
+        for j in range(i + 1, n):
+            if crudos[j]:
+                heredado = crudos[j]
+                break
+        if heredado is None:
+            for j in range(i - 1, -1, -1):
+                if crudos[j]:
+                    heredado = crudos[j]
+                    break
+        temas_por_bloque.append(list(heredado) if heredado else [])
+
+    if temas_subt:
+        for bloque, temas in zip(route_blocks, temas_por_bloque):
+            for linea in bloque.lines:
+                if IMAGE_LINE_RE.match(linea) or linea.startswith("IMG:"):
+                    continue
+                t = normalizar_texto(linea)
+                if not t or t in temas:
+                    continue
+                for ts in temas_subt:
+                    if ts == t or difflib.SequenceMatcher(None, ts, t).ratio() >= TOPIC_SIMILARIDAD:
+                        temas.append(t)
+                        break
+
+    return {b.number: frozenset(temas) for b, temas in zip(route_blocks, temas_por_bloque)}
+
+
+@dataclass
+class Tarjeta:
+    indice: int                          # indice de la linea en el archivo
+    linea: str                           # linea original exacta
+    primero: str
+    segundo: str
+    tema: Optional[str]                  # subT vigente (normalizado) al leerla
+    rutas_manual: Optional[list[int]]    # sufijo ya escrito a mano (None si no trae)
+    malformada: bool = False             # contiene '&' sin numeros
+    reinicia: bool = False               # v4.9 FIX 1: primera tarjeta tras un subT
+    rutas_asignadas: Optional[list[int]] = None  # resultado del paso (None = sin cambio)
+
+
+def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str]]:
+    """Clasifica cada linea. Las vacias y las subT se conservan tal cual.
+    Tolerante a espacios finales tras los numeros del sufijo.
+    Devuelve tambien la lista de temas subT (para FIX 3)."""
+    lineas = texto.split("\n")
+    tarjetas: list[Tarjeta] = []
+    temas_subt: list[str] = []
+    tema_actual: Optional[str] = None
+    reinicia_pendiente = False
+    for indice, linea in enumerate(lineas):
+        limpio = linea.strip()
+        if not limpio:
+            continue                                   # vacia: intacta
+        m_subt = re.match(r"(?i)^subt\b\s*(.*)$", limpio)
+        if m_subt:
+            tema = normalizar_texto(m_subt.group(1)) or None
+            if tema:
+                temas_subt.append(tema)
+            tema_actual = tema
+            reinicia_pendiente = True                  # el proxima tarjeta reinicia el rango
+            continue                                   # subT: intacta
+        cuerpo = linea
+        rutas_manual: Optional[list[int]] = None
+        malformada = False
+        m = SUFIJO_RUTAS_RE.search(linea)
+        if m:
+            rutas_manual = [int(x) for x in re.split(r"\s*,\s*", m.group(1))]
+            cuerpo = linea[:m.start()]
+        elif "&" in linea:
+            malformada = True                          # '&' sin numeros: a revision
+        if " + " in cuerpo:
+            primero, segundo = cuerpo.rsplit(" + ", 1)  # el ultimo " + " separa
+        else:
+            primero, segundo = cuerpo, ""
+        tarjetas.append(Tarjeta(
+            indice=indice, linea=linea,
+            primero=primero.strip(), segundo=segundo.strip(),
+            tema=tema_actual, rutas_manual=rutas_manual,
+            malformada=malformada, reinicia=reinicia_pendiente,
+        ))
+        reinicia_pendiente = False
+    return lineas, tarjetas, temas_subt
+
+
+def puntaje_ruta(claves_pista: list[str], claves_pregunta: list[str],
+                 texto_norm: str, palabras_ruta: frozenset[str]) -> float:
+    """Fraccion de claves de la pista presentes (senal fuerte) mas un
+    aporte debil de las claves de la pregunta. Matching tolerante."""
+    if claves_pista:
+        frac_pista = sum(1 for c in claves_pista if clave_presente(c, texto_norm, palabras_ruta)) / len(claves_pista)
+    else:
+        frac_pista = 0.0
+    if claves_pregunta:
+        frac_preg = sum(1 for c in claves_pregunta if clave_presente(c, texto_norm, palabras_ruta)) / len(claves_pregunta)
+    else:
+        frac_preg = 0.0
+    return frac_pista + PESO_PREGUNTA * frac_preg
+
+
+def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock]) -> None:
+    """v4.9: asocia tarjetas del recordatorio con route_blocks en memoria y
+    escribe el sufijo " & N,M". Sobreescribe el archivo SOLO si hay cambios.
+    Sin copia de seguridad. En consola solo se listan las tarjetas
+    pendientes de asociar (y avisos de anclas), no las asociadas."""
+    try:
+        texto = recordatorio_path.read_bytes().decode("utf-8-sig")
+    except (OSError, UnicodeDecodeError) as exc:
+        print(f"No se pudo leer el recordatorio: {exc}")
+        return
+    if not route_blocks:
+        print("No hay rutas en memoria; paso del recordatorio omitido.")
+        return
+
+    lineas, tarjetas, temas_subt = parsear_recordatorio(texto)
+    if not tarjetas:
+        print("El recordatorio no contiene tarjetas; no se modifica nada.")
+        return
+
+    temas_ruta = construir_temas_rutas(route_blocks, temas_subt)
+
+    # v4.9 FIX 2: excluir renglones de imagen del texto de cada ruta.
+    textos_ruta: dict[int, str] = {}
+    palabras_ruta: dict[int, frozenset[str]] = {}
+    for b in route_blocks:
+        renglones = [ln for ln in b.lines
+                     if not IMAGE_LINE_RE.match(ln) and not ln.startswith("IMG:")]
+        norm = normalizar_texto("\n".join(renglones))
+        textos_ruta[b.number] = norm
+        palabras_ruta[b.number] = frozenset(norm.split())
+    numeros_ruta = [b.number for b in route_blocks]
+
+    def tema_compatible_con(tar: Tarjeta, n: int) -> bool:
+        if tar.tema is None:
+            return True
+        return any(temas_compatibles(tar.tema, t) for t in temas_ruta.get(n, frozenset()))
+
+    def puntaje_de(n: int, claves_pista: list[str], claves_pregunta: list[str]) -> float:
+        return puntaje_ruta(claves_pista, claves_pregunta, textos_ruta[n], palabras_ruta[n])
+
+    ultima_ruta: Optional[int] = None   # rango permitido: >= ultima (misma subT)
+    cambios = 0
+    revision: list[tuple[int, str, str, list[tuple[int, float]]]] = []
+
+    for tar in tarjetas:
+        # v4.9 FIX 1: cada subT reinicia el rango de orden.
+        if tar.reinicia:
+            ultima_ruta = None
+
+        if tar.rutas_manual is not None:
+            # --- validacion de anclas: SOLO avisa, nunca modifica ---
+            inexistentes = [n for n in tar.rutas_manual if n not in textos_ruta]
+            claves_pista = extraer_claves(tar.segundo)
+            if inexistentes:
+                revision.append((tar.indice, tar.linea,
+                                 f"ancla apunta a rutas inexistentes: {inexistentes}", []))
+            elif claves_pista:
+                claves_pregunta = extraer_claves(tar.primero)
+                base = {n for n in numeros_ruta if tema_compatible_con(tar, n)}
+                base |= set(tar.rutas_manual)
+                puntajes_val = {n: puntaje_de(n, claves_pista, claves_pregunta)
+                                for n in sorted(base)}
+                s_anch = max(puntajes_val[n] for n in tar.rutas_manual)
+                mejor_p = max(puntajes_val.values())
+                mejor_n = min(n for n, p in puntajes_val.items() if p == mejor_p)
+                if mejor_n not in tar.rutas_manual and (mejor_p - s_anch) > UMBRAL_AVISO_ANCLA:
+                    revision.append((
+                        tar.indice, tar.linea,
+                        f"ancla & {', '.join(map(str, tar.rutas_manual))}: "
+                        f"la ruta {mejor_n} coincide mejor ({mejor_p:.2f} vs {s_anch:.2f})",
+                        []))
+            ultima_ruta = max(tar.rutas_manual)        # ancla escrita a mano
+            continue
+
+        if tar.malformada:
+            revision.append((tar.indice, tar.linea, "contiene '&' sin numeros", []))
+            continue
+
+        claves_pista = extraer_claves(tar.segundo)
+        if not claves_pista:
+            revision.append((tar.indice, tar.linea, "la pista no produce claves utiles", []))
+            continue
+        claves_pregunta = extraer_claves(tar.primero)
+
+        candidatas = [
+            n for n in numeros_ruta
+            if tema_compatible_con(tar, n)
+            and (ultima_ruta is None or n >= ultima_ruta)
+        ]
+        puntajes = [(n, puntaje_de(n, claves_pista, claves_pregunta)) for n in candidatas]
+        if not puntajes:
+            revision.append((tar.indice, tar.linea,
+                             "sin rutas candidatas para ese tema/orden", []))
+            continue
+
+        mejor = max(p for _n, p in puntajes)
+        calificadas = [(n, p) for n, p in puntajes
+                       if p >= UMBRAL_CLAVES and p >= mejor - MARGEN]
+        calificadas.sort(key=lambda t: (-t[1], t[0]))
+
+        if not calificadas:
+            top = sorted(puntajes, key=lambda t: (-t[1], t[0]))[:5]
+            revision.append((tar.indice, tar.linea,
+                             "ninguna ruta permitida supera UMBRAL_CLAVES", top))
+            continue
+        if len(calificadas) > MAX_RUTAS:               # empate confuso
+            revision.append((tar.indice, tar.linea,
+                             f"empate confuso: {len(calificadas)} rutas dentro del margen",
+                             calificadas[:MAX_RUTAS + 2]))
+            continue
+
+        elegidas = [n for n, _p in calificadas[:MAX_RUTAS]]
+        tar.rutas_asignadas = elegidas
+        ultima_ruta = max(elegidas)
+        cambios += 1
+
+    # --- resumen en consola: solo tarjetas pendientes de asociar ---
+    con_manual = sum(1 for t in tarjetas if t.rutas_manual is not None)
+    print(f"recordatorio: {cambios} de {len(tarjetas)} tarjetas asociadas "
+          f"({con_manual} ya tenian sufijo y se respetaron)")
+    if revision:
+        print(f"tarjetas a revisar ({len(revision)}):")
+        for indice, linea, motivo, cands in revision:
+            print(f"  linea {indice + 1}: {linea.strip()}")
+            print(f"    motivo: {motivo}")
+            if cands:
+                print("    candidatas: "
+                      + ", ".join(f"ruta {n} ({p:.2f})" for n, p in cands))
+    else:
+        print("no hay tarjetas a revisar")
+
+    if cambios == 0:
+        print("sin cambios que hacer: el recordatorio no se toco.")
+        return
+
+    nuevas = list(lineas)
+    for tar in tarjetas:
+        if tar.rutas_asignadas:  # formato exacto: espacio + & + espacio + "N, M"
+            sufijo = " & " + ", ".join(str(n) for n in tar.rutas_asignadas)
+            nuevas[tar.indice] = tar.linea.rstrip() + sufijo
+
+    # --- copia de seguridad desactivada: no se crea ningun .bak ---
+    # bak_path = recordatorio_path.parent / (recordatorio_path.name + ".bak")
+    # if bak_path.exists():
+    #     print(f"aviso: {bak_path.name} ya existe y se conserva intacto.")
+    # else:
+    #     shutil.copyfile(recordatorio_path, bak_path)
+    #     print(f"copia de seguridad creada: {bak_path.name}")
+
+    with open(recordatorio_path, "w", encoding="utf-8", newline="") as fh:
+        fh.write("\n".join(nuevas))
+    print(f"recordatorio actualizado: {recordatorio_path.name}")
 
 
 OUTPUT_DIR = Path(__file__).resolve().parent / "guardados" / "rutas"
@@ -674,6 +1048,16 @@ def main() -> None:
 
     image_nodes = sum(1 for v in vertices.values() if IMAGE_LINE_RE.match(v))
     print(f"archivos txt y json generados, rutas, {image_nodes} imagenes en el grafo)")
+
+    # --- v4.8/v4.9: paso OPCIONAL recordatorio.txt -> sufijos " & N,M" ---
+    recordatorio = filedialog.askopenfilename(
+        title="Selecciona el recordatorio.txt (opcional; cancela para omitir)",
+        filetypes=[("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*")],
+    )
+    if recordatorio:
+        procesar_recordatorio(Path(recordatorio), route_blocks)
+    else:
+        print("sin recordatorio seleccionado: paso omitido.")
 
 
 if __name__ == "__main__":

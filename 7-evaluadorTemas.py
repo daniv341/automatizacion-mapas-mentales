@@ -1394,7 +1394,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">☆ Difíciles guardadas</span>
         <span class="fila-dificiles-botones">
-          <button class="boton-mini" id="btn-exportar-dificiles" title="Descarga las difíciles como JSON">Exportar</button>
+          <button class="boton-mini" id="btn-exportar-dificiles" title="Descarga las difíciles activas como JSON">Exportar</button>
           <button class="boton-mini" id="btn-importar-dificiles" title="Agrega las difíciles de un JSON (fusiona con las actuales)">Importar</button>
         </span>
       </div>
@@ -1403,6 +1403,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <details id="det-dificiles-otros" style="display:none">
         <summary id="suma-dificiles-otros">De otros evaluadores</summary>
         <div id="lista-dificiles-otros"></div>
+      </details>
+      <!-- MODIFICADO: sección de desmarcadas (no se borran, se pueden re-activar) -->
+      <details id="det-dificiles-desm" style="display:none">
+        <summary id="suma-dificiles-desm">Desmarcadas (0)</summary>
+        <div id="lista-dificiles-desm"></div>
+        <button class="boton-mini" id="btn-vaciar-desm" style="margin: 6px 0 8px 16px;">Vaciar desmarcadas</button>
       </details>
       <p class="nota-dificiles" id="nota-dificiles"></p>
     </div>
@@ -1541,9 +1547,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let cronometroIntervalId = null;
 
   // ---------- MODIFICADO: estado persistente de tarjetas difíciles ----------
-  // Mapa { hash: {p: primero, s: segundo} } guardado en localStorage.
+  // Mapa { hash: {p, s, activa} } guardado en localStorage.
   // El hash se calcula sobre el texto normalizado, así el marcado sobrevive
   // a regeneraciones del HTML y a reordenamientos del recordatorio.txt.
+  // activa=false = desmarcada: sigue guardada y se puede re-activar.
   const CLAVE_DIFICILES = 'dificiles_tarjetas_v1';
   let dificiles = cargarDificiles();
 
@@ -1552,7 +1559,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const crudo = localStorage.getItem(CLAVE_DIFICILES);
       if (!crudo) return {};
       const obj = JSON.parse(crudo);
-      if (obj && typeof obj === 'object' && !Array.isArray(obj)) return obj;
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        // Migración: entradas viejas sin 'activa' se toman como activas
+        Object.keys(obj).forEach((h) => {
+          if (obj[h] && typeof obj[h] === 'object' && typeof obj[h].activa === 'undefined') {
+            obj[h].activa = true;
+          }
+        });
+        return obj;
+      }
       return {};
     } catch (e) {
       return {};
@@ -1579,17 +1594,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function esDificil(t) {
-    return !!dificiles[hashTarjeta(t)];
+    const e = dificiles[hashTarjeta(t)];
+    return !!(e && e.activa);
   }
 
   function toggleDificilActual() {
     if (tarjetasSesion.length === 0) return;
     const t = tarjetasSesion[indiceActual];
     const h = hashTarjeta(t);
-    if (dificiles[h]) {
-      delete dificiles[h];
+    const entrada = dificiles[h];
+    if (entrada && entrada.activa) {
+      entrada.activa = false;
+    } else if (entrada) {
+      entrada.activa = true;
     } else {
-      dificiles[h] = { p: t.primero || '', s: t.segundo || '' };
+      dificiles[h] = { p: t.primero || '', s: t.segundo || '', activa: true };
     }
     guardarDificiles();
     renderTarjeta();
@@ -1740,7 +1759,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     iniciarSesion(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);
   });
 
-  // Modo 2: repasar las difíciles guardadas (solo las presentes en este evaluador)
+  // Modo 2: repasar las difíciles activas (solo las presentes en este evaluador)
   document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
     const paraRepasar = tarjetasCompletas.filter((t) => esDificil(t));
     if (paraRepasar.length === 0) return;
@@ -1748,19 +1767,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
 
   // ---------- MODIFICADO: vista previa / gestión de difíciles ----------
+  // Las desmarcadas NO se borran: pasan a la sección 'Desmarcadas' y pueden
+  // re-activarse desde ahí (o desde el botón ☆ durante el estudio).
 
-  function filaDificil(h, p, s) {
+  function filaDificil(h, p, s, activa) {
     const label = document.createElement('label');
     label.className = 'item-tema-check';
 
     const check = document.createElement('input');
     check.type = 'checkbox';
-    check.checked = true;
+    check.checked = !!activa;
     check.addEventListener('change', () => {
-      if (check.checked) {
-        dificiles[h] = { p: p, s: s };
+      if (dificiles[h]) {
+        dificiles[h].activa = check.checked;
       } else {
-        delete dificiles[h];
+        dificiles[h] = { p: p, s: s, activa: check.checked };
       }
       guardarDificiles();
       renderDificilesPreview();
@@ -1785,34 +1806,58 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function renderDificilesPreview() {
     const elLista = document.getElementById('lista-dificiles');
     const elOtros = document.getElementById('lista-dificiles-otros');
-    const elDet = document.getElementById('det-dificiles-otros');
-    const elSuma = document.getElementById('suma-dificiles-otros');
+    const elDetOtros = document.getElementById('det-dificiles-otros');
+    const elSumaOtros = document.getElementById('suma-dificiles-otros');
+    const elDesm = document.getElementById('lista-dificiles-desm');
+    const elDetDesm = document.getElementById('det-dificiles-desm');
+    const elSumaDesm = document.getElementById('suma-dificiles-desm');
     const elNota = document.getElementById('nota-dificiles');
     elLista.innerHTML = '';
     elOtros.innerHTML = '';
+    elDesm.innerHTML = '';
 
-    // 1) Difíciles que existen en este evaluador
+    // 1) Difíciles activas de este evaluador
     const hashesVistos = new Set();
     let nAqui = 0;
     tarjetasCompletas.forEach((t) => {
       const h = hashTarjeta(t);
-      if (!dificiles[h]) return;
+      const e = dificiles[h];
+      if (!e || !e.activa) return;
       hashesVistos.add(h);
       nAqui++;
-      elLista.appendChild(filaDificil(h, t.primero || '', t.segundo || ''));
+      elLista.appendChild(filaDificil(h, t.primero || '', t.segundo || '', true));
     });
 
-    // 2) Difíciles guardadas que no matchean este evaluador (nunca se borran solas)
+    // 2) Activas de otros evaluadores (nunca se borran solas)
     let nOtros = 0;
     Object.keys(dificiles).forEach((h) => {
       if (hashesVistos.has(h)) return;
       const v = dificiles[h] || {};
+      if (!v.activa) return;
+      hashesVistos.add(h);
       nOtros++;
-      elOtros.appendChild(filaDificil(h, v.p || '', v.s || ''));
+      elOtros.appendChild(filaDificil(h, v.p || '', v.s || '', true));
     });
 
-    elDet.style.display = nOtros > 0 ? 'block' : 'none';
-    elSuma.textContent = 'De otros evaluadores (' + nOtros + ')';
+    // 3) Desmarcadas: siguen guardadas y se pueden re-activar desde acá
+    let nDesm = 0;
+    Object.keys(dificiles).forEach((h) => {
+      const v = dificiles[h] || {};
+      if (v.activa) return;
+      nDesm++;
+      let p = v.p || '', s = v.s || '';
+      const enEste = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
+      if (enEste) {
+        p = enEste.primero || '';
+        s = enEste.segundo || '';
+      }
+      elDesm.appendChild(filaDificil(h, p, s, false));
+    });
+
+    elDetOtros.style.display = nOtros > 0 ? 'block' : 'none';
+    elSumaOtros.textContent = 'De otros evaluadores (' + nOtros + ')';
+    elDetDesm.style.display = nDesm > 0 ? 'block' : 'none';
+    elSumaDesm.textContent = 'Desmarcadas (' + nDesm + ')';
 
     // Contador del modo Repasar difíciles
     const btnD = document.getElementById('btn-modo-dificiles');
@@ -1822,15 +1867,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const total = Object.keys(dificiles).length;
     elNota.textContent = total === 0
       ? 'Todavía no marcaste ninguna tarjeta como difícil (botón ☆ Difícil durante el estudio).'
-      : 'Guardadas: ' + total + (nOtros > 0 ? ' (' + nOtros + ' no están en este evaluador)' : '');
+      : 'Guardadas: ' + (total - nDesm) + ' activa(s)' +
+        (nDesm > 0 ? ', ' + nDesm + ' desmarcada(s)' : '');
   }
 
   document.getElementById('btn-exportar-dificiles').addEventListener('click', () => {
-    const lista = Object.keys(dificiles).map((h) => ({
-      h: h,
-      p: dificiles[h].p || '',
-      s: dificiles[h].s || '',
-    }));
+    // Solo se exportan las activas (las desmarcadas son un estado local)
+    const lista = Object.keys(dificiles)
+      .filter((h) => dificiles[h].activa)
+      .map((h) => ({
+        h: h,
+        p: dificiles[h].p || '',
+        s: dificiles[h].s || '',
+      }));
     const contenido = JSON.stringify({ version: 1, tarjetas: lista }, null, 2);
     const blob = new Blob([contenido], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -1869,6 +1918,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           dificiles[item.h] = {
             p: typeof item.p === 'string' ? item.p : '',
             s: typeof item.s === 'string' ? item.s : '',
+            activa: true,
           };
           nuevas++;
         });
@@ -1881,6 +1931,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     };
     lector.readAsText(archivo);
+  });
+
+  document.getElementById('btn-vaciar-desm').addEventListener('click', () => {
+    const hashes = Object.keys(dificiles).filter((h) => !dificiles[h].activa);
+    if (hashes.length === 0) return;
+    if (!confirm('¿Borrar ' + hashes.length + ' desmarcada(s)? Esta acción no se puede deshacer.')) return;
+    hashes.forEach((h) => delete dificiles[h]);
+    guardarDificiles();
+    renderDificilesPreview();
   });
 
   document.getElementById('btn-elegir-temas').addEventListener('click', () => {
@@ -2601,30 +2660,30 @@ def elegir_color(raiz, colores, default):
 
 colores = {
     "amarillo": ["#DEDE00", "#5C5C5C"],
-    "celeste": ["#00CCCC", "#FFFFFF"],
-    "rojo": ["#FF0000", "#FFFFFF"],
-    "verde": ["#66CC00", "#FFFFFF"],
-    "morado": ["#7F00FF", "#FFFFFF"],
-    "rosado": ["#FF66FF", "#FFFFFF"],
-    "azul": ["#0000FF", "#FFFFFF"],
-    "bordo": ["#FF0080", "#FFFFFF"],
-    "naranja": ["#FF8000", "#FFFFFF"],
-    "verdeAgua": ["#0BD0AF", "#FFFFFF"],
-    "gris": ["#999999", "#FFFFFF"],
-    "marron": ["#89552A", "#FFFFFF"],
-    "fucsia": ["#DC7BFF", "#FFFFFF"],
-    "azulGrisaceo": ["#3399FF", "#FFFFFF"],
-    "verdeOscuro": ["#14B866", "#FFFFFF"],
-    "naranjaOscuro": ["#FF5A36", "#FFFFFF"],
-    "rojoOscuro": ["#8B0000", "#FFFFFF"],
-    "amarilloOscuro": ["#556B2F", "#FFFFFF"],
+    "celeste": ["#00CCCC", "#5C5C5C"],
+    "rojo": ["#FF0000", "#5C5C5C"],
+    "verde": ["#66CC00", "#5C5C5C"],
+    "morado": ["#7F00FF", "#5C5C5C"],
+    "rosado": ["#FF66FF", "#5C5C5C"],
+    "azul": ["#0000FF", "#5C5C5C"],
+    "bordo": ["#FF0080", "#5C5C5C"],
+    "naranja": ["#FF8000", "#5C5C5C"],
+    "verdeAgua": ["#0BD0AF", "#5C5C5C"],
+    "gris": ["#999999", "#5C5C5C"],
+    "marron": ["#89552A", "#5C5C5C"],
+    "fucsia": ["#DC7BFF", "#5C5C5C"],
+    "azulGrisaceo": ["#3399FF", "#5C5C5C"],
+    "verdeOscuro": ["#14B866", "#5C5C5C"],
+    "naranjaOscuro": ["#FF5A36", "#5C5C5C"],
+    "rojoOscuro": ["#8B0000", "#5C5C5C"],
+    "amarilloOscuro": ["#556B2F", "#5C5C5C"],
     "verdeClaro": ["#98FF98", "#5C5C5C"],
     "grisClaro": ["#E6E6FA", "#5C5C5C"],
     "rosadoClaro": ["#FFB6C1", "#5C5C5C"],
     "azulClaro": ["#B3BDFF", "#5C5C5C"],
-    "moradoClaro": ["#696ADC", "#FFFFFF"],
-    "rojoClaro": ["#FF6347", "#FFFFFF"],
-    "marronClaro": ["#CD853F", "#FFFFFF"],
+    "moradoClaro": ["#696ADC", "#5C5C5C"],
+    "rojoClaro": ["#FF6347", "#5C5C5C"],
+    "marronClaro": ["#CD853F", "#5C5C5C"],
     "amarilloClaro": ["#FFFF80", "#5C5C5C"],
 }
 
