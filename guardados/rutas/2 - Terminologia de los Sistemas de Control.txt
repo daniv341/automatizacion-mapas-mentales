@@ -282,7 +282,7 @@ con retroalimentación,
 usualmente
 en primer punto suma,
 con fin ordenar a planta
-una acción especificada
+una acción especifica
 
 RUTA 32
 DEFINICIONES

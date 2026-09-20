@@ -1,55 +1,55 @@
 subT Diagramas Bloques
-que representa? + relacion, causa & 9
-en que nos ayuda? + funcionales, componentes & 10
-componentes sistema + alternativamente & 11
+que representa un diagrama de bloques? + relacion, causa & 9
+en que nos ayuda su uso? + funcionales, componentes & 10
+cuales son los componentes de un sistema? + alternativamente & 11
 
 subT DIAGRAMA BLOQUES SIN RETROALIMENTACION
 que representa el rectangulo? + bloque, ejecuta & 12
 que representan las flechas? + direccion, flujo & 13
-adicion, sustraccion + circulo, signo, flechas & 14
-salida + suma & 15
+como se representan la adicion y sustraccion? + circulo, signo, flechas & 14
+que es la salida en el punto suma? + suma & 15
 que entradas pueden llegar a un punto suma? + cualquier & 14
 como puedo dividir una señal? + señal, toma & 16
 
 subT DIAGRAMAS BLOQUES SISTEMAS CONTINUOS CON RETROALIMENTACIÓN
-que representan? + diferentes, conectados, relaciones & 17
-diagrama bloques + intervienen, etapas & 18
+que representan estos diagramas? + diferentes, conectados, relaciones & 17
+que es el diagrama de bloques en este sistema? + intervienen, etapas & 18
 
 subT TERMINOLOGIA DEL DIAGRAMA BLOQUES EN MALLA CERRADA
-como represento variables? + letras minusculas & 19
-que representan letras minusculas + tiempo, contrario & 20
-letras mayusculas + transformadas, compleja & 21
+como se representan las variables? + letras minusculas & 19
+que representan las letras minusculas? + tiempo, contrario & 20
+que representan las letras mayusculas? + transformadas, compleja & 21
 
-subT DEFINICIONES 
-planta + sistema, proceso, cantidad & 22
-salida controlada + salida planta, controla & 23
-trayectoria directa + ruta, suma, salida & 24
-elementos anticipativos + trayectoria, señal control & 25
-señal control, variable manipulada + anticipativos, entrada & 27
-trayectorio retroalimentacion + salida, suma & 28
-elementos retroalimentacion + componentes, funcional, señal & 29
-entrada + externa, especificada & 31
-señal retroalimentacion + suma, actuante, abierta & 35, 36
-señal actuante + suma, retroalimentacion, igual & 36
-accion control + genera, actuante & 37
-tipo retroalimentacion + negativa, positiva & 38, 39
-perturbacion + indeseable, manipulada, intermedio & 40, 41
-muestreador + transforma & 42
-A/D + analogico & 44
-D/A + digital & 45
-transductor + energia & 46
-orden v + entrada, misma, transductor & 47, 48
-sistema multivariable + ambas & 49
+subT DEFINICIONES
+que es la planta? + sistema, proceso, cantidad & 22
+que es la salida controlada? + salida planta, controla & 23
+que es la trayectoria directa? + ruta, suma, salida & 24
+que son los elementos anticipativos? + trayectoria, señal control & 25
+que son la señal de control y la variable manipulada? + anticipativos, entrada & 27
+que es la trayectoria de retroalimentacion? + salida, suma & 28
+que son los elementos de retroalimentacion? + componentes, funcional, señal & 29
+que es la entrada? + externa, especifica, ideal & 31
+que es la señal de retroalimentacion? + funcion, algebraicamente, no tiene & 33, 34
+que es la señal actuante? + suma, retroalimentacion, igual & 35, 36
+que es la accion de control? + genera, actuante & 37
+cuales son los tipos de retroalimentacion? + negativa, positiva & 38, 39
+que es una perturbacion? + indeseable, manipulada, intermedio & 40, 41
+que es un muestreador? + transforma & 42
+que es un conversor A/D? + analogico & 44
+que es un conversor D/A? + digital & 45
+que es un transductor? + energia & 46
+que es el orden v? + entrada, misma, transductor & 47, 48
+que es un sistema multivariable? + ambas & 49
 
 subT CLASIFICACIÓN CONTROLADORES ANALÓGICOS
-controlador industrial + acciones control & 1
-on-off + dos posiciones & 2
-controlador P + salida, ganancia, ajuste & 3, 4
-controlador D + derivada, KD & 5
-controlador I + mayoria, Ki & 6
-PID + suma, combinaciones & 7, 8
+que es un controlador industrial? + acciones control & 1
+que es el control on-off? + dos posiciones & 2
+que es un controlador P? + salida, ganancia, ajuste & 3, 4
+que es un controlador D? + derivada, KD & 5
+que es un controlador I? + mayoria, Ki & 6
+que es un controlador PID? + suma, combinaciones & 7, 8
 
 subT OTROS SISTEMAS CONTROL
-servomecanismos + amplificada, mecanica, tiempo & 50, 51
-regulador + constante, intervalo & 52
-como se diferencian servo y reg? + mantener, entrada variable & 53
+que son los servomecanismos? + amplificada, mecanica, tiempo & 50
+que es un regulador? + constante, intervalo & 52
+como se diferencian el servomecanismo y el regulador? + mantener, entrada variable & 53

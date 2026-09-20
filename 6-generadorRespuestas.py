@@ -57,6 +57,11 @@
 - v4.16: * DETECCION de rutas: si una ruta trae 2-3 subT (subtitulo heredado + rombos que
     quedaron como renglon), se queda SOLO el ultimo como subtitulo del bloque y los
     demas se eliminan (afecta TXT, JSON y get_routes_id_map; no cambia la numeracion).
+- v4.19: dato 'primera' (la pregunta del recordatorio, antes del ' + ') en el cuadro de cada ruta,
+    justo antes de 'ruta'. Tarjetas de una misma ruta se unen con ' | ' (orden del recordatorio);
+    las rutas con '~' no lo escriben. Tras elegir el recordatorio se pregunta: No aplicar
+    (deja los 'primera' del drawio), Si aplicar (reemplaza) o Borrar todo. Sin recordatorio no
+    se pregunta. El drawio se vuelve a guardar despues de procesar el recordatorio.
 - v4.18: rutas adicionales por cobertura contigua (solo tarjetas con subT y 2-4 claves;
     solo rutas del mismo subT y en orden; max 4 rutas): (a) tarjeta firme + ruta vecina
     que aporta una clave rara de la pista -> se agrega con '~' (" & 3, 4~"); (b) tarjeta
@@ -1267,10 +1272,13 @@ def _calificar(puntajes: list[tuple[int, float]], umbral: float) -> list[tuple[i
     return cal
 
 
-def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock]) -> None:
+def procesar_recordatorio(recordatorio_path: Path,
+                          route_blocks: list[RouteBlock]) -> Optional[dict[int, list[str]]]:
     """Asocia tarjetas del recordatorio con route_blocks en memoria y
     escribe el sufijo " & N,M" (orden ascendente). Sobreescribe SOLO si
-    hay cambios. Sin .bak. En consola solo se listan las pendientes."""
+    hay cambios. Sin .bak. En consola solo se listan las pendientes.
+    v4.19: devuelve el mapa ruta -> textos 'primera' (ver primeras_por_ruta), o None
+    si el recordatorio no se pudo procesar (ilegible, sin rutas o sin tarjetas)."""
     try:
         texto = recordatorio_path.read_bytes().decode("utf-8-sig")
     except (OSError, UnicodeDecodeError) as exc:
@@ -1538,7 +1546,7 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
 
     if cambios == 0:
         print("sin cambios que hacer: el recordatorio no se toco.")
-        return
+        return primeras_por_ruta(tarjetas)
 
     nuevas = list(lineas)
     for tar in tarjetas:
@@ -1558,6 +1566,108 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
     with open(recordatorio_path, "w", encoding="utf-8", newline="") as fh:
         fh.write("\n".join(nuevas))
     print(f"recordatorio actualizado: {recordatorio_path.name}")
+    return primeras_por_ruta(tarjetas)
+
+
+def primeras_por_ruta(tarjetas: list[Tarjeta]) -> dict[int, list[str]]:
+    """v4.19: ruta -> textos 'primera' (la parte de la linea antes del ' + ', o sea la
+    pregunta) de las tarjetas asociadas a esa ruta, en el orden del recordatorio y sin
+    repetidos. Solo cuentan las rutas firmes: las que llevan '~' (por revisar) no."""
+    mapa: dict[int, list[str]] = {}
+    for tar in tarjetas:
+        if tar.rutas_asignadas:
+            firmes = [n for n in tar.rutas_asignadas if n not in tar.marcadas]
+        elif tar.rutas_manual is not None:
+            firmes = list(tar.manual_firmes)
+        else:
+            firmes = []
+        texto = tar.primero.strip()
+        if not texto:
+            continue
+        for n in firmes:
+            lista = mapa.setdefault(n, [])
+            if texto not in lista:
+                lista.append(texto)
+    return mapa
+
+
+def aplicar_primera_al_drawio(drawio_path: Path, primeras: dict[int, list[str]],
+                              accion: str) -> tuple[int, int]:
+    """v4.19: reescribe el .drawio en su lugar segun la accion elegida.
+      'aplicar': borra los 'primera' existentes y escribe el dato 'primera' (textos unidos
+                 por ' | ') en cada celda que tenga dato 'ruta' con tarjetas asociadas;
+                 'primera' queda justo ANTES de 'ruta' dentro del elemento.
+      'borrar' : elimina todos los 'primera' (solo quedan los datos 'ruta').
+    Devuelve (celdas con 'primera' escrita, 'primera' eliminados)."""
+    tree = ET.parse(drawio_path)
+    diagrams = tree.getroot().findall("./diagram")
+    if not diagrams:
+        return 0, 0
+    model = diagrams[0].find("./mxGraphModel")
+    graph_root = model.find("./root") if model is not None else None
+    if graph_root is None:
+        return 0, 0
+
+    eliminados = escritos = 0
+    for elem in graph_root.iter():
+        if elem.tag in ("object", "UserObject") and "primera" in elem.attrib:
+            del elem.attrib["primera"]
+            eliminados += 1
+
+    if accion == "aplicar":
+        for elem in graph_root.iter():
+            if elem.tag not in ("object", "UserObject"):
+                continue
+            ruta = (elem.get("ruta") or "").strip()
+            if not ruta.isdigit():
+                continue
+            textos = primeras.get(int(ruta))
+            if not textos:
+                continue
+            items = list(elem.attrib.items())
+            pos = next(i for i, (k, _v) in enumerate(items) if k == "ruta")
+            items.insert(pos, ("primera", " | ".join(textos)))      # antes de 'ruta'
+            elem.attrib.clear()
+            elem.attrib.update(items)
+            escritos += 1
+
+    tree.write(drawio_path, encoding="utf-8", xml_declaration=True)
+    return escritos, eliminados
+
+
+def preguntar_accion_primera(root) -> str:
+    """v4.19: ventana con 3 botones. Devuelve 'no_aplicar', 'aplicar' o 'borrar'.
+    Cerrar la ventana equivale a 'no_aplicar' (no se toca nada)."""
+    eleccion = {"valor": "no_aplicar"}
+    ventana = tk.Toplevel(root)
+    ventana.title("Dato 'primera'")
+    ventana.resizable(False, False)
+
+    def elegir(valor: str) -> None:
+        eleccion["valor"] = valor
+        ventana.destroy()
+
+    tk.Label(
+        ventana, justify="left", anchor="w", padx=16, pady=12,
+        text=("¿Aplicar el dato 'primera' del recordatorio al drawio?\n\n"
+              "  No aplicar: deja los 'primera' que ya tiene el drawio.\n"
+              "  Sí aplicar: reemplaza los 'primera' por los del recordatorio.\n"
+              "  Borrar todo: elimina todos los 'primera' (solo quedan los datos 'ruta')."),
+    ).pack()
+    marco = tk.Frame(ventana, padx=12, pady=10)
+    marco.pack()
+    for texto, valor in (("No aplicar", "no_aplicar"), ("Sí aplicar", "aplicar"),
+                         ("Borrar todo", "borrar")):
+        tk.Button(marco, text=texto, width=14,
+                  command=lambda v=valor: elegir(v)).pack(side="left", padx=6)
+
+    ventana.protocol("WM_DELETE_WINDOW", lambda: elegir("no_aplicar"))
+    ventana.attributes("-topmost", True)
+    ventana.lift()
+    ventana.focus_force()
+    ventana.grab_set()
+    ventana.wait_window()
+    return eleccion["valor"]
 
 
 OUTPUT_DIR = Path(__file__).resolve().parent / "guardados" / "rutas"
@@ -1639,7 +1749,18 @@ def main() -> None:
         filetypes=[("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*")],
     )
     if recordatorio:
-        procesar_recordatorio(Path(recordatorio), route_blocks)
+        primeras = procesar_recordatorio(Path(recordatorio), route_blocks)
+        if primeras is not None:        # v4.19: solo se pregunta si hubo recordatorio
+            accion = preguntar_accion_primera(root)
+            if accion == "no_aplicar":
+                print("dato 'primera': no se aplico (el drawio conserva los que ya tenia)")
+            else:
+                escritos, eliminados = aplicar_primera_al_drawio(input_path, primeras, accion)
+                if accion == "borrar":
+                    print(f"dato 'primera': {eliminados} eliminado(s); solo quedan los datos 'ruta'")
+                else:
+                    print(f"dato 'primera': {escritos} celda(s) con 'primera' "
+                          f"({eliminados} anterior(es) reemplazado(s))")
     else:
         print("sin recordatorio seleccionado: paso omitido.")
 

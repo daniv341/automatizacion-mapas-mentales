@@ -1,0 +1,55 @@
+subT Diagramas Bloques
+que representa? + relacion, causa & 9
+en que nos ayuda? + funcionales, componentes & 10
+componentes sistema + alternativamente & 11
+
+subT DIAGRAMA BLOQUES SIN RETROALIMENTACION
+que representa el rectangulo? + bloque, ejecuta & 12
+que representan las flechas? + direccion, flujo & 13
+adicion, sustraccion + circulo, signo, flechas & 14
+salida + suma & 15
+que entradas pueden llegar a un punto suma? + cualquier & 14
+como puedo dividir una señal? + señal, toma & 16
+
+subT DIAGRAMAS BLOQUES SISTEMAS CONTINUOS CON RETROALIMENTACIÓN
+que representan? + diferentes, conectados, relaciones & 17
+diagrama bloques + intervienen, etapas & 18
+
+subT TERMINOLOGIA DEL DIAGRAMA BLOQUES EN MALLA CERRADA
+como represento variables? + letras minusculas & 19
+que representan letras minusculas + tiempo, contrario & 20
+letras mayusculas + transformadas, compleja & 21
+
+subT DEFINICIONES 
+planta + sistema, proceso, cantidad & 22
+salida controlada + salida planta, controla & 23
+trayectoria directa + ruta, suma, salida & 24
+elementos anticipativos + trayectoria, señal control & 25
+señal control, variable manipulada + anticipativos, entrada & 27
+trayectorio retroalimentacion + salida, suma & 28
+elementos retroalimentacion + componentes, funcional, señal & 29
+entrada + externa, especifica, ideal & 31, 32
+señal retroalimentacion + suma, actuante, abierta & 33, 34
+señal actuante + suma, retroalimentacion, igual & 35, 36
+accion control + genera, actuante & 37
+tipo retroalimentacion + negativa, positiva & 38, 39
+perturbacion + indeseable, manipulada, intermedio & 40, 41
+muestreador + transforma & 42
+A/D + analogico & 44
+D/A + digital & 45
+transductor + energia & 46
+orden v + entrada, misma, transductor & 47, 48
+sistema multivariable + ambas & 49
+
+subT CLASIFICACIÓN CONTROLADORES ANALÓGICOS
+controlador industrial + acciones control & 1
+on-off + dos posiciones & 2
+controlador P + salida, ganancia, ajuste & 3, 4
+controlador D + derivada, KD & 5
+controlador I + mayoria, Ki & 6
+PID + suma, combinaciones & 7, 8
+
+subT OTROS SISTEMAS CONTROL
+servomecanismos + amplificada, mecanica, tiempo & 50, 51
+regulador + constante, intervalo & 52
+como se diferencian servo y reg? + mantener, entrada variable & 53
