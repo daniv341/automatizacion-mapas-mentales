@@ -39,18 +39,46 @@
     claves que la definicion de transductor -> se descarta; en cambio
     'positiva' aporta frente a 'negativa' -> ambas se conservan).
   * Los sufijos automaticos se escriben en orden ASCENDENTE de rutas.
+- v4.14: asociador (correcciones + mejoras):
+  * El orden de tarjetas ya no es un muro (ver v4.15 para el comportamiento actual).
+  * Tema: acepta contencion de palabras y, como ultimo recurso, ignora el tema
+    (umbral mas alto + aviso).
+  * Raiz ligera (plural/singular) en claves y rutas; coincidencia por INICIO de
+    palabra en vez de subcadena ('red' ya no calza en 'pared').
+  * Puntaje con pesos IDF, penalizacion suave por longitud de ruta y cobertura
+    calculada solo con claves de la pista.
+  * Velocidad: vocabulario global con cache por clave y SequenceMatcher con
+    prefiltros (resultado identico).
+- v4.15: * Fuera de orden con puntaje >= UMBRAL_FUERA_ORDEN (0.8): se asigna igual y el
+    orden se reancla en esa ruta (queda listada en 'verificar').
+  * Tarjeta que no supera el umbral: se asigna la ruta de mayor puntaje con '~'
+    (" & 23~" = por revisar). Un sufijo con '~' se respeta en corridas siguientes
+    y no fija el orden; si quitas el '~' pasa a ser un sufijo normal (ancla).
+- v4.16: * DETECCION de rutas: si una ruta trae 2-3 subT (subtitulo heredado + rombos que
+    quedaron como renglon), se queda SOLO el ultimo como subtitulo del bloque y los
+    demas se eliminan (afecta TXT, JSON y get_routes_id_map; no cambia la numeracion).
+  * La contencion de palabras en temas pasa a ultimo recurso: solo si el subT de la
+    tarjeta no coincide con ningun tema del diagrama.
+  * Tarjetas que no superan el umbral (antes siempre '~'): (a) cobertura complementaria:
+    la vecina N+-1 cubre las claves que le faltan a la mejor -> se asignan ambas;
+    (b) margen: mejor >= 0.5 y >= 0.2 por encima de la segunda -> se asigna sin '~'.
+    Ambos solo para candidatas de su tema y en orden; el resto sigue con '~'.
+    Estas asignaciones se listan en 'verificar' y NO fijan el orden.
 """
 from __future__ import annotations
 
 import difflib
 import html
 import json
+import math
 import re
 # import shutil  # desactivado: ya no se crea copia de seguridad .bak
+import statistics
 import unicodedata
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 import tkinter as tk
@@ -526,6 +554,26 @@ def _split_into_blocks(
     return closed, open_items, cont_items
 
 
+def conservar_ultimo_subt(bloque: RouteBlock, is_rhombus_key) -> None:
+    """v4.16 (deteccion de rutas): cuando una ruta trae 2 o 3 subT, el correcto
+    es SIEMPRE el ultimo. Los subT de una ruta son: el subtitulo (rombo activo
+    heredado del padre) y los rombos que quedaron como renglon dentro del
+    bloque. Se conserva solo el ultimo, que pasa a ser el subtitulo del bloque;
+    los demas se eliminan (subtitulo anterior y renglones-rombo), manteniendo
+    items y lines sincronizados. Con 0 o 1 subT no se toca nada."""
+    pos = [i for i, (key, _l) in enumerate(bloque.items) if is_rhombus_key(key)]
+    n_subt = (1 if bloque.subtitle else 0) + len(pos)
+    if n_subt < 2 or not pos:
+        return
+    ultimo = "\n".join(bloque.items[pos[-1]][1]).strip()
+    if not ultimo:
+        return
+    quitar = set(pos)
+    bloque.subtitle = ultimo
+    bloque.items = [it for i, it in enumerate(bloque.items) if i not in quitar]
+    bloque.lines = [line for _key, item_lines in bloque.items for line in item_lines]
+
+
 def build_route_blocks(trie_root: TrieNode, is_rhombus_key) -> list[RouteBlock]:
     blocks: list[RouteBlock] = []
     number = 1
@@ -534,7 +582,9 @@ def build_route_blocks(trie_root: TrieNode, is_rhombus_key) -> list[RouteBlock]:
         tree_blocks = [(None, open_items)] + closed
         for subtitle, items in tree_blocks:
             lines = [line for _key, item_lines in items for line in item_lines]
-            blocks.append(RouteBlock(number=number, subtitle=subtitle, lines=lines, items=items))
+            bloque = RouteBlock(number=number, subtitle=subtitle, lines=lines, items=items)
+            conservar_ultimo_subt(bloque, is_rhombus_key)
+            blocks.append(bloque)
             number += 1
     return blocks
 
@@ -715,6 +765,18 @@ MIN_LARGO_CLAVE = 2       # v4.12: antes 3; permite tokens fusionados (ad, da, K
 SIMILITUD_CLAVE = 0.85    # matching tolerante normal
 SIMILITUD_CLAVE_UNICA = 0.83  # v4.12: antes 0.75; relajado SOLO si la pista tiene 1 clave
 UMBRAL_AVISO_ANCLA = 0.25 # aviso si otra ruta supera a la anclada por mas de esto
+# v4.14
+MAX_EXTRA_PREFIJO = 3     # clave 'red' ~ 'redes' (+2) pero no 'reducir' (+4)
+PESO_IDF_MIN = 0.5        # peso de una clave presente en TODAS las rutas (max = 1.0)
+PENALIZACION_LONGITUD_MAX = 0.08  # penalizacion maxima por ruta larga; mantener < MARGEN
+UMBRAL_CLAVES_SIN_TEMA = 0.8      # umbral exigido cuando se ignora el tema (ultimo recurso)
+EPS = 1e-9                # tolerancia para comparar puntajes con umbrales
+# v4.15
+UMBRAL_FUERA_ORDEN = 0.8  # fuera de orden: se asigna igual si el puntaje es >= esto
+PUNTAJE_MIN_TENTATIVO = 0.0  # asignacion tentativa (~) solo si el mejor puntaje es > esto
+# v4.16 (solo actuan sobre tarjetas que NO superan UMBRAL_CLAVES)
+PUNTAJE_MIN_MARGEN = 0.5  # margen sobre la segunda: el mejor debe tener al menos esto...
+MARGEN_GANADOR = 0.2      # ...y sacarle al menos esto a la siguiente candidata
 
 STOPWORDS = frozenset({
     "que", "como", "cual", "cuales", "cuando", "donde", "cuanto", "por",
@@ -733,7 +795,8 @@ STOPWORDS = frozenset({
 
 # Lectura de sufijo: "&" + numeros separados por coma; tolera espacios
 # finales extra (ej. "& 39 "). Escritura canonica: " & 5" / " & 21, 22".
-SUFIJO_RUTAS_RE = re.compile(r"(?:^|\s)&\s*([0-9]+(?:\s*,\s*[0-9]+)*)\s*$")
+# v4.15: un '~' tras el numero ("& 23~") marca asignacion tentativa a revisar.
+SUFIJO_RUTAS_RE = re.compile(r"(?:^|\s)&\s*([0-9]+~?(?:\s*,\s*[0-9]+~?)*)\s*$")
 
 
 def normalizar_texto(texto: str) -> str:
@@ -747,50 +810,115 @@ def normalizar_texto(texto: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+@lru_cache(maxsize=None)
+def raiz(palabra: str) -> str:
+    """v4.14 FIX 5: raiz ligera para unificar plural/singular (senales~senal,
+    sensores~sensor, condiciones~condicion). Solo recorta si quedan >= 4
+    letras. Se aplica igual a claves y a palabras de ruta, asi que la
+    comparacion es simetrica."""
+    for suf in ("ciones", "cion", "es", "s"):
+        if palabra.endswith(suf) and len(palabra) - len(suf) >= 4:
+            return palabra[:-len(suf)]
+    return palabra
+
+
+def normalizar_para_matching(texto: str) -> str:
+    """normalizar_texto + raiz por palabra (solo para el asociador)."""
+    return " ".join(raiz(p) for p in normalizar_texto(texto).split())
+
+
+@lru_cache(maxsize=None)
+def similares(a: str, b: str, umbral: float) -> bool:
+    """v4.14 (velocidad): ratio >= umbral con cache y prefiltros baratos.
+    real_quick_ratio y quick_ratio son cotas superiores de ratio, asi que el
+    resultado es identico al de SequenceMatcher(None, a, b).ratio() >= umbral."""
+    sm = difflib.SequenceMatcher(None, a, b)
+    if sm.real_quick_ratio() < umbral or sm.quick_ratio() < umbral:
+        return False
+    return sm.ratio() >= umbral
+
+
 def extraer_claves(texto: str) -> list[str]:
     """Claves: minusculas, sin acentos, sin duplicados. v4.12: descarta
-    numeros solos ('14', '2') y mantiene tokens de 2 letras (ad, da, kd)."""
+    numeros solos ('14', '2') y mantiene tokens de 2 letras (ad, da, kd).
+    v4.14: cada clave se reduce a su raiz (plural/singular)."""
     claves: list[str] = []
     for palabra in normalizar_texto(texto).split():
         if palabra.isdigit():
             continue
         if len(palabra) < MIN_LARGO_CLAVE or palabra in STOPWORDS:
             continue
-        if palabra not in claves:
-            claves.append(palabra)
+        r = raiz(palabra)
+        if r not in claves:
+            claves.append(r)
     return claves
 
 
-def clave_presente(clave: str, texto_norm: str, palabras_ruta: frozenset[str],
-                   umbral: Optional[float] = None) -> bool:
-    """La clave aparece por subcadena (>=3 letras) o por palabra similar.
-    v4.12: claves de MENOS de 3 letras solo por palabra EXACTA o similitud
-    (evita que 'da' calce dentro de 'entrada'). 'umbral' relaja la
-    similitud (y el guardia de longitud) para pistas de una sola clave."""
-    if umbral is None:
-        umbral = SIMILITUD_CLAVE
-    if len(clave) >= 3 and clave in texto_norm:
-        return True
-    if len(clave) < 3 and clave in palabras_ruta:
-        return True
+@dataclass
+class RutaIndexada:
+    """v4.14: palabras de una ruta ya normalizadas y con raiz (sin renglones IMG)."""
+    numero: int
+    palabras: frozenset[str]
+    n_tokens: int
+
+
+def indexar_ruta(bloque: RouteBlock) -> RutaIndexada:
+    renglones = [ln for ln in bloque.lines
+                 if not IMAGE_LINE_RE.match(ln) and not ln.startswith("IMG:")]
+    tokens = normalizar_para_matching("\n".join(renglones)).split()
+    return RutaIndexada(bloque.number, frozenset(tokens), len(tokens))
+
+
+def _palabras_que_calzan(clave: str, palabras, por_largo: dict, umbral: float):
+    """Genera las palabras que calzan con la clave: palabra exacta, INICIO de
+    palabra (v4.14 FIX 6: hasta MAX_EXTRA_PREFIJO letras extra, 'red' ~ 'redes'
+    pero NO 'pared' ni 'reducir') o palabra similar. Las claves de menos de 3
+    letras solo por palabra exacta o similitud. 'umbral' relaja la similitud
+    (y el guardia de longitud) para pistas de una sola clave."""
+    if clave in palabras:                            # palabra exacta
+        yield clave
+    largo = len(clave)
+    if largo >= 3:
+        for extra in range(1, MAX_EXTRA_PREFIJO + 1):
+            for palabra in por_largo.get(largo + extra, ()):
+                if palabra.startswith(clave):
+                    yield palabra
     if umbral < SIMILITUD_CLAVE:      # modo relajado: guardia de longitud mas amplia
-        limite_len = len(clave) // 3 + 2
+        limite_len = largo // 3 + 2
     else:
-        limite_len = len(clave) // 4 + 1
-    for palabra in palabras_ruta:
-        if abs(len(palabra) - len(clave)) <= limite_len and \
-           difflib.SequenceMatcher(None, clave, palabra).ratio() >= umbral:
-            return True
-    return False
+        limite_len = largo // 4 + 1
+    for l in range(max(1, largo - limite_len), largo + limite_len + 1):
+        for palabra in por_largo.get(l, ()):
+            if similares(clave, palabra, umbral):
+                yield palabra
 
 
-def temas_compatibles(tema_a: Optional[str], tema_b: Optional[str]) -> bool:
-    """Comparacion tolerante de temas normalizados."""
+@lru_cache(maxsize=None)
+def _tokens_tema(tema: str) -> frozenset[str]:
+    return frozenset(raiz(w) for w in tema.split() if w not in STOPWORDS)
+
+
+def temas_compatibles(tema_a: Optional[str], tema_b: Optional[str],
+                      contencion: bool = False) -> bool:
+    """Comparacion tolerante de temas normalizados: igualdad o similitud.
+    v4.16: la CONTENCION de palabras ('sensores' dentro de 'sensores y
+    transductores') solo se usa si se pide (contencion=True), es decir, como
+    ultimo recurso cuando el subT de la tarjeta no coincide con ningun tema
+    del diagrama. Asi 'Diagramas Bloques' no se cuela en 'DIAGRAMA BLOQUES
+    SIN RETROALIMENTACION' cuando ambos son subT reales."""
     if not tema_a or not tema_b:
         return False
     if tema_a == tema_b:
         return True
-    return difflib.SequenceMatcher(None, tema_a, tema_b).ratio() >= TOPIC_SIMILARIDAD
+    if similares(tema_a, tema_b, TOPIC_SIMILARIDAD):
+        return True
+    if not contencion:
+        return False
+    ta, tb = _tokens_tema(tema_a), _tokens_tema(tema_b)
+    if ta and tb:
+        menor, mayor = (ta, tb) if len(ta) <= len(tb) else (tb, ta)
+        return menor <= mayor
+    return False
 
 
 def construir_temas_rutas(route_blocks: list[RouteBlock],
@@ -825,7 +953,7 @@ def construir_temas_rutas(route_blocks: list[RouteBlock],
                 if not t or t in linea_temas:
                     continue
                 for ts in temas_subt:
-                    if ts == t or difflib.SequenceMatcher(None, ts, t).ratio() >= TOPIC_SIMILARIDAD:
+                    if ts == t or similares(ts, t, TOPIC_SIMILARIDAD):
                         linea_temas.append(t)
                         break
             if linea_temas:
@@ -862,6 +990,8 @@ class Tarjeta:
     malformada: bool = False             # contiene '&' sin numeros
     reinicia: bool = False               # primera tarjeta tras un subT
     rutas_asignadas: Optional[list[int]] = None  # resultado (None = sin cambio)
+    manual_tentativa: bool = False       # el sufijo existente lleva '~' (por revisar)
+    tentativa: bool = False              # la asignacion nueva se escribe con '~'
 
 
 def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str]]:
@@ -885,10 +1015,12 @@ def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str
             continue                                   # subT: intacta
         cuerpo = linea
         rutas_manual: Optional[list[int]] = None
+        manual_tentativa = False
         malformada = False
         m = SUFIJO_RUTAS_RE.search(linea)
         if m:
-            rutas_manual = [int(x) for x in re.split(r"\s*,\s*", m.group(1))]
+            rutas_manual = [int(x) for x in re.findall(r"[0-9]+", m.group(1))]
+            manual_tentativa = "~" in m.group(1)
             cuerpo = linea[:m.start()]
         elif "&" in linea:
             malformada = True
@@ -901,23 +1033,141 @@ def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str
             primero=primero.strip(), segundo=segundo.strip(),
             tema=tema_actual, rutas_manual=rutas_manual,
             malformada=malformada, reinicia=reinicia_pendiente,
+            manual_tentativa=manual_tentativa,
         ))
         reinicia_pendiente = False
     return lineas, tarjetas, temas_subt
 
 
-def evaluar_ruta(claves_pista: list[str], claves_pregunta: list[str],
-                 texto_norm: str, palabras_ruta: frozenset[str]) -> tuple[float, frozenset[str]]:
-    """Devuelve (puntaje, claves_coincidentes). El puntaje es la fraccion
-    de claves de la pista (senal fuerte; umbral relajado si hay una sola)
-    mas el aporte debil de la pregunta. El conjunto de claves coincidentes
-    alimenta la seleccion por cobertura (v4.12 FIX 4)."""
-    umbral_pista = SIMILITUD_CLAVE_UNICA if len(claves_pista) == 1 else SIMILITUD_CLAVE
-    mp = {c for c in claves_pista if clave_presente(c, texto_norm, palabras_ruta, umbral_pista)}
-    mq = {c for c in claves_pregunta if clave_presente(c, texto_norm, palabras_ruta, SIMILITUD_CLAVE)}
-    frac_pista = len(mp) / len(claves_pista) if claves_pista else 0.0
-    frac_preg = len(mq) / len(claves_pregunta) if claves_pregunta else 0.0
-    return frac_pista + PESO_PREGUNTA * frac_preg, frozenset(mp | mq)
+class Puntuador:
+    """v4.14: puntaje de una ruta para una tarjeta.
+    - IDF: cada clave pesa entre PESO_IDF_MIN (aparece en todas las rutas) y
+      1.0 (aparece en una sola). Una clave que no aparece en ninguna ruta
+      pesa el punto medio (no se sabe cuanto discrimina).
+    - Longitud: las rutas mas largas que la mediana reciben una penalizacion
+      suave (max PENALIZACION_LONGITUD_MAX, siempre menor que MARGEN para no
+      sacar del margen a una ruta larga que coincide igual de bien).
+    - El puntaje sigue en la escala de antes: fraccion ponderada de la pista
+      + PESO_PREGUNTA * fraccion ponderada de la pregunta."""
+
+    def __init__(self, route_blocks: list[RouteBlock]) -> None:
+        self.rutas: dict[int, RutaIndexada] = {b.number: indexar_ruta(b) for b in route_blocks}
+        self.n_rutas = len(self.rutas)
+        self.largo_ref = max(1.0, float(statistics.median(
+            max(1, r.n_tokens) for r in self.rutas.values())))
+        self._idf_ref = math.log((self.n_rutas + 1) / 1.5)
+        self._pesos: dict[str, float] = {}
+        # vocabulario global (palabra -> rutas que la contienen). Para cada clave
+        # se calcula UNA vez que palabras del vocabulario calzan; despues, saber
+        # si una ruta la contiene es una interseccion de conjuntos (sin fuzzy).
+        self._rutas_de: dict[str, set[int]] = defaultdict(set)
+        for r in self.rutas.values():
+            for w in r.palabras:
+                self._rutas_de[w].add(r.numero)
+        self._vocab = frozenset(self._rutas_de)
+        por_largo: dict[int, list[str]] = defaultdict(list)
+        for w in self._vocab:
+            por_largo[len(w)].append(w)
+        self._vocab_por_largo = {k: tuple(v) for k, v in por_largo.items()}
+        self._calzan: dict[tuple[str, float], frozenset[str]] = {}
+
+    def calzan(self, clave: str, umbral: float) -> frozenset[str]:
+        llave = (clave, umbral)
+        r = self._calzan.get(llave)
+        if r is None:
+            r = frozenset(_palabras_que_calzan(clave, self._vocab, self._vocab_por_largo, umbral))
+            self._calzan[llave] = r
+        return r
+
+    def existe(self, clave: str) -> bool:
+        """La clave aparece en al menos una ruta del diagrama."""
+        return bool(self.calzan(clave, SIMILITUD_CLAVE))
+
+    def presente(self, clave: str, ruta: RutaIndexada, umbral: float) -> bool:
+        return not self.calzan(clave, umbral).isdisjoint(ruta.palabras)
+
+    def peso(self, clave: str) -> float:
+        p = self._pesos.get(clave)
+        if p is None:
+            con_clave: set[int] = set()
+            for w in self.calzan(clave, SIMILITUD_CLAVE):
+                con_clave |= self._rutas_de[w]
+            df = len(con_clave)
+            if df == 0:
+                p = (1.0 + PESO_IDF_MIN) / 2.0
+            else:
+                idf = math.log((self.n_rutas + 1) / (df + 0.5))
+                rel = min(1.0, max(0.0, idf / self._idf_ref))
+                p = PESO_IDF_MIN + (1.0 - PESO_IDF_MIN) * rel
+            self._pesos[clave] = p
+        return p
+
+    def factor_longitud(self, ruta: RutaIndexada) -> float:
+        n = max(1, ruta.n_tokens)
+        if n <= self.largo_ref:
+            return 1.0
+        return 1.0 - PENALIZACION_LONGITUD_MAX * (1.0 - self.largo_ref / n)
+
+    def _fraccion(self, claves: list[str], presentes: set[str]) -> float:
+        if not claves:
+            return 0.0
+        total = sum(self.peso(c) for c in claves)
+        return sum(self.peso(c) for c in presentes) / total
+
+    def evaluar(self, claves_pista: list[str], claves_pregunta: list[str],
+                numero: int) -> tuple[float, frozenset[str]]:
+        """Devuelve (puntaje, claves_de_la_PISTA_coincidentes). v4.14: el
+        conjunto ya no incluye claves de la pregunta (senal debil) para que
+        la seleccion por cobertura se decida solo con la pista."""
+        ruta = self.rutas[numero]
+        umbral_pista = SIMILITUD_CLAVE_UNICA if len(claves_pista) == 1 else SIMILITUD_CLAVE
+        mp = {c for c in claves_pista if self.presente(c, ruta, umbral_pista)}
+        mq = {c for c in claves_pregunta if self.presente(c, ruta, SIMILITUD_CLAVE)}
+        puntaje = (self._fraccion(claves_pista, mp)
+                   + PESO_PREGUNTA * self._fraccion(claves_pregunta, mq))
+        return puntaje * self.factor_longitud(ruta), frozenset(mp)
+
+
+def _puntuar_rutas(puntuador: Puntuador, claves_pista: list[str],
+                   claves_pregunta: list[str], rutas: list[int]
+                   ) -> tuple[list[tuple[int, float]], dict[int, frozenset[str]]]:
+    puntajes: list[tuple[int, float]] = []
+    coincidentes: dict[int, frozenset[str]] = {}
+    for n in rutas:
+        p, m = puntuador.evaluar(claves_pista, claves_pregunta, n)
+        puntajes.append((n, p))
+        coincidentes[n] = m
+    return puntajes, coincidentes
+
+
+def _buscar_vecina(puntuador: Puntuador, claves_pista: list[str], claves_pregunta: list[str],
+                   n0: int, mp0: frozenset[str], permitidas: set[int]) -> Optional[int]:
+    """v4.16 (cobertura complementaria): la mejor ruta n0 cubre solo parte de la
+    pista; devuelve la ruta VECINA (n0+1 o n0-1) que cubre TODAS las claves que
+    faltan (ignorando las que no aparecen en ninguna ruta), o None."""
+    if len(claves_pista) < 2 or not mp0:
+        return None
+    faltan = {c for c in claves_pista if c not in mp0 and puntuador.existe(c)}
+    if not faltan:
+        return None
+    mejor: Optional[tuple[float, int]] = None
+    for v in (n0 + 1, n0 - 1):                 # a igualdad de puntaje, gana la siguiente
+        if v not in permitidas:
+            continue
+        p, mp = puntuador.evaluar(claves_pista, claves_pregunta, v)
+        if faltan <= mp and (mejor is None or p > mejor[0] + EPS):
+            mejor = (p, v)
+    return mejor[1] if mejor else None
+
+
+def _calificar(puntajes: list[tuple[int, float]], umbral: float) -> list[tuple[int, float]]:
+    """Rutas con puntaje >= umbral y dentro de MARGEN del mejor, mejor primero."""
+    if not puntajes:
+        return []
+    mejor = max(p for _n, p in puntajes)
+    cal = [(n, p) for n, p in puntajes if p >= umbral - EPS and p >= mejor - MARGEN]
+    cal.sort(key=lambda t: (-t[1], t[0]))
+    return cal
 
 
 def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock]) -> None:
@@ -940,33 +1190,46 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
 
     temas_ruta = construir_temas_rutas(route_blocks, temas_subt)
 
-    # renglones de imagen excluidos del texto de cada ruta (v4.9)
-    textos_ruta: dict[int, str] = {}
-    palabras_ruta: dict[int, frozenset[str]] = {}
-    for b in route_blocks:
-        renglones = [ln for ln in b.lines
-                     if not IMAGE_LINE_RE.match(ln) and not ln.startswith("IMG:")]
-        norm = normalizar_texto("\n".join(renglones))
-        textos_ruta[b.number] = norm
-        palabras_ruta[b.number] = frozenset(norm.split())
+    # v4.14: rutas indexadas (sin renglones IMG) + pesos IDF + factor de longitud
+    puntuador = Puntuador(route_blocks)
     numeros_ruta = [b.number for b in route_blocks]
+
+    todos_temas = frozenset(t for ts in temas_ruta.values() for t in ts)
+    _conocidos: dict[str, bool] = {}
+
+    def tema_conocido(tema: str) -> bool:
+        """El subT de la tarjeta coincide (igual/similar) con algun tema del diagrama."""
+        r = _conocidos.get(tema)
+        if r is None:
+            r = any(temas_compatibles(tema, t) for t in todos_temas)
+            _conocidos[tema] = r
+        return r
 
     def tema_compatible_con(tar: Tarjeta, n: int) -> bool:
         if tar.tema is None:
             return True
-        return any(temas_compatibles(tar.tema, t) for t in temas_ruta.get(n, frozenset()))
+        contencion = not tema_conocido(tar.tema)   # v4.16: contencion = ultimo recurso
+        return any(temas_compatibles(tar.tema, t, contencion)
+                   for t in temas_ruta.get(n, frozenset()))
 
     ultima_ruta: Optional[int] = None   # rango permitido: >= ultima (misma subT)
+    linea_ultima: Optional[int] = None  # tarjeta que fijo ultima_ruta (para diagnostico)
     cambios = 0
     revision: list[tuple[int, str, str, list[tuple[int, float]]]] = []
+    avisos: list[tuple[int, str, str]] = []
+    tentativas: list[tuple[int, str, str, list[tuple[int, float]]]] = []
 
     for tar in tarjetas:
         if tar.reinicia:
             ultima_ruta = None         # cada subT reinicia el rango de orden
+            linea_ultima = None
+
+        if tar.rutas_manual is not None and tar.manual_tentativa:
+            continue        # v4.15: sufijo con '~' (por revisar): se respeta y no fija el orden
 
         if tar.rutas_manual is not None:
             # --- validacion de anclas: SOLO avisa, nunca modifica ---
-            inexistentes = [n for n in tar.rutas_manual if n not in textos_ruta]
+            inexistentes = [n for n in tar.rutas_manual if n not in puntuador.rutas]
             claves_pista = extraer_claves(tar.segundo)
             if inexistentes:
                 revision.append((tar.indice, tar.linea,
@@ -975,8 +1238,7 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
                 claves_pregunta = extraer_claves(tar.primero)
                 base = {n for n in numeros_ruta if tema_compatible_con(tar, n)}
                 base |= set(tar.rutas_manual)
-                puntajes_val = {n: evaluar_ruta(claves_pista, claves_pregunta,
-                                                textos_ruta[n], palabras_ruta[n])[0]
+                puntajes_val = {n: puntuador.evaluar(claves_pista, claves_pregunta, n)[0]
                                 for n in sorted(base)}
                 s_anch = max(puntajes_val[n] for n in tar.rutas_manual)
                 mejor_p = max(puntajes_val.values())
@@ -988,6 +1250,7 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
                         f"la ruta {mejor_n} coincide mejor ({mejor_p:.2f} vs {s_anch:.2f})",
                         []))
             ultima_ruta = max(tar.rutas_manual)
+            linea_ultima = tar.indice
             continue
 
         if tar.malformada:
@@ -1000,37 +1263,95 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
             continue
         claves_pregunta = extraer_claves(tar.primero)
 
-        candidatas = [
-            n for n in numeros_ruta
-            if tema_compatible_con(tar, n)
-            and (ultima_ruta is None or n >= ultima_ruta)
-        ]
-        puntajes: list[tuple[int, float]] = []
-        coincidentes: dict[int, frozenset[str]] = {}
-        for n in candidatas:
-            p, m = evaluar_ruta(claves_pista, claves_pregunta, textos_ruta[n], palabras_ruta[n])
-            puntajes.append((n, p))
-            coincidentes[n] = m
-        if not puntajes:
-            revision.append((tar.indice, tar.linea,
-                             "sin rutas candidatas para ese tema/orden", []))
-            continue
+        # --- etapa A: rutas compatibles con el tema Y en orden ---
+        por_tema = [n for n in numeros_ruta if tema_compatible_con(tar, n)]
+        set_tema = set(por_tema)
+        en_orden = [n for n in por_tema if ultima_ruta is None or n >= ultima_ruta]
+        puntajes, coincidentes = _puntuar_rutas(puntuador, claves_pista, claves_pregunta, en_orden)
+        calificadas = _calificar(puntajes, UMBRAL_CLAVES)
+        sin_tema = False
+        fuera_orden = False
 
-        mejor = max(p for _n, p in puntajes)
-        calificadas = [(n, p) for n, p in puntajes
-                       if p >= UMBRAL_CLAVES and p >= mejor - MARGEN]
-        calificadas.sort(key=lambda t: (-t[1], t[0]))
+        # --- etapa B (v4.14 FIX 3 / v4.15): el orden es una pista, no un muro.
+        # Si solo coinciden rutas ANTERIORES a la ultima asignada, la tarjeta se
+        # asigna igual cuando el puntaje es considerablemente alto
+        # (>= UMBRAL_FUERA_ORDEN); el orden se reancla en la nueva ruta. Si no
+        # llega a ese puntaje, cae al caso 'tentativa' (~) de mas abajo.
+        if not calificadas and ultima_ruta is not None:
+            fuera = [n for n in por_tema if n < ultima_ruta]
+            p_f, c_f = _puntuar_rutas(puntuador, claves_pista, claves_pregunta, fuera)
+            cal_alto = _calificar(p_f, UMBRAL_FUERA_ORDEN)
+            coincidentes.update(c_f)
+            if cal_alto:
+                calificadas = cal_alto
+                fuera_orden = True
+            puntajes = puntajes + p_f
+
+        # --- etapa C (v4.14 FIX 4): ultimo recurso, ignorar el tema (subT mal
+        # escrito o ruta sin tema). Exige UMBRAL_CLAVES_SIN_TEMA y deja aviso.
+        if not calificadas and tar.tema is not None:
+            resto = [n for n in numeros_ruta
+                     if n not in set_tema and (ultima_ruta is None or n >= ultima_ruta)]
+            p_r, c_r = _puntuar_rutas(puntuador, claves_pista, claves_pregunta, resto)
+            puntajes = puntajes + p_r
+            coincidentes.update(c_r)
+            cal_r = _calificar(p_r, UMBRAL_CLAVES_SIN_TEMA)
+            if cal_r:
+                calificadas = cal_r
+                sin_tema = True
 
         if not calificadas:
-            top = sorted(puntajes, key=lambda t: (-t[1], t[0]))[:5]
-            revision.append((tar.indice, tar.linea,
-                             "ninguna ruta permitida supera UMBRAL_CLAVES", top))
+            if not puntajes:
+                revision.append((tar.indice, tar.linea,
+                                 "sin rutas candidatas para ese tema/orden", []))
+                continue
+            top = sorted(puntajes, key=lambda t: (-t[1], t[0]))
+            mejor_n, mejor_p = top[0]
+            if mejor_p <= PUNTAJE_MIN_TENTATIVO:
+                revision.append((tar.indice, tar.linea,
+                                 "sin coincidencias con ninguna ruta", []))
+                continue
+            # v4.16: antes de rendirse con '~', dos criterios extra sobre la mejor
+            # candidata (solo si es de su tema y esta en orden; una fuera de orden
+            # o de otro tema sigue siendo tentativa).
+            if mejor_n in set_tema and (ultima_ruta is None or mejor_n >= ultima_ruta):
+                asig_t: Optional[list[int]] = None
+                nota = ""
+                vecina = _buscar_vecina(puntuador, claves_pista, claves_pregunta, mejor_n,
+                                        coincidentes[mejor_n], set(en_orden))
+                if vecina is not None:                       # parche 3
+                    asig_t = sorted([mejor_n, vecina])
+                    nota = (f"cobertura complementaria: la ruta {mejor_n} ({mejor_p:.2f}) "
+                            f"cubre parte de la pista y la vecina {vecina} cubre el resto")
+                elif mejor_p >= PUNTAJE_MIN_MARGEN - EPS:    # parche 1
+                    segunda = top[1][1] if len(top) > 1 else 0.0
+                    if mejor_p - segunda >= MARGEN_GANADOR - EPS:
+                        asig_t = [mejor_n]
+                        nota = (f"margen sobre la segunda: ruta {mejor_n} ({mejor_p:.2f}) "
+                                f"vs {segunda:.2f}")
+                if asig_t is not None:
+                    tar.rutas_asignadas = asig_t   # no fija el orden: no superan el umbral
+                    cambios += 1
+                    avisos.append((tar.indice, tar.linea,
+                                   f"asignada a ruta(s) {', '.join(map(str, asig_t))} sin superar "
+                                   f"UMBRAL_CLAVES; {nota}"))
+                    continue
+            # v4.15: no supera el umbral -> se asigna la de mayor puntaje con '~'
+            # (a revisar). No fija el orden: no es una asignacion confiable.
+            if ultima_ruta is not None and mejor_n < ultima_ruta:
+                motivo = (f"fuera de orden (ultima asignada {ultima_ruta}) y puntaje "
+                          f"{mejor_p:.2f} < UMBRAL_FUERA_ORDEN")
+            else:
+                motivo = f"ninguna ruta permitida supera UMBRAL_CLAVES (mejor {mejor_p:.2f})"
+            tar.rutas_asignadas = [mejor_n]
+            tar.tentativa = True
+            cambios += 1
+            tentativas.append((tar.indice, tar.linea, motivo, top[:5]))
             continue
 
         # v4.12 FIX 4: seleccion por cobertura. Una ruta calificada solo
-        # se conserva si aporta al menos una clave coincidente que ninguna
-        # de las ya elegidas cubra (empates exactos por claves identicas
-        # no agregan informacion).
+        # se conserva si aporta al menos una clave de la PISTA que ninguna
+        # de las ya elegidas cubra (v4.14: la pregunta ya no cuenta aqui).
         filtradas: list[int] = []
         cubiertas: set[str] = set()
         for n, _p in calificadas:
@@ -1048,7 +1369,18 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
         elegidas = sorted(filtradas[:MAX_RUTAS])     # orden ascendente
         tar.rutas_asignadas = elegidas
         ultima_ruta = max(elegidas)
+        linea_ultima = tar.indice
         cambios += 1
+        if fuera_orden:
+            avisos.append((tar.indice, tar.linea,
+                           f"asignada FUERA DE ORDEN a ruta(s) {', '.join(map(str, elegidas))} "
+                           f"(puntaje {calificadas[0][1]:.2f} >= UMBRAL_FUERA_ORDEN); "
+                           f"el orden se reancla en la ruta {ultima_ruta}"))
+        if sin_tema:
+            avisos.append((tar.indice, tar.linea,
+                           f"asignada a ruta(s) {', '.join(map(str, elegidas))} ignorando el "
+                           f"tema (el subT no coincidio con ninguna ruta o no habia coincidencia "
+                           f"dentro de su tema)"))
 
     # --- resumen en consola: solo tarjetas pendientes de asociar ---
     con_manual = sum(1 for t in tarjetas if t.rutas_manual is not None)
@@ -1064,6 +1396,18 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
                       + ", ".join(f"ruta {n} ({p:.2f})" for n, p in cands))
     else:
         print("no hay tarjetas a revisar")
+    if tentativas:
+        print(f"asignadas con ~ (revisar) ({len(tentativas)}):")
+        for indice, linea, motivo, cands in tentativas:
+            print(f"  linea {indice + 1}: {linea.strip()}")
+            print(f"    motivo: {motivo}")
+            print("    candidatas: "
+                  + ", ".join(f"ruta {n} ({p:.2f})" for n, p in cands))
+    if avisos:
+        print(f"asignadas con criterio relajado, verificar ({len(avisos)}):")
+        for indice, linea, motivo in avisos:
+            print(f"  linea {indice + 1}: {linea.strip()}")
+            print(f"    {motivo}")
 
     if cambios == 0:
         print("sin cambios que hacer: el recordatorio no se toco.")
@@ -1072,7 +1416,8 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
     nuevas = list(lineas)
     for tar in tarjetas:
         if tar.rutas_asignadas:  # formato exacto: espacio + & + espacio + "N, M"
-            sufijo = " & " + ", ".join(str(n) for n in tar.rutas_asignadas)
+            marca = "~" if tar.tentativa else ""   # v4.15: '~' = por revisar
+            sufijo = " & " + ", ".join(f"{n}{marca}" for n in tar.rutas_asignadas)
             nuevas[tar.indice] = tar.linea.rstrip() + sufijo
 
     # --- copia de seguridad desactivada: no se crea ningun .bak ---

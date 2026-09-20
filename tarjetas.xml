@@ -4,95 +4,74 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="2" value="ANALISIS RESPUESTA UN SISTEMA 2º ORDEN CON POLOS COMPLEJOS" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#DC7BFF;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="2" value="DEFINICIÓN FUNCIONES TRANSFERENCIA UN SISTEMA CONTINUO" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#14B866;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="20" y="20" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="3" value="SE PUEDE GENERALIZAR?&lt;br&gt;&lt;br&gt;orden general" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="3" value="QUE CONSIDERAMOS PARA FT?&lt;br&gt;&lt;br&gt;continuas, define, multiplica" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="20" y="150" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="4" value="COMO DESCRIBIMOS SU COMPORTAMIENTO DINAMICO?&lt;br&gt;&lt;br&gt;terminos" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="4" value="COMO SE DEFINE?&lt;br&gt;&lt;br&gt;salida, entrada" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="20" y="280" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="5" value="QUE ES Ζ?&lt;br&gt;&lt;br&gt;angulo" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="5" value="QUE ES POLINIOMIO CARACTERISTICO?&lt;br&gt;&lt;br&gt;denominador, respuesta, iniciales" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="20" y="410" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="6" value="QUE ES ΩN?&lt;br&gt;&lt;br&gt;frecuencia" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="6" value="TODAS LAS FT SON EXPRESIONES ALGEBRAICAS?&lt;br&gt;&lt;br&gt;no todas" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="20" y="540" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="7" value="QUE ES ΩD?&lt;br&gt;&lt;br&gt;oscila" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="7" value="QUE SUCEDE CUANDO VALORES INICIALES = 0?&lt;br&gt;&lt;br&gt;conmutativa, inversa" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="20" y="670" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="8" value="QUE HAY QUE TENER EN CUENTA?&lt;br&gt;&lt;br&gt;importante, afectan" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="8" value="QUE SUCEDE EN CONSECUENCIA?&lt;br&gt;&lt;br&gt;depende, polos, ceros" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="20" y="800" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="9" value="OTRA FORMA EN LA QUE ESCRIBIR RAICES?&lt;br&gt;&lt;br&gt;binomica" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="20" y="930" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="10" value="Ubicación Geométrica ζ y su magnitud" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#DC7BFF;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="9" value="PROPIEDADES FUNCIÓN TRANSFERENCIA UN SISTEMA CONTINUO" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#14B866;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="280" y="20" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="11" value="QUE OCURRE EN SEMIPLANO IZQUIERDO?&lt;br&gt;&lt;br&gt;cero" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="10" value="QUE SUCEDE ANTE IMPULSO UNITARIO?&lt;br&gt;&lt;br&gt;iniciales, cero" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="280" y="150" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="12" value="QUE CAUSA AMORTIGUAMIENTO POSITIVO?&lt;br&gt;&lt;br&gt;unitario" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="11" value="QUE IMPORTANCIA TIENE EC DIFERENCIAL?&lt;br&gt;&lt;br&gt;determinarse" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="280" y="280" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="13" value="QUE OCURRE EN SEMIPLANO DERECHO?&lt;br&gt;&lt;br&gt;infinito" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="12" value="QUE PASA SI RAICES REALES NEGATIVAS?&lt;br&gt;&lt;br&gt;estable" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="280" y="410" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="14" value="QUE CAUSA AMORTIGUAMIENTO NEGATIVO?&lt;br&gt;&lt;br&gt;crece" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="13" value="COMO PUEDE ESPECIFICARSE LA FUNCION?&lt;br&gt;&lt;br&gt;constante, K" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="280" y="540" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="15" value="QUE OCURRE EN EJE IMAGINARIO?&lt;br&gt;&lt;br&gt;nulo, oscilacion" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="280" y="670" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="16" value="Ubicación Geométrica Raices 1 Sistema 2º Orden conforme varía ζ" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#DC7BFF;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="14" value="FORMA CANÓNICA UN SISTEMA EN MALLA CERRADA" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#14B866;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="540" y="20" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="17" value="SI Ζ  1?&lt;br&gt;&lt;br&gt;sobreamortiguada" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="15" value="G Y H&lt;br&gt;&lt;br&gt;componentes" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="540" y="150" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="18" value="SI Ζ = 1?&lt;br&gt;&lt;br&gt;criticamente amortiguada" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="16" value="SIGNOS&lt;br&gt;&lt;br&gt;positiva, negativa" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="540" y="280" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="19" value="SI Ζ = 0?&lt;br&gt;&lt;br&gt;oscila indefinidamente," style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="17" value="QUE DETERMINA C/R?&lt;br&gt;&lt;br&gt;ecuacion, a partir" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="540" y="410" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="20" value="SI 0  Ζ  1?&lt;br&gt;&lt;br&gt;subamortiguada" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="540" y="540" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="21" value="COMO EVALUO DESEMPEÑO SC?&lt;br&gt;&lt;br&gt;respuesta, cualquiera" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="540" y="670" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="22" value="PARAMETROS RESPUESTA TRANSITORIA" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#DC7BFF;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="18" value="EFP metodo grafico" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#14B866;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="800" y="20" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="23" value="TIEMPO RETARDO TR?&lt;br&gt;&lt;br&gt;mitad" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="19" value="QUE ES UNA VAR COMPLEJA?&lt;br&gt;&lt;br&gt;binomica, triangulos" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="800" y="150" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="24" value="TIEMPO CRECIMIENTO TC?&lt;br&gt;&lt;br&gt;respuesta vaya" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="20" value="QUE PASA SI OBTENEMOS S1 Y S2?&lt;br&gt;&lt;br&gt;expresar, origen" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="800" y="280" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="25" value="TIEMPO PICO TP?&lt;br&gt;&lt;br&gt;primer" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="21" value="QUE PASA SI SON POLOS REALES?&lt;br&gt;&lt;br&gt;aproximan" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="800" y="410" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="26" value="SOBREPICO MÁXIMO SP?&lt;br&gt;&lt;br&gt;maximo" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="22" value="QUE PASA SI ES IMAGINARIO PURO?&lt;br&gt;&lt;br&gt;inestable" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="800" y="540" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="27" value="TIEMPO ESTABLECIMIENTO TS?&lt;br&gt;&lt;br&gt;alrededor, porcentaje" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+        <mxCell id="23" value="QUE USO SI NO ESPECIFICAN R(S)?&lt;br&gt;&lt;br&gt;1/s" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
           <mxGeometry x="800" y="670" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="28" value="ESPECIFICACIONES RESPUESTA TRANSITORIA" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#DC7BFF;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
-          <mxGeometry x="1060" y="20" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="29" value="QUE SISTEMA ES EL MAS DESEABLE?&lt;br&gt;&lt;br&gt;conjugados, amortiguamiento" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1060" y="150" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="30" value="PORQUE CON 0,4 Y 0,8?&lt;br&gt;&lt;br&gt;sobreimpulso, lentamente" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1060" y="280" width="220" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="31" value="QUE REQUISITO DEBE TENER UN SC?&lt;br&gt;&lt;br&gt;rapidez, adecuado" style="shape=card;whiteSpace=wrap;html=1;fillColor=#DC7BFF;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="1060" y="410" width="220" height="100" as="geometry" />
+        <mxCell id="24" value="QUE DEBO HACER CON LOS ANGULOS?&lt;br&gt;&lt;br&gt;siempre, radianes, suplementarios" style="shape=card;whiteSpace=wrap;html=1;fillColor=#14B866;strokeWidth=3;fontSize=16;strokeColor=#FFFFFF;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="800" y="800" width="220" height="100" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
