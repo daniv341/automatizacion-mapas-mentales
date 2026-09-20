@@ -1,0 +1,323 @@
+subT ANALISIS RESPUESTA UN SISTEMA 2º ORDEN CON POLOS COMPLEJOS
+Se considera
+1 sistema segundo orden,
+aunque se puede generalizar
+para sistemas orden general
+
+sí se tiene
+siguiente sistema segundo orden
+<imagen>
+
+Obtenemos su Función Transferencia:
+<imagen>
+<imagen>
+
+Por tanto,
+su Función Transferencia es
+<imagen>
+
+comportamiento dinámico
+1 Sistema Segundo Orden
+se puede describir
+en términos ζ y ωn,
+parámetros del Sistema
+
+donde ζ
+es relación amortiguamiento o
+amortiguamiento relativo
+es decir
+ángulo existente entre
+origen y
+Polo
+
+ωn es
+frecuencia angular oscilación natural,
+no amortiguada,
+(es decir,
+frecuencia angular oscilación
+a cual sistema oscilaría
+si amortiguamiento
+descendiera a cero),
+siendo analíticamente
+distancia que existe
+del origen al Polo;
+
+ωd se llama
+frecuencia angular oscilación amortiguada,
+es decir,
+frecuencia angular oscilación
+a cual sistema oscila
+cuando amortiguamiento
+es distinto cero
+<imagen>
+
+Es importante discutir valores
+en que se mueven
+estos parámetros y
+diferentes comportamientos
+que adoptan sistemas
+conforme varian
+ζ y ωn
+afectan
+raíces ecuación característica
+del Polinómio denominador
+Función Transferencia
+
+es decir las raices
+<imagen>
+
+dos raíces pueden expresarse como:
+<imagen>
+
+donde
+1
+ζ = cos φ,
+siendo φ ángulo
+entre
+origen y
+Polo;
+s1, s2= sigma ± jω
+
+2
+ωn es distancia
+que existe del origen al Polo;
+
+3
+sigma =ζ ωn
+parte real del Polo Complejo
+
+4
+ωd = ωn √(1 ζ2)
+parte Imaginaria del Polo Complejo
+
+Por tanto,
+raices s1, s2 ,
+pueden reescribirse
+en términos
+forma binómica variable compleja s,
+donde ζ ω
+representa parte real y
+parte imaginaria
+<imagen>
+
+parámetro ωd representa
+representa parte real y
+parte imaginaria
+<imagen>
+
+subT Ubicación Geométrica ζ y su magnitud
+1
+semiplano izquierdo del Plano s
+corresponde al amortiguamiento positivo
+(es decir,
+factor amortiguamiento sigma o
+relación amortiguamiento ζ
+es positivo)
+<imagen>
+
+amortiguamiento positivo
+causa que respuesta
+al escalón unitario
+establezca
+1 valor final constante
+en estado estacionario
+
+sistema es estable
+pues términos exponenciales
+tenderán a cero
+cuanto t→infinito
+
+2
+semiplano derecho del Plano s
+corresponde al amortiguamiento negativo
+
+amortiguamiento negativo
+da una respuesta
+que crece en magnitud
+sin límite en tiempo,
+y sistema es inestable
+
+3
+eje imaginario corresponde
+a 1 amortiguamiento nulo
+(ζ = 0 → ζ ωn = 0 → sigma = 0)
+
+amortiguamiento cero
+resulta
+en una respuesta oscilación permanente,
+y sistema se denomina
+marginalmente estable o
+marginalmente inestable
+y corresponde
+a Polos Imaginarios puros,
+es decir
+su parte real
+igual a cero,
+donde s=± jω
+
+subT Ubicación Geométrica Raices 1 Sistema 2º Orden conforme varía ζ
+1
+Si ζ ) 1
+entonces respuesta del sistema
+es sobreamortiguada,
+corresponde a polos
+reales y
+distintos
+<imagen>
+
+2
+Si ζ = 1
+entonces respuesta del sistema
+es críticamente amortiguada,
+corresponde por lo menos
+a 1 par polos
+reales e
+iguales
+presentando
+Raices Reales Múltiples
+
+3
+Si ζ = 0
+entonces respuesta del sistema
+no se extingue,
+oscila indefinidamente,
+corresponde a
+polos imaginarios puros,
+ya que
+ζ ωn = 0
+por tanto
+parte real del polo es cero
+y el mismo se ubica
+sobre eje imaginario jω
+
+4
+nuestro caso interés
+es cuando respuesta del sistema
+es subamortiguada,
+es decir 0( ζ ( 1
+
+desempeño
+1 sistema control
+se estudia en base
+a respuesta transitoria
+a una entrada escalón unitario,
+ya que
+es fácil generarla y
+muy drástica
+
+Es decir,
+si responde bien
+a una entrada escalón,
+responderá bien
+a cualquier entrada
+
+Se puede particularizar
+analisis todos valores posibles
+pueda tomar ζ
+y su comportamiento
+<imagen>
+<imagen>
+<imagen>
+<imagen>
+<imagen>
+<imagen>
+<imagen>
+
+subT PARAMETROS RESPUESTA TRANSITORIA
+1
+Tiempo Retardo tr:
+Es tiempo
+que tarda respuesta
+en alcanzar
+mitad del valor final
+por primera vez
+<imagen>
+
+2
+Tiempo Crecimiento tc:
+Es tiempo requerido
+para que respuesta vaya
+del 10% al 90%
+del 5% al 95%
+o del 0% al 100%
+su valor final
+
+Para
+sistemas segundo orden subamortiguados
+se utiliza normalmente
+tiempo crecimiento 0% al 100%
+
+Para
+sistemas sobreamortiguados
+se usa generalmente
+tiempo crecimiento 10% al 90%
+
+3
+Tiempo Pico tp:
+Es tiempo requerido
+para que respuesta alcance
+primer pico sobreimpulso
+
+4
+Sobrepico Máximo Sp:
+Es valor
+pico máximo curva respuesta
+medido desde unidad
+Que se define
+<imagen>
+
+Si
+valor final estabilizado respuesta
+difiere unidad,
+se suele utilizar
+sobreimpulso porcentual máximo
+
+5
+Tiempo Establecimiento ts:
+Es tiempo que
+curva respuesta requiere
+para
+alcanzar y
+mantenerse
+en 1 rango alrededor
+del valor final
+con una magnitud especificada
+por porcentaje absoluto
+del valor final
+(se toma 2% al 5%)
+
+criterio para fijar
+porcentaje error a utilizar
+depende objetivos
+diseño del sistema
+en cuestión
+
+subT ESPECIFICACIONES RESPUESTA TRANSITORIA
+Generalmente
+1 sistema
+con una deseable respuesta transitoria
+es aquel que
+tiene polos complejos conjugados,
+con una relación amortiguamiento
+entre 0,4 y 0,8
+<imagen>
+
+Ya que valores pequeños
+ζ (ζ ( 0,4)
+producen 1 excesivo sobreimpulso
+en respuesta transitoria,
+mientras que
+1 sistema
+con 1 valor grande
+ζ (ζ ) 0,8)
+responde lentamente
+
+Un sistema control
+debe tener
+como requisito fundamental
+su rapidez respuesta y
+
+un adecuado amortiguamiento
+(incluso en algunas aplicaciones
+no se tolera ninguna oscilación)
+

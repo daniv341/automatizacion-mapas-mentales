@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarjetas de Estudio</title>
+<style>
+  :root {
+    --fill-color: #FF0080;
+    --stroke-color: #5C5C5C;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f5f3fa 0%, #eef1f7 100%);
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #333;
+  }
+
+  .contenedor {
+    width: 100%;
+    max-width: 560px;
+    padding: 24px;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: #444;
+  }
+
+  .subtitulo {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 16px;
+  }
+
+  /* ---------- Pantalla de selección de temas ---------- */
+
+  .lista-temas {
+    text-align: left;
+    background: #fff;
+    border-radius: 12px;
+    padding: 8px 18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
+
+  .item-tema-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f1f1;
+    font-size: 15px;
+    color: #444;
+  }
+
+  .item-tema-check:last-child { border-bottom: none; }
+
+  .item-tema-check input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--stroke-color);
+    cursor: pointer;
+  }
+
+  .boton-principal {
+    padding: 14px 30px;
+    border-radius: 26px;
+    background: var(--stroke-color);
+    color: #fff;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+  }
+
+  .boton-principal:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* MODIFICADO: modos especiales + zona de difíciles */
+  .zona-modos {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .boton-modo {
+    padding: 12px 22px;
+    border-radius: 24px;
+    background: #ffffff;
+    color: var(--stroke-color);
+    border: 2px solid var(--stroke-color);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .boton-modo:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .zona-dificiles { margin-bottom: 20px; }
+
+  .cabecera-dificiles {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .titulo-dificiles {
+    font-size: 14px;
+    font-weight: 700;
+    color: #444;
+  }
+
+  .fila-dificiles-botones {
+    display: flex;
+    gap: 8px;
+  }
+
+  .boton-mini {
+    padding: 6px 12px;
+    border-radius: 14px;
+    background: #fff;
+    color: #666;
+    border: 1.5px solid #d8d8e0;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .boton-mini:hover {
+    color: var(--stroke-color);
+    border-color: var(--stroke-color);
+  }
+
+  .extra-dificil {
+    color: #999;
+    font-size: 12px;
+  }
+
+  .nota-dificiles {
+    font-size: 12px;
+    color: #999;
+    margin-top: 8px;
+  }
+
+  /* ---------- Área de estudio ---------- */
+
+  .barra-superior {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progreso-texto {
+    font-size: 14px;
+    color: #888;
+  }
+
+  .cronometro {
+    font-size: 14px;
+    color: #888;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cronometro.congelado { color: #e0574c; font-weight: 600; }
+
+  .barra-progreso {
+    width: 100%;
+    height: 8px;
+    background: #e2e2ea;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .barra-progreso-relleno {
+    height: 100%;
+    background: var(--stroke-color);
+    width: 0%;
+    transition: width 0.35s ease;
+  }
+
+  .tema {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--stroke-color);
+    letter-spacing: 0.3px;
+  }
+
+  .tema-rombo {
+    width: 12px;
+    height: 12px;
+    background: var(--fill-color);
+    border: 2px solid var(--stroke-color);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  .tarjeta {
+    position: relative;
+    background: var(--fill-color);
+    border: 3px solid var(--stroke-color);
+    clip-path: polygon(14% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 14%);
+    min-height: 220px;
+    border-radius: 6px;
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+    opacity: 0;
+    transform: translateY(8px);
+    animation: aparecer 0.35s ease forwards;
+  }
+
+  @keyframes aparecer {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* MODIFICADO: badge con la cantidad de rutas asociadas (esquina sup. derecha) */
+  .badge-rutas {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--stroke-color);
+    background: rgba(255,255,255,0.65);
+    border: 1.5px solid var(--stroke-color);
+    border-radius: 12px;
+    padding: 2px 10px;
+    pointer-events: none;
+  }
+
+  .primero {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--stroke-color);
+    line-height: 1.4;
+  }
+
+  .zona-segundo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .fila-botones-tarjeta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .boton-pista {
+    padding: 10px 22px;
+    border-radius: 20px;
+    border: 2px solid var(--stroke-color);
+    background: rgba(255,255,255,0.5);
+    color: var(--stroke-color);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .boton-respuesta {
+    padding: 10px 22px;
+    border-radius: 20px;
+    border: 2px solid var(--stroke-color);
+    background: var(--stroke-color);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+
+  .boton-pista:hover:not(:disabled),
+  .boton-respuesta:hover:not(:disabled) { transform: translateY(-2px); }
+
+  .separador-tarjeta {
+    width: 60px;
+    height: 2px;
+    background: var(--stroke-color);
+    opacity: 0.4;
+  }
+
+  .segundo {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--stroke-color);
+    line-height: 1.5;
+  }
+
+  /* ---------- Evaluación de respuesta escrita ---------- */
+
+  .zona-eval { display:none; margin-top: 14px; text-align:left; }
+
+  .zona-eval textarea {
+    width: 100%; min-height: 74px; resize: vertical;
+    border: 2px solid var(--stroke-color); border-radius: 10px;
+    padding: 10px 12px; font-family: inherit; font-size: 14px; color: #333;
+    background: #fff;
+  }
+
+  .zona-eval textarea:focus {
+    outline: 2px solid var(--stroke-color); outline-offset: 1px;
+  }
+
+  .zona-eval .fila-eval { display: flex; justify-content: center; margin-top: 8px; }
+
+  .resultado-eval {
+    display: none; min-height: 18px;
+    font-size: 13px; font-weight: 600; margin-top: 10px;
+    text-align: left; /* MODIFICADO: evaluación multilínea alineada a la izquierda */
+  }
+
+  .resultado-eval.bien { color: #3aa76d; }
+  .resultado-eval.casi { color: #e0a030; }
+  .resultado-eval.mal  { color: #e0574c; }
+
+  .item-escrito { display: block; color: #333; font-style: italic; margin-top: 3px; }
+  .item-resultado { display: block; font-weight: 700; font-size: 12px; margin-top: 3px; }
+  .item-resultado.bien { color: #3aa76d; }
+  .item-resultado.casi { color: #e0a030; }
+  .item-resultado.mal  { color: #e0574c; }
+
+  /* ---------- Rutas (acordeón de respuestas) ---------- */
+
+  .rutas-contenedor {
+    margin-top: 18px;
+    text-align: left;
+    display: none;
+  }
+
+  .ruta-acordeon {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  }
+
+  .ruta-acordeon summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafafa;
+    color: var(--stroke-color);
+  }
+
+  .ruta-acordeon summary::-webkit-details-marker { display: none; }
+
+  .ruta-acordeon summary::after {
+    content: '\25BE';
+    font-size: 12px;
+    color: #999;
+    transition: transform 0.2s ease;
+  }
+
+  .ruta-acordeon[open] summary::after {
+    transform: rotate(180deg);
+  }
+
+  .ruta-contenido {
+    padding: 10px 16px 14px 16px;
+  }
+
+  .ruta-linea {
+    font-size: 14px;
+    color: #444;
+    padding: 4px 0;
+    line-height: 1.5;
+  }
+
+  .palabra-clave {
+    color: var(--stroke-color);
+    font-weight: 700;
+  }
+
+  .ruta-img-thumb {
+    display: block;
+    max-width: 100%;
+    max-height: 150px;
+    object-fit: contain;
+    margin: 10px auto;
+    border-radius: 8px;
+    border: 1px solid #e2e2ea;
+    background: #fff;
+    cursor: zoom-in;
+  }
+
+  /* ---------- Lightbox de imágenes ---------- */
+
+  .lightbox {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(20, 20, 30, 0.88);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .lightbox.abierto { display: flex; }
+
+  .lightbox img {
+    max-width: 95vw;
+    max-height: 92vh;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+
+  .lightbox-cerrar {
+    position: absolute;
+    top: 14px;
+    right: 22px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 36px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .estado-marca {
+    min-height: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 14px;
+    color: #999;
+  }
+
+  .estado-marca.si { color: #3aa76d; }
+  .estado-marca.no { color: #e0574c; }
+  .estado-marca.saltar { color: #b8b8c4; }
+
+  .botonera {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    margin-top: 10px;
+  }
+
+  .boton {
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+
+  .boton:hover:not(:disabled) { transform: translateY(-2px); }
+  .boton:active:not(:disabled) { transform: translateY(0px); }
+
+  .boton:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .boton-circular {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    font-size: 26px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .boton-no { background: #e0574c; }
+  .boton-si { background: #3aa76d; }
+
+  .boton-saltar {
+    padding: 12px 20px;
+    border-radius: 24px;
+    background: #ffffff;
+    color: #888;
+    border: 2px solid #d8d8e0;
+  }
+
+  /* MODIFICADO: botón toggle de tarjeta difícil */
+  .boton-dificil {
+    padding: 12px 18px;
+    border-radius: 24px;
+    background: #ffffff;
+    color: #888;
+    border: 2px solid #d8d8e0;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .boton-dificil.activa {
+    background: #FFF3C4;
+    color: #8a6d00;
+    border-color: #e0c860;
+  }
+
+  .navegacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 26px;
+    gap: 10px;
+  }
+
+  .boton-nav {
+    padding: 10px 16px;
+    border-radius: 20px;
+    background: #ffffff;
+    color: #666;
+    border: 2px solid #e2e2ea;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .boton-finalizar {
+    padding: 10px 18px;
+    border-radius: 20px;
+    background: #ffffff;
+    color: var(--stroke-color);
+    border: 2px solid var(--stroke-color);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* ---------- Pantalla de resumen ---------- */
+
+  .pantalla-resumen {
+    display: none;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+
+  .pantalla-resumen h2 {
+    margin-top: 0;
+    color: #444;
+  }
+
+  .nota-sesion {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #444;
+  }
+
+  .nota-sesion.aprobado { color: #3aa76d; }
+  .nota-sesion.desaprobado { color: #e0574c; }
+
+  .fila-resumen {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 6px;
+    border-bottom: 1px solid #eee;
+    font-size: 16px;
+  }
+
+  .fila-resumen:last-of-type { border-bottom: none; }
+
+  .etiqueta-resumen { display: flex; align-items: center; gap: 10px; }
+
+  .punto {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .punto-si { background: #3aa76d; }
+  .punto-no { background: #e0574c; }
+  .punto-saltar { background: #b8b8c4; }
+
+  .valor-resumen { font-weight: 700; font-size: 18px; color: #333; }
+  .valor-resumen.chico { font-size: 15px; }
+
+  .acciones-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 26px;
+  }
+
+  .boton-reiniciar, .boton-secundario {
+    padding: 12px 26px;
+    border-radius: 24px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    border: none;
+  }
+
+  .boton-reiniciar {
+    background: var(--stroke-color);
+    color: #fff;
+  }
+
+  .boton-secundario {
+    background: #ffffff;
+    color: var(--stroke-color);
+    border: 2px solid var(--stroke-color);
+  }
+
+  .listas-resumen {
+    margin-top: 26px;
+    text-align: left;
+  }
+
+  .lista-desplegable {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .lista-desplegable summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafafa;
+    color: #444;
+  }
+
+  .lista-desplegable summary::-webkit-details-marker { display: none; }
+
+  .lista-desplegable summary::after {
+    content: '\25BE';
+    font-size: 12px;
+    color: #999;
+    transition: transform 0.2s ease;
+  }
+
+  .lista-desplegable[open] summary::after {
+    transform: rotate(180deg);
+  }
+
+  .lista-desplegable summary .etiqueta-resumen { gap: 8px; }
+
+  .lista-contenido {
+    padding: 4px 16px 12px 16px;
+  }
+
+  .item-lista {
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f1f1;
+    font-size: 14px;
+  }
+
+  .item-lista:last-child { border-bottom: none; }
+
+  .item-lista .item-tema {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--stroke-color);
+    margin-bottom: 3px;
+  }
+
+  .item-lista .item-renglon {
+    display: block;
+    color: #555;
+  }
+
+  .item-lista .item-tiempo {
+    display: block;
+    color: #999;
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .lista-vacia {
+    padding: 10px 0;
+    font-size: 14px;
+    color: #aaa;
+  }
+
+  .sin-tarjetas {
+    color: #888;
+    font-size: 15px;
+  }
+</style>
+</head>
+<body>
+
+<div class="contenedor">
+  <h1>Tarjetas de Estudio</h1>
+
+  <div id="pantalla-temas">
+    <p class="subtitulo">Elegí qué temas querés estudiar</p>
+    <div class="lista-temas" id="lista-temas"></div>
+    <button class="boton-principal" id="btn-comenzar">Comenzar estudio</button>
+
+    <!-- MODIFICADO: modos especiales de inicio -->
+    <div class="zona-modos">
+      <button class="boton-modo" id="btn-modo-completo" title="Estudia todas las tarjetas, ignora los temas marcados">Evaluación completa</button>
+      <button class="boton-modo" id="btn-modo-dificiles" title="Estudia solo las tarjetas marcadas como difíciles en sesiones anteriores" disabled>Repasar difíciles (0)</button>
+    </div>
+
+    <!-- MODIFICADO: vista previa / gestión de las difíciles guardadas -->
+    <div class="lista-temas zona-dificiles" id="zona-dificiles">
+      <div class="cabecera-dificiles">
+        <span class="titulo-dificiles">☆ Difíciles guardadas</span>
+        <span class="fila-dificiles-botones">
+          <button class="boton-mini" id="btn-exportar-dificiles" title="Descarga las difíciles activas como JSON">Exportar</button>
+          <button class="boton-mini" id="btn-importar-dificiles" title="Agrega las difíciles de un JSON (fusiona con las actuales)">Importar</button>
+        </span>
+      </div>
+      <input type="file" id="input-importar" accept=".json,application/json" style="display:none">
+      <div id="lista-dificiles"></div>
+      <details id="det-dificiles-otros" style="display:none">
+        <summary id="suma-dificiles-otros">De otros evaluadores</summary>
+        <div id="lista-dificiles-otros"></div>
+      </details>
+      <!-- MODIFICADO: sección de desmarcadas (no se borran, se pueden re-activar) -->
+      <details id="det-dificiles-desm" style="display:none">
+        <summary id="suma-dificiles-desm">Desmarcadas (0)</summary>
+        <div id="lista-dificiles-desm"></div>
+        <button class="boton-mini" id="btn-vaciar-desm" style="margin: 6px 0 8px 16px;">Vaciar desmarcadas</button>
+      </details>
+      <p class="nota-dificiles" id="nota-dificiles"></p>
+    </div>
+  </div>
+
+  <div id="area-tarjeta" style="display:none;">
+    <div class="barra-superior">
+      <div class="progreso-texto" id="progreso-texto"></div>
+      <div class="cronometro" id="cronometro">⏱ 00:00</div>
+    </div>
+    <div class="barra-progreso"><div class="barra-progreso-relleno" id="barra-relleno"></div></div>
+
+    <div class="tema" id="tema-actual">
+      <span class="tema-rombo"></span>
+      <span id="tema-texto"></span>
+    </div>
+
+    <div class="tarjeta" id="tarjeta">
+      <!-- MODIFICADO: badge con cantidad de rutas asociadas -->
+      <div class="badge-rutas" id="badge-rutas" style="display:none;"></div>
+      <div class="primero" id="tarjeta-primero"></div>
+      <div class="zona-segundo" id="zona-segundo">
+        <div class="fila-botones-tarjeta">
+          <button class="boton-pista" id="btn-pista">Mostrar pista</button>
+          <button class="boton-respuesta" id="btn-respuesta">Mostrar respuesta</button>
+        </div>
+        <div class="separador-tarjeta" id="separador-tarjeta" style="display:none;"></div>
+        <div class="segundo" id="tarjeta-segundo" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="zona-eval" id="zona-eval">
+      <textarea id="texto-eval" placeholder="Escribí la respuesta con tus palabras (opcional). Enter para evaluar"></textarea>
+      <!-- MODIFICADO: id agregado para poder ocultar el botón tras evaluar -->
+      <div class="fila-eval" id="fila-eval">
+        <button class="boton-pista" id="btn-evaluar">Evaluar respuesta</button>
+      </div>
+    </div>
+
+    <div class="rutas-contenedor" id="rutas-contenedor"></div>
+
+    <div class="estado-marca" id="estado-marca"></div>
+
+    <div class="resultado-eval" id="resultado-eval"></div>
+
+    <div class="botonera">
+      <button class="boton boton-circular boton-no" id="btn-no" title="No entendido">&#10007;</button>
+      <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar</button>
+      <!-- MODIFICADO: toggle de tarjeta difícil (se guarda entre sesiones) -->
+      <button class="boton-dificil" id="btn-dificil" title="Marcar/desmarcar como difícil (se guarda entre sesiones)">☆ Difícil</button>
+      <button class="boton boton-circular boton-si" id="btn-si" title="Entendido">&#10003;</button>
+    </div>
+
+    <div class="navegacion">
+      <button class="boton-nav" id="btn-anterior">&larr; Anterior</button>
+      <button class="boton-finalizar" id="btn-finalizar">Finalizar sesión</button>
+      <button class="boton-nav" id="btn-siguiente">Siguiente &rarr;</button>
+    </div>
+  </div>
+
+  <div class="pantalla-resumen" id="pantalla-resumen">
+    <h2>Resumen de la sesión</h2>
+    <div class="nota-sesion" id="nota-sesion">🎓 Nota de la sesión: 0.0 / 10</div>
+    <div class="fila-resumen">
+      <span class="etiqueta-resumen"><span class="punto punto-si"></span> Entendidas</span>
+      <span class="valor-resumen" id="conteo-si">0</span>
+    </div>
+    <div class="fila-resumen">
+      <span class="etiqueta-resumen"><span class="punto punto-no"></span> No entendidas</span>
+      <span class="valor-resumen" id="conteo-no">0</span>
+    </div>
+    <div class="fila-resumen">
+      <span class="etiqueta-resumen"><span class="punto punto-saltar"></span> Pasadas sin marcar</span>
+      <span class="valor-resumen" id="conteo-saltar">0</span>
+    </div>
+    <div class="fila-resumen">
+      <span class="etiqueta-resumen">⏱ Tiempo total</span>
+      <span class="valor-resumen chico" id="tiempo-total">00:00</span>
+    </div>
+    <div class="fila-resumen">
+      <span class="etiqueta-resumen">⏱ Promedio por tarjeta</span>
+      <span class="valor-resumen chico" id="tiempo-promedio">00:00</span>
+    </div>
+
+    <div class="listas-resumen">
+      <!-- MODIFICADO: solo 3 desplegables; tiempo, respuesta escrita y
+           evaluación de cada tarjeta se muestran dentro de cada item -->
+      <details class="lista-desplegable">
+        <summary><span class="etiqueta-resumen"><span class="punto punto-si"></span> Entendidas</span></summary>
+        <div class="lista-contenido" id="lista-si"></div>
+      </details>
+      <details class="lista-desplegable">
+        <summary><span class="etiqueta-resumen"><span class="punto punto-no"></span> No entendidas</span></summary>
+        <div class="lista-contenido" id="lista-no"></div>
+      </details>
+      <details class="lista-desplegable">
+        <summary><span class="etiqueta-resumen"><span class="punto punto-saltar"></span> Pasadas sin marcar</span></summary>
+        <div class="lista-contenido" id="lista-saltar"></div>
+      </details>
+    </div>
+
+    <div class="acciones-resumen">
+      <button class="boton-reiniciar" id="btn-repasar-no" style="display:none;">Repasar las que no entendí</button>
+      <button class="boton-reiniciar" id="btn-reiniciar">Reiniciar esta ronda</button>
+      <button class="boton-secundario" id="btn-elegir-temas">Elegir otros temas</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-cerrar" title="Cerrar">&times;</button>
+  <img id="lightbox-img" src="" alt="Imagen ampliada">
+</div>
+
+<script>
+  const datos = {"tarjetas": [{"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que es un PID?", "segundo": "control, desviacion, correctiva, error", "rutas": [1], "claves": ["control", "desviacion", "correctiva", "error"]}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "banda proporcional", "segundo": "reaccion", "rutas": [2], "claves": ["reaccion"]}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "tiempo integral", "segundo": "correcion, suficiente", "rutas": [3], "claves": ["correcion", "suficiente"]}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "tiempo derivativo", "segundo": "velocidad, produce", "rutas": [4], "claves": ["velocidad", "produce"]}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que hacen en conjunto?", "segundo": "suma, ajustar", "rutas": [5], "claves": ["suma", "ajustar"]}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que logro al ajustar estos parametros?", "segundo": "proveer, eficiente, requiera", "rutas": [6], "claves": ["proveer", "eficiente", "requiera"]}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "como puedo describir respuesta controlador?", "segundo": "grado, velocidad, oscilacion", "rutas": [7, 8, 9], "claves": ["grado", "velocidad", "oscilacion"]}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que no garantiza?", "segundo": "control, estabilidad", "rutas": [10], "claves": ["control", "estabilidad"]}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "controladores PI", "segundo": "sensible, deseado", "rutas": [11], "claves": ["sensible", "deseado"]}, {"tema": "FUNCIONAMIENTO PID", "primero": "que se necesita para correcto funcionamiento?", "segundo": "sensor, controlador, actuador", "rutas": [12, 13, 14], "claves": ["sensor", "controlador", "actuador"]}, {"tema": "PASOS PID", "primero": "1 paso", "segundo": "lee", "rutas": [15], "claves": ["lee"]}, {"tema": "PASOS PID", "primero": "2 paso", "segundo": "naturaleza", "rutas": [16], "claves": ["naturaleza"]}, {"tema": "PASOS PID", "primero": "3 paso", "segundo": "resta, deseado", "rutas": [17], "claves": ["resta", "deseado"]}, {"tema": "PASOS PID", "primero": "4 paso", "segundo": "señal error", "rutas": [18], "claves": ["senal", "error"]}, {"tema": "PASOS PID", "primero": "5 paso", "segundo": "tres sumadas, gobernar", "rutas": [19], "claves": ["tres", "sumadas", "gobernar"]}, {"tema": "PASOS PID", "primero": "6 paso", "segundo": "variable manipulada, transformada", "rutas": [20], "claves": ["variable", "manipulada", "transformada"]}, {"tema": "ACCION PROPORCIONAL", "primero": "en que consiste?", "segundo": "producto, estacionario", "rutas": [21], "claves": ["producto", "estacionario"]}, {"tema": "ACCION PROPORCIONAL", "primero": "eiste un limite?", "segundo": "algunos, a deseados, sobreoscilacion", "rutas": [22], "claves": ["algunos", "a", "deseados", "sobreoscilacion"]}, {"tema": "ACCION PROPORCIONAL", "primero": "considera tiempo?", "segundo": "estacionario, variacion, incluyendo", "rutas": [23], "claves": ["estacionario", "variacion", "incluyendo"]}, {"tema": "ACCION INTEGRAL", "primero": "cual es su proposito?", "segundo": "disminuir, estado estacionario", "rutas": [24], "claves": ["disminuir", "estado", "estacionario"]}, {"tema": "ACCION INTEGRAL", "primero": "cuando actua?", "segundo": "persiste, desviacion, promediarlo", "rutas": [25, 26], "claves": ["persiste", "desviacion", "promediarlo"]}, {"tema": "ACCION INTEGRAL", "primero": "que sucede luego?", "segundo": "I, adicionada, estable", "rutas": [27], "claves": ["i", "adicionada", "estable"]}, {"tema": "ACCION INTEGRAL", "primero": "por que se caracteriza?", "segundo": "repeticiones, reciproca", "rutas": [28], "claves": ["repeticiones", "reciproca"]}, {"tema": "ACCION DERIVATIVA", "primero": "cuando se manifiesta?", "segundo": "cambio, absoluto", "rutas": [29], "claves": ["cambio", "absoluto"]}, {"tema": "ACCION DERIVATIVA", "primero": "que es un error?", "segundo": "desviacion existente", "rutas": [30], "claves": ["desviacion", "existente"]}, {"tema": "ACCION DERIVATIVA", "primero": "cual es su funcion?", "segundo": "mantener, velocidad", "rutas": [31], "claves": ["mantener", "velocidad"]}, {"tema": "ACCION DERIVATIVA", "primero": "cual es el proceso del controlador?", "segundo": "deriva, multiplica, suma", "rutas": [32], "claves": ["deriva", "multiplica", "suma"]}, {"tema": "ACCION DERIVATIVA", "primero": "por que debo adaptar respuesta?", "segundo": "derivativa, rapido", "rutas": [33], "claves": ["derivativa", "rapido"]}, {"tema": "ACCION DERIVATIVA", "primero": "por que se caracteriza el controlador derivativo?", "segundo": "derivada, inestabilidad, oscila", "rutas": [34], "claves": ["derivada", "inestabilidad", "oscila"]}, {"tema": "ACCION DERIVATIVA", "primero": "cuando es adecuada accion derivativa?", "segundo": "retraso, repercusion", "rutas": [37], "claves": ["retraso", "repercusion"]}, {"tema": "ACCION DERIVATIVA", "primero": "por que no se la usa mucho?", "segundo": "sensibilidad, complicaciones", "rutas": [38], "claves": ["sensibilidad", "complicaciones"]}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "siempre es eficiente?", "segundo": "ineficiente", "rutas": [39], "claves": ["ineficiente"]}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "como mejorarlo?", "segundo": "combinando, lazo abierto", "rutas": [40], "claves": ["combinando", "lazo", "abierto"]}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "cuando puede dar desempeño inadecuado", "segundo": "reducida, no dispare", "rutas": [41], "claves": ["reducida", "no", "dispare"]}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "en donde se desempeña mejor?", "segundo": "lineales, variable", "rutas": [42], "claves": ["lineales", "variable"]}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "que afecta a la parte derivativa?", "segundo": "ruido, pequeñas", "rutas": [43], "claves": ["ruido", "pequenas"]}, {"tema": "APLICACIONES PID", "primero": "para que fueron inventados?", "segundo": "simplificar, mejor", "rutas": [44], "claves": ["simplificar", "mejor"]}, {"tema": "APLICACIONES PID", "primero": "donde se lo utiliza mucho?", "segundo": "presion, fuerza, quimica", "rutas": [45], "claves": ["presion", "fuerza", "quimica"]}], "rutas": {"1": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Un Controlador PID", "(Proporcional Integral Derivativo)", "es 1 Mecanismo Control", "por Realimentación", "que calcula", "desviación o error", "entre", "1 valor medido y valor que se quiere obtener", "de manera poder aplicar", "una acción correctiva", "(Acción Control)", "que ajuste Proceso", "a fin", "minimizar o anular", "error"]}, "2": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["algoritmo cálculo del control PID", "se da", "en tres parámetros distintos:", "Banda Proporcional", "(Acción Proporcional),", "valor Banda Proporcional", "determina reacción", "conforme", "al error actual", "IMG:data:image/png;base64,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", "IMG:data:image/png;base64,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"]}, "3": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Tiempo Integral", "(Acción Integral)", "Tiempo Integral", "genera una corrección proporcional", "a integral del error,", "esto nos asegura", "que aplicando", "1 esfuerzo control suficiente,", "error seguimiento", "se reduce a cero"]}, "4": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Tiempo Derivativo", "(Acción Derivativa)", "Tiempo Derivativo", "determina reacción", "en función del tiempo o velocidad", "en que se produce error"]}, "5": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["suma estas tres acciones,", "es usada", "para ajustar al proceso", "vía", "1 elemento control"]}, "6": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Ajustando estas tres variables", "en algoritmo control del PID,", "controlador puede proveer", "una respuesta eficiente", "conforme", "a que se requiera realizar", "en proceso"]}, "7": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["respuesta del controlador", "puede ser descrita", "en términos de:", "a", "grado o magnitud", "Acción Control", "ante 1 desvío", "con respecto al Set Point"]}, "8": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["b", "velocidad al cual", "controlador", "llega al Set Point,"]}, "9": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["c", "grado oscilación", "del sistema"]}, "10": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["uso del PID", "para Control,", "no garantiza", "Control Óptimo del Sistema o", "Estabilidad del mismo"]}, "11": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["controladores PI", "son particularmente comunes,", "ya que acción derivativa", "es muy sensible al ruido,", "y ausencia acción integral", "puede evitar", "que se alcance al valor deseado", "debido a acción control"]}, "12": {"tema": "FUNCIONAMIENTO PID", "lineas": ["Para correcto funcionamiento", "1 controlador PID", "que regule", "1 proceso o sistema", "se necesita al menos:", "a", "un sensor o un transmisor,", "que determine", "estado del sistema"]}, "13": {"tema": "FUNCIONAMIENTO PID", "lineas": ["b", "un controlador,", "que genere señal", "que gobierna al actuador"]}, "14": {"tema": "FUNCIONAMIENTO PID", "lineas": ["c", "un actuador o elemento final control,", "que modifique al sistema", "manera controlada"]}, "15": {"tema": "FUNCIONAMIENTO PID", "lineas": ["PASOS PID", "1", "controlador", "lee una señal externa", "que representa valor", "que se desea alcanzar"]}, "16": {"tema": "PASOS PID", "lineas": ["2", "Esta señal", "recibe nombre", "punto consigna", "el cual es misma naturaleza y", "tiene mismo rango valores", "que señal", "que proporciona sensor"]}, "17": {"tema": "PASOS PID", "lineas": ["3", "controlador", "resta señal actual", "a señal punto", "consigna,", "obteniendo así", "señal error,", "que determina en cada instante", "diferencia que hay", "entre", "valor deseado y", "valor medido"]}, "18": {"tema": "PASOS PID", "lineas": ["4", "señal error", "es utilizada", "por cada uno", "tres componentes", "del controlador PID"]}, "19": {"tema": "PASOS PID", "lineas": ["5", "tres señales", "sumadas,", "componen señal salida", "que controlador", "va a utilizar", "para gobernar al actuador"]}, "20": {"tema": "PASOS PID", "lineas": ["6", "señal resultante", "suma estas tres", "se llama variable manipulada y", "no se aplica directamente", "sobre actuador,", "sino que", "debe ser transformada", "para ser compatible", "con actuador utilizado"]}, "21": {"tema": "ACCION PROPORCIONAL", "lineas": ["consiste en producto", "entre", "señal error y Constante Proporcionalidad", "(recíproca K o G, Ganancia)", "como para que produzca", "que error", "en estado estacionario", "sea casi nulo"]}, "22": {"tema": "ACCION PROPORCIONAL", "lineas": ["Sin embargo,", "existe también", "1 valor límite", "en Constante Proporcionalidad", "a partir del cual,", "en algunos casos,", "sistema alcanza", "valores superiores a deseados", "Este fenómeno se llama", "sobreoscilación"]}, "23": {"tema": "ACCION PROPORCIONAL", "lineas": ["Acción Proporcional", "no considera tiempo,", "por tanto,", "es la mejor manera", "solucionar el error permanente", "en estado estacionario", "(error Offset)", "y de hacer", "que sistema contenga", "alguna componente", "que contemple variación", "respecto al tiempo,", "es incluyendo y", "configurando acciones", "integral y", "derivativa"]}, "24": {"tema": "ACCION INTEGRAL", "lineas": ["tiene como propósito", "disminuir y eliminar", "error en estado estacionario", "(error Offset),", "generado al aplicar", "Acción Proporcional"]}, "25": {"tema": "ACCION INTEGRAL", "lineas": ["Control Integral", "actúa cuando persiste", "una desviación entre", "variable y punto consigna,", "integrando esta desviación", "en tiempo y", "sumándola", "a acción proporcional"]}, "26": {"tema": "ACCION INTEGRAL", "lineas": ["error es integrado,", "el cual tiene función", "promediarlo o sumarlo", "por 1 período determinado"]}, "27": {"tema": "ACCION INTEGRAL", "lineas": ["Luego es multiplicado", "por una constante I", "Posteriormente,", "respuesta integral", "es adicionada", "al modo Proporcional", "para formar", "control PI", "con propósito obtener", "una respuesta estable del sistema,", "sin error Offset", "en estado estacionario"]}, "28": {"tema": "ACCION INTEGRAL", "lineas": ["Control Integral", "se caracteriza", "por tiempo entre", "repeticiones de Banda Proporcional", "en minutos entre repeticiones", "o su recíproca,", "repeticiones por minuto"]}, "29": {"tema": "ACCION DERIVATIVA", "lineas": ["se manifiesta", "cuando hay 1 cambio", "en valor absoluto", "del error;", "(si error es constante,", "solamente actúan", "modos", "proporcional e", "integral)"]}, "30": {"tema": "ACCION DERIVATIVA", "lineas": ["error,", "es desviación existente", "entre", "punto medida y", "valor consigna,"]}, "31": {"tema": "ACCION DERIVATIVA", "lineas": ["Su funcion", "es mantener error al mínimo", "corrigiéndolo proporcionalmente", "a velocidad que este se produce;", "consiguiéndose esta manera", "evitar que error", "se incremente"]}, "32": {"tema": "ACCION DERIVATIVA", "lineas": ["se", "deriva", "con respecto al tiempo y", "se multiplica", "por una constante D y", "luego se suma", "a señales anteriores (PI)"]}, "33": {"tema": "ACCION DERIVATIVA", "lineas": ["Es importante", "adaptar respuesta control", "a cambios en sistema", "ya que una mayor derivativa", "corresponde", "a 1 cambio más rápido y", "controlador puede responder", "acordemente"]}, "34": {"tema": "ACCION DERIVATIVA", "lineas": ["Control Derivativo", "se caracteriza", "por tiempo acción derivada", "en minutos anticipo", "Cuando tiempo acción derivada", "es grande,", "hay inestabilidad en proceso"]}, "35": {"tema": "ACCION DERIVATIVA", "lineas": ["Cuando tiempo acción derivada", "es pequeño", "variable oscila demasiado", "con relación", "al punto consigna"]}, "36": {"tema": "ACCION DERIVATIVA", "lineas": ["tiempo óptimo", "acción derivativa", "es el que retorna a la variable", "al punto consigna", "con mínimas oscilaciones"]}, "37": {"tema": "ACCION DERIVATIVA", "lineas": ["acción derivada", "es adecuada", "cuando hay retraso", "entre", "movimiento válvula control y", "su repercusión", "a variable controlada"]}, "38": {"tema": "ACCION DERIVATIVA", "lineas": ["Suele ser poco utilizada", "debido a sensibilidad", "al ruido que manifiesta y", "a complicaciones", "que ello conlleva"]}, "39": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["pueden ser ineficientes", "en otras aplicaciones"]}, "40": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["desempeño del Sistema Control", "puede ser mejorado", "combinando", "lazo cerrado con 1 control PID", "con 1 lazo abierto"]}, "41": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["a", "pueden dar 1 desempeño inadecuado", "si ganancia del lazo del PID", "debe ser reducida", "para que respuesta de este", "no se dispare u oscile", "sobre valor del Set Point"]}, "42": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["b", "Principal desempeño", "controladores PID", "sistemas lineales", "en Sistemas No Lineales", "es variable"]}, "43": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["c", "en parte derivativa,", "ruido", "puede afectar al sistema,", "haciendo que esas", "pequeñas variaciones,", "hagan que cambio a salida", "sea muy grande"]}, "44": {"tema": "APLICACIONES", "lineas": ["fueron inventados", "para simplificar", "labores de operadores y", "ejercer un mejor control", "sobre operaciones"]}, "45": {"tema": "APLICACIONES", "lineas": ["se utiliza", "en aplicaciones más críticas", "tales como", "Control", "Presión,", "Flujo,", "Fuerza,", "Velocidad,", "en muchas aplicaciones química"]}, "46": {"tema": "APLICACIONES", "lineas": ["a", "Lazos de Temperatura", "(Aire acondicionado,", "Calentadores,", "Refrigeradores, etc.)"]}, "47": {"tema": "APLICACIONES", "lineas": ["b", "Lazos de Nivel", "(Nivel en tanques de líquidos", "como agua,", "lácteos,", "mezclas,", "crudo, etc.)"]}, "48": {"tema": "APLICACIONES", "lineas": ["c", "Lazos de Presión", "(para mantener una presión predeterminada", "en tanques,", "tubos,", "recipientes, etc.)"]}, "49": {"tema": "APLICACIONES", "lineas": ["d", "Lazos de Flujo", "(mantienen la cantidad de flujo dentro de", "una línea", "o tubo)"]}}};
+  const tarjetasCompletas = datos.tarjetas;
+  const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
+  const modoAleatorio = true;
+  const UMBRAL_CASI = 0.5;
+  const SIM_ALTA = 0.7;
+
+  // ---------- Estado de la ronda actual ----------
+  let tarjetasSesion = [];
+  let resultados = [];
+  let tiempos = [];
+  let revelado = [];
+  let pistaMostrada = [];  // MODIFICADO: si se usó 'Mostrar pista' (afecta la nota)
+  let respuestaMostrada = [];
+  let escritos = [];       // texto escrito por tarjeta (aunque no se evalue)
+  let evaluaciones = [];   // {resultado, acertadas, faltaron, clavesTotal, propClaves, sim, comunes, totalEscritas, totalReferencia} o null
+  let indiceActual = 0;
+  let cronometroActivo = true; // false cuando ya no queda nada por marcar
+  let indiceCongelado = -1;    // índice de la tarjeta cuya vista congela el cronómetro
+  let tiempoInicioTarjeta = 0;
+  let cronometroIntervalId = null;
+
+  // ---------- MODIFICADO: estado persistente de tarjetas difíciles ----------
+  // Mapa { hash: {p, s, activa} } guardado en localStorage.
+  // El hash se calcula sobre el texto normalizado, así el marcado sobrevive
+  // a regeneraciones del HTML y a reordenamientos del recordatorio.txt.
+  // activa=false = desmarcada: sigue guardada y se puede re-activar.
+  const CLAVE_DIFICILES = 'dificiles_tarjetas_v1';
+  let dificiles = cargarDificiles();
+
+  function cargarDificiles() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_DIFICILES);
+      if (!crudo) return {};
+      const obj = JSON.parse(crudo);
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        // Migración: entradas viejas sin 'activa' se toman como activas
+        Object.keys(obj).forEach((h) => {
+          if (obj[h] && typeof obj[h] === 'object' && typeof obj[h].activa === 'undefined') {
+            obj[h].activa = true;
+          }
+        });
+        return obj;
+      }
+      return {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function guardarDificiles() {
+    try {
+      localStorage.setItem(CLAVE_DIFICILES, JSON.stringify(dificiles));
+    } catch (e) {
+      // Sin localStorage disponible: solo quedan en memoria de esta sesión
+    }
+  }
+
+  function hashTarjeta(t) {
+    const base = (t.primero || '') + '\u0000' + (t.segundo || '');
+    const norm = normalizarPalabra(base).replace(/\s+/g, ' ').trim();
+    // djb2 -> hash de 32 bits (suficiente y sin dependencias)
+    let h = 5381;
+    for (let i = 0; i < norm.length; i++) {
+      h = ((h << 5) + h + norm.charCodeAt(i)) >>> 0;
+    }
+    return 'h' + h.toString(36);
+  }
+
+  function esDificil(t) {
+    const e = dificiles[hashTarjeta(t)];
+    return !!(e && e.activa);
+  }
+
+  function toggleDificilActual() {
+    if (tarjetasSesion.length === 0) return;
+    const t = tarjetasSesion[indiceActual];
+    const h = hashTarjeta(t);
+    const entrada = dificiles[h];
+    if (entrada && entrada.activa) {
+      entrada.activa = false;
+    } else if (entrada) {
+      entrada.activa = true;
+    } else {
+      dificiles[h] = { p: t.primero || '', s: t.segundo || '', activa: true };
+    }
+    guardarDificiles();
+    renderTarjeta();
+  }
+
+  // ---------- Elementos ----------
+  const elPantallaTemas = document.getElementById('pantalla-temas');
+  const elListaTemas = document.getElementById('lista-temas');
+  const elAreaTarjeta = document.getElementById('area-tarjeta');
+  const elPantallaResumen = document.getElementById('pantalla-resumen');
+
+  const elTemaTexto = document.getElementById('tema-texto');
+  const elPrimero = document.getElementById('tarjeta-primero');
+  const elSegundo = document.getElementById('tarjeta-segundo');
+  const elSeparador = document.getElementById('separador-tarjeta');
+  const elBtnPista = document.getElementById('btn-pista');
+  const elBtnRespuesta = document.getElementById('btn-respuesta');
+  const elRutasContenedor = document.getElementById('rutas-contenedor');
+  const elTarjeta = document.getElementById('tarjeta');
+  const elProgresoTexto = document.getElementById('progreso-texto');
+  const elBarraRelleno = document.getElementById('barra-relleno');
+  const elCronometro = document.getElementById('cronometro');
+  const elEstadoMarca = document.getElementById('estado-marca');
+
+  const elZonaEval = document.getElementById('zona-eval');
+  const elTextoEval = document.getElementById('texto-eval');
+  const elBtnEvaluar = document.getElementById('btn-evaluar');
+  const elResultadoEval = document.getElementById('resultado-eval');
+  // MODIFICADO: nuevos elementos
+  const elFilaEval = document.getElementById('fila-eval');
+  const elBadgeRutas = document.getElementById('badge-rutas');
+  const elBtnDificil = document.getElementById('btn-dificil');
+
+  const elBtnSi = document.getElementById('btn-si');
+  const elBtnNo = document.getElementById('btn-no');
+  const elBtnSaltar = document.getElementById('btn-saltar');
+  const elBtnAnterior = document.getElementById('btn-anterior');
+  const elBtnSiguiente = document.getElementById('btn-siguiente');
+  const elBtnFinalizar = document.getElementById('btn-finalizar');
+
+  const elLightbox = document.getElementById('lightbox');
+  const elLightboxImg = document.getElementById('lightbox-img');
+
+  // ---------- Utilidades ----------
+
+  function mezclar(lista) {
+    const copia = [...lista];
+    for (let i = copia.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copia[i], copia[j]] = [copia[j], copia[i]];
+    }
+    return copia;
+  }
+
+  function armarRenglon(tarjeta) {
+    return tarjeta.segundo ? (tarjeta.primero + ' + ' + tarjeta.segundo) : tarjeta.primero;
+  }
+
+  function formatearTiempo(ms) {
+    const totalSeg = Math.floor(ms / 1000);
+    const min = Math.floor(totalSeg / 60);
+    const seg = totalSeg % 60;
+    return String(min).padStart(2, '0') + ':' + String(seg).padStart(2, '0');
+  }
+
+  function esImagen(linea) {
+    return typeof linea === 'string' && linea.indexOf('IMG:data:image/') === 0;
+  }
+
+  function normalizarPalabra(palabra) {
+    return palabra.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function rutasValidasDe(tarjeta) {
+    return (tarjeta.rutas || []).filter((id) => rutasDisp.hasOwnProperty(id));
+  }
+
+  function mostrarPantalla(nombre) {
+    elPantallaTemas.style.display = nombre === 'temas' ? 'block' : 'none';
+    elAreaTarjeta.style.display = nombre === 'estudio' ? 'block' : 'none';
+    elPantallaResumen.style.display = nombre === 'resumen' ? 'block' : 'none';
+
+    if (nombre === 'temas') {
+      renderDificilesPreview();  // MODIFICADO: actualizar la vista de difíciles
+    }
+    if (nombre !== 'estudio') {
+      detenerCronometro();
+    }
+  }
+
+  // ---------- Pantalla de selección de temas ----------
+
+  function nombreTema(tarjeta) {
+    return tarjeta.tema && tarjeta.tema.trim() !== '' ? tarjeta.tema : '(Sin tema)';
+  }
+
+  function construirListaTemas() {
+    const vistos = new Set();
+    const temas = [];
+    tarjetasCompletas.forEach((t) => {
+      const nombre = nombreTema(t);
+      if (!vistos.has(nombre)) {
+        vistos.add(nombre);
+        temas.push(nombre);
+      }
+    });
+
+    elListaTemas.innerHTML = '';
+    temas.forEach((tema, i) => {
+      const item = document.createElement('label');
+      item.className = 'item-tema-check';
+
+      const check = document.createElement('input');
+      check.type = 'checkbox';
+      check.checked = true;
+      check.value = tema;
+      check.id = 'tema-check-' + i;
+
+      const texto = document.createElement('span');
+      texto.textContent = tema;
+
+      item.appendChild(check);
+      item.appendChild(texto);
+      elListaTemas.appendChild(item);
+    });
+  }
+
+  function temasSeleccionados() {
+    const marcados = elListaTemas.querySelectorAll('input:checked');
+    return new Set(Array.from(marcados).map((c) => c.value));
+  }
+
+  document.getElementById('btn-comenzar').addEventListener('click', () => {
+    const seleccion = temasSeleccionados();
+    if (seleccion.size === 0) return;
+
+    let filtradas = tarjetasCompletas.filter((t) => seleccion.has(nombreTema(t)));
+    if (modoAleatorio) filtradas = mezclar(filtradas);
+
+    iniciarSesion(filtradas);
+  });
+
+  // ---------- MODIFICADO: modos especiales ----------
+
+  // Modo 1: evaluación completa (todas las tarjetas, ignora los checkboxes)
+  document.getElementById('btn-modo-completo').addEventListener('click', () => {
+    if (tarjetasCompletas.length === 0) return;
+    iniciarSesion(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);
+  });
+
+  // Modo 2: repasar las difíciles activas (solo las presentes en este evaluador)
+  document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
+    const paraRepasar = tarjetasCompletas.filter((t) => esDificil(t));
+    if (paraRepasar.length === 0) return;
+    iniciarSesion(modoAleatorio ? mezclar(paraRepasar) : paraRepasar);
+  });
+
+  // ---------- MODIFICADO: vista previa / gestión de difíciles ----------
+  // Las desmarcadas NO se borran: pasan a la sección 'Desmarcadas' y pueden
+  // re-activarse desde ahí (o desde el botón ☆ durante el estudio).
+
+  function filaDificil(h, p, s, activa) {
+    const label = document.createElement('label');
+    label.className = 'item-tema-check';
+
+    const check = document.createElement('input');
+    check.type = 'checkbox';
+    check.checked = !!activa;
+    check.addEventListener('change', () => {
+      if (dificiles[h]) {
+        dificiles[h].activa = check.checked;
+      } else {
+        dificiles[h] = { p: p, s: s, activa: check.checked };
+      }
+      guardarDificiles();
+      renderDificilesPreview();
+    });
+
+    const texto = document.createElement('span');
+    texto.textContent = p || '(sin texto)';
+
+    label.appendChild(check);
+    label.appendChild(texto);
+
+    if (s) {
+      const extra = document.createElement('span');
+      extra.className = 'extra-dificil';
+      extra.textContent = '— ' + s;
+      label.appendChild(extra);
+    }
+
+    return label;
+  }
+
+  function renderDificilesPreview() {
+    const elLista = document.getElementById('lista-dificiles');
+    const elOtros = document.getElementById('lista-dificiles-otros');
+    const elDetOtros = document.getElementById('det-dificiles-otros');
+    const elSumaOtros = document.getElementById('suma-dificiles-otros');
+    const elDesm = document.getElementById('lista-dificiles-desm');
+    const elDetDesm = document.getElementById('det-dificiles-desm');
+    const elSumaDesm = document.getElementById('suma-dificiles-desm');
+    const elNota = document.getElementById('nota-dificiles');
+    elLista.innerHTML = '';
+    elOtros.innerHTML = '';
+    elDesm.innerHTML = '';
+
+    // 1) Difíciles activas de este evaluador
+    const hashesVistos = new Set();
+    let nAqui = 0;
+    tarjetasCompletas.forEach((t) => {
+      const h = hashTarjeta(t);
+      const e = dificiles[h];
+      if (!e || !e.activa) return;
+      hashesVistos.add(h);
+      nAqui++;
+      elLista.appendChild(filaDificil(h, t.primero || '', t.segundo || '', true));
+    });
+
+    // 2) Activas de otros evaluadores (nunca se borran solas)
+    let nOtros = 0;
+    Object.keys(dificiles).forEach((h) => {
+      if (hashesVistos.has(h)) return;
+      const v = dificiles[h] || {};
+      if (!v.activa) return;
+      hashesVistos.add(h);
+      nOtros++;
+      elOtros.appendChild(filaDificil(h, v.p || '', v.s || '', true));
+    });
+
+    // 3) Desmarcadas: siguen guardadas y se pueden re-activar desde acá
+    let nDesm = 0;
+    Object.keys(dificiles).forEach((h) => {
+      const v = dificiles[h] || {};
+      if (v.activa) return;
+      nDesm++;
+      let p = v.p || '', s = v.s || '';
+      const enEste = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
+      if (enEste) {
+        p = enEste.primero || '';
+        s = enEste.segundo || '';
+      }
+      elDesm.appendChild(filaDificil(h, p, s, false));
+    });
+
+    elDetOtros.style.display = nOtros > 0 ? 'block' : 'none';
+    elSumaOtros.textContent = 'De otros evaluadores (' + nOtros + ')';
+    elDetDesm.style.display = nDesm > 0 ? 'block' : 'none';
+    elSumaDesm.textContent = 'Desmarcadas (' + nDesm + ')';
+
+    // Contador del modo Repasar difíciles
+    const btnD = document.getElementById('btn-modo-dificiles');
+    btnD.textContent = 'Repasar difíciles (' + nAqui + ')';
+    btnD.disabled = nAqui === 0;
+
+    const total = Object.keys(dificiles).length;
+    elNota.textContent = total === 0
+      ? 'Todavía no marcaste ninguna tarjeta como difícil (botón ☆ Difícil durante el estudio).'
+      : 'Guardadas: ' + (total - nDesm) + ' activa(s)' +
+        (nDesm > 0 ? ', ' + nDesm + ' desmarcada(s)' : '');
+  }
+
+  document.getElementById('btn-exportar-dificiles').addEventListener('click', () => {
+    // Solo se exportan las activas (las desmarcadas son un estado local)
+    const lista = Object.keys(dificiles)
+      .filter((h) => dificiles[h].activa)
+      .map((h) => ({
+        h: h,
+        p: dificiles[h].p || '',
+        s: dificiles[h].s || '',
+      }));
+    const contenido = JSON.stringify({ version: 1, tarjetas: lista }, null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dificiles_tarjetas.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-dificiles').addEventListener('click', () => {
+    document.getElementById('input-importar').click();
+  });
+
+  document.getElementById('input-importar').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';  // permitir re-importar el mismo archivo
+    if (!archivo) return;
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      const elNota = document.getElementById('nota-dificiles');
+      try {
+        const obj = JSON.parse(lector.result);
+        const lista = Array.isArray(obj)
+          ? obj
+          : (obj && Array.isArray(obj.tarjetas) ? obj.tarjetas : null);
+        if (!lista) throw new Error('formato');
+
+        let nuevas = 0, repetidas = 0, invalidas = 0;
+        lista.forEach((item) => {
+          if (!item || typeof item.h !== 'string' || !item.h) { invalidas++; return; }
+          if (dificiles[item.h]) { repetidas++; return; }  // fusionar: no duplica
+          dificiles[item.h] = {
+            p: typeof item.p === 'string' ? item.p : '',
+            s: typeof item.s === 'string' ? item.s : '',
+            activa: true,
+          };
+          nuevas++;
+        });
+        guardarDificiles();
+        renderDificilesPreview();
+        elNota.textContent = 'Importación: ' + nuevas + ' nueva(s), ' + repetidas +
+          ' ya estaban' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+      } catch (e) {
+        elNota.textContent = 'El archivo no es un JSON válido de difíciles.';
+      }
+    };
+    lector.readAsText(archivo);
+  });
+
+  document.getElementById('btn-vaciar-desm').addEventListener('click', () => {
+    const hashes = Object.keys(dificiles).filter((h) => !dificiles[h].activa);
+    if (hashes.length === 0) return;
+    if (!confirm('¿Borrar ' + hashes.length + ' desmarcada(s)? Esta acción no se puede deshacer.')) return;
+    hashes.forEach((h) => delete dificiles[h]);
+    guardarDificiles();
+    renderDificilesPreview();
+  });
+
+  document.getElementById('btn-elegir-temas').addEventListener('click', () => {
+    mostrarPantalla('temas');
+  });
+
+  // ---------- Sesión de estudio ----------
+
+  function iniciarSesion(lista) {
+    tarjetasSesion = lista;
+    resultados = new Array(lista.length).fill(null);
+    tiempos = new Array(lista.length).fill(0);
+    revelado = new Array(lista.length).fill(false);
+    pistaMostrada = new Array(lista.length).fill(false);  // MODIFICADO
+    respuestaMostrada = new Array(lista.length).fill(false);
+    escritos = new Array(lista.length).fill('');
+    evaluaciones = new Array(lista.length).fill(null);
+    indiceActual = 0;
+    cronometroActivo = lista.length > 0;
+    indiceCongelado = -1;
+    tiempoInicioTarjeta = Date.now();
+
+    mostrarPantalla('estudio');
+    iniciarCronometro();
+    renderTarjeta();
+  }
+
+  function quedanPendientes() {
+    return resultados.some((r) => r === null);
+  }
+
+  function acumularTiempo() {
+    const ahora = Date.now();
+    tiempos[indiceActual] += (ahora - tiempoInicioTarjeta);
+    tiempoInicioTarjeta = ahora;
+  }
+
+  function cronometroCongelado() {
+    return indiceCongelado === indiceActual;
+  }
+
+  function renderTarjeta() {
+    if (tarjetasSesion.length === 0) {
+      elAreaTarjeta.innerHTML = '<p class="sin-tarjetas">No hay tarjetas para estudiar con los temas elegidos.</p>';
+      return;
+    }
+
+    // Auto-parada del cronómetro: si ya no queda nada por marcar, el tiempo
+    // queda congelado (navegar por las tarjetas ya no suma tiempo).
+    if (cronometroActivo && !quedanPendientes()) {
+      cronometroActivo = false;
+      actualizarCronometro();
+    }
+
+    const actual = tarjetasSesion[indiceActual];
+    const marcada = resultados[indiceActual];
+    const mostrarSegundo = revelado[indiceActual] || marcada !== null || !actual.segundo;
+
+    elTemaTexto.textContent = nombreTema(actual);
+    elPrimero.textContent = actual.primero;
+    elSegundo.textContent = actual.segundo;
+
+    // Botón "Mostrar pista" (revela el segundo, sin calificar)
+    if (mostrarSegundo) {
+      elBtnPista.style.display = 'none';
+      elSeparador.style.display = actual.segundo ? 'block' : 'none';
+      elSegundo.style.display = actual.segundo ? 'block' : 'none';
+    } else {
+      elBtnPista.style.display = 'inline-block';
+      elSeparador.style.display = 'none';
+      elSegundo.style.display = 'none';
+    }
+
+    // Botón "Mostrar respuesta" (rutas): solo si la tarjeta tiene rutas válidas
+    // y todavía no se mostraron. No se deshabilita si la tarjeta ya fue marcada.
+    const validas = rutasValidasDe(actual);
+    elBtnRespuesta.style.display = (validas.length > 0 && !respuestaMostrada[indiceActual])
+      ? 'inline-block' : 'none';
+
+    elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
+    const marcadas = resultados.filter((r) => r !== null).length;
+    elBarraRelleno.style.width = (marcadas / tarjetasSesion.length * 100) + '%';
+
+    // Texto de estado (puede combinar marca + respuesta mostrada)
+    let textoEstado = '';
+    let claseEstado = 'estado-marca';
+
+    if (marcada === 'si') {
+      textoEstado = 'Ya marcada: Entendida' + (respuestaMostrada[indiceActual] ? ' — respuesta mostrada' : '');
+      claseEstado = 'estado-marca si';
+    } else if (marcada === 'no') {
+      textoEstado = respuestaMostrada[indiceActual]
+        ? 'No entendida — respuesta mostrada'
+        : 'Ya marcada: No entendida';
+      claseEstado = 'estado-marca no';
+    } else if (marcada === 'saltar') {
+      textoEstado = 'Marcada como pasada sin marcar' + (respuestaMostrada[indiceActual] ? ' — respuesta mostrada' : '');
+      claseEstado = 'estado-marca saltar';
+    }
+
+    elEstadoMarca.textContent = textoEstado;
+    elEstadoMarca.className = claseEstado;
+
+    const yaMarcada = marcada !== null;
+    elBtnSi.disabled = yaMarcada;
+    elBtnNo.disabled = yaMarcada;
+    elBtnSaltar.disabled = yaMarcada;
+
+    elBtnAnterior.disabled = indiceActual === 0;
+    elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+
+    // MODIFICADO: Zona de respuesta escrita:
+    // - sin marcar y evaluable: editable, con botón Evaluar.
+    // - ya marcada con texto escrito: queda visible en solo lectura,
+    //   para poder comparar con la respuesta real ('Mostrar respuesta').
+    const puedeEvaluar = (marcada === null) && evaluable(actual);
+    const textoGuardado = escritos[indiceActual] || '';
+    const mostrarZona = puedeEvaluar || (marcada !== null && textoGuardado.trim() !== '');
+    elZonaEval.style.display = mostrarZona ? 'block' : 'none';
+    elFilaEval.style.display = puedeEvaluar ? 'flex' : 'none';
+    if (mostrarZona) {
+      elTextoEval.value = textoGuardado;
+      elTextoEval.readOnly = !puedeEvaluar;
+    }
+    if (puedeEvaluar) {
+      elBtnEvaluar.disabled = (textoGuardado.trim() === '');
+    }
+    elResultadoEval.style.display = evaluaciones[indiceActual] ? 'block' : 'none';
+    if (evaluaciones[indiceActual]) {
+      renderResultadoEval(evaluaciones[indiceActual]);
+    }
+
+    // MODIFICADO: contador de rutas asociadas (esquina de la tarjeta)
+    if (validas.length > 0) {
+      elBadgeRutas.textContent = 'rutas = ' + validas.length;
+      elBadgeRutas.style.display = 'block';
+    } else {
+      elBadgeRutas.style.display = 'none';
+    }
+
+    // MODIFICADO: estado del toggle Difícil (siempre activo, aunque ya marcada)
+    const esDif = esDificil(actual);
+    elBtnDificil.textContent = esDif ? '★ Difícil' : '☆ Difícil';
+    elBtnDificil.classList.toggle('activa', esDif);
+
+    renderRutas(actual);
+
+    // Reiniciar animación de entrada
+    elTarjeta.style.animation = 'none';
+    void elTarjeta.offsetWidth;
+    elTarjeta.style.animation = null;
+  }
+
+  // ---------- Rutas (acordeón de respuestas) ----------
+
+  // Agrega una línea al acordeón resaltando (negrita + color) las palabras
+  // que coinciden con las claves de la tarjeta actual. Construye nodos DOM,
+  // así el texto nunca se interpreta como código.
+  function agregarLineaResaltada(contenedor, linea, claves) {
+    const div = document.createElement('div');
+    div.className = 'ruta-linea';
+
+    const regexPalabra = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g;
+    let ultimo = 0;
+    for (const m of linea.matchAll(regexPalabra)) {
+      if (m.index > ultimo) {
+        div.appendChild(document.createTextNode(linea.slice(ultimo, m.index)));
+      }
+      if (claves.has(normalizarPalabra(m[0]))) {
+        const fuerte = document.createElement('strong');
+        fuerte.className = 'palabra-clave';
+        fuerte.textContent = m[0];
+        div.appendChild(fuerte);
+      } else {
+        div.appendChild(document.createTextNode(m[0]));
+      }
+      ultimo = m.index + m[0].length;
+    }
+    if (ultimo < linea.length) {
+      div.appendChild(document.createTextNode(linea.slice(ultimo)));
+    }
+
+    contenedor.appendChild(div);
+  }
+
+  function renderRutas(tarjeta) {
+    elRutasContenedor.innerHTML = '';
+
+    if (!respuestaMostrada[indiceActual]) {
+      elRutasContenedor.style.display = 'none';
+      return;
+    }
+
+    const validas = rutasValidasDe(tarjeta);
+    if (validas.length === 0) {
+      elRutasContenedor.style.display = 'none';
+      return;
+    }
+
+    elRutasContenedor.style.display = 'block';
+
+    // Claves de ESTA tarjeta: la misma ruta resalta palabras distintas
+    // según qué tarjeta la invocó.
+    const claves = new Set(tarjeta.claves || []);
+
+    validas.forEach((id) => {
+      const bloque = rutasDisp[id];
+
+      const det = document.createElement('details');
+      det.className = 'ruta-acordeon';
+
+      const sum = document.createElement('summary');
+      sum.textContent = 'Ruta ' + id;
+
+      const contenido = document.createElement('div');
+      contenido.className = 'ruta-contenido';
+
+      (bloque.lineas || []).forEach((linea) => {
+        if (esImagen(linea)) {
+          const img = document.createElement('img');
+          img.className = 'ruta-img-thumb';
+          img.src = linea.substring(4);  // quitar el prefijo 'IMG:'
+          img.alt = 'Imagen de la ruta ' + id;
+          contenido.appendChild(img);
+        } else {
+          agregarLineaResaltada(contenido, linea, claves);
+        }
+      });
+
+      det.appendChild(sum);
+      det.appendChild(contenido);
+      elRutasContenedor.appendChild(det);
+    });
+  }
+
+  // ---------- Evaluación de respuesta escrita ----------
+
+  function tokenizar(texto) {
+    const salida = [];
+    for (const m of texto.matchAll(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g)) {
+      salida.push(normalizarPalabra(m[0]));
+    }
+    return salida;
+  }
+
+  function similitudDice(tokensA, tokensB) {
+    const a = new Set(tokensA), b = new Set(tokensB);
+    if (a.size === 0 || b.size === 0) return 0;
+    let inter = 0;
+    for (const w of a) if (b.has(w)) inter++;
+    return (2 * inter) / (a.size + b.size);
+  }
+
+  // Claves para evaluar: mismo criterio del resaltado, sin palabras de 1-2 letras
+  function clavesEvalDe(tarjeta) {
+    return (tarjeta.claves || []).filter((c) => c.length >= 3);
+  }
+
+  // Texto de referencia: contenido de las rutas válidas (sin imágenes);
+  // si no hay rutas, el propio 'segundo'
+  function textoReferenciaDe(tarjeta) {
+    const partes = [];
+    rutasValidasDe(tarjeta).forEach((id) => {
+      (rutasDisp[id].lineas || []).forEach((linea) => {
+        if (!esImagen(linea)) partes.push(linea);
+      });
+    });
+    return partes.length > 0 ? partes.join(' ') : (tarjeta.segundo || '');
+  }
+
+  function evaluable(tarjeta) {
+    return clavesEvalDe(tarjeta).length > 0 || textoReferenciaDe(tarjeta).length > 0;
+  }
+
+  // MODIFICADO: resultado de la evaluación en 3 líneas
+  // (1: veredicto + claves, 2: coincidencia con el contenido, 3: palabras en común)
+  function renderResultadoEval(ev) {
+    elResultadoEval.innerHTML = '';
+
+    let textoVeredicto;
+    if (ev.resultado === 'bien') textoVeredicto = '✓ Bien';
+    else if (ev.resultado === 'casi') textoVeredicto = '✗ Casi';
+    else textoVeredicto = '✗ Mal';
+
+    // Línea 1: veredicto + claves
+    const linea1 = document.createElement('div');
+    let t1 = textoVeredicto;
+    if (ev.clavesTotal > 0) {
+      t1 += ' — claves: ' + ev.acertadas.length + ' de ' + ev.clavesTotal +
+        ' (' + Math.round(ev.propClaves * 100) + '%)';
+      if (ev.acertadas.length > 0) t1 += ' — acertadas: ' + ev.acertadas.join(', ');
+      if (ev.faltaron.length > 0) t1 += ' — faltaron: ' + ev.faltaron.join(', ');
+    }
+    linea1.textContent = t1;
+    elResultadoEval.appendChild(linea1);
+
+    // Línea 2: coincidencia con el contenido
+    const linea2 = document.createElement('div');
+    linea2.textContent = 'coincidencia con el contenido: ' + Math.round(ev.sim * 100) + '%' +
+      ' (tu respuesta: ' + ev.totalEscritas + ' distintas, contenido: ' + ev.totalReferencia + ')';
+    elResultadoEval.appendChild(linea2);
+
+    // Línea 3: palabras en común
+    const linea3 = document.createElement('div');
+    linea3.textContent = ev.comunes + ' palabra(s) en común';
+    elResultadoEval.appendChild(linea3);
+
+    elResultadoEval.className = 'resultado-eval ' + ev.resultado;
+  }
+
+  function evaluarRespuesta() {
+    if (resultados[indiceActual] !== null) return;
+    const texto = elTextoEval.value;
+    if (texto.trim() === '') return;
+
+    const actual = tarjetasSesion[indiceActual];
+    const claves = clavesEvalDe(actual);
+    const escritas = new Set(tokenizar(texto));
+
+    const acertadas = claves.filter((c) => escritas.has(c));
+    const faltaron = claves.filter((c) => !escritas.has(c));
+    const propClaves = claves.length > 0
+      ? (claves.length - faltaron.length) / claves.length : null;
+
+    const referencia = textoReferenciaDe(actual);
+    const setRef = new Set(tokenizar(referencia));
+    const comunes = Array.from(escritas).filter((w) => setRef.has(w)).length;
+    const sim = similitudDice(escritas, setRef);
+
+    let resultado;
+    if (claves.length > 0) {
+      if (propClaves === 1 || (propClaves >= UMBRAL_CASI && sim >= SIM_ALTA)) resultado = 'bien';
+      else if (propClaves >= UMBRAL_CASI) resultado = 'casi';
+      else resultado = 'mal';
+    } else {
+      if (sim >= SIM_ALTA) resultado = 'bien';
+      else if (sim >= UMBRAL_CASI) resultado = 'casi';
+      else resultado = 'mal';
+    }
+
+    escritos[indiceActual] = texto;
+    evaluaciones[indiceActual] = {
+      resultado,
+      acertadas,
+      faltaron,
+      clavesTotal: claves.length,
+      propClaves,
+      sim,
+      comunes,
+      totalEscritas: escritas.size,
+      totalReferencia: setRef.size,
+    };
+
+    // Auto-marca: bien -> Entendida; casi/mal -> No entendida.
+    // NO avanza: el feedback queda a la vista y el avance es manual.
+    if (cronometroActivo && !cronometroCongelado()) {
+      acumularTiempo();
+    }
+    resultados[indiceActual] = (resultado === 'bien') ? 'si' : 'no';
+    revelado[indiceActual] = true;
+
+    renderTarjeta();
+  }
+
+  // ---------- Lightbox ----------
+
+  function abrirLightbox(src) {
+    elLightboxImg.src = src;
+    elLightbox.classList.add('abierto');
+  }
+
+  function cerrarLightbox() {
+    elLightbox.classList.remove('abierto');
+    elLightboxImg.src = '';
+  }
+
+  elRutasContenedor.addEventListener('click', (evento) => {
+    if (evento.target.classList.contains('ruta-img-thumb')) {
+      abrirLightbox(evento.target.src);
+    }
+  });
+
+  elLightbox.addEventListener('click', (evento) => {
+    if (evento.target === elLightbox || evento.target.classList.contains('lightbox-cerrar')) {
+      cerrarLightbox();
+    }
+  });
+
+  // ---------- Marcado y navegación ----------
+
+  function marcar(resultado) {
+    if (resultados[indiceActual] !== null) return;
+
+    acumularTiempo();
+    resultados[indiceActual] = resultado;
+    revelado[indiceActual] = true;
+
+    if (indiceActual < tarjetasSesion.length - 1) {
+      indiceActual++;
+      tiempoInicioTarjeta = Date.now();
+    }
+
+    renderTarjeta();
+  }
+
+  function mostrarRespuesta() {
+    if (respuestaMostrada[indiceActual]) return;
+
+    respuestaMostrada[indiceActual] = true;
+
+    // Congelar el cronómetro de TODA la sesión (solo si sigue activo):
+    // el tiempo de esta tarjeta queda contado hasta este momento;
+    // el tiempo de lectura no cuenta.
+    if (cronometroActivo && !cronometroCongelado()) {
+      acumularTiempo();
+      indiceCongelado = indiceActual;
+    }
+
+    // Auto-calificar como "No entendida" solo si todavía no estaba marcada.
+    if (resultados[indiceActual] === null) {
+      resultados[indiceActual] = 'no';
+    }
+
+    // NO avanza automáticamente: el usuario se queda leyendo y avanza con "Siguiente".
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function navegar(delta) {
+    const nuevo = indiceActual + delta;
+    if (nuevo < 0 || nuevo >= tarjetasSesion.length) return;
+
+    if (!cronometroActivo) {
+      // Sesión completa: el tiempo ya está congelado, navegar no suma
+      indiceActual = nuevo;
+    } else if (cronometroCongelado()) {
+      // Se estaba viendo una respuesta: el tiempo de esa tarjeta ya fue
+      // acumulado al congelar. Solo se reanuda el reloj para la nueva tarjeta.
+      indiceActual = nuevo;
+      tiempoInicioTarjeta = Date.now();
+    } else {
+      acumularTiempo();
+      indiceActual = nuevo;
+    }
+
+    renderTarjeta();
+  }
+
+  // MODIFICADO: registrar el uso de la pista (baja la nota a 0.5 si la tarjeta
+  // termina como Entendida)
+  elBtnPista.addEventListener('click', () => {
+    revelado[indiceActual] = true;
+    pistaMostrada[indiceActual] = true;
+    renderTarjeta();
+  });
+
+  elBtnRespuesta.addEventListener('click', () => mostrarRespuesta());
+
+  // MODIFICADO: toggle de difícil (persiste entre sesiones)
+  elBtnDificil.addEventListener('click', () => toggleDificilActual());
+
+  elBtnEvaluar.addEventListener('click', () => evaluarRespuesta());
+  elTextoEval.addEventListener('input', () => {
+    escritos[indiceActual] = elTextoEval.value;
+    elBtnEvaluar.disabled = (elTextoEval.value.trim() === '');
+  });
+  elTextoEval.addEventListener('keydown', (evento) => {
+    // Enter evalúa; Shift+Enter = salto de línea
+    if (evento.key === 'Enter' && !evento.shiftKey) {
+      evento.preventDefault();
+      if (!elBtnEvaluar.disabled) evaluarRespuesta();
+    }
+  });
+
+  elBtnSi.addEventListener('click', () => marcar('si'));
+  elBtnNo.addEventListener('click', () => marcar('no'));
+  elBtnSaltar.addEventListener('click', () => marcar('saltar'));
+  elBtnAnterior.addEventListener('click', () => navegar(-1));
+  elBtnSiguiente.addEventListener('click', () => navegar(1));
+  elBtnFinalizar.addEventListener('click', () => finalizarSesion());
+
+  document.addEventListener('keydown', (evento) => {
+    if (elLightbox.classList.contains('abierto')) {
+      if (evento.key === 'Escape') cerrarLightbox();
+      return;
+    }
+    if (evento.target === elTextoEval) return;  // no navegar mientras se escribe
+    if (elAreaTarjeta.style.display === 'none') return;
+    if (evento.key === 'ArrowLeft') navegar(-1);
+    if (evento.key === 'ArrowRight') navegar(1);
+  });
+
+  // ---------- Cronómetro ----------
+
+  function actualizarCronometro() {
+    const congelado = cronometroCongelado();
+    const parado = !cronometroActivo;   // sesión completa: nada más por marcar
+    const ahora = Date.now();
+    const enCurso = (congelado || parado) ? 0 : (ahora - tiempoInicioTarjeta);
+    const totalMs = tiempos.reduce((a, b) => a + b, 0) + enCurso;
+    const icono = parado ? '⏹ ' : (congelado ? '⏸ ' : '⏱ ');
+    elCronometro.textContent = icono + formatearTiempo(totalMs);
+    elCronometro.className = (parado || congelado) ? 'cronometro congelado' : 'cronometro';
+  }
+
+  function iniciarCronometro() {
+    detenerCronometro();
+    actualizarCronometro();
+    cronometroIntervalId = setInterval(actualizarCronometro, 1000);
+  }
+
+  function detenerCronometro() {
+    if (cronometroIntervalId !== null) {
+      clearInterval(cronometroIntervalId);
+      cronometroIntervalId = null;
+    }
+  }
+
+  // ---------- Resumen ----------
+
+  function finalizarSesion() {
+    // El tiempo extra no cuenta si el cronómetro ya está parado
+    // (sesión completa) o congelado (leyendo una respuesta).
+    if (cronometroActivo && !cronometroCongelado()) {
+      acumularTiempo();
+    }
+    for (let i = 0; i < resultados.length; i++) {
+      if (resultados[i] === null) resultados[i] = 'saltar';
+    }
+    mostrarResumen();
+  }
+
+  // MODIFICADO: Entendida sin pista = 1 punto; Entendida con pista = 0.5;
+  // No entendida y Pasada sin marcar = 0
+  function calcularNota() {
+    let puntos = 0;
+    resultados.forEach((r, i) => {
+      if (r === 'si') puntos += pistaMostrada[i] ? 0.5 : 1;
+    });
+    return tarjetasSesion.length > 0 ? (10 * puntos) / tarjetasSesion.length : 0;
+  }
+
+  // MODIFICADO: recibe índices; cada item incluye tema, primero + segundo,
+  // tiempo, respuesta escrita (si la hubo) y su evaluación; marca ☆ las difíciles
+  function llenarLista(idContenedor, indices) {
+    const el = document.getElementById(idContenedor);
+    el.innerHTML = '';
+
+    if (indices.length === 0) {
+      el.innerHTML = '<div class="lista-vacia">No hay tarjetas en esta categoría</div>';
+      return;
+    }
+
+    indices.forEach((i) => {
+      const tarjeta = tarjetasSesion[i];
+      const item = document.createElement('div');
+      item.className = 'item-lista';
+
+      const tema = document.createElement('span');
+      tema.className = 'item-tema';
+      tema.textContent = nombreTema(tarjeta);
+      item.appendChild(tema);
+
+      const renglon = document.createElement('span');
+      renglon.className = 'item-renglon';
+      renglon.textContent = (esDificil(tarjeta) ? '☆ ' : '') + armarRenglon(tarjeta);
+      item.appendChild(renglon);
+
+      const tiempo = document.createElement('span');
+      tiempo.className = 'item-tiempo';
+      tiempo.textContent = '⏱ ' + formatearTiempo(tiempos[i]);
+      item.appendChild(tiempo);
+
+      // Respuesta escrita (si la hubo) + su evaluación
+      if (escritos[i] && escritos[i].trim() !== '') {
+        const escrito = document.createElement('span');
+        escrito.className = 'item-escrito';
+        escrito.textContent = '"' + escritos[i] + '"';
+        item.appendChild(escrito);
+      }
+
+      const ev = evaluaciones[i];
+      if (ev) {
+        const resultado = document.createElement('span');
+        resultado.className = 'item-resultado ' + ev.resultado;
+        let txt = ev.resultado === 'bien' ? '✓ Bien' : (ev.resultado === 'casi' ? '✗ Casi' : '✗ Mal');
+        if (ev.clavesTotal > 0) {
+          txt += ' — claves ' + ev.acertadas.length + '/' + ev.clavesTotal;
+          if (ev.faltaron.length > 0) txt += ' (faltaron: ' + ev.faltaron.join(', ') + ')';
+        }
+        txt += ' — coincidencia ' + Math.round(ev.sim * 100) + '% (' + ev.comunes + ' en común)';
+        resultado.textContent = txt;
+        item.appendChild(resultado);
+      }
+
+      el.appendChild(item);
+    });
+  }
+
+  function mostrarResumen() {
+    // MODIFICADO: se guardan índices en lugar de tarjetas
+    const conteos = { si: 0, no: 0, saltar: 0 };
+    const indices = { si: [], no: [], saltar: [] };
+
+    resultados.forEach((r, i) => {
+      conteos[r]++;
+      indices[r].push(i);
+    });
+
+    // Nota general de la sesión (verde >= 6, rojo < 6)
+    const nota = calcularNota();
+    const elNota = document.getElementById('nota-sesion');
+    elNota.textContent = '🎓 Nota de la sesión: ' + nota.toFixed(1) + ' / 10';
+    elNota.className = 'nota-sesion ' + (nota >= 6 ? 'aprobado' : 'desaprobado');
+
+    document.getElementById('conteo-si').textContent = conteos.si;
+    document.getElementById('conteo-no').textContent = conteos.no;
+    document.getElementById('conteo-saltar').textContent = conteos.saltar;
+
+    const tiempoTotalMs = tiempos.reduce((a, b) => a + b, 0);
+    const promedioMs = tarjetasSesion.length > 0 ? tiempoTotalMs / tarjetasSesion.length : 0;
+    document.getElementById('tiempo-total').textContent = formatearTiempo(tiempoTotalMs);
+    document.getElementById('tiempo-promedio').textContent = formatearTiempo(promedioMs);
+
+    llenarLista('lista-si', indices.si);
+    llenarLista('lista-no', indices.no);
+    llenarLista('lista-saltar', indices.saltar);
+
+    const elBtnRepasarNo = document.getElementById('btn-repasar-no');
+    elBtnRepasarNo.style.display = conteos.no > 0 ? 'block' : 'none';
+    elBtnRepasarNo.onclick = () => {
+      let pendientes = tarjetasSesion.filter((_, i) => resultados[i] === 'no');
+      if (modoAleatorio) pendientes = mezclar(pendientes);
+      iniciarSesion(pendientes);
+    };
+
+    document.getElementById('btn-reiniciar').onclick = () => {
+      const nuevaLista = modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion];
+      iniciarSesion(nuevaLista);
+    };
+
+    mostrarPantalla('resumen');
+  }
+
+  // ---------- Arranque ----------
+  construirListaTemas();
+  mostrarPantalla('temas');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,320 @@
+subT DEFINICIONES
+SISTEMAS
+Ordenamiento componentes físicos,
+unidos o
+relacionados
+tal manera
+que forman y/o actúan
+como una unidad completa
+
+CONTROL
+Proceso para asegurar
+que actividades reales
+se ajusten a
+actividades planificadas
+
+SISTEMAS CONTROL
+Es 1 ordenamiento componentes físicos
+unidos o
+relacionados
+tal manera que
+mandan
+dirigen o
+regulan
+al mismo sistema o a otro
+
+ENTRADA
+estímulo o
+excitación
+que se aplica
+a 1 Sistema Control,
+generalmente
+desde una fuente energía externa,
+con fin producir,
+una respuesta específica
+del sistema control
+
+SALIDA
+Es respuesta real
+que se obtiene
+1 sistema control
+
+Puede ser o no igual
+a respuesta implícita
+especificada por entrada,
+entradas y
+salidas
+pueden tener
+muchas formas diferentes
+
+por ej pueden ser
+variables físicas o
+cantidades más abstractas
+tales como
+valores referencia
+ajuste o
+deseados
+para salida del sistema control
+
+PROPÓSITOS DEL SISTEMA CONTROL
+Identificar o
+definir
+entrada y salida
+
+Si se dan
+entrada y salida,
+es posible
+identificar
+delinear o
+definir
+naturaleza componentes
+
+SUBSISTEMA CONTROL
+Un Subsistema Control
+es 1 Sistema Control
+que se encuentra
+dentro otro Sistema Control,
+donde
+entradas y salidas
+son variables internas
+del Sistema Control mayor
+
+ANCHO BANDA
+es una medida frecuencia
+que bien responde o
+filtra
+las variaciones señal entrada
+
+subT TIPOS SISTEMAS CONTROL segun Naturaleza
+Naturales
+señalar 1 objeto con dedo,
+transpiración
+
+Artificiales
+Calentador
+horno termostático (calefactor),
+interruptor eléctrico
+
+Mixto
+Un hombre conduciendo 1 automóvil
+
+subT Importancia del Control
+1
+Establece medidas
+para corregir actividades,
+tal forma
+que se alcancen objetivos
+exitosamente
+
+2
+Se aplica a todo:
+a cosas,
+a personas y
+a actos
+
+3
+Determina y
+analiza
+rápidamente causas
+que pueden originar desviaciones
+para que no vuelvan
+a presentarse
+en futuro
+
+4
+Reduce costos y
+ahorra tiempo
+al evitar errores
+
+subT TIPOS SISTEMAS CONTROL segun Malla
+distinción se determina
+mediante acción control
+(es cantidad responsable
+activar sistema
+para producir salida)
+no implica directamente
+cambio,
+movimiento o
+actividad
+
+MALLA ABIERTA
+sistemas control
+en donde salida
+no tiene efecto
+sobre acción control
+<imagen>
+
+subT MALLA ABIERTA
+No existe acción retroalimentación,
+para comparar señal salida
+con entrada referencia,
+por tanto,
+es necesario
+medir variable salida
+
+subT Caracteristicas
+a
+Para cada entrada referencia
+corresponde una condición
+de operación establecida
+
+b
+exactitud del sistema
+depende calibración
+del elemento medición
+
+c
+En presencia perturbaciones
+no cumple su función asignada
+debido a que
+no se adapta a cambios
+
+d
+Sólo se debe usar
+cuando se conoce relación
+entre entrada y salida
+del sistema, y
+
+si no hay perturbaciones
+ni internas
+ni externas
+
+e
+Generalmente depende
+del criterio y
+estimación
+del hombre
+
+subT TIPOS SISTEMAS CONTROL segun Malla
+MALLA CERRADA
+Son aquellos
+en que acción control
+depende alguna manera,
+salida
+generalmente llamados,
+sistemas control retroalimentados
+<imagen>
+
+subT MALLA CERRADA
+RETROALIMENTACION
+Es propiedad 1 sistema malla cerrada
+que permite
+que salida se compare
+con entrada del sistema
+tal manera que acción control
+se pueda expresar
+como una función
+entrada y
+salida
+
+subT Caracteristicas
+a
+Aumento exactitud
+(habilidad para reproducir
+entrada fielmente)
+
+b
+Sensibilidad reducida
+en la razón(division)
+salida a entrada
+frente a variaciones
+en características del sistema
+
+c
+Ancho banda aumentado
+
+subT TIPOS SISTEMAS CONTROL segun su Señal
+señales en 1 sistema control
+son funciones
+alguna variable independiente,
+usualmente tiempo,
+denotada por t
+
+SEÑAL ANALÓGICA:
+Una señal dependiente
+1 continuum valores
+variable independiente t
+
+se llama
+señal continua en tiempo o
+señal datos continuos o
+señal analógica
+
+SEÑAL DIGITAL:
+Una señal
+definida o
+interés solamente
+en instantes discretos
+variable independiente t
+
+se llama
+señal discreta en tiempo,
+datos discretos,
+datos muestreados o digital
+
+subT OTRAS DEFINICIONES
+OBJETIVO INGENIERIA SISTEMAS CONTROL
+ingeniería sistemas control
+consiste
+en análisis y
+diseño
+configuraciones sistemas control
+
+a
+análisis es investigación
+propiedades 1 sistema existente
+
+b
+diseño es
+elección y
+ordenamiento
+componentes del sistema
+para desempeñar
+una tarea específica
+Existen dos métodos
+para diseño:
+Diseño por Análisis
+se efectúa al modificar
+características de configuración
+1 sistema
+existente o
+estándar
+
+Diseño por Síntesis
+se efectua al definir
+forma del sistema
+directamente de sus especificaciones
+
+subT MODELOS O REPRESENTACIONES SISTEMAS CONTROL
+Para resolver 1 problema con Sistema Control,
+se debe
+especificar o
+describir
+la
+configuración del sistema y
+sus componentes
+tal manera
+que facilite
+análisis o
+diseño
+
+Modelos representativos
+a
+Modelos Matemáticos
+Estos modelos son necesarios
+cuando se requieren
+relaciones cuantitativas
+
+subT Modelos representativos
+tambien
+Dependen del área aplicación
+del sistema control y
+complejidad tales modelos
+varía ampliamente
+
+b
+Diagramas Bloques
+
+c
+Grafos Flujos Señales
+

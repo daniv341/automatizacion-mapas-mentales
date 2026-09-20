@@ -1,0 +1,335 @@
+temaP metodo del lugar de raices
+
+subT introduccion
+
+metodo permite ubicar graficamente
+posicion de raices de ec caract(polos)
+al variar ganancia k
+en sistema de malla abierta
+
+tambien permite
+estudiar estabilidad relativa
+mas prox a origen mas facil
+estudiarla
+
+caract basica de respuesta transitoria
+de sistemas de lazo cerrado
+esta estrechamente ligada
+a ubicacion de polos de lazo cerrado
+si el sistema tiene ganancia variable
+
+ubicacion de polos de lazo cerrado
+depende valor de ganancia elegida
+por lo tanto
+importante estudiar y conocer
+como se desplazan polos del lazo cerrado
+en el plano al variar ganancia 𝐾
+
+este metodo consiste
+en procedimiento en que se trazan
+raices de ecuacion caracteristica
+para todos valores de 1 parametro sist
+asi se pueden ubicar en grafica resultante
+las raices correspondientes
+a un valor determinado de este parametro
+
+ese parametro suele ser la ganancia k
+pero puede utilizarse cualquier otro parametro
+de funcion transferencia del lazo abierto
+como ser
+
+zeta
+
+omega sub n
+
+a menos que especifique contrario
+se supone que parametro que va variar
+a traves de todos valores
+desde cero a infinito es ganancia 𝐾
+de funcion transferencia del lazo abierto
+
+'metodo lugar de las raices
+es un metodo grafico que permite
+hallar polos del lazo cerrado
+partiendo de polos y ceros del lazo abierto
+variando ganancia 𝐾
+de funcion de transferencia de lazo abierto'
+
+se considerara sistema de segundo orden
+
+aunque se puede generalizar para sistemas de orden n
+ya que todo sistema es susceptible
+de ser reducido a sistema de 2º orden
+en funcion de ubicacion de polos dominantes
+dominancia de polos se manifiesta
+en funcion de cercania al origen
+cuanto mas cerca al origen
+mas dominantes seran los polos
+
+reducir sistemas a 2do orden
+hacen mas facil estudiarlos
+
+existe dominancia razonable si
+cociente de parte real de polos
+es mayor o muy proximo a 5
+pudiendo de esta manera
+descartar polos lejanos al origen
+
+simplificando
+
+reduciendo
+
+sistemas a sistemas de ordenes inferiores
+
+si cambio valor k muevo los polos
+si no hay ganancia critica
+k puede valer infinito no 0 ni negativo
+
+lugar de las raices contempla
+tanto polos reales como complejos
+
+subT reglas
+
+determinar puntos inicio y fin del lugar raices sobre eje real
+
+(determinacion de ramas)
+
+partiendo de forma factorizada
+de funcion transferencia del lazo abierto
+se ubican polos y ceros del lazo abierto
+en plano y determina cantidad de ramas
+presentes en sistema
+
+numero ramas siempre igual al orden del sistema
+es decir al grado del polinomio caracteristico
+o sea igual a cantidad de polos
+
+en este caso al ser sistema 2º orden
+se tienen dos polos
+por lo tanto dos ramas sobre el eje real
+
+los puntos iniciales del lugar de raices
+son polos del lazo abierto
+(son los puntos corresponden a 𝐾=0)
+
+ramas representan
+rangos definidos por posiciones geometricas
+entre elementos
+es decir
+quedan determinadas por:
+
+<imagen>
+
+determinar que rama pertenece a lugar de raices:
+
+partiendo de diagrama ramas
+se elige 1 punto prueba interno
+a rama a analizar
+y observa la derecha de ese punto
+
+si existe un numero impar de elementos
+(polos y/o ceros)
+a derecha del punto
+la rama ∈ al lugar de raices
+
+si existe un numero par de elementos
+(polos y/o ceros)
+a derecha del punto
+la rama ∈ al lugar de raices
+
+no todas ramas contienen lugar de las raices
+
+rama se determina entre elementos
+de func transferencia q entrega g(s)
+
+determinar asintotas y calculo del angulo:
+
+las asintotas del lugar de raices
+conforme tiende a infinito
+representan limite fisico del lugar raices
+y constan 2 parametros
+
+cantidad asintotas =
+cant de polos – cant de ceros
+
+tener cuenta la simetria del lugar de raices
+con respecto eje real
+ya que polos complejos se presentan
+de forma s = - sigma +- j omega
+
+<imagen>
+
+<imagen>
+
+<imagen>
+
+signo menos va ubicado
+en frente de todo el cociente
+
+analiticamente k=0
+polos func transferencia lazo cerrado
+coinciden polos func transf lazo abierto
+
+explicar que representan las asintotas en parcial
+
+determinar punto ruptura:
+
+punto ruptura es el lugar donde
+se encuentran 2 o mas puntos geometricos
+del lugar de raices y luego se separan
+siguiendo trayectorias diferentes
+
+es el punto desde el cual se proyecta
+lugar de raices sobre plano complejo
+corresponde a valores multiples raices
+para ello
+
+<imagen>
+
+por ser un sistema de segundo orden
+punto ruptura debe coincidir con sigma_a
+
+solo hay 1 punto de ruptura
+calculo ganancia para cada punto
+el valido es aquel que de una ganancia positiva
+
+<imagen>
+
+determinar puntos donde lugar de raices cruza eje imaginario:
+
+estos puntos encuentran mediante
+criterio de estabilidad de routh
+haciendo cero la relacion que
+contiene a 𝐾 en la primera columna
+
+aproximacion alternativa es suponer
+que se iguala a j omega
+en ec caracteristica y reemplazarla
+
+igualar a cero tanto
+parte imaginaria como real
+
+despejar y obtener omega desde
+igualdad imaginaria luego
+
+reemplazar omega en igualdad real
+
+calcular 𝐾
+
+paso 5 no se usa nunca
+pero debe saberse
+
+corroborar lugar de raices sobre plano complejo
+
+mediante un punto prueba:
+
+si 1 punto prueba
+(polo complejo)
+esta ubicado geometricamente sobre
+lugar de raices en plano complejo
+suma de angulos de este polo complejo
+debe ser 180º o multiplo de este
+osea debe cumplir la cond de angulo y magnitud
+
+si punto ∈ a proyeccion
+este es un lugar de las raices
+
+los sistemas nunca pierden un polo
+nacen como 2do orden y mueren como 2do orden
+
+<imagen>
+
+subT analisis
+
+forma de decir el lugar de las raices
+
+<imagen>
+
+<imagen>
+
+<imagen>
+
+<imagen>
+
+<imagen>
+
+subT casos particulares
+
+<imagen>
+
+<imagen>
+
+<imagen>
+
+nota:
+identidades a b c
+son validas si y solo si
+p_1 = 0 y p_2 = 1
+es decir g(s) tiene 1 polo en origen
+por lo tanto
+
+<imagen>
+
+siendo b el coeficiente del termino lineal
+del polinomio caracteristico
+
+<imagen>
+
+denominador se puede escribir como:
+
+<imagen>
+
+<imagen>
+
+polos conjugados
+
+<imagen>
+
+<imagen>
+
+<imagen>
+
+en forma general
+se puede deducir
+
+<imagen>
+
+subT identidades generales
+
+<imagen>
+
+a
+
+<imagen>
+
+b
+
+<imagen>
+
+<imagen>
+
+c
+
+<imagen>
+
+d
+
+<imagen>
+
+<imagen>
+
+e
+
+<imagen>
+
+f
+
+<imagen>
+
+g
+
+<imagen>
+
+h
+
+<imagen>

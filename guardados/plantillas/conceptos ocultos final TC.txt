@@ -1,0 +1,119 @@
+imP Criterio Routh-Hurwitz
+imP para Estabilidad Relativa
+imP No solo sirve
+*imP para saber si sistema es 
+
++imP estable o 
+
++imP inestable
+
+imP Si desplazas eje imaginario 
+imP sustituyendo s
+imP por (r−σ),
+imP método te calcula 
+imP exactamente 
+imP margen seguridad que tienes 
+imP antes que 
+imP sistema colapse
+
+
+imP Dominancia Polos (Regla del 6x)
+imP Para simplificar 
+imP cálculo 1 sistema complejo 
+imP reduciéndolo
+imP a uno segundo orden,
+imP polos que vas a ignorar 
+imP deben estar 
+imP al menos seis veces 
+imP más alejados del eje imaginario
+imP que polos principales
+
+
+imP Efecto Aislado Ceros
+imP Agregar 1 cero  
+imP (acción derivativa) 
+imP únicamente moldea 
+imP cómo sistema 
+imP llega a meta  
+imP (el régimen transitorio),
+imP pero no ejerce ningún efecto
+imP en valor final 
+imP donde sistema se estabiliza
+
+
+imP Paradoja del Lugar Geométrico Raíces 
+imP metodo Evans
+imP que te permite 
+imP encontrar polos del sistema 
+imP ya cerrado y trabajando,
+imP utilizando 
+*imP únicamente gráfica 
+
++@imP polos y 
+
++@imP ceros 
+
+$imP del sistema 
+imP cuando está 
+imP apagado/abierto
+
+
+*cuR Algebra Bloques como Cinemática
+
++cuR Multiplicar
+cuR por 's' 
+cuR es derivar 
+
++cuR Dividir
+cuR entre 's' 
+cuR es integrar
+
+
+imP Linealización y Punto Operación
+imP Herramientas control 
+imP solo entienden 
+imP líneas rectas,
+imP pero física real 
+imP es curva
+
+cuR Linealizar 
+cuR es cortar 
+cuR 1 pedacito minúsculo 
+cuR esa curva 
+cuR usando Serie Taylor
+cuR para fingir
+cuR que es una recta
+
+
+imP Ecuación No Homogénea = Entrada Físico
+imP Cuando
+imP en ecuaciones diferenciales 
+imP tienes una ecuación igualada
+imP a una función  
+imP (y no a cero),
+imP esa función que sobra 
+*imP representa 
+
++@imP tu Set Point o 
+
++@imP perturbación física
+
+$imP que empuja al sistema 
+imP desde exterior
+
+
+cuR Acción Integral y Error Acumulado
+cuR Integrar es acumular área
+
+imP Si sistema llega 
+imP casi a meta 
+imP pero se atasca  
+imP (error constante),
+imP integrador 
+imP suma ese diminuto error 
+imP segundo a segundo 
+imP hasta 
+imP que junta fuerza suficiente
+imP para obligar al actuador
+imP a dar exactamente
+imP en blanco

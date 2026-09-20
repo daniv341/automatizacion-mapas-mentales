@@ -1,0 +1,26 @@
+subT DEFINICIÓN FUNCIONES TRANSFERENCIA UN SISTEMA CONTINUO
+que consideramos para FT? + continuas, define, multiplica & 1
+como se define? + salida, entrada & 2
+que es poliniomio caracteristico? + denominador, respuesta, iniciales & 3, 4
+todas las FT son expresiones algebraicas? + no todas & 5
+que sucede cuando valores iniciales = 0? + conmutativa, inversa & 7
+que sucede en consecuencia? + depende, polos, ceros & 9
+
+subT PROPIEDADES FUNCIÓN TRANSFERENCIA UN SISTEMA CONTINUO
+que sucede ante impulso unitario? + iniciales, cero & 10
+que importancia tiene ec diferencial? + determinarse & 11
+que pasa si raices reales negativas? + estable & 12
+como puede especificarse la funcion? + constante, K & 13
+
+subT FORMA CANÓNICA UN SISTEMA EN MALLA CERRADA
+G y H + componentes & 15
+signos + positiva, negativa & 16
+que determina C/R? + ecuacion, a partir & 17
+
+subT EFP metodo grafico
+que es una var compleja? + binomica, triangulos & 28
+que pasa si obtenemos s1 y s2? + expresar, origen & 29
+que pasa si son polos reales? + aproximan & 30
+que pasa si es imaginario puro? + inestable & 31
+que uso si no especifican R(s)? + 1/s & 32
+que debo hacer con los angulos? + siempre, radianes, suplementarios & 33, 34

@@ -1,0 +1,12 @@
+ linea 19: que problemas resuelve? + financieras, metodologia, incapacidad, perdida
+    motivo: ninguna ruta permitida supera UMBRAL_CLAVES
+    candidatas: ruta 23 (0.51), ruta 22 (0.50), ruta 24 (0.25), ruta 25 (0.25), ruta 20 (0.24)
+  linea 23: autoevaluacion + propio, discrepancias, complemento
+    motivo: ninguna ruta permitida supera UMBRAL_CLAVES
+    candidatas: ruta 32 (0.59), ruta 33 (0.34), ruta 34 (0.32), ruta 42 (0.32), ruta 29 (0.00)
+  linea 24: evaluacion por pares + compañeros, anonima
+    motivo: fuera de orden: coincide con ruta(s) menores que la ultima asignada (39, fijada en la linea 22); no se asigno
+    candidatas: ruta 35 (1.25)
+  linea 25: assesment center + externos, objetivo
+    motivo: fuera de orden: coincide con ruta(s) menores que la ultima asignada (39, fijada en la linea 22); no se asigno
+    candidatas: ruta 37 (0.82)

@@ -1,0 +1,431 @@
+subT CLASIFICACIÓN CONTROLADORES ANALÓGICOS
+controladores industriales analógicos
+se pueden clasificar
+de acuerdo con sus acciones control,
+siguiente forma:
+Controladores proporcionales integrales (PI)
+Controladores proporcionales derivativos (PD)
+
+Controladores dos posiciones,
+o encendido_apagado (on off);
+Tiene únicamente
+dos posiciones
+en su salida,
+dependiendo
+entrada al controlador
+
+Controladores proporcionales (P)
+Tienen
+una salida proporcional su entrada,
+es decir
+<imagen>
+Donde Kp
+es una constante proporcionalidad,
+ganancia del controlador
+
+Ventajas:
+cuentan con
+1 sólo parámetro ajuste
+
+Controladores derivativo (D)
+Tienen una salida u
+proporcional
+a derivada de su entrada e,
+<imagen>
+en donde KD
+es una constante proporcionalidad
+
+Controladores integrales (I)
+Tiene una salida proporcional
+a integral su entrada
+<imagen>
+mayoría ingenieros
+usan tiempo integración
+<imagen>
+donde Ki
+es constante de integracion
+
+Controladores proporcionales integrales derivativos (PID)
+salida
+es suma contribuciones partes
+integral y
+proporcional
+derivativa:
+<imagen>
+
+controladores PD, PI, DI,
+son combinaciones controladores
+proporcional (P),
+derivativo (D) e
+integral (I)
+
+subT Diagramas Bloques
+es una representación simplificada
+relación causa y efecto
+que existe entre
+entrada y
+salida
+1 sistema físico
+
+suministra 1 método útil
+para caracterizar
+relaciones funcionales
+entre diferentes componentes
+1 sistema control
+
+componentes del sistema
+se conocen alternativamente
+con nombre
+elementos del sistema
+
+DIAGRAMA BLOQUES SIN RETROALIMENTACION
+interior del rectángulo
+que representa al bloque
+generalmente contiene
+descripción o
+nombre del elemento o
+símbolo operación matemática
+que se ejecuta
+sobre entrada,
+con fin obtener salida
+<imagen>
+
+subT DIAGRAMA BLOQUES SIN RETROALIMENTACION
+flechas representan
+dirección información unilateral o
+flujo señales
+
+operaciones
+adición y
+sustracción
+tienen una representación especial
+bloque se convierte
+en 1 pequeño círculo,
+llamado
+punto suma,
+con signo apropiado
+más o menos,
+asociado con flechas
+que entran al círculo
+Cualquier número entrada
+puede llegar a 1 punto suma
+
+salida
+es suma algebraica
+entradas
+<imagen>
+
+Para hacer
+que misma señal o variable
+sea una entrada
+a más
+1 bloque o
+punto suma
+se utiliza 1 punto toma
+<imagen>
+
+subT Diagramas Bloques
+DIAGRAMAS BLOQUES SISTEMAS CONTINUOS CON RETROALIMENTACIÓN
+bloques que representan
+diferentes componentes
+1 sistema control
+están conectados 1 modo
+que caracteriza
+sus relaciones funcionales
+dentro del sistema
+<imagen>
+
+subT DIAGRAMAS BLOQUES SISTEMAS CONTINUOS CON RETROALIMENTACIÓN
+en este diagrama bloques
+representan
+todos elementos
+que intervienen
+en distintas etapas control
+en una planta
+
+subT TERMINOLOGIA DEL DIAGRAMA BLOQUES EN MALLA CERRADA
+Para representar
+variables entrada y salida
+cada elemento
+se usan letras minúsculas
+como símbolos bloques
+
+Estas cantidades representan
+funciones tiempo,
+a no ser
+que se especifique contrario
+
+letras mayúsculas
+representan
+trasformadas Laplace
+cantidades que son funciones
+variable compleja s
+
+DEFINICIONES
+1
+planta
+(proceso o sistema controlado)
+g2
+es
+sistema
+subsistema
+proceso u
+objeto
+la cual se va a controlar
+con una
+cantidad o
+condición
+particular
+
+subT DEFINICIONES
+(proceso o sistema controlado)
+g2
+es
+sistema
+subsistema
+proceso u
+objeto
+la cual se va a controlar
+con una
+cantidad o
+condición
+particular
+
+2
+salida controlada c
+es variable salida planta,
+es decir, es
+esa cantidad o
+condición
+de la planta
+que se controla
+
+3
+trayectoria directa
+es ruta transmisión
+desde punto suma
+al punto salida controlada c
+
+4
+elementos anticipativos control,
+son componentes
+trayectoria directa
+requeridos para generar
+señal control apropiada
+u o m
+que se aplica a planta
+
+Entre estos se encuentran
+controladores,
+compensadores o
+amplificadores
+
+5
+señal control u, o
+variable manipulada m
+es señal salida
+elementos anticipativos g1,
+aplicada como entrada
+a planta
+
+6
+trayectoria retroalimentación,
+es ruta transmisión
+desde salida controlada
+hasta punto suma
+
+7
+elementos retroalimentación
+son componentes
+que se requieren
+para establecer
+relación funcional
+entre
+señal retroalimentación primaria b y
+salida controlada c
+
+Entre estos se encuentran
+sensores,
+compensadores o
+controladores
+
+8
+entrada referencia r
+es una señal externa aplicada
+al sistema control
+con retroalimentación,
+usualmente
+en primer punto suma,
+con fin ordenar a planta
+una acción especificada
+
+A menudo representa
+1 comportamiento ideal
+salida de la planta
+
+9
+señal retroalimentación primaria b
+es una función
+salida controlada c y
+a entrada referencia r
+para obtener
+señal actuante (error)
+
+que se suma algebraicamente
+salida controlada c y
+a entrada referencia r
+para obtener
+señal actuante (error)
+
+En 1 sistema malla abierta
+no tiene
+señal primaria retroalimentación
+
+10
+señal actuante o error,
+es suma algebraica
+entrada referencia
+más o menos
+(usualmente menos)
+retroalimentación primaria b
+
+En 1 sistema malla abierta,
+que no tiene retroalimentación,
+señal actuante
+es igual a r
+
+acción control
+se genera en función
+del valor dado por
+señal actuante (error)
+en 1 sistema control
+con retroalimentación
+
+11
+En retroalimentación negativa
+punto suma
+es 1 sustractor y
+
+en retroalimentación positiva
+punto suma
+es 1 sumador
+
+12
+Una perturbación
+es una señal entrada indeseable
+que afecta
+valor salida controlada
+
+Puede entrar a planta
+sumándose
+con variable manipulada
+o a través
+1 punto intermedio
+
+13
+Un muestreador
+es 1 dispositivo que transforma
+una señal continua en tiempo,
+en una señal discreta en tiempo
+<imagen>
+
+muestreadores ideales
+se representan manera esquemática
+por 1 interruptor,
+dicho interruptor
+normalmente está abierto,
+excepto
+en instantes t1,t2,etc
+cuando se cierra por 1 instante
+
+14
+Un convertidor
+analógico a digital
+A/D
+es 1 dispositivo
+que convierte
+una señal analógica
+en una digital
+
+15
+Un convertidor
+digital a analógico
+D/A
+es 1 dispositivo
+que convierte
+una señal discreta o digital
+en una continua o analógica
+
+16
+Un transductor
+es 1 dispositivo
+que convierte
+una forma energía
+en otra
+
+17
+orden ν
+es una señal entrada,
+generalmente igual
+a entrada referencia r
+<imagen>
+
+Pero cuando
+clase energía orden v
+no es misma
+que retroalimentación primaria b,
+se requiere 1 transductor
+entre
+orden v y
+entrada referencia r
+
+18
+un sistema multivariable
+es aquel
+que tiene
+más una entrada o
+más una salida o
+ambas
+
+subT OTROS SISTEMAS CONTROL
+SERVOMECANISMOS
+es 1 sistema control
+con retroalimentación amplificada en potencia,
+en el cual
+variable controlada c
+es una posición mecánica o
+<imagen>
+
+una derivada
+con respecto al tiempo,
+tal como
+velocidad o aceleración
+
+REGULADOR
+es 1 sistema control
+con retroalimentación
+en cual
+entrada o
+comando referencia
+es constante
+por largos periodos tiempo,
+habitualmente
+durante todo intervalo tiempo
+en el cual sistema
+es operacional
+
+Un regulador
+se diferencia
+1 servomecanismo
+en que función primordial
+1 regulador
+es generalmente mantener
+constante una salida
+que es controlada,
+mientras que función
+1 servomecanismo
+consiste muy a menudo
+en hacer que
+una entrada variable en sistema
+ocasione una salida
+

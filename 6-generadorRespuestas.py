@@ -57,6 +57,8 @@
 - v4.16: * DETECCION de rutas: si una ruta trae 2-3 subT (subtitulo heredado + rombos que
     quedaron como renglon), se queda SOLO el ultimo como subtitulo del bloque y los
     demas se eliminan (afecta TXT, JSON y get_routes_id_map; no cambia la numeracion).
+- v4.17: el dato 'ruta' del .drawio ya no se anota en hexagonos (temaS): se anota la
+    primera celda de contenido de la ruta (ni rombos ni hexagonos).
   * La contencion de palabras en temas pasa a ultimo recurso: solo si el subT de la
     tarjeta no coincide con ningun tema del diagrama.
   * Tarjetas que no superan el umbral (antes siempre '~'): (a) cobertura complementaria:
@@ -618,6 +620,7 @@ def get_routes_id_map(input_path: Path) -> dict[int, dict]:
 def collect_ruta_annotations(
     route_blocks: list[RouteBlock],
     is_rhombus_key,
+    is_tema_key=None,
 ) -> tuple[dict[str, str], list[str], list[str]]:
     """v4.7: celda -> numero de ruta (primera celda real NO-rombo)."""
     annotations: dict[str, str] = {}
@@ -628,8 +631,8 @@ def collect_ruta_annotations(
         for key, _lines in block.items:
             if not key or key.startswith("__CONVERGENCE__"):
                 continue
-            if is_rhombus_key(key):
-                continue
+            if is_rhombus_key(key) or (is_tema_key is not None and is_tema_key(key)):
+                continue        # v4.17: ni rombos (subT) ni hexagonos (temaS) reciben 'ruta'
             chosen_key = key
             break
         if chosen_key is None:
@@ -1489,7 +1492,9 @@ def main() -> None:
 
     #write_json(json_path, input_path, diagram_name, diagram_id, route_blocks)
 
-    annotations, unannotated, conflicts = collect_ruta_annotations(route_blocks, is_rhombus_key)
+    annotations, unannotated, conflicts = collect_ruta_annotations(
+        route_blocks, is_rhombus_key,
+        lambda k: "hexagon" in (s := styles.get(k, "").lower()) and "gradientcolor=#" in s)   # v4.17: temaS = hexagono con gradientColor
     if annotations:
         annotated_count, missing_cells = write_annotated_drawio(input_path, input_path, annotations)
         print(f"drawio actualizado en su lugar: {annotated_count} celdas con dato 'ruta'")

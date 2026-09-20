@@ -1,0 +1,51 @@
+1 Según cantidad personas asignadas, ¿Cuáles siguientes opciones es correcta? + Asignar más gente a 1 proyecto a mitad este no reduce necesariamente su duración
+2 Durante ejecución 1 proyecto 1 cliente solicita 1 cambio que impacta en alcance del proyecto, se debe: + Realizar 1 análisis impacto, y volver a definir alcance, tiempos, costos, común acuerdo con cliente
+3 interesados en proyecto: + Todas opciones son correctas
+4 Marque opción correcta: + riesgos se mitigan, transfieren, evitan, aceptan
+5 En MS Project + se pueden colocar costo por hora cada recurso: vista Hoja Recursos en campo Tasa estándar
+6 Indique cual definición es correcta: + Proyecto es conjunto actividades, planificadas, ejecutadas y supervisadas que, con recursos finitos, tiene como objeto crear 1 producto o servicio
+7 EDT debe contemplar: + Todas tareas necesarias cumplir con requisitos del proyecto
+8 Indique cual definición es incorrecta: + ciclo vida es una fase mayor que contiene a subfases del proyecto
+9 Gestión Riesgos del Proyecto: + Incluye procesos relacionados con llevar a cabo planificación gestión, identificación, análisis, planificación respuesta a riesgos, asi como su monitoreo y control en 1 proyecto
+10 Indique cual es incorrecta: + Todos entregables tienen que ser solo documentos
+11 Indique opción correcta: + diferencia entre ingresos y costos es Margen del proyecto
+12 Indique cuál definición es correcta: + Ninguna anteriores es correcta
+13 Cual es una secuencia tarea del tipo COMIENZO - FIN: + tarea dependiente (B) no se puede completar hasta que comience tarea que depende (A)
+15 ¿Cuál siguientes es 1 objetivo bien definido? + Realizar 1 prototipo funcional antes Noviembre 2017
+16 Indique opción correcta: + Secuenciar actividades es proceso que consiste en identificar y documentar relaciones entre actividades del proyecto
+17 Indique opción correcta: + Costo es valor factores producción que se ponen en juego y se consumen para realizar una actividad
+18 Realizar capacitaciones usuario pertenece a qué fase del sistema: + Implantación
+19 Con respecto a plazos 1 proyecto que se deben cumplir: + Todas anteriores son falsas
+20 Indique cuál es correcta + acta constitución proporciona detalles interesados, propósitos, objetivos, entregables, etc
+21 Indique opción correcta + Tanto operaciones como proyectos sirven para alcanzar objetivos organización
+22 Utilizando MS Project: + cada recurso tiene 1 único calendario asociado, que puede ser distinto del estándar
+23 Indique correcta: + Un sistema planificación permite organizar proyecto en función hitos, tareas, subtareas, con asignación y control del tiempo, recursos materiales y humanos
+24 Dirigir 1 proyecto implica: + Todas anteriores son correctas
+25 En gestión del tiempo del proyecto se debe: + Todas anteriores son correctas
+26 Cuál opción es correcta: + Para definir EDT es necesario conocer alcance
+27 Dado que proyectos deben cambiar y adaptarse constantemente, planificación es una actividad única y que debe realizarse una solo vez en proyecto + Falso
+28 EDT debe descomponerse hasta que cada tarea pueda: + Todas opciones anteriores
+29 En Qosqo: + Puedo relacionar peticiones tipo tareas, reuniones y asimismo vincular subtareas con tareas padres
+31 Indique cuál es correcta: + (Hay una asquerosamente parecida) Todas anteriores son incorrectas NOTA: Si d) hubiera dicho solo 1 responsable hubiera sido correcta
+32 Guía Fundamentos Dirección Proyectos (PMBOK): + Es una norma reconocida en profesión dirección proyectos
+33 costos 1 proyecto son mayores durante: + Durante etapa ejecución
+34 Gastos: + Intercambio 1 factor producción por otro, se transforma en costo cuando se consume para realizar una actividad Verdadero
+35 ¿Cuál opción es correcta en Qosqo?: + Ninguna anteriores
+37 EDT consiste en: + Subdividir entregables del proyecto y trabajo del proyecto en componentes más pequeños y más fáciles manejar
+38 Indique cual es correcta: + acta constitución debe ser aprobada por sponsor del proyecto
+39 Con respecto a riesgos 1 proyecto + dos anteriores son falsas
+40 Indique opción correcta: + Cada tarea en MS Project puede tener numerosos recursos asociados con sus respectivos calendarios
+41 MS Project es una herramienta útil para: + Gestionar procesos que permiten generar cronograma del proyecto
+43 tutor su proyecto puede ser: + Un Ingeniero en Sistemas Información graduado cualquier universidad Falso
+44 examen teórico individual, corresponde a: + Cuarto Nivel para evaluación materia
+45 Además del campus virtual UTN FRT, utilizaremos una plataforma gestión proyectos denominada 'GP UTN FRT' + Falso
+46 ¿Qué palabra se ajusta mejor a esta imagen? + Equilibrio
+47 ¿Cómo se llama este resultado? + Pijama bebé que limpia
+48 Uno niveles necesarios para regularizar es tener una asistencia como mínimo: + 75%
+49 Especifica ruta correcta para cambiar contraseña + a Menú superior >> Mi Cuenta >> Cambiar Contraseña
+50 Indique si es verdadero o falso: + Dentro del primer bloque conceptual del acta constitucion del proyecto, dimensión dos, cual responde a ¿Qué vamos a hacer con realidad determinada en dimensión uno? Incluye apartado 'descripcion del producto o servicio que proyecto generará' entre otros Verdadero
+51 fechas del apartado 10 del Reglamento Catedra corresponden a: + Fechas límite aprobación entregables
+52 ¿Cuántas instancias recuperación se prevé para TPs en Materia Proyecto Final? + Las necesarias
+53 Para evitar que me lleguen notificaciones a mis aportes a una petición debo: + 1 Accediendo a 'Mi cuenta' 2 Luego tildar en 'No quiero ser avisado cambios hechos por mi' Verdadero
+54 ¿Cuáles son tipos perfiles que se utilizan en Qosqo? + Administrador, Jefe Proyecto, Editor, Visualizador
+55 ¿Qué tipo petición se usa en Qosqo? + Tarea, Error, Reunión, Bonocrédito y Requerimiento

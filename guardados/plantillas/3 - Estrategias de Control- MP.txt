@@ -1,0 +1,419 @@
+subT CONCEPTO Y DEFINICION CONTROL PID
+Un Controlador PID
+(Proporcional Integral Derivativo)
+es 1 Mecanismo Control
+por Realimentación
+que calcula
+desviación o
+error
+entre
+1 valor medido y
+valor que se quiere obtener
+de manera poder aplicar
+una acción correctiva
+(Acción Control)
+que ajuste Proceso
+a fin
+minimizar o
+anular
+error
+
+algoritmo cálculo del control PID
+se da
+en tres parámetros distintos:
+Banda Proporcional
+(Acción Proporcional),
+valor Banda Proporcional
+determina reacción
+conforme
+al error actual
+<imagen>
+<imagen>
+
+Tiempo Integral
+(Acción Integral)
+Tiempo Integral
+genera una corrección proporcional
+a integral del error,
+esto nos asegura
+que aplicando
+1 esfuerzo control suficiente,
+error seguimiento
+se reduce a cero
+
+Tiempo Derivativo
+(Acción Derivativa)
+Tiempo Derivativo
+determina reacción
+en función del tiempo o
+velocidad
+en que se produce error
+
+suma estas tres acciones,
+es usada
+para ajustar al proceso
+vía
+1 elemento control
+
+Ajustando estas tres variables
+en algoritmo control del PID,
+controlador puede proveer
+una respuesta eficiente
+conforme
+a que se requiera realizar
+en proceso
+
+respuesta del controlador
+puede ser descrita
+en términos de:
+a
+grado o
+magnitud
+Acción Control
+ante 1 desvío
+con respecto al Set Point
+
+b
+velocidad al cual
+controlador
+llega al Set Point,
+
+c
+grado oscilación
+del sistema
+
+uso del PID
+para Control,
+no garantiza
+Control Óptimo del Sistema o
+Estabilidad del mismo
+
+controladores PI
+son particularmente comunes,
+ya que acción derivativa
+es muy sensible al ruido,
+y ausencia acción integral
+puede evitar
+que se alcance al valor deseado
+debido a acción control
+
+subT FUNCIONAMIENTO
+Para correcto funcionamiento
+1 controlador PID
+que regule
+1 proceso o
+sistema
+se necesita al menos:
+a
+un sensor o
+un transmisor
+que determine
+estado del sistema
+
+b
+un controlador,
+que genere señal
+que gobierna al actuador
+
+c
+un actuador o
+elemento final control
+que modifique al sistema
+manera controlada
+
+PASOS
+1
+controlador
+lee una señal externa
+que representa valor
+que se desea alcanzar
+
+subT PASOS
+2
+Esta señal
+recibe nombre
+punto consigna
+el cual es misma naturaleza y
+tiene mismo rango valores
+que señal
+que proporciona sensor
+
+3
+controlador
+resta señal actual
+a señal punto 
+consigna,
+obteniendo así
+señal error,
+que determina en cada instante
+diferencia que hay
+entre
+valor deseado y
+valor medido
+
+4
+señal error
+es utilizada
+por cada uno
+tres componentes
+del controlador PID
+
+5
+tres señales 
+sumadas,
+componen señal salida
+que controlador
+va a utilizar
+para gobernar al actuador
+
+6
+señal resultante
+suma estas tres
+se llama variable manipulada y
+no se aplica directamente
+sobre actuador,
+sino que
+debe ser transformada
+para ser compatible
+con actuador utilizado
+
+subT ACCION PROPORCIONAL
+consiste en producto
+entre
+señal error y
+Constante Proporcionalidad
+(recíproca K o G, Ganancia)
+como para que produzca
+que error
+en estado estacionario
+sea casi nulo
+
+Sin embargo,
+existe también
+1 valor límite
+en Constante Proporcionalidad
+a partir del cual,
+en algunos casos,
+sistema alcanza
+valores superiores a deseados
+Este fenómeno se llama
+sobreoscilación
+
+Acción Proporcional
+no considera tiempo,
+por tanto,
+es la mejor manera
+solucionar el error permanente
+en estado estacionario
+(error Offset)
+y de hacer
+que sistema contenga
+alguna componente
+que contemple variación
+respecto al tiempo,
+es incluyendo y
+configurando acciones
+integral y
+derivativa
+
+subT ACCION INTEGRAL
+tiene como propósito
+disminuir y
+eliminar
+error en estado estacionario
+(error Offset),
+generado al aplicar
+Acción Proporcional
+
+Control Integral
+actúa cuando persiste
+una desviación entre
+variable y
+punto consigna
+integrando esta desviación
+en tiempo y
+sumándola
+a acción proporcional
+
+error es integrado,
+el cual tiene función
+promediarlo o
+sumarlo
+por 1 período determinado
+
+Luego es multiplicado
+por una constante I
+Posteriormente,
+respuesta integral
+es adicionada
+al modo Proporcional
+para formar
+control PI
+con propósito obtener
+una respuesta estable del sistema,
+sin error Offset
+en estado estacionario
+
+Control Integral
+se caracteriza
+por tiempo entre
+repeticiones de Banda Proporcional
+en minutos entre repeticiones
+o su recíproca,
+repeticiones por minuto
+
+subT ACCION DERIVATIVA
+se manifiesta
+cuando hay 1 cambio
+en valor absoluto
+del error;
+(si error es constante,
+solamente actúan
+modos
+proporcional e
+integral)
+
+error,
+es desviación existente
+entre
+punto medida y
+valor consigna,
+
+Su funcion
+es mantener error al mínimo
+corrigiéndolo proporcionalmente
+a velocidad que este se produce;
+consiguiéndose esta manera
+evitar que error
+se incremente
+
+se
+deriva
+con respecto al tiempo y
+se multiplica
+por una constante D y
+luego se suma
+a señales anteriores (PI)
+
+Es importante
+adaptar respuesta control
+a cambios en sistema
+ya que una mayor derivativa
+corresponde
+a 1 cambio más rápido y
+controlador puede responder
+acordemente
+
+Control Derivativo
+se caracteriza
+por tiempo acción derivada
+en minutos anticipo
+Cuando tiempo acción derivada
+es grande,
+hay inestabilidad en proceso
+
+Cuando tiempo acción derivada
+es pequeño
+variable oscila demasiado
+con relación
+al punto consigna
+
+tiempo óptimo
+acción derivativa
+es el que retorna a la variable
+al punto consigna
+con mínimas oscilaciones
+
+acción derivada
+es adecuada
+cuando hay retraso
+entre
+movimiento válvula control y
+su repercusión
+a variable controlada
+
+Suele ser poco utilizada
+debido a sensibilidad
+al ruido que manifiesta y
+a complicaciones
+que ello conlleva
+
+subT LIMITACIONES UN CONTROL PID
+pueden ser ineficientes
+en otras aplicaciones
+
+desempeño del Sistema Control
+puede ser mejorado
+combinando
+lazo cerrado con 1 control PID
+con 1 lazo abierto
+
+a
+pueden dar 1 desempeño inadecuado
+si ganancia del lazo del PID
+debe ser reducida
+para que respuesta de este
+no se dispare
+u oscile
+sobre valor del Set Point
+
+b
+es lineal
+Principalmente desempeño
+controladores PID
+en Sistemas No Lineales
+es variable
+
+c
+en parte derivativa,
+ruido
+puede afectar al sistema,
+haciendo que esas
+pequeñas variaciones,
+hagan que cambio a salida
+sea muy grande
+
+subT APLICACIONES
+fueron inventados
+para simplificar
+labores de operadores y
+ejercer un mejor control
+sobre operaciones
+
+se utiliza
+en aplicaciones más críticas
+tales como
+Control
+Presión,
+Flujo,
+Fuerza,
+Velocidad,
+en muchas aplicaciones química
+
+a
+Lazos de Temperatura
+(Aire acondicionado,
+Calentadores,
+Refrigeradores, etc.)
+
+b
+Lazos de Nivel
+(Nivel en tanques de líquidos
+como agua,
+lácteos,
+mezclas,
+crudo, etc.)
+
+c
+Lazos de Presión
+(para mantener una presión predeterminada
+en tanques,
+tubos,
+recipientes, etc.)
+
+d
+Lazos de Flujo
+(mantienen la cantidad de flujo dentro de
+una línea
+o tubo)
+

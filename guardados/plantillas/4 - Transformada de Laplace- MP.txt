@@ -1,0 +1,257 @@
+FUNCION TRANSFERENCIA
+POLOS REALES
+DEFINICIÓN FUNCIONES TRANSFERENCIA UN SISTEMA CONTINUO
+Se considerará primero
+funciones transferencia continuas,
+para sistemas
+una sola salida
+una sola entrada y
+<imagen>
+o en notación transformada,
+<imagen>
+como
+función Transferencia P(s)
+<imagen>
+1 sistema continuo se define
+como
+aquel factor en ecuación Y(s)
+que multiplica
+a transformada entrada U(s)
+
+subT DEFINICIÓN FUNCIONES TRANSFERENCIA UN SISTEMA CONTINUO
+función transferencia
+se define como
+transformada Laplace salida
+sobre
+transformada Laplace entrada
+<imagen>
+
+denominador es
+Polinomio característico y
+transformada respuesta
+puede escribirse como
+<imagen>
+
+donde términos correspondientes
+a valores iniciales uk0, yk0
+se consideran igual
+a cero,
+por tanto,
+Transformada Laplace salida Y(s)
+en respuesta
+a una entrada U(s)
+está dada por
+<imagen>
+
+Se hace énfasis
+en que
+no todas funciones transferencia
+son expresiones algebraicas racionales
+
+Puesto que
+formación transformada salida Y(s)
+es simplemente
+una multiplicación algebraica
+P(s) y U(s)
+
+Cuando términos los valores iniciales uk0, yk0
+son ceros,
+multiplicación es conmutativa;
+es decir:
+Y(s) = U(s) P(s) = P(s) U(s),
+entonces
+transformada inversa es
+<imagen>
+
+Por tanto,
+respuesta tiempo y(t)
+puede determinarse
+encontrando polos P(s) U(s)
+
+En consecuencia y(t)
+depende tanto
+polos y
+ceros
+función transferencia
+como
+polos y
+ceros
+entrada
+
+subT PROPIEDADES FUNCIÓN TRANSFERENCIA UN SISTEMA CONTINUO
+1
+Si entrada
+en 1 sistema
+con función transferencia P(s)
+es 1 impulso unitario,
+y todos sus valores iniciales
+son cero,
+transformada salida es P(s)
+<imagen>
+
+2
+función transferencia
+del sistema
+puede determinarse
+a partir ecuación diferencial
+del sistema
+
+3
+Para sistemas continuos,
+si todas raíces del denominador
+tienen partes reales negativas,
+sistema es estable
+
+4
+función transferencia del sistema
+puede especificarse entonces
+como una constante,
+especificando
+polos y
+ceros
+del sistema
+
+Esta constante
+representada por K
+es factor ganancia del sistema
+
+subT FORMA CANÓNICA UN SISTEMA EN MALLA CERRADA
+Donde G y H son
+funciones Transferencia
+del Sistema Control
+componentes Sistema Control son
+<imagen>
+
+En siguientes ecuaciones,
+signo –
+se refiere a 1 sistema
+con retroalimentación positiva
+con retroalimentación negativa
+<imagen>
+se debe considerar
+<imagen>
+
+y signo +
+a 1 sistema
+con retroalimentación positiva
+con retroalimentación negativa
+<imagen>
+se debe considerar
+<imagen>
+
+denominador C/R
+determina
+ecuación característica del sistema,
+que se define
+a partir 1 ± GH=0
+<imagen>
+
+subT RESPUESTA EN TIEMPO
+cómo variables estado
+están asociadas
+con sistemas lazo cerrado,
+para una variedad entradas o
+condiciones iniciales
+Queda encontrar y(t)
+
+función transferencia
+lazo cerrado es
+
+Conociendo entrada en tiempo,
+se conoce su transformada
+
+Y conociendo
+función transferencia lazo cerrado,
+se puede hallar
+transformada Laplace salida
+
+Esto se obtiene hallando
+transformada Inversa Laplace anterior
+
+métodos gráficos
+son una herramienta poderosa
+en ingeniería control
+ya que exactitud obtenida
+es por general compatible
+con exactitudes
+con que se describen plantas
+que se desean estudiar
+
+subT ganancia respuesta tiempo
+<imagen>
+
+diagrama respuesta en tiempo
+<imagen>
+
+subT EFP metodo grafico
+<imagen>
+<imagen>
+<imagen>
+ganancia
+acostumbra poner
+segundo 
+cuadrante
+
+subT conceptos previos
+<imagen>
+<imagen>
+<imagen>
+
+POLOS COMPLEJOS
+EFP 
+metodo grafico
+variable compleja
+en forma binomica
+considera como expresion
+<imagen>
+sigma parte real
+jw 
+parte imaginaria
+sigma y w 
+numeros reales
+unidad imaginaria con propiedades
+<imagen>
+polos en grafico
+son triangulitos
+<imagen>
+<imagen>
+
+subT EFP metodo grafico
+obteniendo valores
+s1 s2
+expresar polinomio
+<imagen>
+como
+<imagen>
+si desarrolla
+cuadrado binomio
+llegara polinomio origen
+<imagen>
+
+polos reales
+aproximan
+valores estables
+
+S imaginario puro
+sistema inestable
+
+si no dan R(s)
+usar 1/s
+
+angulos
+siempre
+positivizados
+usar radianes
+
+suplementarios
+suma cuyo
+resultado
+= 180
+
+diagrama respuesta en tiempo
+<imagen>
+
+ejemplo diagrama
+<imagen>
+<imagen>
+

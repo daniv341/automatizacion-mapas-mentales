@@ -1,0 +1,322 @@
+temaP estabilidad
+
+subT concepto de estabilidad
+
+requerimiento importante para sist control
+es que debe ser estable
+significa que si a sistema se aplica
+entrada de magnitud finita
+entonces salida tambien ser finita
+y de ningun modo infinita
+
+sistema puede definirse estable
+si toda entrada finita(o acotada)
+produce salida acotada
+por ejemplo
+
+para toda entrada escalon aplicada a sistema
+salida debe ser finita
+
+toda entrada escalon debe
+producir salidas finitas
+
+si salida no tiende a 0 o no crece a infinito
+pero tiende a valor finito distinto de cero
+se dice que sistema es marginalmente estable
+
+si solo interesa estudio estabilidad de sistema
+los polos de funcion transferencia son importantes
+y
+
+valores
+
+ubicacion
+
+de ceros son irrelevantes
+
+subT casos
+
+<imagen>
+
+estable
+
+si todos polos estan en lado izquierdo
+de diagrama de polos y ceros
+sistema es estable
+<imagen>
+
+tiene raices
+con parte real negativa
+
+inestable
+
+si solo uno de los polos esta
+en el lado derecho de diagrama
+este es inestable
+<imagen>
+
+tiene raices
+con parte real positiva
+
+marginalmente estable
+<imagen>
+
+con parte real igual a 0
+
+sistema marginalmente estable
+si 1 o mas polos estan sobre eje jω
+es decir
+tienen parte real cero
+no hay polos en lado derecho
+
+analiticamente
+valores k para que
+sistema sea lo menos inestable posible
+pueden ser negativos o 0
+conceptualmente k > 0
+
+si existen pares polos que involucran jω
+entonces salida es siempre una oscilacion
+esta oscilacion
+
+estable
+si parte real del par polos complejos es negativa
+
+<imagen>
+
+inestable si parte real es positiva
+
+subT criterio de routh
+
+raices no se pueden obtener con facilidad
+si polinomio denominador tiene forma
+
+<imagen>
+
+representa metodo que puede usarse
+en tales situaciones
+permitiendo determinar cantidad de polos
+en lazo cerrado que se encuentran en
+semiplano derecho del plano s
+sin tener que factorear polinomio
+cuando n > 3
+
+subT caract del metodo
+determina localizacion ceros o raices
+polinomio con coeficientes constantes reales
+con respecto a semiplanos
+izquierdo y derecho del plano s
+sin obtener valor analitico de esos ceros
+
+subT limitaciones del metodo
+
+valido solo para determinar raices de
+ecuacion caracteristica respecto a
+
+semiplano derecho
+
+semiplano izquierdo
+
+del plano s
+
+el limite de estabilidad
+es el eje j𝛚 del plano s
+
+si sistema es inestable
+la prueba no proporciona informacion
+sobre como estabilizarlo
+
+subT condiciones
+
+<imagen>
+
+para que ecuacion anterior
+no tenga raices con partes reales positivas
+necesario que se cumpla:
+
+todos coeficientes deben ser reales
+todos coeficientes de ecuacion
+deben tener mismo signo
+
+ningun coeficiente es igual a cero
+es decir
+no debe faltar ningun termino
+
+estas condiciones no son suficientes
+ya que posible que ecuacion
+que cumpla condiciones
+pueda no tener todas raices
+en semiplano izquierdo del plano s
+por ejemplo
+
+<imagen>
+<imagen>
+<imagen>
+
+subT revisar coeficientes de ecuacion
+
+si algun coeficiente es negativo
+entonces el sistema es inestable
+
+si cualesquiera de coeficientes es cero
+entonces
+en el mejor de los casos
+sistema es marginalmente estable
+
+si solo interesa estabilidad absoluta
+no necesario continuar procedimiento
+si desea limitar cantidad de polos
+del lado derecho del plano s
+continuar con procedimiento
+
+si son todos son
+
+reales positivos
+
+ninguno es cero
+
+entonces sistema puede ser estable
+
+para que el sistema tenga
+menor inestabilidad debemos buscar
+menor cantidad de cambios signo
+en primera columna de tabla routh
+
+subT procedimiento
+
+polinomio caracteristico
+
+igualado a cero
+llamado
+ecuacion caracteristica
+
+si se encuentra incompleto
+y se desea avanzar en estudio
+sabiendo que en el mejor de los casos
+sera marginalmente estable
+se completa el mismo incorporando termino faltante
+con coeficiente igual a cero
+
+ordenar coeficientes de ecuacion caracteristica
+en dos renglones
+todos contados desde
+termino de grado mas alto
+
+obtener filas adicionales
+
+en tabla de routh
+las cuales se determinan
+mediante calculos a partir de elementos
+de dos filas inmediatamente anteriores
+
+filas subsecuentes
+se calculan continuando
+tabla horizontal y verticalmente
+hasta obtener ceros
+
+investigar signos de coeficientes
+
+de primera columna de tabla
+que contienen informacion sobre
+raices de ecuacion
+y se hacen las conclusiones
+
+todas raices de ecuacion caracteristica
+tienen partes reales negativas
+si y solo si
+elementos primera columna de tabla routh
+tienen mismo signo
+de lo contrario
+numero raices con partes reales positivas
+igual
+numero de cambios de signo
+
+subT casos especiales
+
+dependiendo de coef de ecuacion
+siguientes dificultades
+pueden impedir que tabla routh
+se complete apropiadamente
+
+primer elemento cualquiera de los renglones
+de tabla routh es 0
+pero los otros no lo son
+reemplazar elemento cero en primera columna
+por un numero pequeno
+
+positivo
+
+arbitrario
+
+llamado epsilon
+y despues continuar tabla routh
+
+elementos en 1 renglon tabla routh
+son todos ceros
+pasos a seguir
+
+formar ecuacion auxiliar a(s)=0
+
+mediante uso de coeficientes del renglon
+que se encuentra justo antes de renglon de ceros
+
+derivar ecuacion auxiliar
+
+con respecto a s esto da da/(ds)=0
+
+reemplace renglon de ceros
+
+continuar tabla de routh
+
+en la forma usual
+con nuevo renglon de coeficientes
+reemplazando renglon de ceros
+
+interprete en forma usual
+
+el cambio de signos (si existen)
+de coeficientes en primera columna de tabla routh
+
+subT estabilidad relativa
+
+puede usarse criterio
+para saber que tan cerca de la inestabilidad
+se encuentra un sistema estable
+
+para estudiar este aspecto
+necesario determinar
+que tan cerca del eje imaginario
+se encuentran las raices
+
+<imagen>
+
+desplazar eje a -sigma
+significa
+todos valores polinomio denominador
+reemplazen por (r-sigma)
+luego aplicar criterio routh
+para analizar estabilidad
+nuevo sistema
+
+conclusion
+sistema original es estable
+pero como tenemos polos proximos al origen
+el sistema es susceptible de ser inestable
+
+puede conseguirse moviendo eje a izquierda
+una cantidad finita
+y analizar si corrimiento
+da o no por resultado
+sistema inestable a partir
+de ubicacion del nuevo eje
+
+determinar estabilidad de sistema dada
+su funcion de transferencia
+
+implica determinar raices
+del polinomio denominador
+
+considerar si cualesquiera de estas
+son o no positivas
+
+con coeficientes de da/(ds)=0
