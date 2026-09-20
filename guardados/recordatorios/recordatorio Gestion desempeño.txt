@@ -16,13 +16,13 @@ con quienes trabajan? + gerentes, justos & 19
 subT IMPORTANCIA Y PROBLEMAS QUE RESUELVE 
 que importancia tiene? + interraciones & 20
 que brinda? + vision, ayuda & 21
-que problemas resuelve? + financieras, metodologia, incapacidad, perdida 
+que problemas resuelve? + financieras, metodologia, incapacidad, perdida & 22, 23, 24, 25
 
 subT TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA
-evaluacion 90 + directo, autoridad & 39
-autoevaluacion + propio, discrepancias, complemento 
-evaluacion por pares + compañeros, anonima 
-assesment center + externos, objetivo 
+evaluacion 90 + directo, autoridad & 29
+autoevaluacion + propio, discrepancias, complemento & 32
+evaluacion por pares + compañeros, anonima & 35
+assesment center + externos, objetivo & 37
 evaluacion por equipo + colectivo, complementa & 40
 evaluacion del cliente + interactua, contacto clientes & 43
-evaluacion 360 + recoge, completa & 46
+evaluacion 360 + recoge, completa & 46, 47

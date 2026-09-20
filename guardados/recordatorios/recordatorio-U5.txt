@@ -15,11 +15,11 @@ que causa amortiguamiento negativo? + crece, inestable & 19
 que ocurre en eje imaginario? + nulo, puros & 20, 21
 
 subT Ubicación Geométrica Raices 1 Sistema 2º Orden conforme varía ζ 
-Si ζ > 1? + sobreamortiguada & 22
+Si ζ > 1? + sobreamortiguada & 25
 Si ζ = 1? + criticamente amortiguada & 23
 Si ζ = 0? + oscila indefinidamente & 24
 Si 0 < ζ < 1? + subamortiguada & 25
-como evaluo desempeño SC? + escalon, cualquier & 27, 28
+como evaluo desempeño SC? + escalon, cualquier & 26, 27
 
 subT PARAMETROS RESPUESTA TRANSITORIA 
 Tiempo Retardo tr? + mitad & 29
@@ -31,9 +31,4 @@ Tiempo Establecimiento ts? + alrededor, porcentaje & 36
 subT ESPECIFICACIONES RESPUESTA TRANSITORIA 
 que sistema es el mas deseable? + conjugados, amortiguamiento & 38
 porque con 0,4 y 0,8? + sobreimpulso, lentamente & 39
-que requisito debe tener un SC? + rapidez, adecuado & 40
-
-
-shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;fixedSize=1;fontSize=16;fillColor=#CCCC00;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;fontStyle=1;arcSize=7;size=30;gradientColor=#4F4F4F;gradientDirection=south;fontFamily=Helvetica;overflow=block;
-
-ellipse;whiteSpace=wrap;fontSize=16;fillColor=#98FF98;strokeColor=default;fontColor=#5C5C5C;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;fontStyle=1;arcSize=7;fontFamily=Helvetica;gradientColor=#FFFFFF;overflow=block;
+que requisito debe tener un SC? + rapidez, adecuado & 40, 41

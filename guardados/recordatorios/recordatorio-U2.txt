@@ -44,7 +44,7 @@ sistema multivariable + ambas & 49
 subT CLASIFICACIÓN CONTROLADORES ANALÓGICOS
 controlador industrial + acciones control & 1
 on-off + dos posiciones & 2
-controlador P + salida, ganancia, ajuste & 3
+controlador P + salida, ganancia, ajuste & 3, 4
 controlador D + derivada, KD & 5
 controlador I + mayoria, Ki & 6
 PID + suma, combinaciones & 7, 8

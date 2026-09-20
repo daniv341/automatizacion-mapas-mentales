@@ -57,8 +57,14 @@
 - v4.16: * DETECCION de rutas: si una ruta trae 2-3 subT (subtitulo heredado + rombos que
     quedaron como renglon), se queda SOLO el ultimo como subtitulo del bloque y los
     demas se eliminan (afecta TXT, JSON y get_routes_id_map; no cambia la numeracion).
-- v4.17: el dato 'ruta' del .drawio ya no se anota en hexagonos (temaS): se anota la
-    primera celda de contenido de la ruta (ni rombos ni hexagonos).
+- v4.18: rutas adicionales por cobertura contigua (solo tarjetas con subT y 2-4 claves;
+    solo rutas del mismo subT y en orden; max 4 rutas): (a) tarjeta firme + ruta vecina
+    que aporta una clave rara de la pista -> se agrega con '~' (" & 3, 4~"); (b) tarjeta
+    bajo el umbral cuyas claves raras se reparten en rutas contiguas -> se asignan todas.
+    El '~' ahora es por ruta; un sufijo mixto ('3, 4~') se respeta y solo '3' fija el orden.
+- v4.17: el dato 'ruta' del .drawio ya no se anota en los temaS (hexagono que es raiz del
+    arbol): se anota la primera celda de contenido. Los hexagonos que no son raiz
+    (ej. 'Entre estos se encuentran') siguen siendo celdas de contenido y se anotan.
   * La contencion de palabras en temas pasa a ultimo recurso: solo si el subT de la
     tarjeta no coincide con ningun tema del diagrama.
   * Tarjetas que no superan el umbral (antes siempre '~'): (a) cobertura complementaria:
@@ -499,6 +505,19 @@ def make_is_rhombus_lookup(styles: dict[str, str]):
     return _is_rhombus_key
 
 
+def make_is_tema_lookup(styles: dict[str, str], roots: list[str]):
+    """v4.17: un temaS es un hexagono que es RAIZ del arbol (el padre de los subT).
+    Los hexagonos que no son raiz (p. ej. 'Entre estos se encuentran') son celdas
+    de contenido y SI reciben el dato 'ruta'."""
+    raices = set(roots)
+
+    def _is_tema_key(key: str) -> bool:
+        s = styles.get(key, "").lower()
+        return "hexagon" in s and "gradientcolor=#" in s
+
+    return _is_tema_key
+
+
 def _is_head_with_single_leaf(node: TrieNode) -> bool:
     if len(node.children) != 1:
         return False
@@ -780,6 +799,12 @@ PUNTAJE_MIN_TENTATIVO = 0.0  # asignacion tentativa (~) solo si el mejor puntaje
 # v4.16 (solo actuan sobre tarjetas que NO superan UMBRAL_CLAVES)
 PUNTAJE_MIN_MARGEN = 0.5  # margen sobre la segunda: el mejor debe tener al menos esto...
 MARGEN_GANADOR = 0.2      # ...y sacarle al menos esto a la siguiente candidata
+# v4.18: rutas adicionales por cobertura contigua (solo tarjetas CON subT y 2-4 claves)
+MAX_CLAVES_EXTRA = 4      # la pista debe tener entre 2 y este numero de claves
+MAX_RUTAS_EXTRA = 4       # maximo de rutas de una tarjeta con este mecanismo
+DF_MAX_EXTRA = 3          # una clave 'rara' aparece en a lo sumo estas rutas del diagrama
+MAX_SEMILLAS = 6          # candidatas probadas como punto de partida de la cadena
+MARCAR_EXTRAS = True      # ruta agregada a una asignacion firme: se escribe con '~'
 
 STOPWORDS = frozenset({
     "que", "como", "cual", "cuales", "cuando", "donde", "cuanto", "por",
@@ -994,7 +1019,8 @@ class Tarjeta:
     reinicia: bool = False               # primera tarjeta tras un subT
     rutas_asignadas: Optional[list[int]] = None  # resultado (None = sin cambio)
     manual_tentativa: bool = False       # el sufijo existente lleva '~' (por revisar)
-    tentativa: bool = False              # la asignacion nueva se escribe con '~'
+    marcadas: set[int] = field(default_factory=set)   # rutas nuevas que se escriben con '~'
+    manual_firmes: list[int] = field(default_factory=list)  # rutas del sufijo existente SIN '~'
 
 
 def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str]]:
@@ -1019,11 +1045,14 @@ def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str
         cuerpo = linea
         rutas_manual: Optional[list[int]] = None
         manual_tentativa = False
+        manual_firmes: list[int] = []
         malformada = False
         m = SUFIJO_RUTAS_RE.search(linea)
         if m:
-            rutas_manual = [int(x) for x in re.findall(r"[0-9]+", m.group(1))]
-            manual_tentativa = "~" in m.group(1)
+            pares = re.findall(r"([0-9]+)(~?)", m.group(1))
+            rutas_manual = [int(n) for n, _t in pares]
+            manual_firmes = [int(n) for n, t in pares if not t]
+            manual_tentativa = not manual_firmes      # todas con '~' -> por revisar
             cuerpo = linea[:m.start()]
         elif "&" in linea:
             malformada = True
@@ -1036,7 +1065,7 @@ def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str
             primero=primero.strip(), segundo=segundo.strip(),
             tema=tema_actual, rutas_manual=rutas_manual,
             malformada=malformada, reinicia=reinicia_pendiente,
-            manual_tentativa=manual_tentativa,
+            manual_tentativa=manual_tentativa, manual_firmes=manual_firmes,
         ))
         reinicia_pendiente = False
     return lineas, tarjetas, temas_subt
@@ -1060,6 +1089,7 @@ class Puntuador:
             max(1, r.n_tokens) for r in self.rutas.values())))
         self._idf_ref = math.log((self.n_rutas + 1) / 1.5)
         self._pesos: dict[str, float] = {}
+        self._dfs: dict[str, int] = {}
         # vocabulario global (palabra -> rutas que la contienen). Para cada clave
         # se calcula UNA vez que palabras del vocabulario calzan; despues, saber
         # si una ruta la contiene es una interseccion de conjuntos (sin fuzzy).
@@ -1089,13 +1119,21 @@ class Puntuador:
     def presente(self, clave: str, ruta: RutaIndexada, umbral: float) -> bool:
         return not self.calzan(clave, umbral).isdisjoint(ruta.palabras)
 
-    def peso(self, clave: str) -> float:
-        p = self._pesos.get(clave)
-        if p is None:
+    def df(self, clave: str) -> int:
+        """En cuantas rutas del diagrama aparece la clave."""
+        d = self._dfs.get(clave)
+        if d is None:
             con_clave: set[int] = set()
             for w in self.calzan(clave, SIMILITUD_CLAVE):
                 con_clave |= self._rutas_de[w]
-            df = len(con_clave)
+            d = len(con_clave)
+            self._dfs[clave] = d
+        return d
+
+    def peso(self, clave: str) -> float:
+        p = self._pesos.get(clave)
+        if p is None:
+            df = self.df(clave)
             if df == 0:
                 p = (1.0 + PESO_IDF_MIN) / 2.0
             else:
@@ -1160,6 +1198,62 @@ def _buscar_vecina(puntuador: Puntuador, claves_pista: list[str], claves_pregunt
         p, mp = puntuador.evaluar(claves_pista, claves_pregunta, v)
         if faltan <= mp and (mejor is None or p > mejor[0] + EPS):
             mejor = (p, v)
+    return mejor[1] if mejor else None
+
+
+def _extender_contiguas(puntuador: Puntuador, claves_pista: list[str], claves_pregunta: list[str],
+                        base: list[int], permitidas: set[int], max_rutas: int
+                        ) -> tuple[list[int], set[str]]:
+    """v4.18: partiendo de las rutas 'base', agrega rutas CONTIGUAS (N+-1 de alguna ya
+    elegida) mientras aporten al menos una clave RARA de la pista (aparece en a lo sumo
+    DF_MAX_EXTRA rutas) que las elegidas aun no cubran. Solo se consideran rutas
+    'permitidas' (mismo subT y en orden). Devuelve (cadena ordenada, claves raras que
+    siguen sin cubrir)."""
+    raras = {c for c in claves_pista if puntuador.existe(c) and puntuador.df(c) <= DF_MAX_EXTRA}
+    memo: dict[int, frozenset[str]] = {}
+
+    def cubre(n: int) -> frozenset[str]:
+        if n not in memo:
+            memo[n] = puntuador.evaluar(claves_pista, claves_pregunta, n)[1]
+        return memo[n]
+
+    cadena = sorted(set(base))
+    faltan = set(raras)
+    for n in cadena:
+        faltan -= cubre(n)
+    while faltan and len(cadena) < max_rutas:
+        mejor: Optional[tuple[tuple[float, int], int, set[str]]] = None
+        for n in cadena:
+            for v in (n + 1, n - 1):
+                if v in cadena or v not in permitidas:
+                    continue
+                aporta = faltan & cubre(v)
+                if not aporta:
+                    continue
+                orden = (sum(puntuador.peso(c) for c in aporta), v)   # mas peso; luego la siguiente
+                if mejor is None or orden > mejor[0]:
+                    mejor = (orden, v, aporta)
+        if mejor is None:
+            break
+        cadena = sorted(cadena + [mejor[1]])
+        faltan -= mejor[2]
+    return cadena, faltan
+
+
+def _mejor_ventana(puntuador: Puntuador, claves_pista: list[str], claves_pregunta: list[str],
+                   semillas: list[tuple[int, float]], permitidas: set[int]) -> Optional[list[int]]:
+    """v4.18 (tarjeta que NO supera el umbral): busca una cadena de rutas contiguas
+    (2 a MAX_RUTAS_EXTRA) que cubra TODAS las claves raras de la pista, aportando cada
+    ruta al menos una. Gana la cadena mas corta; luego la semilla de mayor puntaje."""
+    mejor: Optional[tuple[tuple[int, float, int], list[int]]] = None
+    for n0, p0 in semillas:
+        cadena, faltan = _extender_contiguas(puntuador, claves_pista, claves_pregunta,
+                                             [n0], permitidas, MAX_RUTAS_EXTRA)
+        if len(cadena) < 2 or faltan:
+            continue
+        clave = (-len(cadena), p0, -n0)
+        if mejor is None or clave > mejor[0]:
+            mejor = (clave, cadena)
     return mejor[1] if mejor else None
 
 
@@ -1252,7 +1346,7 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
                         f"ancla & {', '.join(map(str, tar.rutas_manual))}: "
                         f"la ruta {mejor_n} coincide mejor ({mejor_p:.2f} vs {s_anch:.2f})",
                         []))
-            ultima_ruta = max(tar.rutas_manual)
+            ultima_ruta = max(tar.manual_firmes)   # solo las rutas sin '~' fijan el orden
             linea_ultima = tar.indice
             continue
 
@@ -1314,6 +1408,20 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
                 revision.append((tar.indice, tar.linea,
                                  "sin coincidencias con ninguna ruta", []))
                 continue
+            # v4.18: cadena de rutas contiguas del mismo subT que, juntas, cubren TODAS las
+            # claves raras de la pista (una clave por ruta o mas). Sin '~': la evidencia es
+            # la cobertura completa. No fija el orden.
+            if tar.tema is not None and 2 <= len(claves_pista) <= MAX_CLAVES_EXTRA:
+                permit = set(en_orden)
+                semillas = [(n, p) for n, p in top if n in permit and coincidentes.get(n)][:MAX_SEMILLAS]
+                ventana = _mejor_ventana(puntuador, claves_pista, claves_pregunta, semillas, permit)
+                if ventana is not None:
+                    tar.rutas_asignadas = ventana
+                    cambios += 1
+                    avisos.append((tar.indice, tar.linea,
+                                   f"asignada a ruta(s) {', '.join(map(str, ventana))} por cobertura "
+                                   f"contigua: cada ruta aporta claves de la pista y juntas las cubren todas"))
+                    continue
             # v4.16: antes de rendirse con '~', dos criterios extra sobre la mejor
             # candidata (solo si es de su tema y esta en orden; una fuera de orden
             # o de otro tema sigue siendo tentativa).
@@ -1347,7 +1455,7 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
             else:
                 motivo = f"ninguna ruta permitida supera UMBRAL_CLAVES (mejor {mejor_p:.2f})"
             tar.rutas_asignadas = [mejor_n]
-            tar.tentativa = True
+            tar.marcadas = {mejor_n}
             cambios += 1
             tentativas.append((tar.indice, tar.linea, motivo, top[:5]))
             continue
@@ -1384,6 +1492,22 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
                            f"asignada a ruta(s) {', '.join(map(str, elegidas))} ignorando el "
                            f"tema (el subT no coincidio con ninguna ruta o no habia coincidencia "
                            f"dentro de su tema)"))
+        # v4.18: rutas adicionales por cobertura contigua. Solo en la via normal, en
+        # tarjetas CON subT y 2-4 claves; las rutas agregadas solo salen de ese subT,
+        # y no fijan el orden (ultima_ruta ya se calculo con las firmes).
+        if (not fuera_orden and not sin_tema and tar.tema is not None
+                and 2 <= len(claves_pista) <= MAX_CLAVES_EXTRA):
+            cadena, _falt = _extender_contiguas(puntuador, claves_pista, claves_pregunta,
+                                                elegidas, set(en_orden), MAX_RUTAS_EXTRA)
+            extras = [n for n in cadena if n not in elegidas]
+            if extras:
+                tar.rutas_asignadas = cadena
+                if MARCAR_EXTRAS:
+                    tar.marcadas = set(extras)
+                avisos.append((tar.indice, tar.linea,
+                               f"ruta(s) {', '.join(map(str, extras))} agregada(s) por cobertura "
+                               f"contigua: cubre(n) claves raras de la pista que la(s) ruta(s) "
+                               f"{', '.join(map(str, elegidas))} no cubre(n)"))
 
     # --- resumen en consola: solo tarjetas pendientes de asociar ---
     con_manual = sum(1 for t in tarjetas if t.rutas_manual is not None)
@@ -1419,8 +1543,8 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
     nuevas = list(lineas)
     for tar in tarjetas:
         if tar.rutas_asignadas:  # formato exacto: espacio + & + espacio + "N, M"
-            marca = "~" if tar.tentativa else ""   # v4.15: '~' = por revisar
-            sufijo = " & " + ", ".join(f"{n}{marca}" for n in tar.rutas_asignadas)
+            sufijo = " & " + ", ".join(f"{n}{'~' if n in tar.marcadas else ''}"   # '~' = por revisar
+                                       for n in tar.rutas_asignadas)
             nuevas[tar.indice] = tar.linea.rstrip() + sufijo
 
     # --- copia de seguridad desactivada: no se crea ningun .bak ---
@@ -1493,8 +1617,7 @@ def main() -> None:
     #write_json(json_path, input_path, diagram_name, diagram_id, route_blocks)
 
     annotations, unannotated, conflicts = collect_ruta_annotations(
-        route_blocks, is_rhombus_key,
-        lambda k: "hexagon" in (s := styles.get(k, "").lower()) and "gradientcolor=#" in s)   # v4.17: temaS = hexagono con gradientColor
+        route_blocks, is_rhombus_key, make_is_tema_lookup(styles, roots))   # v4.17
     if annotations:
         annotated_count, missing_cells = write_annotated_drawio(input_path, input_path, annotations)
         print(f"drawio actualizado en su lugar: {annotated_count} celdas con dato 'ruta'")
