@@ -619,7 +619,7 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, ruta
     html = html.replace("__UMBRAL_CASI__", str(UMBRAL_CASI))
     html = html.replace("__SIM_ALTA__", str(SIM_ALTA))
 
-    with open(f"guardados/html/evaluador_{nombre_base}.html", "w", encoding="utf-8") as archivo:
+    with open(f"guardados/evaluadores/evaluador_{nombre_base}.html", "w", encoding="utf-8") as archivo:
         archivo.write(html)
 
     print("evaluador creado")

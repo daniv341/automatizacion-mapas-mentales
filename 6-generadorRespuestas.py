@@ -6,38 +6,39 @@
 - fusion de convergencias (multiples predecesores al mismo destino)
 - Trie para agrupar prefijos comunes
 - separacion entre arboles principales
-- v4.1: fusion de ramas hoja al bloque actual
-- v4.2: fusion de ramas 'cabeza + 1 hijo hoja' bajo padre no-rombo
+- v4.1: fusion de ramas hoja al bloque actual (INTACTA)
+- v4.2: fusion de ramas 'cabeza + 1 hijo hoja' bajo padre no-rombo (INTACTA)
 - v4.4: rombo contenedor (transparente) cuando su primera rama es otro rombo
 - v4.5: imagenes embebidas como renglones 'IMG:<data:image/...>'
-- v4.6: dato 'ruta' en el diagrama (mecanismo nativo de drawio:
-  <object label="..." ruta="N" id="...">)
-- v4.7: NUEVO - LA CELDA ANOTADA NUNCA ES UN ROMBO:
-  * Cada bloque conoce la secuencia de celdas (items) que producen sus
-    renglones. El dato 'ruta' se coloca en la PRIMERA celda real NO-rombo
-    de esa secuencia (se saltan rombos y nodos sinteticos de convergencia).
-  * El drawio anotado REEMPLAZA al original (misma ruta). Antes de anotar
-    se eliminan los datos 'ruta' previos de la Hoja 1 (proceso idempotente).
-- v4.8: NUEVO - PASO OPCIONAL recordatorio.txt -> sufijos " & N,M"
-- v4.9: CORRECCIONES del paso recordatorio (producto de pruebas con U2):
-  * FIX 1: el rango de orden (ultima_ruta) se REINICIA en cada linea subT
-    (antes heredaba el rango de la seccion anterior y las tarjetas de un
-    tema con rutas numeradas antes que el tema previo quedaban sin
-    candidatas, ej. CLASIFICACION CONTROLADORES -> rutas 1-8).
-  * FIX 2: los renglones 'IMG:data:image/...' se excluyen del texto de
-    cada ruta (las imagenes ya no participan en el matching).
-  * FIX 3: el tema de una ruta tambien puede salir de un RENGLON que
-    coincida con algun subT del recordatorio (caso rutas 12/17: el rombo
-    de tema queda como renglon, no como subtitle). Ademas el subtitle se
-    separa por lineas (puede ser multilínea, ej. ruta 22).
-  * FIX 4: matching tolerante de claves: subcadena O similitud >= 0.85
-    contra palabras de la ruta (cualquiera~cualquier, entradas~entrada,
-    combinanciones~combinaciones, ocasionar~ocasione).
-  * NUEVO: validacion de anclas (solo avisos, nunca modifica): si para una
-    tarjeta con sufijo manual existe otra ruta que coincide mucho mejor
-    que la anclada (diferencia > UMBRAL_AVISO_ANCLA), se reporta a revision.
-  * En consola solo se listan las tarjetas PENDIENTES (revision), no las
-    asociadas. Sin copia de seguridad (.bak desactivado). Idempotente.
+- v4.6: dato 'ruta' en el diagrama (<object label="..." ruta="N" id="...">)
+- v4.7: la celda anotada nunca es un rombo; el drawio anotado reemplaza
+  al original (idempotente)
+- v4.8: PASO OPCIONAL recordatorio.txt -> sufijos " & N,M"
+- v4.9: correcciones del paso recordatorio (reinicio de rango por subT,
+  IMG excluidas del matching, tema desde renglones, matching tolerante,
+  validacion de anclas con avisos)
+- v4.10: dedup de convergencias (caminos que se bifurcan y se juntan):
+  duplicado puro se elimina; contenido unico se fusiona si la bifurcacion
+  es en NO-rombo; si es en ROMBO se conservan como alternativas
+- v4.11: matching relajado cuando la pista tiene una unica clave
+- v4.12: 4 ajustes del asociador validados contra un ground-truth manual:
+  * FIX 1: los temas detectados en RENGLONES de una ruta REEMPLAZAN al
+    tema del subtitle (el rombo que queda como renglon es el que gobierna
+    la ruta; antes se SUMABAN y la ruta quedaba en dos temas a la vez,
+    ej. ruta 17 pertenecia tambien a 'Diagramas Bloques').
+  * FIX 2: SIMILITUD_CLAVE_UNICA 0.75 -> 0.83 (0.75 dejaba pasar pares
+    tipo derivada~derivativa = 0.78 entre rutas distintas).
+  * FIX 3: normalizar_texto fusiona '/' y '-' ENTRE alfanumericos
+    (A/D->ad, D/A->da, on-off->onoff); MIN_LARGO_CLAVE 3 -> 2 (permite
+    ad/da/KD/Ki) con stopwords de 2 letras ampliados y numeros solos
+    descartados; las claves de menos de 3 letras emparejan SOLO por
+    palabra exacta (evita que 'da' calce dentro de 'entrada').
+  * FIX 4: seleccion por COBERTURA: una ruta calificada se descarta si
+    no aporta NINGUNA clave nueva frente a las ya elegidas (ej. la ruta
+    'transductor entre orden v' coincide con exactamente las mismas
+    claves que la definicion de transductor -> se descarta; en cambio
+    'positiva' aporta frente a 'negativa' -> ambas se conservan).
+  * Los sufijos automaticos se escriben en orden ASCENDENTE de rutas.
 """
 from __future__ import annotations
 
@@ -342,6 +343,103 @@ def apply_convergences(
     return transformed, values, metadata
 
 
+# ======================================================================
+# v4.10: DEDUP DE CONVERGENCIAS (diamantes que se bifurcan y se juntan)
+# ======================================================================
+
+DEDUPLICAR_CONVERGENCIAS = True
+
+
+def deduplicar_convergencias(
+    paths: list[list[str]],
+    values: dict[str, str],
+    is_rhombus_key,
+) -> tuple[list[list[str]], int, int]:
+    """v4.10: fusiona caminos que se bifurcan y vuelven a juntar.
+
+    (a) DUPLICADO PURO: el camino no aportaria ningun texto nuevo -> se
+        elimina, sin importar donde se bifurque.
+    (b) APORTA CONTENIDO UNICO -> se fusiona SOLO si se separan en un
+        NO-rombo; el texto unico se inserta antes del punto de union.
+    (c) SE SEPARAN EN UN ROMBO -> alternativas de una decision: se
+        conservan como ruta propia.
+    """
+    nuevos: list[list[str]] = []
+    colas: dict[tuple[str, ...], tuple[int, list[str]]] = {}
+    fusionados = 0
+    alternativas = 0
+
+    def contenido(k: str) -> str:
+        return normalizar_texto(values.get(k, k))
+
+    def registrar(idx: int, camino: list[str], conv_pos: list[int]) -> None:
+        for i in conv_pos:
+            colas.setdefault(tuple(camino[i:]), (idx, camino))
+
+    for path in paths:
+        conv_pos = [i for i, k in enumerate(path) if k.startswith("__CONVERGENCE__")]
+
+        encontrado = None
+        for i in conv_pos:
+            dato = colas.get(tuple(path[i:]))
+            if dato is not None:
+                encontrado = (dato[0], dato[1], i)
+                break
+
+        if encontrado is None:
+            nuevos.append(list(path))
+            registrar(len(nuevos) - 1, path, conv_pos)
+            continue
+
+        idx_portador, camino_orig, pos_corte = encontrado
+        portador = nuevos[idx_portador]
+
+        L = 0
+        while L < len(path) and L < len(camino_orig) and path[L] == camino_orig[L]:
+            L += 1
+        bifurca_en_rombo = L > 0 and is_rhombus_key(path[L - 1])
+
+        claves_portador = set(portador)
+        valores_portador = {c for c in (contenido(k) for k in portador) if c}
+        extras: list[str] = []
+        for k in path[:pos_corte]:
+            if k in claves_portador:
+                continue
+            c = contenido(k)
+            if c and c in valores_portador:
+                continue
+            claves_portador.add(k)
+            if c:
+                valores_portador.add(c)
+            extras.append(k)
+
+        if bifurca_en_rombo and extras:
+            alternativas += 1
+            nuevos.append(list(path))
+            registrar(len(nuevos) - 1, path, conv_pos)
+            continue
+
+        if extras:
+            j: Optional[int] = None
+            try:
+                j = portador.index(path[pos_corte])
+            except ValueError:
+                for k in path[pos_corte:]:
+                    if k in portador:
+                        j = portador.index(k)
+                        break
+            if j is None:
+                alternativas += 1
+                nuevos.append(list(path))
+                registrar(len(nuevos) - 1, path, conv_pos)
+                continue
+            portador[j:j] = extras
+        fusionados += 1
+        registrar(idx_portador, path, conv_pos)
+
+    return nuevos, fusionados, alternativas
+
+
 def build_trie(
     paths: list[list[str]],
     values: dict[str, str],
@@ -387,17 +485,7 @@ def _split_into_blocks(
     list[tuple[str, list[str]]],
     list[tuple[str, list[str]]],
 ]:
-    """Descompone el sub-arbol de 'node' en bloques lineales.
-
-    v4.7: los bloques se llevan como ITEMS (cell_key, lineas) en orden, para
-    que la anotacion 'ruta' pueda saltar rombos y sinteticos.
-
-    Devuelve (bloques_cerrados, items_abiertos, items_continuacion):
-    - bloques_cerrados: [(subtitulo, items), ...]
-    - items_abiertos: tronco del sub-arbol (con el texto propio del nodo,
-      salvo que sea rombo transparente).
-    - items_continuacion: items de la primera rama (sin el texto del nodo).
-    """
+    """Descompone el sub-arbol de 'node' en bloques lineales (v4.7: items)."""
     own_item = (node.key, node.value.splitlines() or [""])
     node_is_rhombus = is_rhombus_key(node.key)
     next_active = node.value if node_is_rhombus else active_rhombus
@@ -451,15 +539,8 @@ def build_route_blocks(trie_root: TrieNode, is_rhombus_key) -> list[RouteBlock]:
     return blocks
 
 def get_routes_id_map(input_path: Path) -> dict[int, dict]:
-    """Para uso externo (otro script importa este). Devuelve un diccionario:
-    {
-        <numero de ruta>: {
-            "tema": <texto del subT o None>,
-            "ids": {"renglon1": "<id celda>", "renglon2": "<id celda>", ...},
-        },
-        ...
-    }
-    """
+    """Para uso externo (otro script importa este). v4.10: aplica el mismo
+    dedup de convergencias que main()."""
     vertices, styles, edges, graph, _n, _i, _o = parse_first_page(input_path)
     roots = find_roots(vertices, edges)
     leaves = find_leaves(graph)
@@ -467,8 +548,10 @@ def get_routes_id_map(input_path: Path) -> dict[int, dict]:
     convergence_map = build_convergence_map(vertices, edges)
     transformed_paths, convergence_values, _meta = apply_convergences(original_paths, convergence_map)
     trie_values = {**convergence_values, **vertices}
-    trie = build_trie(transformed_paths, trie_values, vertices, chain_marks)
     is_rhombus_key = make_is_rhombus_lookup(styles)
+    if DEDUPLICAR_CONVERGENCIAS:
+        transformed_paths, _f, _a = deduplicar_convergencias(transformed_paths, trie_values, is_rhombus_key)
+    trie = build_trie(transformed_paths, trie_values, vertices, chain_marks)
     route_blocks = build_route_blocks(trie, is_rhombus_key)
 
     id_map: dict[int, dict] = {}
@@ -486,9 +569,7 @@ def collect_ruta_annotations(
     route_blocks: list[RouteBlock],
     is_rhombus_key,
 ) -> tuple[dict[str, str], list[str], list[str]]:
-    """v4.7: celda -> numero de ruta. La celda elegida es la PRIMERA de la
-    secuencia de items del bloque que sea real (no sintetica) y NO rombo.
-    Devuelve (anotaciones, bloques_sin_celda, conflictos)."""
+    """v4.7: celda -> numero de ruta (primera celda real NO-rombo)."""
     annotations: dict[str, str] = {}
     unannotated: list[str] = []
     conflicts: list[str] = []
@@ -520,10 +601,7 @@ def write_annotated_drawio(
     output_path: Path,
     annotations: dict[str, str],
 ) -> tuple[int, list[str]]:
-    """v4.7: escribe el .drawio con las celdas anotadas envueltas en
-    <object label="..." ruta="N" id="...">. Si output_path == input_path,
-    el original se reemplaza. Limpia primero cualquier dato 'ruta' previo
-    en la Hoja 1 (idempotencia)."""
+    """v4.7: escribe el .drawio con las celdas anotadas (idempotente)."""
     tree = ET.parse(input_path)
     diagrams = tree.getroot().findall("./diagram")
     if not diagrams:
@@ -533,7 +611,6 @@ def write_annotated_drawio(
     if graph_root is None:
         return 0, list(annotations)
 
-    # Limpiar datos 'ruta' previos en la Hoja 1.
     for elem in graph_root.iter():
         if elem.tag in ("object", "UserObject"):
             elem.attrib.pop("ruta", None)
@@ -626,22 +703,18 @@ def write_json(
 
 
 # ======================================================================
-# v4.9: PASO OPCIONAL - sufijos " & N,M" en recordatorio.txt
-# ----------------------------------------------------------------------
-# Toma un recordatorio.txt (tarjetas "pregunta + pista"), asocia cada
-# tarjeta con la(s) ruta(s) ya generadas del .drawio y escribe el sufijo.
-# Aditivo: si se cancela el dialogo, el script sigue igual que antes.
-# SIN copia de seguridad: el archivo se sobreescribe directamente.
+# v4.8-v4.12: PASO OPCIONAL - sufijos " & N,M" en recordatorio.txt
 # ======================================================================
 
 UMBRAL_CLAVES = 0.6       # puntaje minimo para asignar una ruta
 MARGEN = 0.1              # distancia maxima admitida al mejor puntaje
 MAX_RUTAS = 3             # maximo de rutas por tarjeta
-PESO_PREGUNTA = 0.25      # peso de las palabras del "primero" (senal debil; sola no supera el umbral)
+PESO_PREGUNTA = 0.25      # peso de las palabras del "primero" (senal debil)
 TOPIC_SIMILARIDAD = 0.8   # similitud minima subT <-> tema de ruta (0..1)
-MIN_LARGO_CLAVE = 3       # claves mas cortas que esto se descartan (nota: KD/KI caen aqui)
-SIMILITUD_CLAVE = 0.85    # matching tolerante: subcadena O similitud >= esto (cualquiera~cualquier)
-UMBRAL_AVISO_ANCLA = 0.25 # aviso si otra ruta supera a la anclada por mas de esto (solo aviso)
+MIN_LARGO_CLAVE = 2       # v4.12: antes 3; permite tokens fusionados (ad, da, KD, Ki)
+SIMILITUD_CLAVE = 0.85    # matching tolerante normal
+SIMILITUD_CLAVE_UNICA = 0.83  # v4.12: antes 0.75; relajado SOLO si la pista tiene 1 clave
+UMBRAL_AVISO_ANCLA = 0.25 # aviso si otra ruta supera a la anclada por mas de esto
 
 STOPWORDS = frozenset({
     "que", "como", "cual", "cuales", "cuando", "donde", "cuanto", "por",
@@ -652,6 +725,10 @@ STOPWORDS = frozenset({
     "haya", "sea", "fue", "tiene", "tienen", "hace", "hacen", "porque",
     "entre", "sobre", "desde", "hasta", "segun", "todo", "toda", "todos",
     "todas", "otro", "otra", "otros", "otras", "cada", "puede", "pueden",
+    # v4.12: palabras functionales de 2 letras (MIN_LARGO_CLAVE ahora es 2;
+    # 'da' NO es stopword: es el token fusionado de D/A)
+    "me", "te", "ni", "mi", "tu", "yo", "ha", "he", "va", "ve", "vi",
+    "ya", "ah", "ay", "eh", "oh",
 })
 
 # Lectura de sufijo: "&" + numeros separados por coma; tolera espacios
@@ -660,19 +737,23 @@ SUFIJO_RUTAS_RE = re.compile(r"(?:^|\s)&\s*([0-9]+(?:\s*,\s*[0-9]+)*)\s*$")
 
 
 def normalizar_texto(texto: str) -> str:
-    """Minusculas, sin acentos, solo alfanumericos, espacios colapsados."""
+    """Minusculas, sin acentos, solo alfanumericos, espacios colapsados.
+    v4.12: fusiona '/' y '-' entre alfanumericos ANTES de limpiar
+    (A/D -> ad, D/A -> da, on-off -> onoff, t1/t2 -> t1t2)."""
     s = unicodedata.normalize("NFD", (texto or "").lower())
     s = "".join(c for c in s if not unicodedata.combining(c))
+    s = re.sub(r"(?<=[0-9a-z])[/\-](?=[0-9a-z])", "", s)
     s = re.sub(r"[^0-9a-z]+", " ", s)
     return re.sub(r"\s+", " ", s).strip()
 
 
 def extraer_claves(texto: str) -> list[str]:
-    """Claves: minusculas, sin acentos, solo letras, sin duplicados.
-    Descarta numeros solos (no sobreviven la normalizacion), palabras
-    muy cortas y stopwords."""
+    """Claves: minusculas, sin acentos, sin duplicados. v4.12: descarta
+    numeros solos ('14', '2') y mantiene tokens de 2 letras (ad, da, kd)."""
     claves: list[str] = []
     for palabra in normalizar_texto(texto).split():
+        if palabra.isdigit():
+            continue
         if len(palabra) < MIN_LARGO_CLAVE or palabra in STOPWORDS:
             continue
         if palabra not in claves:
@@ -680,15 +761,25 @@ def extraer_claves(texto: str) -> list[str]:
     return claves
 
 
-def clave_presente(clave: str, texto_norm: str, palabras_ruta: frozenset[str]) -> bool:
-    """v4.9 FIX 4: la clave aparece por subcadena O por palabra similar
-    (tolera singulares/plurales y typos leves)."""
-    if clave in texto_norm:
+def clave_presente(clave: str, texto_norm: str, palabras_ruta: frozenset[str],
+                   umbral: Optional[float] = None) -> bool:
+    """La clave aparece por subcadena (>=3 letras) o por palabra similar.
+    v4.12: claves de MENOS de 3 letras solo por palabra EXACTA o similitud
+    (evita que 'da' calce dentro de 'entrada'). 'umbral' relaja la
+    similitud (y el guardia de longitud) para pistas de una sola clave."""
+    if umbral is None:
+        umbral = SIMILITUD_CLAVE
+    if len(clave) >= 3 and clave in texto_norm:
         return True
-    limite_len = len(clave) // 4 + 1
+    if len(clave) < 3 and clave in palabras_ruta:
+        return True
+    if umbral < SIMILITUD_CLAVE:      # modo relajado: guardia de longitud mas amplia
+        limite_len = len(clave) // 3 + 2
+    else:
+        limite_len = len(clave) // 4 + 1
     for palabra in palabras_ruta:
         if abs(len(palabra) - len(clave)) <= limite_len and \
-           difflib.SequenceMatcher(None, clave, palabra).ratio() >= SIMILITUD_CLAVE:
+           difflib.SequenceMatcher(None, clave, palabra).ratio() >= umbral:
             return True
     return False
 
@@ -704,15 +795,14 @@ def temas_compatibles(tema_a: Optional[str], tema_b: Optional[str]) -> bool:
 
 def construir_temas_rutas(route_blocks: list[RouteBlock],
                           temas_subt: list[str]) -> dict[int, frozenset[str]]:
-    """v4.9 FIX 3: numero de ruta -> CONJUNTO de temas normalizados.
-    Fuentes de temas:
-    (a) cada linea del subtitle por separado (puede ser multilínea, ej.
-        ruta 22: 'TERMINOLOGIA...' + 'DEFINICIONES');
-    (b) renglones de la ruta que coincidan con algun subT del recordatorio
-        (caso rutas 12/17: el rombo de tema queda como renglon, no como
-        subtitle);
-    (c) herencia del bloque sin temas mas cercano si el subtitle no aporta
-        nada: primero hacia ADELANTE, luego hacia atras."""
+    """Numero de ruta -> CONJUNTO de temas normalizados.
+    v4.13 FIX: el orden era la causa de un bug — la herencia (para rutas
+    sin tema propio) corria ANTES del reemplazo por renglones y usaba los
+    subtítulos crudos, asi que una ruta sin subtitle heredaba el tema del
+    rombo ANTERIOR aunque el vecino ya hubiera recuperado (via renglones)
+    el tema del rombo nuevo. Ahora: (1) temas del subtitle, (2) temas por
+    renglones REEMPLAZAN (FIX 1), (3) herencia adelante/atrás usando los
+    temas FINALES de los vecinos."""
     def temas_de_subtitle(subtitle: Optional[str]) -> list[str]:
         out: list[str] = []
         for linea in (subtitle or "").splitlines():
@@ -721,39 +811,44 @@ def construir_temas_rutas(route_blocks: list[RouteBlock],
                 out.append(t)
         return out
 
-    crudos = [temas_de_subtitle(b.subtitle) for b in route_blocks]
     n = len(route_blocks)
-    temas_por_bloque: list[list[str]] = []
-    for i in range(n):
-        if crudos[i]:
-            temas_por_bloque.append(list(crudos[i]))
-            continue
-        heredado: Optional[list[str]] = None
-        for j in range(i + 1, n):
-            if crudos[j]:
-                heredado = crudos[j]
-                break
-        if heredado is None:
-            for j in range(i - 1, -1, -1):
-                if crudos[j]:
-                    heredado = crudos[j]
-                    break
-        temas_por_bloque.append(list(heredado) if heredado else [])
+    propios: list[list[str]] = [temas_de_subtitle(b.subtitle) for b in route_blocks]
 
+    # (2) renglones que coinciden con algun subT REEMPLAZAN el tema propio
     if temas_subt:
-        for bloque, temas in zip(route_blocks, temas_por_bloque):
+        for i, bloque in enumerate(route_blocks):
+            linea_temas: list[str] = []
             for linea in bloque.lines:
                 if IMAGE_LINE_RE.match(linea) or linea.startswith("IMG:"):
                     continue
                 t = normalizar_texto(linea)
-                if not t or t in temas:
+                if not t or t in linea_temas:
                     continue
                 for ts in temas_subt:
                     if ts == t or difflib.SequenceMatcher(None, ts, t).ratio() >= TOPIC_SIMILARIDAD:
-                        temas.append(t)
+                        linea_temas.append(t)
                         break
+            if linea_temas:
+                propios[i] = linea_temas
 
-    return {b.number: frozenset(temas) for b, temas in zip(route_blocks, temas_por_bloque)}
+    # (3) herencia SOLO para rutas sin tema propio, con temas finales
+    temas_por_bloque: list[list[str]] = [list(t) for t in propios]
+    for i in range(n):
+        if temas_por_bloque[i]:
+            continue
+        heredado: Optional[list[str]] = None
+        for j in range(i + 1, n):            # hacia ADELANTE
+            if propios[j]:
+                heredado = propios[j]
+                break
+        if heredado is None:
+            for j in range(i - 1, -1, -1):   # hacia atras
+                if propios[j]:
+                    heredado = propios[j]
+                    break
+        temas_por_bloque[i] = list(heredado) if heredado else []
+
+    return {b.number: frozenset(t) for b, t in zip(route_blocks, temas_por_bloque)}
 
 
 @dataclass
@@ -765,14 +860,12 @@ class Tarjeta:
     tema: Optional[str]                  # subT vigente (normalizado) al leerla
     rutas_manual: Optional[list[int]]    # sufijo ya escrito a mano (None si no trae)
     malformada: bool = False             # contiene '&' sin numeros
-    reinicia: bool = False               # v4.9 FIX 1: primera tarjeta tras un subT
-    rutas_asignadas: Optional[list[int]] = None  # resultado del paso (None = sin cambio)
+    reinicia: bool = False               # primera tarjeta tras un subT
+    rutas_asignadas: Optional[list[int]] = None  # resultado (None = sin cambio)
 
 
 def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str]]:
-    """Clasifica cada linea. Las vacias y las subT se conservan tal cual.
-    Tolerante a espacios finales tras los numeros del sufijo.
-    Devuelve tambien la lista de temas subT (para FIX 3)."""
+    """Clasifica cada linea. Las vacias y las subT se conservan tal cual."""
     lineas = texto.split("\n")
     tarjetas: list[Tarjeta] = []
     temas_subt: list[str] = []
@@ -788,7 +881,7 @@ def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str
             if tema:
                 temas_subt.append(tema)
             tema_actual = tema
-            reinicia_pendiente = True                  # el proxima tarjeta reinicia el rango
+            reinicia_pendiente = True
             continue                                   # subT: intacta
         cuerpo = linea
         rutas_manual: Optional[list[int]] = None
@@ -798,9 +891,9 @@ def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str
             rutas_manual = [int(x) for x in re.split(r"\s*,\s*", m.group(1))]
             cuerpo = linea[:m.start()]
         elif "&" in linea:
-            malformada = True                          # '&' sin numeros: a revision
+            malformada = True
         if " + " in cuerpo:
-            primero, segundo = cuerpo.rsplit(" + ", 1)  # el ultimo " + " separa
+            primero, segundo = cuerpo.rsplit(" + ", 1)
         else:
             primero, segundo = cuerpo, ""
         tarjetas.append(Tarjeta(
@@ -813,26 +906,24 @@ def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str
     return lineas, tarjetas, temas_subt
 
 
-def puntaje_ruta(claves_pista: list[str], claves_pregunta: list[str],
-                 texto_norm: str, palabras_ruta: frozenset[str]) -> float:
-    """Fraccion de claves de la pista presentes (senal fuerte) mas un
-    aporte debil de las claves de la pregunta. Matching tolerante."""
-    if claves_pista:
-        frac_pista = sum(1 for c in claves_pista if clave_presente(c, texto_norm, palabras_ruta)) / len(claves_pista)
-    else:
-        frac_pista = 0.0
-    if claves_pregunta:
-        frac_preg = sum(1 for c in claves_pregunta if clave_presente(c, texto_norm, palabras_ruta)) / len(claves_pregunta)
-    else:
-        frac_preg = 0.0
-    return frac_pista + PESO_PREGUNTA * frac_preg
+def evaluar_ruta(claves_pista: list[str], claves_pregunta: list[str],
+                 texto_norm: str, palabras_ruta: frozenset[str]) -> tuple[float, frozenset[str]]:
+    """Devuelve (puntaje, claves_coincidentes). El puntaje es la fraccion
+    de claves de la pista (senal fuerte; umbral relajado si hay una sola)
+    mas el aporte debil de la pregunta. El conjunto de claves coincidentes
+    alimenta la seleccion por cobertura (v4.12 FIX 4)."""
+    umbral_pista = SIMILITUD_CLAVE_UNICA if len(claves_pista) == 1 else SIMILITUD_CLAVE
+    mp = {c for c in claves_pista if clave_presente(c, texto_norm, palabras_ruta, umbral_pista)}
+    mq = {c for c in claves_pregunta if clave_presente(c, texto_norm, palabras_ruta, SIMILITUD_CLAVE)}
+    frac_pista = len(mp) / len(claves_pista) if claves_pista else 0.0
+    frac_preg = len(mq) / len(claves_pregunta) if claves_pregunta else 0.0
+    return frac_pista + PESO_PREGUNTA * frac_preg, frozenset(mp | mq)
 
 
 def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock]) -> None:
-    """v4.9: asocia tarjetas del recordatorio con route_blocks en memoria y
-    escribe el sufijo " & N,M". Sobreescribe el archivo SOLO si hay cambios.
-    Sin copia de seguridad. En consola solo se listan las tarjetas
-    pendientes de asociar (y avisos de anclas), no las asociadas."""
+    """Asocia tarjetas del recordatorio con route_blocks en memoria y
+    escribe el sufijo " & N,M" (orden ascendente). Sobreescribe SOLO si
+    hay cambios. Sin .bak. En consola solo se listan las pendientes."""
     try:
         texto = recordatorio_path.read_bytes().decode("utf-8-sig")
     except (OSError, UnicodeDecodeError) as exc:
@@ -849,7 +940,7 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
 
     temas_ruta = construir_temas_rutas(route_blocks, temas_subt)
 
-    # v4.9 FIX 2: excluir renglones de imagen del texto de cada ruta.
+    # renglones de imagen excluidos del texto de cada ruta (v4.9)
     textos_ruta: dict[int, str] = {}
     palabras_ruta: dict[int, frozenset[str]] = {}
     for b in route_blocks:
@@ -865,17 +956,13 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
             return True
         return any(temas_compatibles(tar.tema, t) for t in temas_ruta.get(n, frozenset()))
 
-    def puntaje_de(n: int, claves_pista: list[str], claves_pregunta: list[str]) -> float:
-        return puntaje_ruta(claves_pista, claves_pregunta, textos_ruta[n], palabras_ruta[n])
-
     ultima_ruta: Optional[int] = None   # rango permitido: >= ultima (misma subT)
     cambios = 0
     revision: list[tuple[int, str, str, list[tuple[int, float]]]] = []
 
     for tar in tarjetas:
-        # v4.9 FIX 1: cada subT reinicia el rango de orden.
         if tar.reinicia:
-            ultima_ruta = None
+            ultima_ruta = None         # cada subT reinicia el rango de orden
 
         if tar.rutas_manual is not None:
             # --- validacion de anclas: SOLO avisa, nunca modifica ---
@@ -888,7 +975,8 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
                 claves_pregunta = extraer_claves(tar.primero)
                 base = {n for n in numeros_ruta if tema_compatible_con(tar, n)}
                 base |= set(tar.rutas_manual)
-                puntajes_val = {n: puntaje_de(n, claves_pista, claves_pregunta)
+                puntajes_val = {n: evaluar_ruta(claves_pista, claves_pregunta,
+                                                textos_ruta[n], palabras_ruta[n])[0]
                                 for n in sorted(base)}
                 s_anch = max(puntajes_val[n] for n in tar.rutas_manual)
                 mejor_p = max(puntajes_val.values())
@@ -899,7 +987,7 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
                         f"ancla & {', '.join(map(str, tar.rutas_manual))}: "
                         f"la ruta {mejor_n} coincide mejor ({mejor_p:.2f} vs {s_anch:.2f})",
                         []))
-            ultima_ruta = max(tar.rutas_manual)        # ancla escrita a mano
+            ultima_ruta = max(tar.rutas_manual)
             continue
 
         if tar.malformada:
@@ -917,7 +1005,12 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
             if tema_compatible_con(tar, n)
             and (ultima_ruta is None or n >= ultima_ruta)
         ]
-        puntajes = [(n, puntaje_de(n, claves_pista, claves_pregunta)) for n in candidatas]
+        puntajes: list[tuple[int, float]] = []
+        coincidentes: dict[int, frozenset[str]] = {}
+        for n in candidatas:
+            p, m = evaluar_ruta(claves_pista, claves_pregunta, textos_ruta[n], palabras_ruta[n])
+            puntajes.append((n, p))
+            coincidentes[n] = m
         if not puntajes:
             revision.append((tar.indice, tar.linea,
                              "sin rutas candidatas para ese tema/orden", []))
@@ -933,13 +1026,26 @@ def procesar_recordatorio(recordatorio_path: Path, route_blocks: list[RouteBlock
             revision.append((tar.indice, tar.linea,
                              "ninguna ruta permitida supera UMBRAL_CLAVES", top))
             continue
-        if len(calificadas) > MAX_RUTAS:               # empate confuso
+
+        # v4.12 FIX 4: seleccion por cobertura. Una ruta calificada solo
+        # se conserva si aporta al menos una clave coincidente que ninguna
+        # de las ya elegidas cubra (empates exactos por claves identicas
+        # no agregan informacion).
+        filtradas: list[int] = []
+        cubiertas: set[str] = set()
+        for n, _p in calificadas:
+            m = coincidentes[n]
+            if m - cubiertas:
+                filtradas.append(n)
+                cubiertas |= m
+
+        if len(filtradas) > MAX_RUTAS:               # empate confuso
             revision.append((tar.indice, tar.linea,
-                             f"empate confuso: {len(calificadas)} rutas dentro del margen",
+                             f"empate confuso: {len(filtradas)} rutas dentro del margen",
                              calificadas[:MAX_RUTAS + 2]))
             continue
 
-        elegidas = [n for n, _p in calificadas[:MAX_RUTAS]]
+        elegidas = sorted(filtradas[:MAX_RUTAS])     # orden ascendente
         tar.rutas_asignadas = elegidas
         ultima_ruta = max(elegidas)
         cambios += 1
@@ -998,11 +1104,7 @@ def main() -> None:
 
     input_path = Path(input)
 
-    # Carpeta de salida del TXT y del JSON:
-    # - Si OUTPUT_DIR esta definida, se usa esa (se crea si no existe).
-    # - Si no, la carpeta del script (comportamiento original).
     output_dir = OUTPUT_DIR if OUTPUT_DIR is not None else Path(__file__).parent.resolve()
-    # ESTA ES LA LINEA QUE FALTABA EN TU INTENTO: crear la carpeta.
     output_dir.mkdir(parents=True, exist_ok=True)
 
     txt_path = output_dir / f"{input_path.stem}.txt"
@@ -1019,9 +1121,18 @@ def main() -> None:
     )
 
     trie_values = {**convergence_values, **vertices}
-    trie = build_trie(transformed_paths, trie_values, vertices, chain_marks)
-
     is_rhombus_key = make_is_rhombus_lookup(styles)
+
+    # v4.10: dedup de caminos que se bifurcan y vuelven a juntar.
+    if DEDUPLICAR_CONVERGENCIAS:
+        transformed_paths, fusiones_conv, alternativas_conv = deduplicar_convergencias(
+            transformed_paths, trie_values, is_rhombus_key
+        )
+        if fusiones_conv or alternativas_conv:
+            print(f"convergencias: {fusiones_conv} camino(s) duplicado(s) fusionado(s), "
+                  f"{alternativas_conv} alternativa(s) de rombo conservada(s) como ruta propia")
+
+    trie = build_trie(transformed_paths, trie_values, vertices, chain_marks)
     route_blocks = build_route_blocks(trie, is_rhombus_key)
 
     for block in route_blocks:
@@ -1049,7 +1160,7 @@ def main() -> None:
     image_nodes = sum(1 for v in vertices.values() if IMAGE_LINE_RE.match(v))
     print(f"archivos txt y json generados, rutas, {image_nodes} imagenes en el grafo)")
 
-    # --- v4.8/v4.9: paso OPCIONAL recordatorio.txt -> sufijos " & N,M" ---
+    # --- paso OPCIONAL recordatorio.txt -> sufijos " & N,M" ---
     recordatorio = filedialog.askopenfilename(
         title="Selecciona el recordatorio.txt (opcional; cancela para omitir)",
         filetypes=[("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*")],

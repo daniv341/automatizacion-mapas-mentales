@@ -483,7 +483,7 @@ def postprocess_txt(text: str) -> str:
     return re.sub(r"^[ \t]+", "", text, flags=re.MULTILINE)
 
 
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "guardados" / "plantilla"
+OUTPUT_DIR = Path(__file__).resolve().parent.parent / "guardados" / "plantillas"
 
 
 def main() -> None:
