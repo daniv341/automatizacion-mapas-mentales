@@ -1,0 +1,47 @@
+subT CONCEPTO E INTERPRETACION DEL LUGAR RAICES
+que nos nos indica este diagrama? + graficamente, variar & 1
+que permite estudiar? + relativa, no lineales & 2
+a que esta ligada la respuesta transitoria? + caracteristica, ubicacion & 3
+que pasa si sistema tiene ganancia variable? + ubicacion, elegida, importante, plano & 4, 5
+en que afecta al diseño si se modifica la ganancia? + diseño, ajuste, seleccion, adecuado & 6, 7
+existe un metodo para hallar las raices de un sistema? + trazan, parametro, determinado, K & 9
+que podemos predecir con este metodo? + variacion, adicion & 11
+que dificultades evita el metodo? + tecnicas, presentacion, todos, rapida & 13, 14
+que podemos hacer si tenemos multiples parametros? + construir, variando & 15
+
+subT DIAGRAMAS DEL LUGAR RAICES
+como debemos empezar con el metodo? + conocer, ubicacion & 21
+
+subT ejemplo practico
+ver primera imagen + G(s)H(s) & 22
+ver segunda imagen + p2, p3, conjugados & 23
+ver tercera imagen + magnitud G(s) & 24
+como estan ubicados los polos y ceros complejos? + simetrica, lugar, construir, dibujar & 25, 26
+
+subT REGLAS GENERALES PARA CONSTRUIR LUGAR RAICES
+como podemos construir el lugar de las raices de forma general? + ubicando, asintotas, angulos, llegada & 27
+
+subT REGLAS
+primer paso + obtiene, reescribe, interes, condicion & 28, 29
+segundo paso + inicio, ramas & 32
+que cantidad de ramas tiene el lugar de las raices? + tener, caracteristica, iguala & 34
+que pasa si tiendo K a infinito? + cero, infinito & 37
+tercer paso + eje real, sobre & 38
+los polos y ceros conjugados tienen efecto sobre eje real? + efecto, ubicacion & 40
+como se extiende cada porcion del lugar de las raices? + eje real, otro & 41
+tercer paso que debemos elegir? + prueba, cantidad, impar & 42, 43
+cuarto paso + asintotas & 44
+cuarto paso que debemos mirar de la ubicacion del punto prueba? + lejos, origen, angulos & 45
+ver imagen ecuacion angulo asintotas + grandes, rectas & 47
+quinto paso + ruptura, llegada & 48
+donde esta el punto ruptura? + simetria, eje real, pares & 49
+quinto paso que sucede si lugar raices esta entre 1 polo y cero lazo abierto? puede, ruptura & 51
+sexto paso + angulos, partida, complejos & 52
+que debemos hacer para trazar lugar de las raices? + direcciones, sentidos & 53
+septimo paso + cruza, imaginario & 56
+septimo paso como hallamos estos puntos? + Routh, procedimiento, caracteristica & 57, 58, 59
+octavo paso + cualquier, posible, magnitud & 60, 61
+octavo paso que es K(no ganancia)? + cualquier, condicion & 62
+noveno paso + determinar, amplia & 64
+noveno paso cual es la parte mas importante lugar raices? + asintotas, entorno, eje & 65
+que debemos tener en cuenta si cambiamos algo? + configuracion, significaticas, lugar & 66

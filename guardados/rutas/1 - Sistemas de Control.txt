@@ -158,7 +158,6 @@ movimiento o
 actividad
 
 RUTA 20
-TIPOS SISTEMAS CONTROL segun Malla
 MALLA ABIERTA
 sistemas control
 en donde salida
@@ -219,7 +218,6 @@ del criterio y estimación
 del hombre
 
 RUTA 28
-TIPOS SISTEMAS CONTROL segun Malla
 MALLA CERRADA
 Son aquellos
 en que acción control
@@ -351,7 +349,6 @@ análisis o
 diseño
 
 RUTA 43
-MODELOS O REPRESENTACIONES SISTEMAS CONTROL
 Modelos representativos
 a
 Modelos Matemáticos

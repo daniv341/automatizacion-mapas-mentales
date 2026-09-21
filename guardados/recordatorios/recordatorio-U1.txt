@@ -1,63 +1,63 @@
 subT definiciones
-SISTEMAS + unidad completa &1, 23, 24, 46
-CONTROL + asegurar &2
-SISTEMA CONTROL + dirigen &3
-ENTRADA + estimulo &4
-SALIDA + respuesta real
-PROPOSITO SISTEMA CONTROL + identificar
-SUBSISTEMA DE CONTROL + internas
-ANCHO BANDA + medida
+Que es un sistema? + unidad completa & 1
+Que es el control? + asegurar & 2
+Que es un sistema de control? + dirigen & 3
+Que es una entrada? + estimulo & 4
+Que es una salida? + respuesta real, diferentes & 5, 6
+Cual es el proposito de un sistema de control? + identificar & 8
+Que es un subsistema de control? + internas & 10
+Que es el ancho de banda? + medida & 11
 
 subT tipos sistemas control segun naturaleza
-NATURALES + dedo
-ARTIFICIALES + calentador
-MIXTO + manejar
+Que define a un sistema de control natural? + dedo & 12
+Que define a un sistema de control artificial? + calentador & 13
+Que define a un sistema de control mixto? + conduciendo & 14
 
 subT importancia del control
-1 + objetivos
-2 + aplica todo
-3 + causas, desviaciones
-4 + reduce, ahorra
+Cual es su importancia respecto a los objetivos? + objetivos & 15
+En que ambitos se aplica? + aplica todo & 16
+Como interviene frente a desviaciones? + causas, desviaciones & 17
+Que impacto economico o de eficiencia genera? + reduce, ahorra & 18
 
 subT tipos sistemas control segun malla
-QUE LOS DISTINGUE? + accion control, no movimiento
+Que los distingue? + accion control, no movimiento & 19
 
 subT malla abierta
-QUE NO TIENE? + salida sin efecto &20
+Que no tiene? + salida, efecto, medir & 20, 21
 
 subT caracteristicas malla abierta
-A + entrada, condicion
-B + depende calibracion
-C + no adapta cambios
-D + conocer relacion, no perturbaciones
-E + depende criterio
+Como se determina la condicion de entrada? + entrada, condicion & 22
+De que depende su precision o funcionamiento? + depende calibracion & 23
+Como responde ante perturbaciones o variaciones? + no adapta cambios & 24
+Que se necesita conocer para su operacion? + conocer relacion, no perturbaciones & 25, 26
+De que factor externo depende la accion? + depende criterio & 27
 
 subT malla cerrada
-EN QUE SE DIFERENCIAN ? + depende salida &28
-RETROALIMENTACION + propiedad, comparar
+En que se diferencian? + depende salida & 28
+Que es la retroalimentacion? + propiedad, comparar & 29
 
 subT caracteristicas malla cerrada
-A + exactitud
-B + razon
-C + ancho banda
+Como influye la malla cerrada en la exactitud? + exactitud & 23
+Que ocurre con la razon o sensibilidad? + razon & 31
+Como se ve afectado el ancho de banda? + ancho banda & 32
 
 subT tipos sistemas control segun su senal
-QUE ES? + funcion, t
-ANALOGICA + continuum
-DIGITAL + discretos
+Que es una señal en control? + funcion, t & 33
+Que es una señal analogica? + continuum & 34
+Que es una señal digital? + discretos & 36
 
 subT otras definiciones
-OBJETIVO INGENIERIA CONTROL + analisis, diseño
-ANALISIS + investigacion
-DISEÑO + ordenamiento, tarea
-DISEÑO ANALISIS + modificar, existente
-DISEÑO SINTESIS + definir, especificaciones
+Cual es el objetivo de la ingenieria de control? + analisis, diseño & 38
+Que es el analisis en control? + investigacion & 39
+Que es el diseño en control? + ordenamiento, tarea & 40
+Que es el diseño por analisis? + modificar, existente & 40
+Que es el diseño por sintesis? + definir, especificaciones & 41
 
 subT modelos o representaciones sistemas control
-COMO LOS RESUELVO? + especificar, analisis
+Como los resuelvo? + especificar, analisis & 42
 
 subT modelos representativos
-A + relacion cuantitativa
-B + diagrama
-C + grafos
+Que modelo define la relacion cuantitativa y matematica? + relacion cuantitativa, aplicacion, complejidad & 43
+Que modelo utiliza diagramas de bloques? + diagrama & 45
+Que modelo utiliza grafos de flujo de señal? + grafos & 46
 
