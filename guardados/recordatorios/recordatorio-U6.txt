@@ -2,7 +2,7 @@ subT INTRODUCCIÓN AL CONCEPTO ESTABILIDAD
 cual es un requerimiento importante? + estable, inutil & 1
 que implica que el sistema sea estable? + finita, infinita & 2
 como un sistema se define estable? + acotada, salida & 3
-si uso escalon ya es estable? + sola, todas & 5
+si uso escalon ya es estable? + sola, toda & 5
 como deberia actuar ante impulso unitario? + respuesta, tiende, reposo & 7
 que significa que no tiende a cero ni infinito? + finito, marginalmente & 8
 si es marginalmente estable que implica? + fines, inestables & 9

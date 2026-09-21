@@ -137,6 +137,13 @@ def parsear_recordatorio(txt):
     - 'subT' define el tema de las tarjetas siguientes.
     - Cada tarjeta es 'primero + segundo' y opcionalmente termina con '&N,M'
       indicando las rutas asociadas.
+    - NUEVO: opcionalmente, después de todo lo anterior, '| nota' agrega un
+      apunte personal. Formato completo:  primero + segundo &1,4 | nota
+      La línea se corta en el PRIMER '|' ANTES de cualquier otro análisis: lo de
+      la izquierda sigue el flujo de siempre y lo de la derecha es la nota
+      (puede contener '+', '&', 'subT' o más '|' sin problema). La nota no
+      participa en claves, hash de difíciles ni resaltado del drawio.
+      El texto literal '\\n' dentro de la nota se convierte en salto de línea.
     - Un '&' final SIN números se limpia de la tarjeta (no se muestra) y se
       avisa por consola que esa tarjeta no tendrá botón 'Mostrar respuesta'.
     - Un '&' en medio del texto se conserva como texto literal.
@@ -148,12 +155,24 @@ def parsear_recordatorio(txt):
     tarjetas = []
     tema_actual = ""
     ampersands_sueltos = []
+    lineas_solo_nota = []
 
     for renglon in lineas:
         renglon = renglon.strip()
 
         if not renglon:
             continue
+
+        # NUEVO: separar la nota ('|') ANTES de todo lo demás
+        nota = ""
+        if "|" in renglon:
+            renglon, nota = renglon.split("|", 1)
+            renglon = renglon.strip()
+            nota = nota.strip().replace("\\n", "\n")
+            if not renglon:
+                # línea que empieza con '|': no hay tarjeta a la que asignarle la nota
+                lineas_solo_nota.append(nota)
+                continue
 
         if "subT" in renglon:
             tema_actual = renglon.replace("subT", "").strip()
@@ -186,7 +205,13 @@ def parsear_recordatorio(txt):
             "segundo": segundo,
             "rutas": rutas_asociadas,
             "claves": extraer_claves(segundo),
+            "nota": nota,
         })
+
+    if lineas_solo_nota:
+        print("\nAVISO: líneas que empiezan con '|' (sin tarjeta), ignoradas:")
+        for texto in lineas_solo_nota:
+            print(f"  - {texto}")
 
     if ampersands_sueltos:
         print("\nAVISO: estas tarjetas tenían '&' sin número de ruta.")
@@ -201,6 +226,8 @@ def reportar_asociaciones(tarjetas, rutas):
     """Diagnóstico por consola: cuántas tarjetas tienen botón y rutas faltantes."""
     con_rutas = [t for t in tarjetas if t["rutas"]]
     print(f"\nTarjetas con botón 'Mostrar respuesta': {len(con_rutas)} de {len(tarjetas)}")
+    con_nota = [t for t in tarjetas if t.get("nota")]
+    print(f"Tarjetas con nota (💡): {len(con_nota)} de {len(tarjetas)}")
 
     faltantes = sorted({n for t in tarjetas for n in t["rutas"] if n not in rutas})
     if faltantes:
@@ -941,6 +968,183 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .boton-pista:hover:not(:disabled),
   .boton-respuesta:hover:not(:disabled) { transform: translateY(-2px); }
 
+  /* NUEVO: botón 💡 de nota (toggle) */
+  .boton-nota {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--stroke-color);
+    background: rgba(255,255,255,0.5);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    font-family: inherit;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .boton-nota:hover { transform: translateY(-2px); }
+
+  .boton-nota.activa {
+    background: #FFF3C4;
+    border-color: #e0c860;
+    box-shadow: 0 0 0 3px rgba(240,200,80,0.35);
+  }
+
+  /* NUEVO: 💡 sin nota (invita a agregar) y marca de "nota distinta a la del txt" */
+  .boton-nota { position: relative; }
+  .boton-nota.vacia { border-style: dashed; opacity: 0.6; }
+  .boton-nota.dif::after {
+    content: '';
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #f08a24;
+    border: 2px solid #fff;
+  }
+
+  /* NUEVO: panel de nota estilo post-it, debajo de la tarjeta */
+  .panel-nota {
+    display: none;
+    margin-top: 14px;
+    text-align: left;
+    background: #FFF8DC;
+    border: 1px dashed #e6d38a;
+    border-left: 6px solid #F2C94C;
+    border-radius: 4px 10px 10px 4px;
+    padding: 12px 16px 14px 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    animation: aparecer 0.25s ease forwards;
+  }
+
+  .panel-nota-titulo {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #a4841c;
+    margin-bottom: 6px;
+  }
+
+  .panel-nota-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .panel-nota-cabecera .panel-nota-titulo { margin-bottom: 0; }
+
+  .panel-nota-estado {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+    font-size: 11px;
+    color: #b26a00;
+    margin-left: 6px;
+  }
+
+  .panel-nota-versiones { display: flex; gap: 6px; }
+
+  .boton-mini.activo {
+    background: var(--stroke-color);
+    color: #fff;
+    border-color: var(--stroke-color);
+  }
+
+  .panel-nota-texto.vacio { color: #a99a5c; font-style: italic; }
+
+  .panel-nota-editor {
+    width: 100%;
+    min-height: 90px;
+    resize: vertical;
+    border: 1.5px solid #e6d38a;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    background: #fffdf2;
+    color: #4d4216;
+  }
+
+  .panel-nota-editor:focus { outline: 2px solid #F2C94C; outline-offset: 1px; }
+
+  .panel-nota-acciones {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  /* NUEVO: lista de notas en la pantalla "Elegir temas" */
+  .item-nota-dif, .item-nota-otra {
+    border-bottom: 1px solid #f1f1f1;
+    padding: 8px 0;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  .item-nota-dif:last-child, .item-nota-otra:last-child { border-bottom: none; }
+  .item-nota-dif summary { cursor: pointer; color: #444; }
+
+  .badge-estado {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 10px;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+
+  .badge-estado.pendiente { background: #FFF3C4; color: #8a6d00; }
+  .badge-estado.conflicto { background: #ffe1dc; color: #b3372c; }
+
+  .bloque-version {
+    margin: 8px 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #FFF8DC;
+    border-left: 4px solid #F2C94C;
+    font-size: 13px;
+    color: #4d4216;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .bloque-version.txt { background: #f3f4f8; border-left-color: #b8b8c4; color: #555; }
+  .bloque-version.vacio { font-style: italic; opacity: 0.75; }
+
+  .bloque-version .etq {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #a4841c;
+    margin-bottom: 3px;
+  }
+
+  .bloque-version.txt .etq { color: #888; }
+  .acciones-nota-dif { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 2px; }
+
+  #zona-notas details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: #444; }
+
+  .panel-nota-texto {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #4d4216;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
   .separador-tarjeta {
     width: 60px;
     height: 2px;
@@ -1412,6 +1616,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </details>
       <p class="nota-dificiles" id="nota-dificiles"></p>
     </div>
+
+    <!-- NUEVO: notas editadas en el navegador (localStorage) -->
+    <div class="lista-temas zona-dificiles" id="zona-notas">
+      <div class="cabecera-dificiles">
+        <span class="titulo-dificiles">💡 Notas editadas</span>
+        <span class="fila-dificiles-botones">
+          <button class="boton-mini" id="btn-exportar-notas" title="Descarga tus notas editadas como JSON">Exportar</button>
+          <button class="boton-mini" id="btn-importar-notas" title="Fusiona las notas de un JSON (gana la más reciente)">Importar</button>
+        </span>
+      </div>
+      <input type="file" id="input-importar-notas" accept=".json,application/json" style="display:none">
+      <details id="det-notas-dif" style="display:none">
+        <summary id="suma-notas-dif">Distintas a las del txt</summary>
+        <div id="lista-notas-dif"></div>
+      </details>
+      <details id="det-notas-otras" style="display:none">
+        <summary id="suma-notas-otras">De otros evaluadores</summary>
+        <div id="lista-notas-otras"></div>
+      </details>
+      <p class="nota-dificiles" id="nota-notas"></p>
+    </div>
   </div>
 
   <div id="area-tarjeta" style="display:none;">
@@ -1434,9 +1659,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="fila-botones-tarjeta">
           <button class="boton-pista" id="btn-pista">Mostrar pista</button>
           <button class="boton-respuesta" id="btn-respuesta">Mostrar respuesta</button>
+          <!-- NUEVO: botón de nota (solo se ve si la tarjeta tiene nota) -->
+          <button class="boton-nota" id="btn-nota" title="Ver/ocultar nota (pausa el cronómetro)">💡</button>
         </div>
         <div class="separador-tarjeta" id="separador-tarjeta" style="display:none;"></div>
         <div class="segundo" id="tarjeta-segundo" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- NUEVO: panel de nota (texto plano, se inyecta con textContent) -->
+    <div class="panel-nota" id="panel-nota">
+      <div class="panel-nota-cabecera">
+        <div class="panel-nota-titulo">💡 Nota <span class="panel-nota-estado" id="panel-nota-estado"></span></div>
+        <div class="panel-nota-versiones" id="panel-nota-versiones" style="display:none;">
+          <button class="boton-mini" id="btn-ver-local">Mi versión</button>
+          <button class="boton-mini" id="btn-ver-txt">Versión del txt</button>
+        </div>
+      </div>
+      <div class="panel-nota-texto" id="panel-nota-texto"></div>
+      <textarea class="panel-nota-editor" id="nota-editor" style="display:none;" placeholder="Escribí tu nota (Ctrl+Enter para guardar)"></textarea>
+      <div class="panel-nota-acciones">
+        <button class="boton-mini" id="btn-nota-editar">✎ Editar</button>
+        <button class="boton-mini" id="btn-nota-guardar" style="display:none;">Guardar</button>
+        <button class="boton-mini" id="btn-nota-cancelar" style="display:none;">Cancelar</button>
+        <button class="boton-mini" id="btn-nota-borrar" style="display:none;">🗑 Borrar nota</button>
       </div>
     </div>
 
@@ -1543,6 +1789,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let indiceActual = 0;
   let cronometroActivo = true; // false cuando ya no queda nada por marcar
   let indiceCongelado = -1;    // índice de la tarjeta cuya vista congela el cronómetro
+  let notaAbierta = false;     // NUEVO: la nota de la tarjeta actual está abierta (también congela)
+  let editandoNota = false;    // NUEVO: el panel de nota está en modo edición
+  let versionNota = 'local';   // NUEVO: qué versión se ve en el panel: 'local' | 'txt'
   let tiempoInicioTarjeta = 0;
   let cronometroIntervalId = null;
 
@@ -1614,6 +1863,82 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderTarjeta();
   }
 
+  // ---------- NUEVO: notas locales (editables en el HTML) ----------
+  // Mapa { hash: {p, s, nota, base, t} } guardado en localStorage.
+  //  - hash: el mismo de las difíciles (primero + segundo normalizados).
+  //  - nota: texto de MI versión ('' = la borré a propósito).
+  //  - base: nota que venía del txt cuando edité (sirve para distinguir
+  //          'pendiente de pasar al txt' de 'el txt cambió después').
+  //  - t: fecha de última edición (al importar gana la más reciente).
+  // La nota local manda sobre la del txt; el txt nunca se modifica.
+  const CLAVE_NOTAS = 'notas_tarjetas_v1';
+  let notasLocales = cargarNotas();
+
+  function cargarNotas() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_NOTAS);
+      if (!crudo) return {};
+      const obj = JSON.parse(crudo);
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) return obj;
+      return {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function guardarNotas() {
+    try {
+      localStorage.setItem(CLAVE_NOTAS, JSON.stringify(notasLocales));
+    } catch (e) {
+      // Sin localStorage: quedan solo en memoria de esta sesión
+    }
+  }
+
+  function notaTxtDe(t) { return (t.nota || '').trim(); }
+
+  function entradaNotaDe(t) { return notasLocales[hashTarjeta(t)] || null; }
+
+  // Nota que se muestra: la local si existe, si no la del txt
+  function notaEfectivaDe(t) {
+    const e = entradaNotaDe(t);
+    return e ? (e.nota || '') : notaTxtDe(t);
+  }
+
+  // 'igual' | 'pendiente' (edité yo, el txt sigue como estaba) | 'conflicto' (el txt cambió después)
+  function estadoNotaDe(t) {
+    const e = entradaNotaDe(t);
+    if (!e) return 'igual';
+    const txt = notaTxtDe(t);
+    if ((e.nota || '') === txt) return 'igual';
+    return (e.base || '') === txt ? 'pendiente' : 'conflicto';
+  }
+
+  function guardarNotaLocal(t, texto) {
+    texto = (texto || '').trim();
+    const h = hashTarjeta(t);
+    const base = notaTxtDe(t);
+    if (texto === base) {
+      delete notasLocales[h];   // igual al txt: no hace falta override
+    } else {
+      notasLocales[h] = { p: t.primero || '', s: t.segundo || '', nota: texto, base: base, t: Date.now() };
+    }
+    guardarNotas();
+  }
+
+  function descartarNotaLocal(t) {
+    delete notasLocales[hashTarjeta(t)];
+    guardarNotas();
+  }
+
+  // "Quedarme con la mía": acepto que el txt cambió y mantengo mi versión
+  function conservarMiNota(t) {
+    const e = entradaNotaDe(t);
+    if (!e) return;
+    e.base = notaTxtDe(t);
+    e.t = Date.now();
+    guardarNotas();
+  }
+
   // ---------- Elementos ----------
   const elPantallaTemas = document.getElementById('pantalla-temas');
   const elListaTemas = document.getElementById('lista-temas');
@@ -1636,6 +1961,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elZonaEval = document.getElementById('zona-eval');
   const elTextoEval = document.getElementById('texto-eval');
   const elBtnEvaluar = document.getElementById('btn-evaluar');
+  // NUEVO: nota
+  const elBtnNota = document.getElementById('btn-nota');
+  const elPanelNota = document.getElementById('panel-nota');
+  const elPanelNotaTexto = document.getElementById('panel-nota-texto');
+  const elPanelNotaEstado = document.getElementById('panel-nota-estado');
+  const elPanelNotaVersiones = document.getElementById('panel-nota-versiones');
+  const elBtnVerLocal = document.getElementById('btn-ver-local');
+  const elBtnVerTxt = document.getElementById('btn-ver-txt');
+  const elNotaEditor = document.getElementById('nota-editor');
+  const elBtnNotaEditar = document.getElementById('btn-nota-editar');
+  const elBtnNotaGuardar = document.getElementById('btn-nota-guardar');
+  const elBtnNotaCancelar = document.getElementById('btn-nota-cancelar');
+  const elBtnNotaBorrar = document.getElementById('btn-nota-borrar');
   const elResultadoEval = document.getElementById('resultado-eval');
   // MODIFICADO: nuevos elementos
   const elFilaEval = document.getElementById('fila-eval');
@@ -1693,6 +2031,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     if (nombre === 'temas') {
       renderDificilesPreview();  // MODIFICADO: actualizar la vista de difíciles
+      renderNotasPreview();      // NUEVO: notas distintas a las del txt
     }
     if (nombre !== 'estudio') {
       detenerCronometro();
@@ -1942,6 +2281,209 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderDificilesPreview();
   });
 
+  // ---------- NUEVO: notas en la pantalla "Elegir temas" ----------
+
+  function bloqueVersion(etiqueta, texto, esTxt, vacio) {
+    const div = document.createElement('div');
+    div.className = 'bloque-version' + (esTxt ? ' txt' : '') + (vacio ? ' vacio' : '');
+    const etq = document.createElement('span');
+    etq.className = 'etq';
+    etq.textContent = etiqueta;
+    div.appendChild(etq);
+    div.appendChild(document.createTextNode(texto));
+    return div;
+  }
+
+  function botonMini(texto, onClick) {
+    const b = document.createElement('button');
+    b.className = 'boton-mini';
+    b.textContent = texto;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function filaNotaDif(t, est) {
+    const det = document.createElement('details');
+    det.className = 'item-nota-dif';
+
+    const sum = document.createElement('summary');
+    const tx = document.createElement('span');
+    tx.textContent = t.primero || '(sin texto)';
+    const badge = document.createElement('span');
+    badge.className = 'badge-estado ' + est;
+    badge.textContent = est === 'pendiente' ? 'pendiente de pasar al txt' : 'el txt cambió';
+    sum.appendChild(tx);
+    sum.appendChild(badge);
+    det.appendChild(sum);
+
+    const e = entradaNotaDe(t) || { nota: '' };
+    const mia = e.nota || '';
+    const txt = notaTxtDe(t);
+    det.appendChild(bloqueVersion('Mi versión', mia !== '' ? mia : '(nota borrada)', false, mia === ''));
+    det.appendChild(bloqueVersion('Versión del txt', txt !== '' ? txt : '(sin nota en el txt)', true, txt === ''));
+
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    if (est === 'conflicto') {
+      acc.appendChild(botonMini('Quedarme con la mía', () => {
+        conservarMiNota(t);
+        renderNotasPreview();
+      }));
+    }
+    acc.appendChild(botonMini('Usar la del txt', () => {
+      if (!confirm('Se descarta tu versión y se usa la del txt. ¿Continuar?')) return;
+      descartarNotaLocal(t);
+      renderNotasPreview();
+    }));
+    det.appendChild(acc);
+    return det;
+  }
+
+  function filaNotaOtra(h, v) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+    const titulo = document.createElement('div');
+    titulo.textContent = (v.p || '(sin texto)') + (v.s ? ' — ' + v.s : '');
+    div.appendChild(titulo);
+    const nota = v.nota || '';
+    div.appendChild(bloqueVersion('Mi nota', nota !== '' ? nota : '(nota borrada)', false, nota === ''));
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Borrar', () => {
+      if (!confirm('¿Borrar esta nota guardada? No se puede deshacer.')) return;
+      delete notasLocales[h];
+      guardarNotas();
+      renderNotasPreview();
+    }));
+    div.appendChild(acc);
+    return div;
+  }
+
+  function renderNotasPreview() {
+    const elDif = document.getElementById('lista-notas-dif');
+    const elDetDif = document.getElementById('det-notas-dif');
+    const elSumaDif = document.getElementById('suma-notas-dif');
+    const elOtras = document.getElementById('lista-notas-otras');
+    const elDetOtras = document.getElementById('det-notas-otras');
+    const elSumaOtras = document.getElementById('suma-notas-otras');
+    const elInfo = document.getElementById('nota-notas');
+    elDif.innerHTML = '';
+    elOtras.innerHTML = '';
+
+    // 1) Tarjetas de ESTE evaluador cuya nota local difiere de la del txt
+    const hashesAqui = new Set();
+    let nDif = 0, nConflicto = 0;
+    tarjetasCompletas.forEach((t) => {
+      const h = hashTarjeta(t);
+      if (hashesAqui.has(h)) return;
+      hashesAqui.add(h);
+      const est = estadoNotaDe(t);
+      if (est === 'igual') return;
+      nDif++;
+      if (est === 'conflicto') nConflicto++;
+      elDif.appendChild(filaNotaDif(t, est));
+    });
+
+    // 2) Notas guardadas que no corresponden a ninguna tarjeta de este txt
+    //    (otro evaluador, o el primero/segundo cambió y el hash ya no coincide)
+    let nOtras = 0;
+    Object.keys(notasLocales).forEach((h) => {
+      if (hashesAqui.has(h)) return;
+      nOtras++;
+      elOtras.appendChild(filaNotaOtra(h, notasLocales[h] || {}));
+    });
+
+    elDetDif.style.display = nDif > 0 ? 'block' : 'none';
+    elSumaDif.textContent = 'Distintas a las del txt (' + nDif + ')' +
+      (nConflicto > 0 ? ' — ' + nConflicto + ' con conflicto' : '');
+    elDetOtras.style.display = nOtras > 0 ? 'block' : 'none';
+    elSumaOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
+
+    const total = Object.keys(notasLocales).length;
+    elInfo.textContent = total === 0
+      ? 'Todavía no editaste ninguna nota (botón 💡 durante el estudio).'
+      : 'Guardadas en este navegador: ' + total;
+  }
+
+  document.getElementById('btn-exportar-notas').addEventListener('click', () => {
+    const lista = Object.keys(notasLocales).map((h) => ({
+      h: h,
+      p: notasLocales[h].p || '',
+      s: notasLocales[h].s || '',
+      nota: notasLocales[h].nota || '',
+      base: notasLocales[h].base || '',
+      t: notasLocales[h].t || 0,
+    }));
+    const contenido = JSON.stringify({ version: 1, notas: lista }, null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'notas_tarjetas.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-notas').addEventListener('click', () => {
+    document.getElementById('input-importar-notas').click();
+  });
+
+  document.getElementById('input-importar-notas').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      const elInfo = document.getElementById('nota-notas');
+      try {
+        const obj = JSON.parse(lector.result);
+        const lista = Array.isArray(obj)
+          ? obj
+          : (obj && Array.isArray(obj.notas) ? obj.notas : null);
+        if (!lista) throw new Error('formato');
+
+        // Fusión: si la misma tarjeta tiene nota distinta, gana la más reciente (campo t)
+        let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+        lista.forEach((item) => {
+          if (!item || typeof item.h !== 'string' || !item.h || typeof item.nota !== 'string') {
+            invalidas++;
+            return;
+          }
+          const entrada = {
+            p: typeof item.p === 'string' ? item.p : '',
+            s: typeof item.s === 'string' ? item.s : '',
+            nota: item.nota,
+            base: typeof item.base === 'string' ? item.base : '',
+            t: typeof item.t === 'number' ? item.t : 0,
+          };
+          const local = notasLocales[item.h];
+          if (!local) {
+            notasLocales[item.h] = entrada;
+            nuevas++;
+          } else if ((local.nota || '') === entrada.nota) {
+            iguales++;
+          } else if (entrada.t > (local.t || 0)) {
+            notasLocales[item.h] = entrada;
+            actualizadas++;
+          } else {
+            conservadas++;
+          }
+        });
+        guardarNotas();
+        renderNotasPreview();
+        elInfo.textContent = 'Importación: ' + nuevas + ' nueva(s), ' + actualizadas +
+          ' actualizada(s) por ser más recientes, ' + conservadas + ' conservada(s) (la tuya era más reciente), ' +
+          iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+      } catch (e) {
+        elInfo.textContent = 'El archivo no es un JSON válido de notas.';
+      }
+    };
+    lector.readAsText(archivo);
+  });
+
   document.getElementById('btn-elegir-temas').addEventListener('click', () => {
     mostrarPantalla('temas');
   });
@@ -1960,6 +2502,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     indiceActual = 0;
     cronometroActivo = lista.length > 0;
     indiceCongelado = -1;
+    resetNotaUI();
     tiempoInicioTarjeta = Date.now();
 
     mostrarPantalla('estudio');
@@ -1977,8 +2520,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     tiempoInicioTarjeta = ahora;
   }
 
+  // MODIFICADO: también congela mientras la nota está abierta
   function cronometroCongelado() {
-    return indiceCongelado === indiceActual;
+    return notaAbierta || indiceCongelado === indiceActual;
   }
 
   function renderTarjeta() {
@@ -2084,6 +2628,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const esDif = esDificil(actual);
     elBtnDificil.textContent = esDif ? '★ Difícil' : '☆ Difícil';
     elBtnDificil.classList.toggle('activa', esDif);
+
+    renderNota(actual);  // NUEVO: botón 💡 + panel de nota
 
     renderRutas(actual);
 
@@ -2332,8 +2878,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function marcar(resultado) {
     if (resultados[indiceActual] !== null) return;
+    if (!confirmarDescartarBorrador()) return;
 
-    acumularTiempo();
+    // MODIFICADO (guard): si el cronómetro está congelado (nota abierta) el
+    // tiempo de lectura NO se suma; solo se reinicia la referencia.
+    if (!cronometroCongelado()) {
+      acumularTiempo();
+    } else {
+      tiempoInicioTarjeta = Date.now();
+    }
+    resetNotaUI();
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
 
@@ -2353,8 +2907,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     // Congelar el cronómetro de TODA la sesión (solo si sigue activo):
     // el tiempo de esta tarjeta queda contado hasta este momento;
     // el tiempo de lectura no cuenta.
-    if (cronometroActivo && !cronometroCongelado()) {
-      acumularTiempo();
+    // MODIFICADO: si la nota ya estaba abierta el reloj ya está parado (no se
+    // acumula de nuevo), pero igual se registra el congelado por respuesta para
+    // que cerrar la nota no reanude el reloj mientras se lee la respuesta.
+    if (cronometroActivo && indiceCongelado !== indiceActual) {
+      if (!cronometroCongelado()) acumularTiempo();
       indiceCongelado = indiceActual;
     }
 
@@ -2371,6 +2928,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function navegar(delta) {
     const nuevo = indiceActual + delta;
     if (nuevo < 0 || nuevo >= tarjetasSesion.length) return;
+    if (!confirmarDescartarBorrador()) return;
 
     if (!cronometroActivo) {
       // Sesión completa: el tiempo ya está congelado, navegar no suma
@@ -2385,7 +2943,168 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       indiceActual = nuevo;
     }
 
+    resetNotaUI();  // NUEVO: la nota se cierra al cambiar de tarjeta
     renderTarjeta();
+  }
+
+  // ---------- NUEVO: nota de la tarjeta (ver / editar / versiones) ----------
+  // No influye en la calificación; mientras el panel está abierto (viendo o
+  // editando) el cronómetro queda pausado.
+
+  function resetNotaUI() {
+    notaAbierta = false;
+    editandoNota = false;
+    versionNota = 'local';
+  }
+
+  function borradorSinGuardar() {
+    if (!editandoNota) return false;
+    const actual = tarjetasSesion[indiceActual];
+    return actual ? (elNotaEditor.value.trim() !== notaEfectivaDe(actual)) : false;
+  }
+
+  function confirmarDescartarBorrador() {
+    if (!borradorSinGuardar()) return true;
+    return confirm('Tenés cambios sin guardar en la nota. ¿Descartarlos?');
+  }
+
+  function renderNota(actual) {
+    const efectiva = notaEfectivaDe(actual);
+    const est = estadoNotaDe(actual);
+    const hayNota = efectiva !== '';
+    const hayDif = est !== 'igual';
+
+    // Botón 💡: siempre visible (sin nota = punteado, invita a agregar)
+    elBtnNota.style.display = 'inline-flex';
+    elBtnNota.classList.toggle('activa', notaAbierta);
+    elBtnNota.classList.toggle('vacia', !hayNota && !hayDif && !notaAbierta);
+    elBtnNota.classList.toggle('dif', hayDif);
+    elBtnNota.title = (hayNota || hayDif)
+      ? 'Ver/ocultar nota (pausa el cronómetro)'
+      : 'Agregar nota (pausa el cronómetro)';
+
+    if (!notaAbierta) {
+      elPanelNota.style.display = 'none';
+      return;
+    }
+    elPanelNota.style.display = 'block';
+
+    if (!hayDif) versionNota = 'local';
+
+    // Estado + selector de versión (solo cuando difieren y no se está editando)
+    elPanelNotaEstado.textContent = hayDif
+      ? (est === 'pendiente' ? '· editada, pendiente de pasar al txt' : '· el txt cambió desde tu edición')
+      : '';
+    elPanelNotaVersiones.style.display = (hayDif && !editandoNota) ? 'flex' : 'none';
+    elBtnVerLocal.classList.toggle('activo', versionNota === 'local');
+    elBtnVerTxt.classList.toggle('activo', versionNota === 'txt');
+
+    if (editandoNota) {
+      elPanelNotaTexto.style.display = 'none';
+      elNotaEditor.style.display = 'block';
+      elBtnNotaEditar.style.display = 'none';
+      elBtnNotaGuardar.style.display = 'inline-block';
+      elBtnNotaCancelar.style.display = 'inline-block';
+      elBtnNotaBorrar.style.display = hayNota ? 'inline-block' : 'none';
+    } else {
+      elNotaEditor.style.display = 'none';
+      elPanelNotaTexto.style.display = 'block';
+      let texto, vacio;
+      if (versionNota === 'txt') {
+        texto = notaTxtDe(actual);
+        vacio = texto === '';
+        if (vacio) texto = '(sin nota en el txt)';
+      } else {
+        texto = efectiva;
+        vacio = texto === '';
+        if (vacio) texto = hayDif ? '(borraste la nota)' : '(sin nota)';
+      }
+      elPanelNotaTexto.textContent = texto;
+      elPanelNotaTexto.classList.toggle('vacio', vacio);
+      elBtnNotaEditar.style.display = versionNota === 'local' ? 'inline-block' : 'none';
+      elBtnNotaEditar.textContent = hayNota ? '✎ Editar' : '＋ Agregar nota';
+      elBtnNotaGuardar.style.display = 'none';
+      elBtnNotaCancelar.style.display = 'none';
+      elBtnNotaBorrar.style.display = 'none';
+    }
+  }
+
+  function abrirNota() {
+    const actual = tarjetasSesion[indiceActual];
+    if (!actual) return;
+    // Abrir: guardar el tiempo corrido hasta ahora (si el reloj estaba andando)
+    if (cronometroActivo && !cronometroCongelado()) acumularTiempo();
+    notaAbierta = true;
+    versionNota = 'local';
+    // Sin nota y sin diferencias: directo a escribir
+    editandoNota = (notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual');
+    if (editandoNota) elNotaEditor.value = '';
+    actualizarCronometro();
+    renderTarjeta();
+    if (editandoNota) elNotaEditor.focus();
+  }
+
+  function cerrarNota() {
+    // Cerrar: reanudar salvo que la respuesta siga mostrada (congelado propio)
+    const siguePorRespuesta = indiceCongelado === indiceActual;
+    resetNotaUI();
+    if (cronometroActivo && !siguePorRespuesta) tiempoInicioTarjeta = Date.now();
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function toggleNota() {
+    if (tarjetasSesion.length === 0) return;
+    if (notaAbierta) {
+      if (!confirmarDescartarBorrador()) return;
+      cerrarNota();
+    } else {
+      abrirNota();
+    }
+  }
+
+  function empezarEdicionNota() {
+    const actual = tarjetasSesion[indiceActual];
+    if (!actual) return;
+    editandoNota = true;
+    versionNota = 'local';
+    elNotaEditor.value = notaEfectivaDe(actual);
+    renderTarjeta();
+    elNotaEditor.focus();
+  }
+
+  function guardarEdicionNota() {
+    const actual = tarjetasSesion[indiceActual];
+    if (!actual || !editandoNota) return;
+    guardarNotaLocal(actual, elNotaEditor.value);
+    editandoNota = false;
+    versionNota = 'local';
+    // Nota vacía y sin diferencias con el txt: no hay nada que mostrar, se cierra
+    if (notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual') {
+      cerrarNota();
+    } else {
+      renderTarjeta();
+    }
+  }
+
+  function cancelarEdicionNota() {
+    const actual = tarjetasSesion[indiceActual];
+    if (!confirmarDescartarBorrador()) return;
+    editandoNota = false;
+    if (actual && notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual') {
+      cerrarNota();
+    } else {
+      renderTarjeta();
+    }
+  }
+
+  function borrarNotaActual() {
+    const actual = tarjetasSesion[indiceActual];
+    if (!actual) return;
+    if (!confirm('¿Borrar la nota de esta tarjeta?')) return;
+    guardarNotaLocal(actual, '');
+    editandoNota = false;
+    cerrarNota();
   }
 
   // MODIFICADO: registrar el uso de la pista (baja la nota a 0.5 si la tarjeta
@@ -2397,6 +3116,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
 
   elBtnRespuesta.addEventListener('click', () => mostrarRespuesta());
+  elBtnNota.addEventListener('click', () => toggleNota());
+  elBtnNotaEditar.addEventListener('click', () => empezarEdicionNota());
+  elBtnNotaGuardar.addEventListener('click', () => guardarEdicionNota());
+  elBtnNotaCancelar.addEventListener('click', () => cancelarEdicionNota());
+  elBtnNotaBorrar.addEventListener('click', () => borrarNotaActual());
+  elBtnVerLocal.addEventListener('click', () => { versionNota = 'local'; renderTarjeta(); });
+  elBtnVerTxt.addEventListener('click', () => { versionNota = 'txt'; renderTarjeta(); });
+  elNotaEditor.addEventListener('keydown', (evento) => {
+    // Ctrl+Enter (o Cmd+Enter) guarda; Enter solo es salto de línea
+    if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+      evento.preventDefault();
+      guardarEdicionNota();
+    }
+  });
 
   // MODIFICADO: toggle de difícil (persiste entre sesiones)
   elBtnDificil.addEventListener('click', () => toggleDificilActual());
@@ -2426,7 +3159,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (evento.key === 'Escape') cerrarLightbox();
       return;
     }
-    if (evento.target === elTextoEval) return;  // no navegar mientras se escribe
+    if (evento.target === elTextoEval || evento.target === elNotaEditor) return;  // no navegar mientras se escribe
     if (elAreaTarjeta.style.display === 'none') return;
     if (evento.key === 'ArrowLeft') navegar(-1);
     if (evento.key === 'ArrowRight') navegar(1);
@@ -2461,6 +3194,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // ---------- Resumen ----------
 
   function finalizarSesion() {
+    if (!confirmarDescartarBorrador()) return;
     // El tiempo extra no cuenta si el cronómetro ya está parado
     // (sesión completa) o congelado (leyendo una respuesta).
     if (cronometroActivo && !cronometroCongelado()) {

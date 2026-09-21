@@ -137,6 +137,8 @@ def generar_tarjetas():
 
     # Patrón para el sufijo "& números/lista de números" al final del renglón
     PATRON_AMP = re.compile(r'\s*&[\d,\s]*\d[\d,\s]*$')
+    # NUEVO: ignorar desde "|" en adelante (incluido el |)
+    PATRON_PIPE = re.compile(r'\s*\|.*$')
 
     if opciones and opciones in colores:
         fillColor = colores[opciones][0]
@@ -152,8 +154,11 @@ def generar_tarjetas():
     for renglon in lineas:
         renglon = renglon.strip()
 
+        # NUEVO: quitar desde "|" en adelante (PRIMERO, para que el
+        # patrón de "& números" pueda limpiar lo que quede al final)
+        renglon = PATRON_PIPE.sub('', renglon).strip()
+
         # Quitar el sufijo "& números/lista de números" del final (si existe)
-        # IMPORTANTE: se hace sobre el texto CRUDO, antes de escapar
         renglon = PATRON_AMP.sub('', renglon).strip()
 
         if not renglon:
