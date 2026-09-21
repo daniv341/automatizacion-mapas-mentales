@@ -1,55 +1,61 @@
-subT Diagramas Bloques
-que representa? + relacion, causa & 9
-en que nos ayuda? + funcionales, componentes & 10
-componentes sistema + alternativamente & 11
+subT INTRODUCCIÓN AL CONCEPTO ESTABILIDAD
+cual es un requerimiento importante? + estable, inutil & 1
+que implica que el sistema sea estable? + finita, infinita & 2
+como un sistema se define estable? + acotada, salida & 3
+si uso escalon ya es estable? + sola, toda & 5
+como deberia actuar ante impulso unitario? + respuesta, tiende, reposo & 7
+que significa que no tiende a cero ni infinito? + finito, marginalmente & 8
+si es marginalmente estable que implica? + fines, inestables & 9
+que diferencia hay entre impulso y escalon? + extingue, mantiene & 10
 
-subT DIAGRAMA BLOQUES SIN RETROALIMENTACION
-que representa el rectangulo? + bloque, ejecuta & 12
-que representan las flechas? + direccion, flujo & 13
-adicion, sustraccion + circulo, signo, flechas & 14
-salida + suma & 15
-que entradas pueden llegar a un punto suma? + cualquier & 14
-como puedo dividir una señal? + señal, toma & 16
+subT ESTUDIO FUNCION
+que son los ceros? + convierte, cero & 16
+que son los polos? + infinita, denominador & 17
+que implica cada cuadrante? + primero, segundo & 18, 19
+eje imaginario implica inestabilidad? + excepto, region & 20
 
-subT DIAGRAMAS BLOQUES SISTEMAS CONTINUOS CON RETROALIMENTACIÓN
-que representan? + diferentes, conectados, relaciones & 17
-diagrama bloques + intervienen, etapas & 18
+subT ESTUDIO ESTABILIDAD
+que sucede con el sistea si se le aplica impulso? + forma, terminos & 21
+que pasa si solo un termino es creciente? + crecera, tiempo, inestable & 24
+que implica que polos tengan ± jω? + siempre oscilacion & 25
+que implica si parte real cambia signo? + oscilacion, negativa, positiva & 26, 27
+que pasa si polos estan lado izquierdo? + todos, izquierdo & 28
+que pasa si solo uno esta en lado derecho? + derecho, inestable & 29
+que pasa si esta sobre eje jω? + marginalmente, cero & 30
+que interesa en estudio estabilidad? + valores ubicacion & 31
+que es la estabilidad absoluta? + condicion, respuesta & 34
 
-subT TERMINOLOGIA DEL DIAGRAMA BLOQUES EN MALLA CERRADA
-como represento variables? + letras minusculas & 19
-que representan letras minusculas + tiempo, contrario & 20
-letras mayusculas + transformadas, compleja & 21
+subT OTROS CONCEPTOS
+que podemos hacer si es estable? + interesante, grado, relativa & 35
+que es respuesta estado cero? + todas condiciones & 36
+que es respuesta entrada cero? + todas entradas & 37
+que es el principio de superposicion? + sujeto, escribe & 38
 
-subT DEFINICIONES 
-planta + sistema, proceso, cantidad & 22
-salida controlada + salida planta, controla & 23
-trayectoria directa + ruta, suma, salida & 24
-elementos anticipativos + trayectoria, señal control & 25
-señal control, variable manipulada + anticipativos, entrada & 27
-trayectorio retroalimentacion + salida, suma & 28
-elementos retroalimentacion + componentes, funcional, señal & 29
-entrada + externa, especifica, ideal & 31, 32
-señal retroalimentacion + suma, actuante, abierta & 33, 34
-señal actuante + suma, retroalimentacion, igual & 35, 36
-accion control + genera, actuante & 37
-tipo retroalimentacion + negativa, positiva & 38, 39
-perturbacion + indeseable, manipulada, intermedio & 40, 41
-muestreador + transforma & 42
-A/D + analogico & 44
-D/A + digital & 45
-transductor + energia & 46
-orden v + entrada, misma, transductor & 47, 48
-sistema multivariable + ambas & 49
+subT CRITERIO ROUTH – HURWITZ
+cual es el problema mas importante? + problema, vuelve, estabiliza & 39, 40
+que representa este metodo? + determinar, semiplano, factorear & 41
+que permite este metodo? + conocer, absoluta & 42
+cuando se puede aplicar? + finita terminos & 43
 
-subT CLASIFICACIÓN CONTROLADORES ANALÓGICOS
-controlador industrial + acciones control & 1
-on-off + dos posiciones & 2
-controlador P + salida, ganancia, ajuste & 3, 4
-controlador D + derivada, KD & 5
-controlador I + mayoria, Ki & 6
-PID + suma, combinaciones & 7, 8
+subT LIMITACIONES
+cuando es valido este metodo? + ecuacion, semiplano, limite, jω & 44, 45
+que nos facilita este metodo? + general, interesa, grado & 46, 47
 
-subT OTROS SISTEMAS CONTROL
-servomecanismos + amplificada, mecanica, tiempo & 50, 51
-regulador + constante, intervalo & 52
-como se diferencian servo y reg? + mantener, entrada variable & 53
+subT CONDICIONES NECESARIAS
+que condiciones tiene? + coeficientes, faltar & 48, 49
+estas condiciones son suficientes? + posible, semiplano & 50
+si ya sabemos estabilidad absoluta continuamos? + absoluta, procedimiento & 51
+cual es una condicion necesaria y suficiente? + raices, negativas & 53
+esta condicion lo asegura?  + respuesta, exponencialmente & 54
+
+subT PROCEDIMIENTO
+como escribimos los coeficientes? + orden, tabla & 55
+primer paso + ordenar, primera, segunda & 56, 57, 58
+segundo paso + adicionales, inmediatas, subsecuentes, horizontal & 59, 60
+tercer paso + investigar, signos & 61
+
+subT CASOS ESPECIALES
+que puede pasar? + veces, dificultades & 63
+si primer elemento es cero? + demas, salvar, pequeño & 64, 65
+si aparece fila de ceros? + fila, derivada, reemplazan & 67
+para que puede usarse este criterio? + cerca inestabilidad, moviendo,corrimiento & 68, 69

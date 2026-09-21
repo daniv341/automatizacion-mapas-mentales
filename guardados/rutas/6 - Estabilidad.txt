@@ -243,8 +243,8 @@ RUTA 29
 ESTUDIO ESTABILIDAD
 Si sólo uno polos
 está en lado derecho
-dicho diagrama,
-éste es inestable
+de dicho diagrama,
+éste es inestable
 
 RUTA 30
 ESTUDIO ESTABILIDAD

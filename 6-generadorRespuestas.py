@@ -77,6 +77,13 @@
     (b) margen: mejor >= 0.5 y >= 0.2 por encima de la segunda -> se asigna sin '~'.
     Ambos solo para candidatas de su tema y en orden; el resto sigue con '~'.
     Estas asignaciones se listan en 'verificar' y NO fijan el orden.
+- v4.20: las lineas del recordatorio admiten nota personal tras el PRIMER '|'
+  ("primero + segundo & N,M | nota"). La nota se corta ANTES de cualquier otro
+  analisis (subT, sufijo de rutas, split por '+'), no participa en la asociacion
+  (ni en claves ni en temas) y se reemite tal cual al reescribir la linea, de
+  modo que el sufijo queda ANTES de la nota ("primera + segunda & 1, 2 | nota").
+  Una linea que empieza con '|' (sin cuerpo) se ignora; '|' ya no puede usarse
+  dentro de 'primero'/'segundo'.
 """
 from __future__ import annotations
 
@@ -829,6 +836,7 @@ STOPWORDS = frozenset({
 # Lectura de sufijo: "&" + numeros separados por coma; tolera espacios
 # finales extra (ej. "& 39 "). Escritura canonica: " & 5" / " & 21, 22".
 # v4.15: un '~' tras el numero ("& 23~") marca asignacion tentativa a revisar.
+# v4.20: el regex se aplica SOLO a la parte de la linea ANTES del primer '|'.
 SUFIJO_RUTAS_RE = re.compile(r"(?:^|\s)&\s*([0-9]+~?(?:\s*,\s*[0-9]+~?)*)\s*$")
 
 
@@ -1015,13 +1023,14 @@ def construir_temas_rutas(route_blocks: list[RouteBlock],
 @dataclass
 class Tarjeta:
     indice: int                          # indice de la linea en el archivo
-    linea: str                           # linea original exacta
+    linea: str                           # v4.20: renglon SIN nota (lo que queda antes del primer '|')
     primero: str
     segundo: str
     tema: Optional[str]                  # subT vigente (normalizado) al leerla
     rutas_manual: Optional[list[int]]    # sufijo ya escrito a mano (None si no trae)
     malformada: bool = False             # contiene '&' sin numeros
     reinicia: bool = False               # primera tarjeta tras un subT
+    nota: str = ""                       # v4.20: apunte tras el primer '|'; se conserva, no se usa
     rutas_asignadas: Optional[list[int]] = None  # resultado (None = sin cambio)
     manual_tentativa: bool = False       # el sufijo existente lleva '~' (por revisar)
     marcadas: set[int] = field(default_factory=set)   # rutas nuevas que se escriben con '~'
@@ -1029,7 +1038,11 @@ class Tarjeta:
 
 
 def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str]]:
-    """Clasifica cada linea. Las vacias y las subT se conservan tal cual."""
+    """Clasifica cada linea. Las vacias y las subT se conservan tal cual.
+    v4.20: todo lo que sigue al PRIMER '|' es nota personal: se corta ANTES de
+    cualquier otro analisis (subT, sufijo de rutas, split por '+'), no participa
+    en la asociacion (ni en claves ni en temas) y se conserva tal cual al
+    reescribir la linea. Una linea que empieza con '|' (sin cuerpo) se ignora."""
     lineas = texto.split("\n")
     tarjetas: list[Tarjeta] = []
     temas_subt: list[str] = []
@@ -1039,7 +1052,16 @@ def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str
         limpio = linea.strip()
         if not limpio:
             continue                                   # vacia: intacta
-        m_subt = re.match(r"(?i)^subt\b\s*(.*)$", limpio)
+        # v4.20: corte en el primer '|' antes de cualquier otro analisis.
+        nota = ""
+        renglon = limpio
+        if "|" in renglon:
+            renglon, nota = renglon.split("|", 1)
+            renglon = renglon.strip()
+            nota = nota.strip()
+            if not renglon:
+                continue                               # linea que empezaba con '|': se ignora
+        m_subt = re.match(r"(?i)^subt\b\s*(.*)$", renglon)
         if m_subt:
             tema = normalizar_texto(m_subt.group(1)) or None
             if tema:
@@ -1047,26 +1069,26 @@ def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str
             tema_actual = tema
             reinicia_pendiente = True
             continue                                   # subT: intacta
-        cuerpo = linea
+        cuerpo = renglon
         rutas_manual: Optional[list[int]] = None
         manual_tentativa = False
         manual_firmes: list[int] = []
         malformada = False
-        m = SUFIJO_RUTAS_RE.search(linea)
+        m = SUFIJO_RUTAS_RE.search(renglon)
         if m:
             pares = re.findall(r"([0-9]+)(~?)", m.group(1))
             rutas_manual = [int(n) for n, _t in pares]
             manual_firmes = [int(n) for n, t in pares if not t]
             manual_tentativa = not manual_firmes      # todas con '~' -> por revisar
-            cuerpo = linea[:m.start()]
-        elif "&" in linea:
+            cuerpo = renglon[:m.start()]
+        elif "&" in renglon:
             malformada = True
         if " + " in cuerpo:
             primero, segundo = cuerpo.rsplit(" + ", 1)
         else:
             primero, segundo = cuerpo, ""
         tarjetas.append(Tarjeta(
-            indice=indice, linea=linea,
+            indice=indice, linea=renglon, nota=nota,
             primero=primero.strip(), segundo=segundo.strip(),
             tema=tema_actual, rutas_manual=rutas_manual,
             malformada=malformada, reinicia=reinicia_pendiente,
@@ -1553,7 +1575,8 @@ def procesar_recordatorio(recordatorio_path: Path,
         if tar.rutas_asignadas:  # formato exacto: espacio + & + espacio + "N, M"
             sufijo = " & " + ", ".join(f"{n}{'~' if n in tar.marcadas else ''}"   # '~' = por revisar
                                        for n in tar.rutas_asignadas)
-            nuevas[tar.indice] = tar.linea.rstrip() + sufijo
+            cola = f" | {tar.nota}" if tar.nota else ""   # v4.20: la nota se conserva al final
+            nuevas[tar.indice] = tar.linea.rstrip() + sufijo + cola
 
     # --- copia de seguridad desactivada: no se crea ningun .bak ---
     # bak_path = recordatorio_path.parent / (recordatorio_path.name + ".bak")
