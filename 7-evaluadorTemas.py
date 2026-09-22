@@ -14,6 +14,27 @@ UMBRAL_CASI = 0.5
 # Similitud (Dice) con el contenido del bloque que, combinada con claves
 # >= UMBRAL_CASI, premia parafrasear bien y da "Bien"
 SIM_ALTA = 0.7
+# Cuando aparecen TODAS las claves: coincidencia mínima (Dice) para "Bien"
+# si NO se usó "Mostrar pista" (por debajo => "Casi")
+SIM_SIN_PISTA = 0.5
+# Igual, pero si SÍ se usó "Mostrar pista": la coincidencia debe ser MAYOR a
+# este valor (si no llega => "Casi")
+SIM_CON_PISTA = 0.6
+
+# Palabras vacías que se ignoran al evaluar (claves, respuesta escrita y texto
+# de referencia de las rutas). Solo afecta la evaluación: el texto de las rutas
+# se muestra completo. Van sin acentos (mismo formato que normalizar_palabra).
+STOPWORDS_ES = {
+    # artículos
+    "el", "la", "los", "las",
+    # preposiciones
+    "a", "con", "de", "del", "en", "para", "por", "sin", "so", "tras", "via",
+    # conjunciones
+    "y", "e", "ni", "que", "o", "u", "pero", "mas", "aunque", "sino", "si", "pues", "ya",
+    # pronombres comunes
+    "me", "te", "se", "nos", "os", "le", "les", "lo", "mi", "tu", "su", "mis", "tus", "sus",
+    "esto", "eso", "aquello",
+}
 
 # ============================================================
 # UTILIDADES DE RESALTADO (claves extraídas del campo 'segundo')
@@ -29,13 +50,16 @@ def extraer_claves(segundo):
     """
     Extrae palabras clave del campo 'segundo' de la tarjeta.
     Tokeniza solo letras: los números solos ('1', '2') se descartan solos.
-    Devuelve claves normalizadas (minúsculas, sin acentos), sin duplicados.
+    Devuelve claves normalizadas (minúsculas, sin acentos), sin duplicados y
+    sin palabras vacías (STOPWORDS_ES).
     """
     if not segundo:
         return []
     claves = []
     for token in re.findall(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+', segundo):
         normalizada = normalizar_palabra(token)
+        if normalizada in STOPWORDS_ES:
+            continue
         if normalizada not in claves:
             claves.append(normalizada)
     return claves
@@ -645,6 +669,9 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, ruta
     html = html.replace("__MODO_ALEATORIO__", "true" if modo_aleatorio else "false")
     html = html.replace("__UMBRAL_CASI__", str(UMBRAL_CASI))
     html = html.replace("__SIM_ALTA__", str(SIM_ALTA))
+    html = html.replace("__SIM_SIN_PISTA__", str(SIM_SIN_PISTA))
+    html = html.replace("__SIM_CON_PISTA__", str(SIM_CON_PISTA))
+    html = html.replace("__STOPWORDS__", json.dumps(sorted(STOPWORDS_ES)))
 
     with open(f"guardados/evaluadores/evaluador_{nombre_base}.html", "w", encoding="utf-8") as archivo:
         archivo.write(html)
@@ -1318,6 +1345,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     align-items: center;
     gap: 18px;
     margin-top: 10px;
+    flex-wrap: wrap;
   }
 
   .boton {
@@ -1698,6 +1726,197 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .sub-desplegable[open] > summary::after { transform: rotate(180deg); }
   .sub-desplegable .item-lista { padding-left: 8px; }
 
+  /* NUEVO: estado "Casi" */
+  .estado-marca.casi { color: #e0a030; }
+  .punto-casi { background: #e0a030; }
+
+  /* NUEVO: pausa manual del cronómetro */
+  .grupo-cronometro { display: flex; align-items: center; gap: 10px; }
+
+  .boton-pausa {
+    border: 1.5px solid #d8d8e0;
+    background: #fff;
+    color: #777;
+    border-radius: 14px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .boton-pausa:hover { border-color: var(--stroke-color); color: var(--stroke-color); }
+
+  .overlay-pausa {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: rgba(255,255,255,0.93);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+    padding: 24px;
+  }
+
+  .overlay-pausa.abierto { display: flex; }
+  .titulo-pausa { font-size: 26px; font-weight: 700; color: var(--stroke-color); }
+  .texto-pausa { font-size: 14px; color: #777; max-width: 340px; }
+
+  /* NUEVO: botón "Revisar" (esquina superior izquierda, pasado el corte del clip-path) */
+  .boton-revisar {
+    position: absolute;
+    top: 10px;
+    left: calc(14% + 8px);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--stroke-color);
+    background: rgba(255,255,255,0.65);
+    border: 1.5px solid var(--stroke-color);
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .boton-revisar.activa { background: #ffe3c2; border-color: #e0812a; color: #a85a10; }
+
+  /* NUEVO: "Entendida por comprensión" reemplaza al tilde */
+  .boton-circular.boton-si.comprension {
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    border-radius: 24px;
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+
+  /* NUEVO: modal de "Continuar con las no respondidas" */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    background: rgba(30,30,40,0.55);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.abierto { display: flex; }
+
+  .modal-caja {
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    width: min(92vw, 420px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .modal-caja h3 { font-size: 18px; color: var(--stroke-color); margin-bottom: 2px; }
+  .modal-caja p { font-size: 14px; color: #666; margin-bottom: 6px; }
+  .modal-ayuda { font-size: 12px; color: #999; margin-bottom: 8px; }
+
+  .modal-cancelar {
+    background: none;
+    border: none;
+    color: #888;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  #area-tarjeta.observador .grupo-cronometro,
+  #area-tarjeta.observador #btn-pausa { display: none !important; }
+
+  /* NUEVO: botón y panel de razones */
+  .boton-razones { position: relative; }
+  .boton-razones.activa { border-color: #8B5CF6; color: #8B5CF6; }
+  .boton-nota:disabled, .boton-razones:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .badge-conteo {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: #8B5CF6;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  .chips-razones {
+    display: none;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .chip-razon {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1.3px solid;
+    white-space: nowrap;
+  }
+
+  .chip-razon.chico { font-size: 11px; font-weight: 600; padding: 1px 8px; margin: 3px 4px 0 0; }
+  .chip-razon.vacio { border-style: dashed; opacity: 0.7; font-style: italic; font-weight: 500; }
+  .item-razones { margin-top: 4px; }
+  .fila-chips-mini { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+
+  .panel-razones {
+    display: none;
+    margin-top: 14px;
+    text-align: left;
+    background: #F8F9FC;
+    border: 1px solid #E2E4EC;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  .panel-razones-titulo {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 10px;
+  }
+
+  .lista-check-razones { display: flex; flex-direction: column; gap: 9px; }
+
+  .item-check-razon {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    color: #444;
+    cursor: pointer;
+  }
+
+  .item-check-razon input { width: 17px; height: 17px; cursor: pointer; accent-color: var(--stroke-color); }
+  .dot-razon { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .panel-razones-acciones { display: flex; gap: 8px; margin-top: 12px; }
+
+  #area-tarjeta.observador .chips-razones,
+  #area-tarjeta.observador .panel-razones { display: none !important; }
+
   .sin-tarjetas {
     color: #888;
     font-size: 15px;
@@ -1766,6 +1985,40 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </details>
       <p class="nota-dificiles" id="nota-notas"></p>
     </div>
+
+    <!-- NUEVO: tarjetas marcadas 🚩 Revisar (persisten entre sesiones) -->
+    <div class="lista-temas zona-dificiles" id="zona-revisar">
+      <div class="cabecera-dificiles">
+        <span class="titulo-dificiles">🚩 Para revisar guardadas</span>
+        <span class="fila-dificiles-botones">
+          <button class="boton-mini" id="btn-vaciar-revisar" style="display:none;">Vaciar todas</button>
+        </span>
+      </div>
+      <div id="lista-revisar-guardadas"></div>
+      <p class="nota-dificiles" id="nota-revisar"></p>
+    </div>
+
+    <!-- NUEVO: razones guardadas -->
+    <div class="lista-temas zona-dificiles" id="zona-razones">
+      <div class="cabecera-dificiles">
+        <span class="titulo-dificiles">🏷 Razones guardadas</span>
+        <span class="fila-dificiles-botones">
+          <button class="boton-mini" id="btn-exportar-razones">Exportar</button>
+          <button class="boton-mini" id="btn-importar-razones">Importar</button>
+        </span>
+      </div>
+      <input type="file" id="input-importar-razones" accept=".json,application/json" style="display:none">
+      <details id="det-razones-aqui" style="display:none">
+        <summary id="suma-razones-aqui">De este evaluador</summary>
+        <div id="lista-razones-aqui"></div>
+      </details>
+      <details id="det-razones-otras" style="display:none">
+        <summary id="suma-razones-otras">De otros evaluadores</summary>
+        <div id="lista-razones-otras"></div>
+      </details>
+      <p class="nota-dificiles" id="nota-razones"></p>
+      <button class="boton-mini" id="btn-vaciar-razones" style="display:none;">Vaciar todas</button>
+    </div>
   </div>
 
   <!-- NUEVO: modo observador (lista de tarjetas por subT; al tocar una se abre) -->
@@ -1778,7 +2031,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div id="area-tarjeta" style="display:none;">
     <div class="barra-superior">
       <div class="progreso-texto" id="progreso-texto"></div>
-      <div class="cronometro" id="cronometro">⏱ 00:00</div>
+      <div class="grupo-cronometro">
+        <div class="cronometro" id="cronometro">⏱ 00:00</div>
+        <!-- NUEVO: pausa manual (por si dejás de estudiar un rato) -->
+        <button class="boton-pausa" id="btn-pausa" title="Pausar el cronómetro">⏸ Pausar</button>
+      </div>
     </div>
     <div class="barra-progreso"><div class="barra-progreso-relleno" id="barra-relleno"></div></div>
 
@@ -1790,6 +2047,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="tarjeta" id="tarjeta">
       <!-- MODIFICADO: badge con cantidad de rutas asociadas -->
       <div class="badge-rutas" id="badge-rutas" style="display:none;"></div>
+      <!-- NUEVO: marcar la tarjeta para revisar (solo en memoria, durante esta sesión) -->
+      <button class="boton-revisar" id="btn-revisar" title="Marcar para revisar (solo durante esta sesión)">🚩 Revisar</button>
       <div class="primero" id="tarjeta-primero"></div>
       <div class="zona-segundo" id="zona-segundo">
         <div class="fila-botones-tarjeta">
@@ -1822,6 +2081,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
     </div>
 
+    <!-- NUEVO: chips de razones guardadas (solo lectura) -->
+    <div class="chips-razones" id="chips-razones" style="display:none;"></div>
+
+    <!-- NUEVO: panel de razones (checkboxes de las 6 predefinidas) -->
+    <div class="panel-razones" id="panel-razones" style="display:none;">
+      <div class="panel-razones-titulo">🏷 ¿Por qué la marcaste así?</div>
+      <div class="lista-check-razones" id="lista-check-razones"></div>
+      <div class="panel-razones-acciones">
+        <button class="boton-mini" id="btn-razones-guardar">Guardar</button>
+        <button class="boton-mini" id="btn-razones-cerrar">Cerrar</button>
+      </div>
+    </div>
+
     <div class="zona-eval" id="zona-eval">
       <textarea id="texto-eval" placeholder="Escribí la respuesta con tus palabras (opcional). Enter para evaluar"></textarea>
       <!-- MODIFICADO: id agregado para poder ocultar el botón tras evaluar -->
@@ -1841,6 +2113,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar</button>
       <!-- MODIFICADO: toggle de tarjeta difícil (se guarda entre sesiones) -->
       <button class="boton-dificil" id="btn-dificil" title="Marcar/desmarcar como difícil (se guarda entre sesiones)">☆ Difícil</button>
+      <!-- NUEVO: registrar por qué se marcó así (se guarda entre sesiones) -->
+      <button class="boton-dificil boton-razones" id="btn-razones" title="Registrar por qué marcaste esta tarjeta así">🏷 Razones<span class="badge-conteo" id="badge-conteo-razones" style="display:none;"></span></button>
       <button class="boton boton-circular boton-si" id="btn-si" title="Entendido">&#10003;</button>
     </div>
 
@@ -1859,6 +2133,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="fila-resumen">
       <span class="etiqueta-resumen"><span class="punto punto-si"></span> Entendidas</span>
       <span class="valor-resumen" id="conteo-si">0</span>
+    </div>
+    <div class="fila-resumen">
+      <span class="etiqueta-resumen"><span class="punto punto-casi"></span> Casi</span>
+      <span class="valor-resumen" id="conteo-casi">0</span>
     </div>
     <div class="fila-resumen">
       <span class="etiqueta-resumen"><span class="punto punto-no"></span> No entendidas</span>
@@ -1885,6 +2163,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="lista-contenido" id="lista-si"></div>
       </details>
       <details class="lista-desplegable">
+        <summary><span class="etiqueta-resumen"><span class="punto punto-casi"></span> Casi</span></summary>
+        <div class="lista-contenido" id="lista-casi"></div>
+      </details>
+      <details class="lista-desplegable">
         <summary><span class="etiqueta-resumen"><span class="punto punto-no"></span> No entendidas</span></summary>
         <div class="lista-contenido" id="lista-no"></div>
       </details>
@@ -1892,13 +2174,39 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <summary><span class="etiqueta-resumen"><span class="punto punto-saltar"></span> Pasadas sin marcar</span></summary>
         <div class="lista-contenido" id="lista-saltar"></div>
       </details>
+      <!-- NUEVO: tarjetas marcadas con 🚩 Revisar durante la sesión -->
+      <details class="lista-desplegable">
+        <summary><span class="etiqueta-resumen" id="etq-revisar">🚩 Para revisar (0)</span></summary>
+        <div class="lista-contenido" id="lista-revisar"></div>
+      </details>
     </div>
 
     <div class="acciones-resumen">
+      <button class="boton-reiniciar" id="btn-continuar-pendientes" style="display:none;">Continuar con las no respondidas</button>
       <button class="boton-reiniciar" id="btn-repasar-no" style="display:none;">Repasar las que no entendí</button>
       <button class="boton-reiniciar" id="btn-reiniciar">Reiniciar esta ronda</button>
       <button class="boton-secundario" id="btn-elegir-temas">Elegir otros temas</button>
     </div>
+  </div>
+</div>
+
+<!-- NUEVO: overlay de pausa manual -->
+<div class="overlay-pausa" id="overlay-pausa">
+  <div class="titulo-pausa">⏸ En pausa</div>
+  <div class="texto-pausa">El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.</div>
+  <button class="boton-reiniciar" id="btn-reanudar">▶ Reanudar</button>
+</div>
+
+<!-- NUEVO: modal (no usa window.confirm) para continuar con las no respondidas -->
+<div class="modal-overlay" id="modal-continuar">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>Continuar con las no respondidas</h3>
+    <p id="modal-continuar-texto"></p>
+    <button class="boton-reiniciar" id="btn-modal-sesion">Continuar en esta sesión</button>
+    <div class="modal-ayuda">Vuelve a la primera pendiente, conservando tiempos y aciertos.</div>
+    <button class="boton-secundario" id="btn-modal-ronda">Iniciar nueva ronda</button>
+    <div class="modal-ayuda">Sesión nueva solo con esas tarjetas (nota y tiempos aparte).</div>
+    <button class="modal-cancelar" id="btn-modal-cancelar">Cancelar</button>
   </div>
 </div>
 
@@ -1914,6 +2222,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const modoAleatorio = __MODO_ALEATORIO__;
   const UMBRAL_CASI = __UMBRAL_CASI__;
   const SIM_ALTA = __SIM_ALTA__;
+  const SIM_SIN_PISTA = __SIM_SIN_PISTA__;   // NUEVO: todas las claves, sin pista
+  const SIM_CON_PISTA = __SIM_CON_PISTA__;   // NUEVO: todas las claves, con pista (debe ser MAYOR)
+  const STOPWORDS = new Set(__STOPWORDS__);  // NUEVO: palabras vacías (solo para evaluar)
 
   // ---------- Estado de la ronda actual ----------
   let tarjetasSesion = [];
@@ -1932,6 +2243,47 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let versionNota = 'local';   // NUEVO: qué versión se ve en el panel: 'local' | 'txt'
   let modoObservador = false;  // NUEVO: viendo tarjetas sin evaluarse (sin cronómetro ni calificación)
   let observadorAbiertos = new Set();  // NUEVO: subT abiertos en la lista del observador
+  let pausaManual = false;     // NUEVO: cronómetro pausado a mano (botón ⏸ Pausar)
+  // ---------- MODIFICADO: "Revisar" en memoria, sin persistencia en disco ----------
+  // Vive solo mientras la pestaña está abierta: no lee ni escribe localStorage.
+  // Al recargar o cerrar la página, revisarEnMemoria se pierde por completo (a
+  // propósito). Funciona igual en sesión de estudio y en modo observador, porque
+  // ambos operan sobre tarjetasSesion[indiceActual].
+  let revisarEnMemoria = {};
+
+  function esRevisar(t) { return !!revisarEnMemoria[hashTarjeta(t)]; }
+
+  function toggleRevisarActual() {
+    if (tarjetasSesion.length === 0) return;
+    const t = tarjetasSesion[indiceActual];
+    const h = hashTarjeta(t);
+    if (revisarEnMemoria[h]) {
+      delete revisarEnMemoria[h];
+    } else {
+      revisarEnMemoria[h] = { p: t.primero || '', s: t.segundo || '', t: Date.now() };
+    }
+    renderTarjeta();
+  }
+  let porComprension = [];     // NUEVO: tarjetas marcadas Entendida por comprensión
+  let razonesAbierto = false;  // NUEVO: panel de razones abierto (pausa el cronómetro)
+  let razonesPendientes = null; // NUEVO: array de códigos en edición, null si el panel está cerrado
+
+  // NUEVO: razones predefinidas (código fijo, sin texto libre ni personalización)
+  const RAZONES_DEF = [
+    { codigo: 'olvido', texto: 'Olvido', color: '#9CA3AF' },
+    { codigo: 'incompleto', texto: 'Incompleto', color: '#F59E0B' },
+    { codigo: 'confusion', texto: 'Confusión', color: '#EF4444' },
+    { codigo: 'mezcla', texto: 'Mezcla de conceptos', color: '#F97316' },
+    { codigo: 'terminologia', texto: 'Terminología específica', color: '#3B82F6' },
+    { codigo: 'contexto', texto: 'Contexto / redacción', color: '#8B5CF6' },
+  ];
+  const MAPA_RAZONES = new Map(RAZONES_DEF.map((r) => [r.codigo, r]));
+
+  function hexToRgba(hex, alpha) {
+    const v = hex.replace('#', '');
+    const r = parseInt(v.substring(0, 2), 16), g = parseInt(v.substring(2, 4), 16), b = parseInt(v.substring(4, 6), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+  }
   let tiempoInicioTarjeta = 0;
   let cronometroIntervalId = null;
 
@@ -2086,6 +2438,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elPantallaResumen = document.getElementById('pantalla-resumen');
   const elPantallaObservador = document.getElementById('pantalla-observador');
   const elListaObservador = document.getElementById('lista-observador');
+  const elBtnPausa = document.getElementById('btn-pausa');
+  const elOverlayPausa = document.getElementById('overlay-pausa');
+  const elBtnReanudar = document.getElementById('btn-reanudar');
+  const elBtnRevisar = document.getElementById('btn-revisar');
+  const elModalContinuar = document.getElementById('modal-continuar');
 
   const elTemaTexto = document.getElementById('tema-texto');
   const elPrimero = document.getElementById('tarjeta-primero');
@@ -2120,6 +2477,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // MODIFICADO: nuevos elementos
   const elFilaEval = document.getElementById('fila-eval');
   const elBadgeRutas = document.getElementById('badge-rutas');
+  const elBtnRazones = document.getElementById('btn-razones');
+  const elBadgeRazones = document.getElementById('badge-conteo-razones');
+  const elChipsRazones = document.getElementById('chips-razones');
+  const elPanelRazones = document.getElementById('panel-razones');
+  const elListaCheckRazones = document.getElementById('lista-check-razones');
   const elBtnDificil = document.getElementById('btn-dificil');
 
   const elBtnSi = document.getElementById('btn-si');
@@ -2175,6 +2537,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (nombre === 'temas') {
       renderDificilesPreview();  // MODIFICADO: actualizar la vista de difíciles
       renderNotasPreview();      // NUEVO: notas distintas a las del txt
+      renderRevisarGuardadoPreview();  // NUEVO: también al volver por "Volver a temas" del observador
     }
     if (nombre !== 'estudio') {
       detenerCronometro();
@@ -2344,7 +2707,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         fila.appendChild(crearTextosTarjeta(t));
         const marcas = document.createElement('span');
         marcas.className = 'tc-marcas';
-        marcas.textContent = (esDificil(t) ? '★' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '');
+        marcas.textContent = (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '');
         fila.appendChild(marcas);
         fila.addEventListener('click', () => abrirTarjetaObservador(i));
         cuerpo.appendChild(fila);
@@ -2370,10 +2733,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     respuestaMostrada = new Array(n).fill(false);
     escritos = new Array(n).fill('');
     evaluaciones = new Array(n).fill(null);
+    porComprension = new Array(n).fill(false);
     indiceActual = idx;
     cronometroActivo = false;   // sin cronómetro
     indiceCongelado = -1;
-    resetNotaUI();
+    resetPanelesUI();
     modoObservador = true;
     elAreaTarjeta.classList.add('observador');
     mostrarPantalla('estudio');
@@ -2384,7 +2748,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function salirObservador() {
     if (!confirmarDescartarBorrador()) return;
     const ultimo = indiceActual;
-    resetNotaUI();
+    resetPanelesUI();
     modoObservador = false;
     elAreaTarjeta.classList.remove('observador');
     construirListaObservador();   // refresca ★ y 💡
@@ -2792,7 +3156,215 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lector.readAsText(archivo);
   });
 
+  // ---------- NUEVO: "Revisar" guardadas en "Elegir temas" (solo primero + segundo) ----------
+
+  function filaRevisarGuardada(hash, entrada) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+    const titulo = document.createElement('div');
+    titulo.textContent = (entrada.p || '(sin texto)') + (entrada.s ? ' — ' + entrada.s : '');
+    div.appendChild(titulo);
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Quitar', () => {
+      delete revisarEnMemoria[hash];
+      renderRevisarGuardadoPreview();
+    }));
+    div.appendChild(acc);
+    return div;
+  }
+
+  function renderRevisarGuardadoPreview() {
+    const el = document.getElementById('lista-revisar-guardadas');
+    const elInfo = document.getElementById('nota-revisar');
+    const elVaciar = document.getElementById('btn-vaciar-revisar');
+    el.innerHTML = '';
+    const hashes = Object.keys(revisarEnMemoria);
+    hashes.forEach((h) => el.appendChild(filaRevisarGuardada(h, revisarEnMemoria[h])));
+    elInfo.textContent = hashes.length === 0
+      ? 'No tenés tarjetas marcadas para revisar (botón 🚩 durante el estudio).'
+      : 'Marcadas en esta sesión del navegador: ' + hashes.length + ' (se pierden al recargar la página)';
+    elVaciar.style.display = hashes.length > 0 ? 'inline-block' : 'none';
+  }
+
+  document.getElementById('btn-vaciar-revisar').addEventListener('click', () => {
+    if (Object.keys(revisarEnMemoria).length === 0) return;
+    if (!confirm('¿Vaciar todas las tarjetas para revisar? No se puede deshacer.')) return;
+    revisarEnMemoria = {};
+    renderRevisarGuardadoPreview();
+  });
+
+  // ---------- NUEVO: razones guardadas en "Elegir temas" ----------
+
+  function filaRazonGuardada(hash, entrada) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+    const titulo = document.createElement('div');
+    titulo.textContent = (entrada.p || '(sin texto)') + (entrada.s ? ' — ' + entrada.s : '');
+    div.appendChild(titulo);
+
+    const chips = document.createElement('div');
+    chips.className = 'fila-chips-mini';
+    const codigos = entrada.razones || [];
+    if (codigos.length === 0) {
+      const vacio = document.createElement('span');
+      vacio.className = 'chip-razon chico vacio';
+      vacio.textContent = '(sin razones)';
+      chips.appendChild(vacio);
+    } else {
+      codigos.forEach((cod) => {
+        const def = MAPA_RAZONES.get(cod);
+        if (!def) return;
+        const chip = document.createElement('span');
+        chip.className = 'chip-razon chico';
+        chip.textContent = def.texto;
+        chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+        chip.style.borderColor = def.color;
+        chip.style.color = def.color;
+        chips.appendChild(chip);
+      });
+    }
+    div.appendChild(chips);
+
+    if (entrada.estado) {
+      const nombres = { si: 'Entendida', no: 'No entendida', casi: 'Casi', saltar: 'Sin marcar' };
+      const est = document.createElement('div');
+      est.style.fontSize = '11px';
+      est.style.color = '#999';
+      est.textContent = 'Estado al guardar: ' + (nombres[entrada.estado] || entrada.estado);
+      div.appendChild(est);
+    }
+
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Borrar', () => {
+      if (!confirm('¿Borrar por completo este registro de razones?')) return;
+      delete razonesGuardadas[hash];
+      guardarRazones();
+      renderRazonesPreview();
+    }));
+    div.appendChild(acc);
+    return div;
+  }
+
+  function renderRazonesPreview() {
+    const elAqui = document.getElementById('lista-razones-aqui');
+    const elDetAqui = document.getElementById('det-razones-aqui');
+    const elSumaAqui = document.getElementById('suma-razones-aqui');
+    const elOtras = document.getElementById('lista-razones-otras');
+    const elDetOtras = document.getElementById('det-razones-otras');
+    const elSumaOtras = document.getElementById('suma-razones-otras');
+    const elInfo = document.getElementById('nota-razones');
+    const elVaciar = document.getElementById('btn-vaciar-razones');
+    elAqui.innerHTML = '';
+    elOtras.innerHTML = '';
+
+    const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
+    let nAqui = 0, nOtras = 0;
+    Object.keys(razonesGuardadas).forEach((h) => {
+      if (hashesAqui.has(h)) { nAqui++; elAqui.appendChild(filaRazonGuardada(h, razonesGuardadas[h])); }
+      else { nOtras++; elOtras.appendChild(filaRazonGuardada(h, razonesGuardadas[h])); }
+    });
+    elDetAqui.style.display = nAqui > 0 ? 'block' : 'none';
+    elSumaAqui.textContent = 'De este evaluador (' + nAqui + ')';
+    elDetOtras.style.display = nOtras > 0 ? 'block' : 'none';
+    elSumaOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
+    const total = nAqui + nOtras;
+    elInfo.textContent = total === 0
+      ? 'Todavía no guardaste razones (botón 🏷 durante el estudio).'
+      : 'Guardadas en este navegador: ' + total;
+    elVaciar.style.display = total > 0 ? 'inline-block' : 'none';
+  }
+
+  document.getElementById('btn-vaciar-razones').addEventListener('click', () => {
+    if (Object.keys(razonesGuardadas).length === 0) return;
+    if (!confirm('¿Vaciar TODAS las razones guardadas? No se puede deshacer.')) return;
+    razonesGuardadas = {};
+    guardarRazones();
+    renderRazonesPreview();
+  });
+
+  document.getElementById('btn-exportar-razones').addEventListener('click', () => {
+    const lista = Object.keys(razonesGuardadas).map((h) => ({
+      h: h,
+      p: razonesGuardadas[h].p || '',
+      s: razonesGuardadas[h].s || '',
+      razones: razonesGuardadas[h].razones || [],
+      estado: razonesGuardadas[h].estado || null,
+      t: razonesGuardadas[h].t || 0,
+    }));
+    const contenido = JSON.stringify({ version: 1, razones: lista }, null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'razones_tarjetas.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-razones').addEventListener('click', () => {
+    document.getElementById('input-importar-razones').click();
+  });
+
+  document.getElementById('input-importar-razones').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      const elInfo = document.getElementById('nota-razones');
+      try {
+        const obj = JSON.parse(lector.result);
+        const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.razones) ? obj.razones : null);
+        if (!lista) throw new Error('formato');
+
+        let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+        lista.forEach((item) => {
+          if (!item || typeof item.h !== 'string' || !item.h || !Array.isArray(item.razones)) {
+            invalidas++;
+            return;
+          }
+          const codigosValidos = item.razones.filter((c) => MAPA_RAZONES.has(c));
+          const entrada = {
+            p: typeof item.p === 'string' ? item.p : '',
+            s: typeof item.s === 'string' ? item.s : '',
+            razones: codigosValidos,
+            estado: typeof item.estado === 'string' ? item.estado : null,
+            t: typeof item.t === 'number' ? item.t : 0,
+          };
+          const local = razonesGuardadas[item.h];
+          if (!local) {
+            razonesGuardadas[item.h] = entrada;
+            nuevas++;
+          } else if (JSON.stringify((local.razones || []).slice().sort()) === JSON.stringify(entrada.razones.slice().sort()) &&
+                     (local.estado || null) === entrada.estado) {
+            iguales++;
+          } else if (entrada.t > (local.t || 0)) {
+            razonesGuardadas[item.h] = entrada;
+            actualizadas++;
+          } else {
+            conservadas++;
+          }
+        });
+        guardarRazones();
+        renderRazonesPreview();
+        elInfo.textContent = 'Importación: ' + nuevas + ' nueva(s), ' + actualizadas +
+          ' actualizada(s) por ser más recientes, ' + conservadas + ' conservada(s) (la tuya era más reciente), ' +
+          iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+      } catch (e) {
+        elInfo.textContent = 'El archivo no es un JSON válido de razones.';
+      }
+    };
+    lector.readAsText(archivo);
+  });
+
   document.getElementById('btn-elegir-temas').addEventListener('click', () => {
+    renderRevisarGuardadoPreview();
+    renderRazonesPreview();
     mostrarPantalla('temas');
   });
 
@@ -2809,10 +3381,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     respuestaMostrada = new Array(lista.length).fill(false);
     escritos = new Array(lista.length).fill('');
     evaluaciones = new Array(lista.length).fill(null);
+    porComprension = new Array(lista.length).fill(false);
+    pausaManual = false;
+    elOverlayPausa.classList.remove('abierto');
     indiceActual = 0;
     cronometroActivo = lista.length > 0;
     indiceCongelado = -1;
-    resetNotaUI();
+    resetPanelesUI();
     tiempoInicioTarjeta = Date.now();
 
     mostrarPantalla('estudio');
@@ -2830,9 +3405,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     tiempoInicioTarjeta = ahora;
   }
 
-  // MODIFICADO: también congela mientras la nota está abierta
+  // MODIFICADO: también congela con la nota o el panel de razones abiertos, o en pausa manual
   function cronometroCongelado() {
-    return notaAbierta || indiceCongelado === indiceActual;
+    return pausaManual || notaAbierta || razonesAbierto || indiceCongelado === indiceActual;
   }
 
   function renderTarjeta() {
@@ -2882,8 +3457,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     let claseEstado = 'estado-marca';
 
     if (marcada === 'si') {
-      textoEstado = 'Ya marcada: Entendida' + (respuestaMostrada[indiceActual] ? ' — respuesta mostrada' : '');
+      textoEstado = 'Ya marcada: Entendida' + (porComprension[indiceActual] ? ' (por comprensión)' : '') +
+        (respuestaMostrada[indiceActual] ? ' — respuesta mostrada' : '');
       claseEstado = 'estado-marca si';
+    } else if (marcada === 'casi') {
+      textoEstado = 'Casi entendida (cuenta 0.5)';
+      claseEstado = 'estado-marca casi';
     } else if (marcada === 'no') {
       textoEstado = respuestaMostrada[indiceActual]
         ? 'No entendida — respuesta mostrada'
@@ -2898,7 +3477,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elEstadoMarca.className = claseEstado;
 
     const yaMarcada = marcada !== null;
-    elBtnSi.disabled = yaMarcada;
+
+    // NUEVO: si la respuesta escrita salió "Casi" o "Mal", el tilde se reemplaza por
+    // "Entendida por comprensión" (permite corregir el veredicto del evaluador)
+    const evActual = evaluaciones[indiceActual];
+    const permiteComprension = !modoObservador && !!evActual &&
+      (evActual.resultado === 'casi' || evActual.resultado === 'mal') && marcada !== 'si';
+    elBtnSi.classList.toggle('comprension', permiteComprension);
+    elBtnSi.textContent = permiteComprension ? '💡✓ Entendida por comprensión' : '✓';
+    elBtnSi.title = permiteComprension
+      ? 'Marcar como entendida aunque la evaluación no lo diera por bien (1 punto; 0.5 si usaste la pista)'
+      : 'Entendido';
+    elBtnSi.disabled = yaMarcada && !permiteComprension;
     elBtnNo.disabled = yaMarcada;
     elBtnSaltar.disabled = yaMarcada;
 
@@ -2934,12 +3524,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elBadgeRutas.style.display = 'none';
     }
 
+    // NUEVO: botón Pausar (solo mientras el cronómetro corre) y toggle Revisar
+    elBtnPausa.style.display = (cronometroActivo && !modoObservador) ? 'inline-block' : 'none';
+    elBtnRevisar.classList.toggle('activa', esRevisar(actual));
+    elBtnRevisar.textContent = esRevisar(actual) ? '🚩 Para revisar' : '🚩 Revisar';
+
     // MODIFICADO: estado del toggle Difícil (siempre activo, aunque ya marcada)
     const esDif = esDificil(actual);
     elBtnDificil.textContent = esDif ? '★ Difícil' : '☆ Difícil';
     elBtnDificil.classList.toggle('activa', esDif);
 
     renderNota(actual);  // NUEVO: botón 💡 + panel de nota
+    renderRazones(actual);  // NUEVO: botón 🏷 + panel de razones
 
     renderRutas(actual);
 
@@ -3033,25 +3629,130 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // ---------- Evaluación de respuesta escrita ----------
 
-  function tokenizar(texto) {
+  // ---------- Evaluación: palabras vacías, raíces y tolerancia a tipeos ----------
+
+  const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','sion','adoras','adores','adora','ador',
+    'ivas','ivos','iva','ivo','ables','ibles','able','ible','anza','ante','ente','ados','idos','ado','ido','ando','iendo'];
+
+  // Raíz simplificada para comparar singular/plural, género y algunas derivaciones.
+  // Recibe cualquier palabra (se normaliza antes: minúsculas y sin tildes).
+  // Ajustes respecto de la versión original (ver notas del cambio):
+  //  - el plural en -s se quita también en -as/-os/-is/-us (sistemas -> sistema, polos -> polo)
+  //  - los sufijos se quitan solo si la raíz queda con 4+ letras (evita estado = estable)
+  function raiz(palabra) {
+    let p = normalizarPalabra(palabra).trim();
+    if (p.length <= 3) return p;
+    if (p.endsWith('ces') && p.length > 4) return p.slice(0, -3) + 'z';
+    if (p.endsWith('es') && p.length >= 5) {
+      p = p.slice(0, -2);
+    } else if (p.endsWith('s') && !p.endsWith('es')) {
+      p = p.slice(0, -1);
+    }
+    const dim = p.match(/^(.+?)(itos|itas|ito|ita|illos|illas|illo|illa|icos|icas|ico|ica)$/);
+    if (dim && dim[1].length >= 3) return dim[1];
+    const aum = p.match(/^(.+?)(otes|otas|ote|ota|ones|onas|on|ona)$/);
+    if (aum && aum[1].length >= 3) return aum[1];
+    if (p.endsWith('mente') && p.length > 7) p = p.slice(0, -5);
+    for (const suf of SUFIJOS_RAIZ) {
+      if (p.endsWith(suf) && p.length - suf.length >= 4) { p = p.slice(0, -suf.length); break; }
+    }
+    for (const suf of ['ar', 'er', 'ir']) {
+      if (p.endsWith(suf) && p.length - suf.length >= 3) { p = p.slice(0, -suf.length); break; }
+    }
+    if (p.length >= 5 && (p.endsWith('a') || p.endsWith('o'))) p = p.slice(0, -1);
+    if (p.endsWith('c')) p = p.slice(0, -1) + 'z';
+    return p;
+  }
+
+  // Una palabra en -es puede ser plural de una palabra en consonante (condiciones ->
+  // condicion) o de una en -e (estables -> estable, partes -> parte). Como no se
+  // puede saber cuál, se guardan las dos raíces posibles y basta que coincida una.
+  function variantesRaiz(palabra) {
+    const p = normalizarPalabra(palabra).trim();
+    const v = [raiz(p)];
+    if (p.endsWith('es') && p.length >= 5) {
+      const alt = raiz(p.slice(0, -1));
+      if (v.indexOf(alt) === -1) v.push(alt);
+    }
+    return v;
+  }
+
+  // true si a y b difieren en 1 letra como máximo (de más, de menos, cambiada,
+  // o dos letras seguidas invertidas)
+  function distanciaMax1(a, b) {
+    if (a === b) return true;
+    const la = a.length, lb = b.length;
+    if (Math.abs(la - lb) > 1) return false;
+    let i = 0;
+    while (i < la && i < lb && a[i] === b[i]) i++;
+    if (la === lb) {
+      if (a.slice(i + 1) === b.slice(i + 1)) return true;
+      if (i + 1 < la && a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2)) return true;
+      return false;
+    }
+    if (la > lb) return a.slice(i + 1) === b.slice(i);
+    return b.slice(i + 1) === a.slice(i);
+  }
+
+  function crearEntrada(w, orig) {
+    return { w: w, orig: orig, v: variantesRaiz(w) };
+  }
+
+  // Palabras de un texto, sin palabras vacías y sin repetir raíz.
+  // Solo se usa para EVALUAR: el texto de las rutas se muestra completo.
+  function analizarTexto(texto) {
+    const vistos = new Set();
     const salida = [];
     for (const m of texto.matchAll(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g)) {
-      salida.push(normalizarPalabra(m[0]));
+      const w = normalizarPalabra(m[0]);
+      if (STOPWORDS.has(w)) continue;
+      const e = crearEntrada(w, m[0]);
+      if (vistos.has(e.v[0])) continue;
+      vistos.add(e.v[0]);
+      salida.push(e);
     }
     return salida;
   }
 
-  function similitudDice(tokensA, tokensB) {
-    const a = new Set(tokensA), b = new Set(tokensB);
-    if (a.size === 0 || b.size === 0) return 0;
-    let inter = 0;
-    for (const w of a) if (b.has(w)) inter++;
-    return (2 * inter) / (a.size + b.size);
+  function compartenRaiz(a, b) {
+    return a.v.some((x) => b.v.indexOf(x) !== -1);
+  }
+
+  // Tolerancia de tipeo: 1 letra de diferencia en palabras (o raíces) de 5+ letras
+  function seParecen(a, b) {
+    if (a.w.length >= 5 && b.w.length >= 5 && distanciaMax1(a.w, b.w)) return true;
+    for (const x of a.v) {
+      for (const y of b.v) {
+        if (x.length >= 5 && y.length >= 5 && distanciaMax1(x, y)) return true;
+      }
+    }
+    return false;
+  }
+
+  // Empareja uno a uno las entradas de A con las de B: primero por raíz
+  // (raiz(a) === raiz(b)) y, lo que quede, por tipeo. Devuelve Map indiceA -> indiceB.
+  function emparejar(A, B) {
+    const usadosB = new Set();
+    const pares = new Map();
+    [compartenRaiz, seParecen].forEach((comparar) => {
+      A.forEach((a, i) => {
+        if (pares.has(i)) return;
+        for (let j = 0; j < B.length; j++) {
+          if (usadosB.has(j)) continue;
+          if (comparar(a, B[j])) {
+            usadosB.add(j);
+            pares.set(i, j);
+            break;
+          }
+        }
+      });
+    });
+    return pares;
   }
 
   // Claves para evaluar: mismo criterio del resaltado, sin palabras de 1-2 letras
   function clavesEvalDe(tarjeta) {
-    return (tarjeta.claves || []).filter((c) => c.length >= 3);
+    return (tarjeta.claves || []).filter((c) => c.length >= 3 && !STOPWORDS.has(c));
   }
 
   // Texto de referencia: contenido de las rutas válidas (sin imágenes);
@@ -3070,8 +3771,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return clavesEvalDe(tarjeta).length > 0 || textoReferenciaDe(tarjeta).length > 0;
   }
 
-  // MODIFICADO: resultado de la evaluación en 3 líneas
-  // (1: veredicto + claves, 2: coincidencia con el contenido, 3: palabras en común)
+  // MODIFICADO: resultado de la evaluación, en este orden:
+  // 1) veredicto + claves, 2) mapeo de claves, 3) coincidencia con el contenido,
+  // 4) palabras en común
   function renderResultadoEval(ev) {
     elResultadoEval.innerHTML = '';
 
@@ -3080,7 +3782,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     else if (ev.resultado === 'casi') textoVeredicto = '✗ Casi';
     else textoVeredicto = '✗ Mal';
 
-    // Línea 1: veredicto + claves
+    // 1) veredicto + claves
     const linea1 = document.createElement('div');
     let t1 = textoVeredicto;
     if (ev.clavesTotal > 0) {
@@ -3092,44 +3794,86 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     linea1.textContent = t1;
     elResultadoEval.appendChild(linea1);
 
-    // Línea 2: coincidencia con el contenido
+    // 2) mapeo de claves: con qué palabra tuya coincidió cada clave
+    if (ev.mapeo && ev.mapeo.length > 0) {
+      const enc = document.createElement('div');
+      enc.textContent = 'Mapeo Claves:';
+      elResultadoEval.appendChild(enc);
+      ev.mapeo.forEach((m) => {
+        const par = document.createElement('div');
+        par.style.paddingLeft = '18px';
+        par.textContent = m.clave + ' ≈ ' + m.palabra;
+        elResultadoEval.appendChild(par);
+      });
+    }
+
+    // 3) coincidencia con el contenido
     const linea2 = document.createElement('div');
     linea2.textContent = 'coincidencia con el contenido: ' + Math.round(ev.sim * 100) + '%' +
-      ' (tu respuesta: ' + ev.totalEscritas + ' distintas, contenido: ' + ev.totalReferencia + ')';
+      ' (tu respuesta: ' + ev.totalEscritas + ' distintas, contenido: ' + ev.totalReferencia + ')' +
+      (ev.conPista && ev.clavesTotal > 0
+        ? ' — usaste la pista: para "Bien" se exige más de ' + Math.round(SIM_CON_PISTA * 100) + '%' : '');
     elResultadoEval.appendChild(linea2);
 
-    // Línea 3: palabras en común
+    // 4) palabras en común
     const linea3 = document.createElement('div');
     linea3.textContent = ev.comunes + ' palabra(s) en común';
     elResultadoEval.appendChild(linea3);
+
+    if (porComprension[indiceActual]) {
+      const extra = document.createElement('div');
+      extra.textContent = '💡 Marcada como entendida por comprensión';
+      elResultadoEval.appendChild(extra);
+    }
 
     elResultadoEval.className = 'resultado-eval ' + ev.resultado;
   }
 
   function evaluarRespuesta() {
+    if (pausaManual) return;
     if (resultados[indiceActual] !== null) return;
     const texto = elTextoEval.value;
     if (texto.trim() === '') return;
 
     const actual = tarjetasSesion[indiceActual];
     const claves = clavesEvalDe(actual);
-    const escritas = new Set(tokenizar(texto));
+    const escritas = analizarTexto(texto);
 
-    const acertadas = claves.filter((c) => escritas.has(c));
-    const faltaron = claves.filter((c) => !escritas.has(c));
-    const propClaves = claves.length > 0
-      ? (claves.length - faltaron.length) / claves.length : null;
+    // Claves acertadas: cada clave contra las palabras escritas (raíz o tipeo)
+    const entradasClaves = claves.map((c) => crearEntrada(c, c));
+    const paresClaves = emparejar(entradasClaves, escritas);
+    const acertadas = [];
+    const faltaron = [];
+    const mapeo = [];
+    claves.forEach((c, i) => {
+      if (paresClaves.has(i)) {
+        acertadas.push(c);
+        mapeo.push({ clave: c, palabra: escritas[paresClaves.get(i)].orig.toLowerCase() });
+      } else {
+        faltaron.push(c);
+      }
+    });
+    const propClaves = claves.length > 0 ? acertadas.length / claves.length : null;
 
-    const referencia = textoReferenciaDe(actual);
-    const setRef = new Set(tokenizar(referencia));
-    const comunes = Array.from(escritas).filter((w) => setRef.has(w)).length;
-    const sim = similitudDice(escritas, setRef);
+    // Coincidencia con el contenido (Dice sobre palabras con raíz equivalente)
+    const referencia = analizarTexto(textoReferenciaDe(actual));
+    const comunes = emparejar(escritas, referencia).size;
+    const sim = (escritas.length === 0 || referencia.length === 0)
+      ? 0 : (2 * comunes) / (escritas.length + referencia.length);
 
+    // Calificación (ver tabla): con pista, para "Bien" la coincidencia debe ser
+    // MAYOR a SIM_CON_PISTA; sin pista alcanza con SIM_SIN_PISTA.
+    const conPista = !!pistaMostrada[indiceActual];
     let resultado;
     if (claves.length > 0) {
-      if (propClaves === 1 || (propClaves >= UMBRAL_CASI && sim >= SIM_ALTA)) resultado = 'bien';
-      else if (propClaves >= UMBRAL_CASI) resultado = 'casi';
-      else resultado = 'mal';
+      if (propClaves === 1) {
+        const cumple = conPista ? (sim > SIM_CON_PISTA) : (sim >= SIM_SIN_PISTA);
+        resultado = cumple ? 'bien' : 'casi';
+      } else if (propClaves >= UMBRAL_CASI) {
+        resultado = (sim >= SIM_ALTA && (!conPista || sim > SIM_CON_PISTA)) ? 'bien' : 'casi';
+      } else {
+        resultado = 'mal';
+      }
     } else {
       if (sim >= SIM_ALTA) resultado = 'bien';
       else if (sim >= UMBRAL_CASI) resultado = 'casi';
@@ -3141,20 +3885,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       resultado,
       acertadas,
       faltaron,
+      mapeo,
+      conPista,
       clavesTotal: claves.length,
       propClaves,
       sim,
       comunes,
-      totalEscritas: escritas.size,
-      totalReferencia: setRef.size,
+      totalEscritas: escritas.length,
+      totalReferencia: referencia.length,
     };
 
-    // Auto-marca: bien -> Entendida; casi/mal -> No entendida.
+    // Auto-marca: bien -> Entendida; casi -> Casi (0.5); mal -> No entendida.
     // NO avanza: el feedback queda a la vista y el avance es manual.
     if (cronometroActivo && !cronometroCongelado()) {
       acumularTiempo();
     }
-    resultados[indiceActual] = (resultado === 'bien') ? 'si' : 'no';
+    resultados[indiceActual] = (resultado === 'bien') ? 'si' : (resultado === 'casi' ? 'casi' : 'no');
     revelado[indiceActual] = true;
 
     renderTarjeta();
@@ -3187,6 +3933,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // ---------- Marcado y navegación ----------
 
   function marcar(resultado) {
+    if (pausaManual) return;
     if (resultados[indiceActual] !== null) return;
     if (!confirmarDescartarBorrador()) return;
 
@@ -3197,7 +3944,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else {
       tiempoInicioTarjeta = Date.now();
     }
-    resetNotaUI();
+    resetPanelesUI();
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
 
@@ -3241,7 +3988,40 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderTarjeta();
   }
 
+  // NUEVO: "Entendida por comprensión": cuando la respuesta escrita salió Casi o Mal,
+  // permite marcar la tarjeta como entendida igual. Suma 1 punto, o 0.5 si se usó la pista.
+  function marcarPorComprension() {
+    if (pausaManual || modoObservador) return;
+    const ev = evaluaciones[indiceActual];
+    if (!ev || (ev.resultado !== 'casi' && ev.resultado !== 'mal')) return;
+    if (resultados[indiceActual] === 'si') return;
+    resultados[indiceActual] = 'si';
+    porComprension[indiceActual] = true;
+    renderTarjeta();
+  }
+
+  // NUEVO: pausa manual del cronómetro. Mientras dura, el tiempo no cuenta y un
+  // overlay tapa la pantalla (no se puede leer, marcar ni navegar).
+  function pausarManual() {
+    if (modoObservador || !cronometroActivo || pausaManual) return;
+    if (!cronometroCongelado()) acumularTiempo();
+    pausaManual = true;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    elOverlayPausa.classList.add('abierto');
+    actualizarCronometro();
+    elBtnReanudar.focus();
+  }
+
+  function reanudarManual() {
+    if (!pausaManual) return;
+    pausaManual = false;
+    elOverlayPausa.classList.remove('abierto');
+    if (cronometroActivo && !cronometroCongelado()) tiempoInicioTarjeta = Date.now();
+    actualizarCronometro();
+  }
+
   function navegar(delta) {
+    if (pausaManual) return;
     const nuevo = indiceActual + delta;
     if (nuevo < 0 || nuevo >= tarjetasSesion.length) return;
     if (!confirmarDescartarBorrador()) return;
@@ -3259,7 +4039,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       indiceActual = nuevo;
     }
 
-    resetNotaUI();  // NUEVO: la nota se cierra al cambiar de tarjeta
+    resetPanelesUI();  // NUEVO: nota y razones se cierran al cambiar de tarjeta
     renderTarjeta();
   }
 
@@ -3273,15 +4053,38 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     versionNota = 'local';
   }
 
+  // NUEVO: cierra el panel de razones sin preguntar (usar resetPanelesUI para el caso general)
+  function resetRazonesUI() {
+    razonesAbierto = false;
+    razonesPendientes = null;
+  }
+
+  // NUEVO: cierra nota y razones juntos (cambio de tarjeta, inicio de sesión, etc.)
+  function resetPanelesUI() {
+    resetNotaUI();
+    resetRazonesUI();
+  }
+
   function borradorSinGuardar() {
     if (!editandoNota) return false;
     const actual = tarjetasSesion[indiceActual];
     return actual ? (elNotaEditor.value.trim() !== notaEfectivaDe(actual)) : false;
   }
 
+  // NUEVO: cambios sin guardar en el panel de razones (checkboxes tocados sin apretar Guardar)
+  function razonesSinGuardar() {
+    if (!razonesAbierto || razonesPendientes === null) return false;
+    const actual = tarjetasSesion[indiceActual];
+    if (!actual) return false;
+    const guardado = razonesDeTarjeta(actual).slice().sort().join(',');
+    const pendiente = razonesPendientes.slice().sort().join(',');
+    return guardado !== pendiente;
+  }
+
+  // MODIFICADO: cubre tanto la nota como el panel de razones
   function confirmarDescartarBorrador() {
-    if (!borradorSinGuardar()) return true;
-    return confirm('Tenés cambios sin guardar en la nota. ¿Descartarlos?');
+    if (!borradorSinGuardar() && !razonesSinGuardar()) return true;
+    return confirm('Tenés cambios sin guardar (nota y/o razones). ¿Descartarlos?');
   }
 
   function renderNota(actual) {
@@ -3290,8 +4093,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const hayNota = efectiva !== '';
     const hayDif = est !== 'igual';
 
-    // Botón 💡: siempre visible (sin nota = punteado, invita a agregar)
+    // Botón 💡: siempre visible (sin nota = punteado, invita a agregar); deshabilitado
+    // mientras el panel de razones está abierto (solo un panel a la vez)
     elBtnNota.style.display = 'inline-flex';
+    elBtnNota.disabled = razonesAbierto;
     elBtnNota.classList.toggle('activa', notaAbierta);
     elBtnNota.classList.toggle('vacia', !hayNota && !hayDif && !notaAbierta);
     elBtnNota.classList.toggle('dif', hayDif);
@@ -3362,9 +4167,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function cerrarNota() {
     // Cerrar: reanudar salvo que la respuesta siga mostrada (congelado propio)
+    // o que el panel de razones haya quedado abierto (no se toca acá)
     const siguePorRespuesta = indiceCongelado === indiceActual;
     resetNotaUI();
-    if (cronometroActivo && !siguePorRespuesta) tiempoInicioTarjeta = Date.now();
+    if (cronometroActivo && !siguePorRespuesta && !razonesAbierto) tiempoInicioTarjeta = Date.now();
     actualizarCronometro();
     renderTarjeta();
   }
@@ -3423,6 +4229,143 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cerrarNota();
   }
 
+  // ---------- NUEVO: razones (por qué se marcó así) ----------
+  // Igual patrón que las notas locales: persisten en localStorage, no en el txt.
+  // A diferencia de la nota, no hay "versión del txt": son solo 6 códigos fijos.
+  const CLAVE_RAZONES = 'razones_tarjetas_v1';
+  let razonesGuardadas = cargarRazones();
+
+  function cargarRazones() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_RAZONES);
+      if (!crudo) return {};
+      const obj = JSON.parse(crudo);
+      return (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function guardarRazones() {
+    try {
+      localStorage.setItem(CLAVE_RAZONES, JSON.stringify(razonesGuardadas));
+    } catch (e) {
+      // sin localStorage: quedan solo en memoria de esta sesión
+    }
+  }
+
+  function razonesDeTarjeta(t) {
+    const e = razonesGuardadas[hashTarjeta(t)];
+    return e ? (e.razones || []) : [];
+  }
+
+  function abrirRazones() {
+    const actual = tarjetasSesion[indiceActual];
+    if (!actual || notaAbierta) return;   // un panel a la vez
+    if (cronometroActivo && !cronometroCongelado()) acumularTiempo();
+    razonesAbierto = true;
+    razonesPendientes = razonesDeTarjeta(actual).slice();
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function cerrarRazones() {
+    if (!confirmarDescartarBorrador()) return;
+    const siguePorRespuesta = indiceCongelado === indiceActual;
+    resetRazonesUI();
+    if (cronometroActivo && !siguePorRespuesta && !notaAbierta) tiempoInicioTarjeta = Date.now();
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function toggleRazonCheck(codigo) {
+    if (razonesPendientes === null) return;
+    const i = razonesPendientes.indexOf(codigo);
+    if (i === -1) razonesPendientes.push(codigo);
+    else razonesPendientes.splice(i, 1);
+    renderTarjeta();
+  }
+
+  // "Guardar": persiste los códigos marcados (array vacío si no hay ninguno,
+  // lo que equivale a borrar el registro de esta tarjeta)
+  function guardarRazonesActual() {
+    const actual = tarjetasSesion[indiceActual];
+    if (!actual || razonesPendientes === null) return;
+    const h = hashTarjeta(actual);
+    if (razonesPendientes.length === 0) {
+      delete razonesGuardadas[h];
+    } else {
+      razonesGuardadas[h] = {
+        p: actual.primero || '',
+        s: actual.segundo || '',
+        razones: razonesPendientes.slice(),
+        estado: resultados[indiceActual],
+        t: Date.now(),
+      };
+    }
+    guardarRazones();
+    const siguePorRespuesta = indiceCongelado === indiceActual;
+    resetRazonesUI();
+    if (cronometroActivo && !siguePorRespuesta && !notaAbierta) tiempoInicioTarjeta = Date.now();
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function renderChipsRazones(actual) {
+    const guardadas = razonesDeTarjeta(actual);
+    elChipsRazones.innerHTML = '';
+    if (guardadas.length === 0) {
+      elChipsRazones.style.display = 'none';
+      return;
+    }
+    elChipsRazones.style.display = 'flex';
+    guardadas.forEach((cod) => {
+      const def = MAPA_RAZONES.get(cod);
+      if (!def) return;
+      const chip = document.createElement('span');
+      chip.className = 'chip-razon';
+      chip.textContent = def.texto;
+      chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+      chip.style.borderColor = def.color;
+      chip.style.color = def.color;
+      elChipsRazones.appendChild(chip);
+    });
+  }
+
+  function renderRazones(actual) {
+    const guardadas = razonesDeTarjeta(actual);
+
+    elBadgeRazones.textContent = String(guardadas.length);
+    elBadgeRazones.style.display = guardadas.length > 0 ? 'inline-block' : 'none';
+    elBtnRazones.classList.toggle('activa', guardadas.length > 0 || razonesAbierto);
+    // deshabilitado mientras la nota está abierta (solo un panel a la vez)
+    elBtnRazones.disabled = notaAbierta;
+
+    renderChipsRazones(actual);   // chips de solo lectura (lo ya guardado)
+
+    elPanelRazones.style.display = razonesAbierto ? 'block' : 'none';
+    if (!razonesAbierto) return;
+
+    elListaCheckRazones.innerHTML = '';
+    RAZONES_DEF.forEach((r) => {
+      const label = document.createElement('label');
+      label.className = 'item-check-razon';
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.checked = razonesPendientes.indexOf(r.codigo) !== -1;
+      chk.addEventListener('change', () => toggleRazonCheck(r.codigo));
+      const dot = document.createElement('span');
+      dot.className = 'dot-razon';
+      dot.style.background = r.color;
+      const txt = document.createElement('span');
+      txt.textContent = r.texto;
+      label.appendChild(chk);
+      label.appendChild(dot);
+      label.appendChild(txt);
+      elListaCheckRazones.appendChild(label);
+    });
+  }
+
   // MODIFICADO: registrar el uso de la pista (baja la nota a 0.5 si la tarjeta
   // termina como Entendida)
   elBtnPista.addEventListener('click', () => {
@@ -3437,6 +4380,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnNotaGuardar.addEventListener('click', () => guardarEdicionNota());
   elBtnNotaCancelar.addEventListener('click', () => cancelarEdicionNota());
   elBtnNotaBorrar.addEventListener('click', () => borrarNotaActual());
+  elBtnRazones.addEventListener('click', () => { if (razonesAbierto) cerrarRazones(); else abrirRazones(); });
+  document.getElementById('btn-razones-guardar').addEventListener('click', () => guardarRazonesActual());
+  document.getElementById('btn-razones-cerrar').addEventListener('click', () => cerrarRazones());
   elBtnVerLocal.addEventListener('click', () => { versionNota = 'local'; renderTarjeta(); });
   elBtnVerTxt.addEventListener('click', () => { versionNota = 'txt'; renderTarjeta(); });
   elNotaEditor.addEventListener('keydown', (evento) => {
@@ -3463,7 +4409,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   });
 
-  elBtnSi.addEventListener('click', () => marcar('si'));
+  elBtnSi.addEventListener('click', () => {
+    if (elBtnSi.classList.contains('comprension')) marcarPorComprension();
+    else marcar('si');
+  });
+  elBtnPausa.addEventListener('click', () => pausarManual());
+  elBtnReanudar.addEventListener('click', () => reanudarManual());
+  elBtnRevisar.addEventListener('click', () => toggleRevisarActual());
   elBtnNo.addEventListener('click', () => marcar('no'));
   elBtnSaltar.addEventListener('click', () => marcar('saltar'));
   elBtnAnterior.addEventListener('click', () => navegar(-1));
@@ -3471,8 +4423,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnFinalizar.addEventListener('click', () => finalizarSesion());
 
   document.addEventListener('keydown', (evento) => {
+    if (elModalContinuar.classList.contains('abierto')) {
+      if (evento.key === 'Escape') cerrarModalContinuar();
+      return;
+    }
+    if (pausaManual) {
+      if (evento.key === 'Escape') reanudarManual();
+      return;
+    }
     if (elLightbox.classList.contains('abierto')) {
       if (evento.key === 'Escape') cerrarLightbox();
+      return;
+    }
+    // NUEVO: Esc sale del cuadro de texto para poder usar las flechas
+    if (evento.key === 'Escape' && (evento.target === elTextoEval || evento.target === elNotaEditor)) {
+      evento.target.blur();
       return;
     }
     if (evento.target === elTextoEval || evento.target === elNotaEditor) return;  // no navegar mientras se escribe
@@ -3523,11 +4488,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   // MODIFICADO: Entendida sin pista = 1 punto; Entendida con pista = 0.5;
-  // No entendida y Pasada sin marcar = 0
+  // Casi = 0.5; No entendida y Pasada sin marcar = 0
   function calcularNota() {
     let puntos = 0;
     resultados.forEach((r, i) => {
       if (r === 'si') puntos += pistaMostrada[i] ? 0.5 : 1;
+      else if (r === 'casi') puntos += 0.5;   // NUEVO: Casi = 0.5
     });
     return tarjetasSesion.length > 0 ? (10 * puntos) / tarjetasSesion.length : 0;
   }
@@ -3535,7 +4501,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // NUEVO: arma el item de una tarjeta del resumen (conTema=false cuando ya está
   // dentro de un grupo de su subT). Incluye primero + segundo, tiempo, respuesta
   // escrita (si la hubo) y su evaluación; marca ☆ las difíciles.
-  function crearItemResultado(i, conTema) {
+  function crearItemResultado(i, conTema, mostrarRazones) {
     const tarjeta = tarjetasSesion[i];
     const item = document.createElement('div');
     item.className = 'item-lista';
@@ -3570,6 +4536,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const resultado = document.createElement('span');
       resultado.className = 'item-resultado ' + ev.resultado;
       let txt = ev.resultado === 'bien' ? '✓ Bien' : (ev.resultado === 'casi' ? '✗ Casi' : '✗ Mal');
+      if (porComprension[i]) txt += ' → 💡 entendida por comprensión';
       if (ev.clavesTotal > 0) {
         txt += ' — claves ' + ev.acertadas.length + '/' + ev.clavesTotal;
         if (ev.faltaron.length > 0) txt += ' (faltaron: ' + ev.faltaron.join(', ') + ')';
@@ -3579,12 +4546,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       item.appendChild(resultado);
     }
 
+    // NUEVO: razones guardadas (no se muestran en la sección "Revisar")
+    if (mostrarRazones) {
+      const codigos = razonesDeTarjeta(tarjeta);
+      if (codigos.length > 0) {
+        const fila = document.createElement('div');
+        fila.className = 'item-razones';
+        fila.appendChild(document.createTextNode('🏷 '));
+        codigos.forEach((cod) => {
+          const def = MAPA_RAZONES.get(cod);
+          if (!def) return;
+          const chip = document.createElement('span');
+          chip.className = 'chip-razon chico';
+          chip.textContent = def.texto;
+          chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+          chip.style.borderColor = def.color;
+          chip.style.color = def.color;
+          fila.appendChild(chip);
+        });
+        item.appendChild(fila);
+      }
+    }
+
     return item;
   }
 
   // MODIFICADO: recibe índices y los agrupa en desplegables por subT.
   // Orden: subT en el orden del txt; dentro de cada subT, tarjetas en el orden del txt.
-  function llenarLista(idContenedor, indices) {
+  // mostrarRazones=false se usa para la sección "Revisar" (sin chips de razones).
+  function llenarLista(idContenedor, indices, mostrarRazones) {
+    if (mostrarRazones === undefined) mostrarRazones = true;
     const el = document.getElementById(idContenedor);
     el.innerHTML = '';
 
@@ -3614,15 +4605,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const sum = document.createElement('summary');
       sum.textContent = nombre + ' (' + lista.length + ')';
       det.appendChild(sum);
-      lista.forEach((i) => det.appendChild(crearItemResultado(i, false)));
+      lista.forEach((i) => det.appendChild(crearItemResultado(i, false, mostrarRazones)));
       el.appendChild(det);
     });
   }
 
   function mostrarResumen() {
-    // MODIFICADO: se guardan índices en lugar de tarjetas
-    const conteos = { si: 0, no: 0, saltar: 0 };
-    const indices = { si: [], no: [], saltar: [] };
+    // Se guardan índices en lugar de tarjetas
+    const conteos = { si: 0, casi: 0, no: 0, saltar: 0 };
+    const indices = { si: [], casi: [], no: [], saltar: [] };
 
     resultados.forEach((r, i) => {
       conteos[r]++;
@@ -3636,6 +4627,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elNota.className = 'nota-sesion ' + (nota >= 6 ? 'aprobado' : 'desaprobado');
 
     document.getElementById('conteo-si').textContent = conteos.si;
+    document.getElementById('conteo-casi').textContent = conteos.casi;
     document.getElementById('conteo-no').textContent = conteos.no;
     document.getElementById('conteo-saltar').textContent = conteos.saltar;
 
@@ -3645,13 +4637,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     document.getElementById('tiempo-promedio').textContent = formatearTiempo(promedioMs);
 
     llenarLista('lista-si', indices.si);
+    llenarLista('lista-casi', indices.casi);
     llenarLista('lista-no', indices.no);
     llenarLista('lista-saltar', indices.saltar);
 
+    // NUEVO: tarjetas marcadas con 🚩 Revisar durante la sesión
+    const idxRevisar = [];
+    tarjetasSesion.forEach((t, i) => { if (esRevisar(t)) idxRevisar.push(i); });
+    llenarLista('lista-revisar', idxRevisar, false);   // NUEVO: sin razones en "Revisar"
+    document.getElementById('etq-revisar').textContent = '🚩 Para revisar (' + idxRevisar.length + ')';
+
+    // NUEVO: continuar con las no respondidas (pasadas sin marcar)
+    const elBtnContinuar = document.getElementById('btn-continuar-pendientes');
+    elBtnContinuar.style.display = conteos.saltar > 0 ? 'block' : 'none';
+    elBtnContinuar.textContent = 'Continuar con las no respondidas (' + conteos.saltar + ')';
+    elBtnContinuar.onclick = () => abrirModalContinuar();
+
+    // "Casi" también se repasa (antes contaba como No entendida)
     const elBtnRepasarNo = document.getElementById('btn-repasar-no');
-    elBtnRepasarNo.style.display = conteos.no > 0 ? 'block' : 'none';
+    elBtnRepasarNo.style.display = (conteos.no + conteos.casi) > 0 ? 'block' : 'none';
     elBtnRepasarNo.onclick = () => {
-      let pendientes = tarjetasSesion.filter((_, i) => resultados[i] === 'no');
+      let pendientes = tarjetasSesion.filter((_, i) => resultados[i] === 'no' || resultados[i] === 'casi');
       if (modoAleatorio) pendientes = mezclar(pendientes);
       iniciarSesion(pendientes);
     };
@@ -3663,6 +4669,59 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     mostrarPantalla('resumen');
   }
+
+  // ---------- NUEVO: modal "Continuar con las no respondidas" ----------
+
+  function abrirModalContinuar() {
+    const n = resultados.filter((r) => r === 'saltar').length;
+    document.getElementById('modal-continuar-texto').textContent =
+      n + ' tarjeta(s) quedaron sin responder. ¿Cómo querés seguir?';
+    elModalContinuar.classList.add('abierto');
+  }
+
+  function cerrarModalContinuar() {
+    elModalContinuar.classList.remove('abierto');
+  }
+
+  // Opción 1: seguir en la MISMA sesión. Se conservan tiempos, aciertos y demás
+  // resultados; solo las pasadas sin marcar vuelven a quedar pendientes.
+  function continuarEnEstaSesion() {
+    cerrarModalContinuar();
+    resultados.forEach((r, i) => {
+      if (r === 'saltar') {
+        resultados[i] = null;
+        // Al pasarla se había revelado el segundo sin usar la pista: se vuelve a ocultar
+        revelado[i] = !!pistaMostrada[i];
+      }
+    });
+    const primera = resultados.findIndex((r) => r === null);
+    indiceActual = primera >= 0 ? primera : 0;
+    cronometroActivo = primera >= 0;
+    indiceCongelado = -1;
+    resetPanelesUI();
+    pausaManual = false;
+    elOverlayPausa.classList.remove('abierto');
+    tiempoInicioTarjeta = Date.now();
+    mostrarPantalla('estudio');
+    iniciarCronometro();
+    renderTarjeta();
+    window.scrollTo(0, 0);
+  }
+
+  // Opción 2: sesión nueva y aislada solo con las pendientes
+  function iniciarNuevaRondaPendientes() {
+    cerrarModalContinuar();
+    let pendientes = tarjetasSesion.filter((_, i) => resultados[i] === 'saltar');
+    if (modoAleatorio) pendientes = mezclar(pendientes);
+    iniciarSesion(pendientes);
+  }
+
+  document.getElementById('btn-modal-sesion').addEventListener('click', () => continuarEnEstaSesion());
+  document.getElementById('btn-modal-ronda').addEventListener('click', () => iniciarNuevaRondaPendientes());
+  document.getElementById('btn-modal-cancelar').addEventListener('click', () => cerrarModalContinuar());
+  elModalContinuar.addEventListener('click', (evento) => {
+    if (evento.target === elModalContinuar) cerrarModalContinuar();
+  });
 
   // NUEVO: listeners del modo observador
   document.getElementById('btn-modo-observador').addEventListener('click', () => entrarObservador());

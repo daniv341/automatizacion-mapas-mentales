@@ -4,7 +4,7 @@ Que es el control? + asegurar & 2
 Que es un sistema de control? + dirigen & 3
 Que es una entrada? + estimulo & 4
 Que es una salida? + respuesta real, diferentes & 5, 6
-Cual es el proposito de un sistema de control? + identificar & 8
+Cual es el proposito de un sistema de control? + identificar, naturaleza & 8, 9
 Que es un subsistema de control? + internas & 10
 Que es el ancho de banda? + medida & 11
 

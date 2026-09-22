@@ -157,7 +157,7 @@ def clean_drawio_value(value: str) -> str:
 
 def is_rhombus_style(style: str) -> bool:
     lowered = (style or "").lower()
-    return "rhombus" in lowered or "flowchart.decision" in lowered or ("gradientcolor=#" in lowered and "ellipse" in lowered)
+    return "rhombus" in lowered or "flowchart.decision" in lowered or ("gradientcolor=#" in lowered and "ellipse" in lowered) or "shape=offpageconnector" in lowered
 
 
 def parse_first_page(path: Path):
