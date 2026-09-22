@@ -709,21 +709,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .contenedor {
     width: 100%;
     max-width: 560px;
-    padding: 24px;
+    padding: clamp(12px, 4vw, 24px);
     text-align: center;
   }
 
   h1 {
-    font-size: 22px;
+    font-size: clamp(18px, 5vw, 22px);
     font-weight: 600;
-    margin-bottom: 18px;
+    margin-bottom: clamp(10px, 3vw, 18px);
     color: #444;
   }
 
   .subtitulo {
     font-size: 14px;
     color: #888;
-    margin-bottom: 16px;
+    margin-bottom: clamp(8px, 3vw, 16px);
   }
 
   /* ---------- Pantalla de selección de temas ---------- */
@@ -876,7 +876,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     background: #e2e2ea;
     border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 24px;
+    margin-bottom: clamp(12px, 4vw, 24px);
   }
 
   .barra-progreso-relleno {
@@ -890,7 +890,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 18px;
+    margin-bottom: clamp(10px, 3vw, 18px);
     font-weight: 600;
     font-size: 15px;
     color: var(--stroke-color);
@@ -911,14 +911,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     background: var(--fill-color);
     border: 3px solid var(--stroke-color);
     clip-path: polygon(14% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 14%);
-    min-height: 220px;
+    min-height: clamp(170px, 32vw, 220px);
     border-radius: 6px;
-    padding: 40px 30px;
+    padding: clamp(24px, 7vw, 40px) clamp(18px, 5.5vw, 30px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 20px;
+    gap: clamp(12px, 4vw, 20px);
     box-shadow: 0 10px 24px rgba(0,0,0,0.12);
     opacity: 0;
     transform: translateY(8px);
@@ -945,7 +945,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .primero {
-    font-size: 19px;
+    font-size: clamp(16.5px, 4.4vw, 19px);
     font-weight: 700;
     color: var(--stroke-color);
     line-height: 1.4;
@@ -955,7 +955,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: clamp(10px, 3vw, 16px);
     width: 100%;
   }
 
@@ -968,7 +968,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .boton-pista {
-    padding: 10px 22px;
+    padding: clamp(8px, 2.5vw, 10px) clamp(15px, 5vw, 22px);
     border-radius: 20px;
     border: 2px solid var(--stroke-color);
     background: rgba(255,255,255,0.5);
@@ -980,7 +980,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .boton-respuesta {
-    padding: 10px 22px;
+    padding: clamp(8px, 2.5vw, 10px) clamp(15px, 5vw, 22px);
     border-radius: 20px;
     border: 2px solid var(--stroke-color);
     background: var(--stroke-color);
@@ -997,8 +997,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   /* NUEVO: botón 💡 de nota (toggle) */
   .boton-nota {
-    width: 40px;
-    height: 40px;
+    width: clamp(34px, 9vw, 40px);
+    height: clamp(34px, 9vw, 40px);
     border-radius: 50%;
     border: 2px solid var(--stroke-color);
     background: rgba(255,255,255,0.5);
@@ -1339,12 +1339,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .estado-marca.no { color: #e0574c; }
   .estado-marca.saltar { color: #b8b8c4; }
 
+  /* MODIFICADO: dos filas agrupadas por función (decisión / etiquetas), en vez
+     de una sola fila con wrap. Evita que el ✓ quede solo, descentrado, cuando
+     no entran los 5 botones en una línea (pantallas angostas). */
   .botonera {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .fila-decision, .fila-etiquetas {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 18px;
-    margin-top: 10px;
+    gap: clamp(8px, 3vw, 14px);
     flex-wrap: wrap;
   }
 
@@ -1368,10 +1378,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .boton-circular {
-    width: 64px;
-    height: 64px;
+    width: clamp(50px, 14vw, 64px);
+    height: clamp(50px, 14vw, 64px);
     border-radius: 50%;
-    font-size: 26px;
+    font-size: clamp(20px, 6vw, 26px);
     color: #fff;
     display: flex;
     align-items: center;
@@ -1382,7 +1392,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .boton-si { background: #3aa76d; }
 
   .boton-saltar {
-    padding: 12px 20px;
+    padding: clamp(9px, 3vw, 12px) clamp(14px, 4.5vw, 20px);
     border-radius: 24px;
     background: #ffffff;
     color: #888;
@@ -1391,7 +1401,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   /* MODIFICADO: botón toggle de tarjeta difícil */
   .boton-dificil {
-    padding: 12px 18px;
+    padding: clamp(9px, 3vw, 12px) clamp(13px, 4vw, 18px);
     border-radius: 24px;
     background: #ffffff;
     color: #888;
@@ -1413,7 +1423,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 26px;
+    margin-top: clamp(14px, 5vw, 26px);
     gap: 10px;
   }
 
@@ -1447,7 +1457,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: none;
     background: #ffffff;
     border-radius: 16px;
-    padding: 40px 30px;
+    padding: clamp(20px, 7vw, 40px) clamp(16px, 5.5vw, 30px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   }
 
@@ -1457,7 +1467,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .nota-sesion {
-    font-size: 26px;
+    font-size: clamp(21px, 6vw, 26px);
     font-weight: 700;
     margin-bottom: 10px;
     color: #444;
@@ -1470,7 +1480,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 6px;
+    padding: clamp(9px, 3vw, 14px) 6px;
     border-bottom: 1px solid #eee;
     font-size: 16px;
   }
@@ -1497,11 +1507,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 26px;
+    margin-top: clamp(14px, 5vw, 26px);
   }
 
   .boton-reiniciar, .boton-secundario {
-    padding: 12px 26px;
+    padding: clamp(9px, 3vw, 12px) clamp(18px, 5.5vw, 26px);
     border-radius: 24px;
     font-size: 15px;
     font-weight: 600;
@@ -1522,7 +1532,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .listas-resumen {
-    margin-top: 26px;
+    margin-top: clamp(14px, 5vw, 26px);
     text-align: left;
   }
 
@@ -2109,13 +2119,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="resultado-eval" id="resultado-eval"></div>
 
     <div class="botonera">
-      <button class="boton boton-circular boton-no" id="btn-no" title="No entendido">&#10007;</button>
-      <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar</button>
-      <!-- MODIFICADO: toggle de tarjeta difícil (se guarda entre sesiones) -->
-      <button class="boton-dificil" id="btn-dificil" title="Marcar/desmarcar como difícil (se guarda entre sesiones)">☆ Difícil</button>
-      <!-- NUEVO: registrar por qué se marcó así (se guarda entre sesiones) -->
-      <button class="boton-dificil boton-razones" id="btn-razones" title="Registrar por qué marcaste esta tarjeta así">🏷 Razones<span class="badge-conteo" id="badge-conteo-razones" style="display:none;"></span></button>
-      <button class="boton boton-circular boton-si" id="btn-si" title="Entendido">&#10003;</button>
+      <!-- MODIFICADO: fila de decisión (cambian resultados[] / avanzan la tarjeta) -->
+      <div class="fila-decision">
+        <button class="boton boton-circular boton-no" id="btn-no" title="No entendido">&#10007;</button>
+        <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar</button>
+        <button class="boton boton-circular boton-si" id="btn-si" title="Entendido">&#10003;</button>
+      </div>
+      <!-- MODIFICADO: fila de etiquetas (metadata; no afectan la calificación) -->
+      <div class="fila-etiquetas">
+        <button class="boton-dificil" id="btn-dificil" title="Marcar/desmarcar como difícil (se guarda entre sesiones)">☆ Difícil</button>
+        <button class="boton-dificil boton-razones" id="btn-razones" title="Registrar por qué marcaste esta tarjeta así">🏷 Razones<span class="badge-conteo" id="badge-conteo-razones" style="display:none;"></span></button>
+      </div>
     </div>
 
     <div class="navegacion">
