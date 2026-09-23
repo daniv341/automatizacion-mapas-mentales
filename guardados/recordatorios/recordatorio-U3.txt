@@ -22,22 +22,22 @@ subT PASOS PID
 
 subT ACCION PROPORCIONAL
 en que consiste? + producto, estacionario & 21
-eiste un limite? + algunos, a deseados, sobreoscilacion & 22
-considera tiempo? + estacionario, variacion, incluyendo & 23
+existe un limite? + algunos, a deseados, sobreoscilacion & 22
+considera el tiempo? + estacionario, variacion, incluyendo & 23
 
 subT ACCION INTEGRAL
 cual es su proposito? + disminuir, estado estacionario & 24
 cuando actua? + persiste, desviacion, promediarlo & 25
-que sucede luego? + I, adicionada, estable & 27
+una vez obtenida la integral del error, que hago? + I, adicionada, estable & 27
 por que se caracteriza? + repeticiones, reciproca & 28
 
 subT ACCION DERIVATIVA
 cuando se manifiesta? + cambio, absoluto & 29
 que es un error? + desviacion existente & 30
-cual es su funcion? + mantener, velocidad & 31
-cual es el proceso del controlador? + deriva, multiplica, suma & 32
+cual es su funcion respecto al error? + mantener, velocidad & 31
+como es el proceso de este controlador? + deriva, multiplica, suma & 32
 por que debo adaptar respuesta? + derivativa, rapido & 33
-por que se caracteriza el controlador derivativo? + derivada, inestabilidad, oscila & 34, 35
+por que se caracteriza el controlador derivativo? + derivada, inestabilidad, oscila & 34, 35, 36
 cuando es adecuada accion derivativa? + retraso, repercusion & 37
 por que no se la usa mucho? + sensibilidad, complicaciones & 38
 

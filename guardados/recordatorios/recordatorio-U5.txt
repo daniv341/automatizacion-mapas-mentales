@@ -4,18 +4,19 @@ como describimos su comportamiento dinamico? + terminos & 5
 que es ζ? + angulo & 6
 que es ωn? + no amortiguada, distancia & 7
 que es ωd? + distinto, cero & 8
-que hay que tener en cuenta? + mueven, varian, raices & 9
+que hay que tener en cuenta de estos parametros? porque? + mueven, varian, raices & 9
 otra forma en la que escribir raices? + binomica & 14
 
 subT Ubicación Geométrica ζ y su magnitud 
 que ocurre en semiplano izquierdo? + positivo & 15
 que causa amortiguamiento positivo? + constante & 16
-que ocurre en semiplano derecho? + negativo & 18
+que tipo de amortiguamiento es en semiplano derecho? + negativo & 18
 que causa amortiguamiento negativo? + crece, inestable & 19
-que ocurre en eje imaginario? + nulo, puros & 20, 21
+que tipo de amortiguamiento hay en ejeimaginario? + nulo & 20
+que provoca el amortiguamiento nulo? marginalmente, puros & 21
 
 subT Ubicación Geométrica Raices 1 Sistema 2º Orden conforme varía ζ 
-Si ζ > 1? + sobreamortiguada & 25
+Si ζ > 1? + sobreamortiguada & 22
 Si ζ = 1? + criticamente amortiguada & 23
 Si ζ = 0? + oscila indefinidamente & 24
 Si 0 < ζ < 1? + subamortiguada & 25

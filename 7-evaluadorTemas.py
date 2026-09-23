@@ -657,7 +657,7 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
 # GENERACIÓN DEL HTML
 # ============================================================
 
-def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, ruta_drawio):
+def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, ruta_drawio, espacio_hash):
     datos = {"tarjetas": tarjetas, "rutas": rutas}
     datos_json = json.dumps(datos, ensure_ascii=False)
     nombre_base = Path(ruta_drawio).stem
@@ -672,6 +672,9 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, ruta
     html = html.replace("__SIM_SIN_PISTA__", str(SIM_SIN_PISTA))
     html = html.replace("__SIM_CON_PISTA__", str(SIM_CON_PISTA))
     html = html.replace("__STOPWORDS__", json.dumps(sorted(STOPWORDS_ES)))
+    # NUEVO: identidad de este evaluador (para que difíciles/notas/razones no se
+    # mezclen entre dos evaluadores con tarjetas de texto idéntico). Ver hashTarjeta().
+    html = html.replace("__ESPACIO__", json.dumps(espacio_hash))
 
     with open(f"guardados/evaluadores/evaluador_{nombre_base}.html", "w", encoding="utf-8") as archivo:
         archivo.write(html)
@@ -1350,7 +1353,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-top: 10px;
   }
 
-  .fila-decision, .fila-etiquetas {
+  .fila-decision, .fila-etiquetas, .fila-galeria-acciones {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1927,6 +1930,29 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   #area-tarjeta.observador .chips-razones,
   #area-tarjeta.observador .panel-razones { display: none !important; }
 
+  /* NUEVO: galería de imágenes (modo observador) */
+  .fila-obs-botones { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+
+  .galeria-indicador {
+    font-size: 14px;
+    font-weight: 700;
+    color: #666;
+    margin-bottom: 12px;
+  }
+
+  .galeria-imagen-wrap { display: flex; justify-content: center; }
+
+  .galeria-img {
+    max-width: 100%;
+    max-height: 55vh;
+    border-radius: 10px;
+    border: 2px solid var(--stroke-color);
+    background: #fff;
+    cursor: zoom-in;
+  }
+
+  .galeria-vacia { color: #888; padding: 30px 0; }
+
   .sin-tarjetas {
     color: #888;
     font-size: 15px;
@@ -1994,6 +2020,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div id="lista-notas-otras"></div>
       </details>
       <p class="nota-dificiles" id="nota-notas"></p>
+      <button class="boton-mini" id="btn-vaciar-notas" style="display:none;">Vaciar todas</button>
     </div>
 
     <!-- NUEVO: tarjetas marcadas 🚩 Revisar (persisten entre sesiones) -->
@@ -2035,7 +2062,68 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div id="pantalla-observador" style="display:none;">
     <p class="subtitulo">Modo observador: tocá una tarjeta para verla (sin evaluarte)</p>
     <div class="lista-temas" id="lista-observador"></div>
-    <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
+    <!-- MODIFICADO: se agrega "Ver imágenes" junto al botón de volver -->
+    <div class="fila-obs-botones">
+      <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
+      <button class="boton-secundario" id="btn-ver-imagenes">🖼 Ver imágenes</button>
+    </div>
+
+    <!-- NUEVO: notas y difíciles de imágenes (independiente de las de tarjetas) -->
+    <div class="lista-temas zona-dificiles" id="zona-imagenes">
+      <div class="cabecera-dificiles">
+        <span class="titulo-dificiles">🖼 Datos de imágenes guardados</span>
+        <span class="fila-dificiles-botones">
+          <button class="boton-mini" id="btn-exportar-imagenes">Exportar</button>
+          <button class="boton-mini" id="btn-importar-imagenes">Importar</button>
+        </span>
+      </div>
+      <input type="file" id="input-importar-imagenes" accept=".json,application/json" style="display:none">
+      <details id="det-imagenes" style="display:none">
+        <summary id="suma-imagenes">Con nota o marcadas difícil</summary>
+        <div id="lista-imagenes-guardadas"></div>
+      </details>
+      <p class="nota-dificiles" id="nota-imagenes"></p>
+      <button class="boton-mini" id="btn-vaciar-imagenes" style="display:none;">Vaciar todas</button>
+    </div>
+  </div>
+
+  <!-- NUEVO: galería de imágenes de las rutas, vista secuencial e independiente -->
+  <div id="pantalla-galeria" style="display:none;">
+    <div class="galeria-indicador" id="galeria-indicador"></div>
+    <div class="galeria-imagen-wrap">
+      <img id="galeria-img" class="galeria-img" alt="Imagen de una ruta" style="display:none;">
+    </div>
+    <p class="galeria-vacia" id="galeria-vacia" style="display:none;">No hay imágenes en las rutas de respuestas.txt.</p>
+
+    <div class="fila-galeria-acciones" style="margin-top:14px;">
+      <button class="boton-dificil" id="btn-galeria-dificil" title="Marcar/desmarcar esta imagen como difícil">☆ Difícil</button>
+      <button class="boton-nota" id="btn-galeria-nota" title="Ver/editar nota de esta imagen">💡</button>
+    </div>
+
+    <!-- NUEVO: mismo estilo post-it que la nota de tarjeta -->
+    <div class="panel-nota" id="panel-galeria-nota" style="display:none;">
+      <div class="panel-nota-cabecera">
+        <div class="panel-nota-titulo">💡 Nota de la imagen</div>
+        <div class="panel-nota-versiones" id="galeria-nota-versiones" style="display:none;">
+          <button class="boton-mini" id="btn-galeria-ver-actual">Versión actual</button>
+          <button class="boton-mini" id="btn-galeria-ver-anterior">Versión anterior</button>
+        </div>
+      </div>
+      <div class="panel-nota-texto" id="galeria-nota-texto"></div>
+      <textarea class="panel-nota-editor" id="galeria-nota-editor" style="display:none;" placeholder="Escribí una nota para esta imagen"></textarea>
+      <div class="panel-nota-acciones">
+        <button class="boton-mini" id="btn-galeria-nota-editar">✎ Editar</button>
+        <button class="boton-mini" id="btn-galeria-nota-guardar" style="display:none;">Guardar</button>
+        <button class="boton-mini" id="btn-galeria-nota-cancelar" style="display:none;">Cancelar</button>
+        <button class="boton-mini" id="btn-galeria-nota-revertir" style="display:none;">↩ Revertir a la anterior</button>
+      </div>
+    </div>
+
+    <div class="navegacion" style="margin-top:20px;">
+      <button class="boton-secundario" id="btn-galeria-anterior">&larr; Anterior</button>
+      <button class="boton-secundario" id="btn-galeria-volver">☰ Volver a la lista</button>
+      <button class="boton-secundario" id="btn-galeria-siguiente">Siguiente &rarr;</button>
+    </div>
   </div>
 
   <div id="area-tarjeta" style="display:none;">
@@ -2337,10 +2425,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
+  // NUEVO: identifica a ESTE evaluador (nombre de su recordatorio.txt). Se mezcla
+  // en el hash para que dos evaluadores distintos con una tarjeta de texto
+  // idéntico ("primero + segundo" igual) no compartan difíciles, notas ni razones.
+  // Regenerar el HTML desde el MISMO recordatorio.txt mantiene este valor igual
+  // (no invalida lo ya guardado); solo cambia si el archivo cambia de nombre.
+  const ESPACIO_HASH = __ESPACIO__;
+
   function hashTarjeta(t) {
-    const base = (t.primero || '') + '\\u0000' + (t.segundo || '');
+    const base = ESPACIO_HASH + '\\u0001' + (t.primero || '') + '\\u0000' + (t.segundo || '');
     const norm = normalizarPalabra(base).replace(/\\s+/g, ' ').trim();
-    // djb2 -> hash de 32 bits (suficiente y sin dependencias)
+    // djb2 -> hash de 32 bits (suficiente y sin dependencias; se mantiene corto
+    // aunque se agregue el espacio, porque solo se usa como entrada del hash)
     let h = 5381;
     for (let i = 0; i < norm.length; i++) {
       h = ((h << 5) + h + norm.charCodeAt(i)) >>> 0;
@@ -2452,6 +2548,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elPantallaResumen = document.getElementById('pantalla-resumen');
   const elPantallaObservador = document.getElementById('pantalla-observador');
   const elListaObservador = document.getElementById('lista-observador');
+  // NUEVO: galería de imágenes
+  const elPantallaGaleria = document.getElementById('pantalla-galeria');
+  const elGaleriaIndicador = document.getElementById('galeria-indicador');
+  const elGaleriaImg = document.getElementById('galeria-img');
+  const elGaleriaVacia = document.getElementById('galeria-vacia');
+  const elBtnGaleriaDificil = document.getElementById('btn-galeria-dificil');
+  const elBtnGaleriaNota = document.getElementById('btn-galeria-nota');
+  const elPanelGaleriaNota = document.getElementById('panel-galeria-nota');
+  const elGaleriaNotaTexto = document.getElementById('galeria-nota-texto');
+  const elGaleriaNotaEditor = document.getElementById('galeria-nota-editor');
+  const elGaleriaNotaVersiones = document.getElementById('galeria-nota-versiones');
+  const elBtnGaleriaAnterior = document.getElementById('btn-galeria-anterior');
+  const elBtnGaleriaSiguiente = document.getElementById('btn-galeria-siguiente');
   const elBtnPausa = document.getElementById('btn-pausa');
   const elOverlayPausa = document.getElementById('overlay-pausa');
   const elBtnReanudar = document.getElementById('btn-reanudar');
@@ -2547,11 +2656,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elAreaTarjeta.style.display = nombre === 'estudio' ? 'block' : 'none';
     elPantallaResumen.style.display = nombre === 'resumen' ? 'block' : 'none';
     elPantallaObservador.style.display = nombre === 'observador' ? 'block' : 'none';
+    elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  // NUEVO
+
+    if (nombre === 'observador') {
+      renderImagenesPreview();   // NUEVO: refresca también al entrar por primera vez (mismo motivo que "temas")
+    }
 
     if (nombre === 'temas') {
       renderDificilesPreview();  // MODIFICADO: actualizar la vista de difíciles
       renderNotasPreview();      // NUEVO: notas distintas a las del txt
       renderRevisarGuardadoPreview();  // NUEVO: también al volver por "Volver a temas" del observador
+      renderRazonesPreview();    // NUEVO: corrige que no aparecieran al abrir el HTML por primera vez
     }
     if (nombre !== 'estudio') {
       detenerCronometro();
@@ -2775,6 +2890,444 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (fila.scrollIntoView) fila.scrollIntoView({ block: 'center' });
     }
   }
+
+  // ============================================================
+  // NUEVO: galería de imágenes de las rutas (solo desde el modo observador)
+  // ============================================================
+  // Datos completamente independientes de las notas/difíciles de tarjetas:
+  // propia clave de localStorage, propio hash y su propia sección de preview
+  // (no se suman a "Difíciles guardadas" ni "Notas editadas").
+  const CLAVE_IMAGENES = 'datos_imagenes_v1';
+  let datosImagenes = cargarImagenes();
+  let galeriaPos = 0;            // posición actual dentro de INDICE_IMAGENES
+  let galeriaNotaAbierta = false;
+  let galeriaEditando = false;
+  let galeriaVerAnterior = false; // false = versión actual, true = versión anterior
+
+  function cargarImagenes() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_IMAGENES);
+      if (!crudo) return {};
+      const obj = JSON.parse(crudo);
+      return (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function guardarImagenesStorage() {
+    try {
+      localStorage.setItem(CLAVE_IMAGENES, JSON.stringify(datosImagenes));
+    } catch (e) {
+      // sin localStorage: quedan solo en memoria de esta sesión
+    }
+  }
+
+  // Hash liviano: espacio del evaluador + número de ruta + índice de la imagen
+  // DENTRO de esa ruta (solo contando líneas 'IMG:'). Sin base64, sin subT.
+  function hashImagen(ruta, indice) {
+    const base = ESPACIO_HASH + '\u0001' + ruta + '\u0000' + indice;
+    let h = 5381;
+    for (let i = 0; i < base.length; i++) {
+      h = ((h << 5) + h + base.charCodeAt(i)) >>> 0;
+    }
+    return 'i' + h.toString(36);   // prefijo 'i' (imagen) para no confundir con 'h' de tarjeta
+  }
+
+  // Recorre rutasDisp en orden numérico de ruta y arma la lista de coordenadas
+  // {ruta, indice} de TODAS las imágenes, en el mismo orden en que aparecen en
+  // respuestas.txt. No guarda el src acá: eso se busca "al vuelo" al renderizar.
+  function construirIndiceImagenes() {
+    const nav = [];
+    Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
+      const lineas = (rutasDisp[ruta] && rutasDisp[ruta].lineas) || [];
+      const cantidad = lineas.filter(esImagen).length;
+      for (let i = 0; i < cantidad; i++) nav.push({ ruta: ruta, indice: i });
+    });
+    return nav;
+  }
+  const INDICE_IMAGENES = construirIndiceImagenes();   // fijo: no cambia durante la sesión
+
+  // Busca el src de una imagen por coordenadas, filtrando solo líneas 'IMG:'
+  function srcDeImagen(ruta, indice) {
+    const lineas = (rutasDisp[ruta] && rutasDisp[ruta].lineas) || [];
+    const imagenes = lineas.filter(esImagen);
+    const linea = imagenes[indice];
+    return linea ? linea.substring(4) : '';   // quitar el prefijo 'IMG:'
+  }
+
+  function entradaImagenActual() {
+    if (galeriaPos < 0 || galeriaPos >= INDICE_IMAGENES.length) return null;
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    return datosImagenes[hashImagen(ruta, indice)] || null;
+  }
+
+  function notaActualImagen() { const e = entradaImagenActual(); return e ? (e.nota || '') : ''; }
+  function notaBaseImagen() { const e = entradaImagenActual(); return e ? (e.base || '') : ''; }
+  function esDificilImagen() { const e = entradaImagenActual(); return !!(e && e.dificil); }
+
+  // Guarda la entrada de esta imagen, o la borra si queda "vacía" (sin nota y
+  // sin marca de difícil), para no acumular entradas basura en localStorage.
+  function guardarEntradaImagen(ruta, indice, cambios) {
+    const h = hashImagen(ruta, indice);
+    const actual = datosImagenes[h] || { ruta: ruta, indice: indice, nota: '', base: '', dificil: false, t: 0 };
+    const nueva = Object.assign({}, actual, cambios, { ruta: ruta, indice: indice, t: Date.now() });
+    if (!nueva.nota && !nueva.dificil) {
+      delete datosImagenes[h];
+    } else {
+      datosImagenes[h] = nueva;
+    }
+    guardarImagenesStorage();
+  }
+
+  function toggleDificilImagenActual() {
+    if (INDICE_IMAGENES.length === 0) return;
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    guardarEntradaImagen(ruta, indice, { dificil: !esDificilImagen() });
+    renderGaleria();
+  }
+
+  // ---------- Nota de la imagen: ver / editar / revertir a la anterior ----------
+
+  function galeriaCambiosSinGuardar() {
+    if (!galeriaEditando) return false;
+    return elGaleriaNotaEditor.value.trim() !== notaActualImagen();
+  }
+
+  function confirmarDescartarGaleria() {
+    if (!galeriaCambiosSinGuardar()) return true;
+    return confirm('Tenés cambios sin guardar en la nota de esta imagen. ¿Descartarlos?');
+  }
+
+  function resetGaleriaNotaUI() {
+    galeriaNotaAbierta = false;
+    galeriaEditando = false;
+    galeriaVerAnterior = false;
+  }
+
+  function abrirGaleriaNota() {
+    if (INDICE_IMAGENES.length === 0) return;
+    galeriaNotaAbierta = true;
+    galeriaVerAnterior = false;
+    // sin nota y sin versión anterior: directo a escribir
+    galeriaEditando = (notaActualImagen() === '' && notaBaseImagen() === '');
+    if (galeriaEditando) elGaleriaNotaEditor.value = '';
+    renderGaleria();
+    if (galeriaEditando) elGaleriaNotaEditor.focus();
+  }
+
+  function cerrarGaleriaNota() {
+    if (!confirmarDescartarGaleria()) return;
+    resetGaleriaNotaUI();
+    renderGaleria();
+  }
+
+  function empezarEdicionGaleriaNota() {
+    galeriaEditando = true;
+    galeriaVerAnterior = false;
+    elGaleriaNotaEditor.value = notaActualImagen();
+    renderGaleria();
+    elGaleriaNotaEditor.focus();
+  }
+
+  function guardarEdicionGaleriaNota() {
+    if (!galeriaEditando || INDICE_IMAGENES.length === 0) return;
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    const anterior = notaActualImagen();
+    const nueva = elGaleriaNotaEditor.value.trim();
+    // solo se actualiza 'base' (versión anterior) si el texto realmente cambió
+    const cambios = (nueva === anterior) ? { nota: nueva } : { nota: nueva, base: anterior };
+    guardarEntradaImagen(ruta, indice, cambios);
+    galeriaEditando = false;
+    galeriaVerAnterior = false;
+    if (notaActualImagen() === '' && notaBaseImagen() === '') {
+      resetGaleriaNotaUI();
+    }
+    renderGaleria();
+  }
+
+  function cancelarEdicionGaleriaNota() {
+    if (!confirmarDescartarGaleria()) return;
+    galeriaEditando = false;
+    if (notaActualImagen() === '' && notaBaseImagen() === '') {
+      resetGaleriaNotaUI();
+    }
+    renderGaleria();
+  }
+
+  // "Revertir": la versión anterior pasa a ser la actual (deshacer de un solo nivel)
+  function revertirGaleriaNota() {
+    if (INDICE_IMAGENES.length === 0) return;
+    const base = notaBaseImagen();
+    if (base === '' && notaActualImagen() === '') return;
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    guardarEntradaImagen(ruta, indice, { nota: base, base: '' });
+    galeriaVerAnterior = false;
+    renderGaleria();
+  }
+
+  // ---------- Render y navegación ----------
+
+  function renderGaleria() {
+    const total = INDICE_IMAGENES.length;
+
+    if (total === 0) {
+      elGaleriaIndicador.textContent = '';
+      elGaleriaImg.style.display = 'none';
+      elGaleriaVacia.style.display = 'block';
+      elBtnGaleriaDificil.style.display = 'none';
+      elBtnGaleriaNota.style.display = 'none';
+      elPanelGaleriaNota.style.display = 'none';
+      elBtnGaleriaAnterior.disabled = true;
+      elBtnGaleriaSiguiente.disabled = true;
+      return;
+    }
+
+    elGaleriaVacia.style.display = 'none';
+    elGaleriaImg.style.display = 'inline-block';
+    elBtnGaleriaDificil.style.display = 'inline-block';
+    elBtnGaleriaNota.style.display = 'inline-flex';
+    elBtnGaleriaAnterior.disabled = false;
+    elBtnGaleriaSiguiente.disabled = false;
+
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    elGaleriaImg.src = srcDeImagen(ruta, indice);
+    elGaleriaIndicador.textContent = 'Imagen ' + (galeriaPos + 1) + ' de ' + total + ' (Ruta ' + ruta + ')';
+
+    const esDif = esDificilImagen();
+    elBtnGaleriaDificil.textContent = esDif ? '★ Difícil' : '☆ Difícil';
+    elBtnGaleriaDificil.classList.toggle('activa', esDif);
+
+    const actual = notaActualImagen();
+    const base = notaBaseImagen();
+    const hayVersionAnterior = base !== '';
+    elBtnGaleriaNota.classList.toggle('vacia', actual === '' && !hayVersionAnterior && !galeriaNotaAbierta);
+    elBtnGaleriaNota.classList.toggle('activa', actual !== '' || galeriaNotaAbierta);
+    elPanelGaleriaNota.style.display = galeriaNotaAbierta ? 'block' : 'none';
+    if (!galeriaNotaAbierta) return;
+
+    elGaleriaNotaVersiones.style.display = (hayVersionAnterior && !galeriaEditando) ? 'flex' : 'none';
+    document.getElementById('btn-galeria-ver-actual').classList.toggle('activo', !galeriaVerAnterior);
+    document.getElementById('btn-galeria-ver-anterior').classList.toggle('activo', galeriaVerAnterior);
+
+    if (galeriaEditando) {
+      elGaleriaNotaTexto.style.display = 'none';
+      elGaleriaNotaEditor.style.display = 'block';
+      document.getElementById('btn-galeria-nota-editar').style.display = 'none';
+      document.getElementById('btn-galeria-nota-guardar').style.display = 'inline-block';
+      document.getElementById('btn-galeria-nota-cancelar').style.display = 'inline-block';
+      document.getElementById('btn-galeria-nota-revertir').style.display = 'none';
+    } else {
+      elGaleriaNotaEditor.style.display = 'none';
+      elGaleriaNotaTexto.style.display = 'block';
+      let texto, vacio;
+      if (galeriaVerAnterior) {
+        texto = base !== '' ? base : '(sin versión anterior)';
+        vacio = base === '';
+      } else {
+        texto = actual !== '' ? actual : '(sin nota)';
+        vacio = actual === '';
+      }
+      elGaleriaNotaTexto.textContent = texto;
+      elGaleriaNotaTexto.classList.toggle('vacio', vacio);
+      document.getElementById('btn-galeria-nota-editar').style.display = galeriaVerAnterior ? 'none' : 'inline-block';
+      document.getElementById('btn-galeria-nota-editar').textContent = actual !== '' ? '✎ Editar' : '＋ Agregar nota';
+      document.getElementById('btn-galeria-nota-guardar').style.display = 'none';
+      document.getElementById('btn-galeria-nota-cancelar').style.display = 'none';
+      document.getElementById('btn-galeria-nota-revertir').style.display = (!galeriaVerAnterior && hayVersionAnterior) ? 'inline-block' : 'none';
+    }
+  }
+
+  function navegarGaleria(delta) {
+    if (!confirmarDescartarGaleria()) return;
+    const total = INDICE_IMAGENES.length;
+    if (total === 0) return;
+    // navegación continua: de la última imagen de una ruta pasa a la primera de la siguiente
+    galeriaPos = (galeriaPos + delta + total) % total;
+    resetGaleriaNotaUI();
+    renderGaleria();
+  }
+
+  function abrirGaleria() {
+    galeriaPos = 0;
+    resetGaleriaNotaUI();
+    mostrarPantalla('galeria');
+    renderGaleria();
+  }
+
+  function volverListaDesdeGaleria() {
+    if (!confirmarDescartarGaleria()) return;
+    resetGaleriaNotaUI();
+    // MODIFICADO: no se reconstruye la lista del observador (a diferencia de
+    // salirObservador), así los subT que estaban abiertos quedan como estaban.
+    // renderImagenesPreview() ya se llama dentro de mostrarPantalla('observador').
+    mostrarPantalla('observador');
+  }
+
+  // ---------- Preview en el modo observador: "🖼 Datos de imágenes guardados" ----------
+
+  function filaImagenGuardada(hash, entrada) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+
+    const titulo = document.createElement('div');
+    titulo.textContent = 'Ruta ' + entrada.ruta + ' — imagen ' + (entrada.indice + 1) +
+      (entrada.dificil ? ' · ★ difícil' : '');
+    div.appendChild(titulo);
+
+    const src = srcDeImagen(entrada.ruta, entrada.indice);
+    if (src) {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Miniatura';
+      img.style.maxWidth = '90px';
+      img.style.maxHeight = '90px';
+      img.style.borderRadius = '6px';
+      img.style.margin = '6px 0';
+      img.style.cursor = 'zoom-in';
+      img.addEventListener('click', () => abrirLightbox(src));
+      div.appendChild(img);
+    }
+
+    if (entrada.nota) {
+      const nota = document.createElement('div');
+      nota.className = 'bloque-version';
+      nota.textContent = entrada.nota;
+      div.appendChild(nota);
+    }
+
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Borrar', () => {
+      if (!confirm('¿Borrar la nota y la marca de difícil de esta imagen?')) return;
+      delete datosImagenes[hash];
+      guardarImagenesStorage();
+      renderImagenesPreview();
+    }));
+    div.appendChild(acc);
+    return div;
+  }
+
+  function renderImagenesPreview() {
+    const elLista = document.getElementById('lista-imagenes-guardadas');
+    const elDet = document.getElementById('det-imagenes');
+    const elSuma = document.getElementById('suma-imagenes');
+    const elInfo = document.getElementById('nota-imagenes');
+    const elVaciar = document.getElementById('btn-vaciar-imagenes');
+    elLista.innerHTML = '';
+
+    const hashes = Object.keys(datosImagenes);
+    hashes.forEach((h) => elLista.appendChild(filaImagenGuardada(h, datosImagenes[h])));
+    elDet.style.display = hashes.length > 0 ? 'block' : 'none';
+    elSuma.textContent = 'Con nota o marcadas difícil (' + hashes.length + ')';
+    elInfo.textContent = hashes.length === 0
+      ? 'Todavía no marcaste ni anotaste ninguna imagen (galería del modo observador).'
+      : 'Guardadas en este navegador: ' + hashes.length;
+    elVaciar.style.display = hashes.length > 0 ? 'inline-block' : 'none';
+  }
+
+  document.getElementById('btn-vaciar-imagenes').addEventListener('click', () => {
+    if (Object.keys(datosImagenes).length === 0) return;
+    if (!confirm('¿Vaciar TODOS los datos de imágenes guardados? No se puede deshacer.')) return;
+    datosImagenes = {};
+    guardarImagenesStorage();
+    renderImagenesPreview();
+  });
+
+  document.getElementById('btn-exportar-imagenes').addEventListener('click', () => {
+    const lista = Object.keys(datosImagenes).map((h) => ({
+      h: h,
+      ruta: datosImagenes[h].ruta,
+      indice: datosImagenes[h].indice,
+      nota: datosImagenes[h].nota || '',
+      base: datosImagenes[h].base || '',
+      dificil: !!datosImagenes[h].dificil,
+      t: datosImagenes[h].t || 0,
+    }));
+    const contenido = JSON.stringify({ version: 1, imagenes: lista }, null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'datos_imagenes.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-imagenes').addEventListener('click', () => {
+    document.getElementById('input-importar-imagenes').click();
+  });
+
+  document.getElementById('input-importar-imagenes').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      const elInfo = document.getElementById('nota-imagenes');
+      try {
+        const obj = JSON.parse(lector.result);
+        const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.imagenes) ? obj.imagenes : null);
+        if (!lista) throw new Error('formato');
+
+        let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+        lista.forEach((item) => {
+          if (!item || typeof item.h !== 'string' || !item.h ||
+              typeof item.ruta !== 'number' || typeof item.indice !== 'number') {
+            invalidas++;
+            return;
+          }
+          const entrada = {
+            ruta: item.ruta,
+            indice: item.indice,
+            nota: typeof item.nota === 'string' ? item.nota : '',
+            base: typeof item.base === 'string' ? item.base : '',
+            dificil: !!item.dificil,
+            t: typeof item.t === 'number' ? item.t : 0,
+          };
+          const local = datosImagenes[item.h];
+          if (!local) {
+            datosImagenes[item.h] = entrada;
+            nuevas++;
+          } else if ((local.nota || '') === entrada.nota && !!local.dificil === entrada.dificil &&
+                     (local.base || '') === entrada.base) {
+            iguales++;
+          } else if (entrada.t > (local.t || 0)) {
+            datosImagenes[item.h] = entrada;
+            actualizadas++;
+          } else {
+            conservadas++;
+          }
+        });
+        guardarImagenesStorage();
+        renderImagenesPreview();
+        elInfo.textContent = 'Importación: ' + nuevas + ' nueva(s), ' + actualizadas +
+          ' actualizada(s) por ser más recientes, ' + conservadas + ' conservada(s) (la tuya era más reciente), ' +
+          iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+      } catch (e) {
+        elInfo.textContent = 'El archivo no es un JSON válido de imágenes.';
+      }
+    };
+    lector.readAsText(archivo);
+  });
+
+  // ---------- Listeners de la galería ----------
+  document.getElementById('btn-ver-imagenes').addEventListener('click', () => abrirGaleria());
+  document.getElementById('btn-galeria-volver').addEventListener('click', () => volverListaDesdeGaleria());
+  document.getElementById('btn-galeria-anterior').addEventListener('click', () => navegarGaleria(-1));
+  document.getElementById('btn-galeria-siguiente').addEventListener('click', () => navegarGaleria(1));
+  elBtnGaleriaDificil.addEventListener('click', () => toggleDificilImagenActual());
+  elBtnGaleriaNota.addEventListener('click', () => { galeriaNotaAbierta ? cerrarGaleriaNota() : abrirGaleriaNota(); });
+  document.getElementById('btn-galeria-nota-editar').addEventListener('click', () => empezarEdicionGaleriaNota());
+  document.getElementById('btn-galeria-nota-guardar').addEventListener('click', () => guardarEdicionGaleriaNota());
+  document.getElementById('btn-galeria-nota-cancelar').addEventListener('click', () => cancelarEdicionGaleriaNota());
+  document.getElementById('btn-galeria-nota-revertir').addEventListener('click', () => revertirGaleriaNota());
+  document.getElementById('btn-galeria-ver-actual').addEventListener('click', () => { galeriaVerAnterior = false; renderGaleria(); });
+  document.getElementById('btn-galeria-ver-anterior').addEventListener('click', () => { galeriaVerAnterior = true; renderGaleria(); });
+  elGaleriaImg.addEventListener('click', () => { if (elGaleriaImg.src) abrirLightbox(elGaleriaImg.src); });
 
   // ---------- MODIFICADO: modos especiales ----------
 
@@ -3089,7 +3642,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elInfo.textContent = total === 0
       ? 'Todavía no editaste ninguna nota (botón 💡 durante el estudio).'
       : 'Guardadas en este navegador: ' + total;
+    document.getElementById('btn-vaciar-notas').style.display = total > 0 ? 'inline-block' : 'none';
   }
+
+  // NUEVO: mismo patrón que "Vaciar todas" de razones
+  document.getElementById('btn-vaciar-notas').addEventListener('click', () => {
+    if (Object.keys(notasLocales).length === 0) return;
+    if (!confirm('¿Vaciar TODAS las notas guardadas? No se puede deshacer.')) return;
+    notasLocales = {};
+    guardarNotas();
+    renderNotasPreview();
+  });
 
   document.getElementById('btn-exportar-notas').addEventListener('click', () => {
     const lista = Object.keys(notasLocales).map((h) => ({
@@ -3376,9 +3939,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lector.readAsText(archivo);
   });
 
+  // MODIFICADO: renderRevisarGuardadoPreview() y renderRazonesPreview() ya se
+  // llaman dentro de mostrarPantalla('temas'), así que alcanza con esto.
   document.getElementById('btn-elegir-temas').addEventListener('click', () => {
-    renderRevisarGuardadoPreview();
-    renderRazonesPreview();
     mostrarPantalla('temas');
   });
 
@@ -4909,6 +5472,6 @@ if ruta_drawio:
 else:
     print("No se seleccionó drawio; se genera solo el evaluador.")
 
-generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, ruta_drawio)
+generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, ruta_drawio, Path(txt).stem)
 
 raiz.destroy()

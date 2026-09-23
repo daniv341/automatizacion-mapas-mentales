@@ -1869,6 +1869,7 @@
       renderDificilesPreview();  // MODIFICADO: actualizar la vista de difíciles
       renderNotasPreview();      // NUEVO: notas distintas a las del txt
       renderRevisarGuardadoPreview();  // NUEVO: también al volver por "Volver a temas" del observador
+      renderRazonesPreview();    // NUEVO: corrige que no aparecieran al abrir el HTML por primera vez
     }
     if (nombre !== 'estudio') {
       detenerCronometro();
@@ -2694,8 +2695,6 @@
   });
 
   document.getElementById('btn-elegir-temas').addEventListener('click', () => {
-    renderRevisarGuardadoPreview();
-    renderRazonesPreview();
     mostrarPantalla('temas');
   });
 

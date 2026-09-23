@@ -36,7 +36,7 @@ Tiempo Integral
 (Acción Integral)
 Tiempo Integral
 genera una corrección proporcional
-a integral del error,
+a la integral del error,
 esto nos asegura
 que aplicando
 1 esfuerzo control suficiente,
@@ -209,8 +209,8 @@ RUTA 21
 ACCION PROPORCIONAL
 consiste en producto
 entre
-señal error y Constante Proporcionalidad
-(recíproca K o G, Ganancia)
+Constante Proporcionalidad
+(recíproca K o G, Ganancia) señal error y
 como para que produzca
 que error
 en estado estacionario
@@ -345,7 +345,7 @@ ACCION DERIVATIVA
 Es importante
 adaptar respuesta control
 a cambios en sistema
-ya que una mayor derivativa
+ya que una mayor  accion derivativa
 corresponde
 a 1 cambio más rápido y
 controlador puede responder
@@ -435,7 +435,7 @@ ruido
 puede afectar al sistema,
 haciendo que esas
 pequeñas variaciones,
-hagan que cambio a salida
+hagan que cambio en salida
 sea muy grande
 
 RUTA 44
