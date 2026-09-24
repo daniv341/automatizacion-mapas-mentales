@@ -89,10 +89,9 @@ RUTA 11
 CONCEPTO E INTERPRETACION DEL LUGAR RAICES
 diseñador puede predecir
 efectos que variación
-ganancia o adición nuevos
-de
+adición nuevos
 polos y ceros
-lazo abierto
+lazo abierto ganancia o
 tienen en ubicación
 polos lazo cerrado
 
@@ -105,7 +104,6 @@ partiendo
 polos y ceros
 lazo abierto,
 variando ganancia K
-Función Transferencia Lazo Abierto
 
 RUTA 13
 CONCEPTO E INTERPRETACION DEL LUGAR RAICES

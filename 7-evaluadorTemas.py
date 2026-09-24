@@ -1927,8 +1927,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .dot-razon { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
   .panel-razones-acciones { display: flex; gap: 8px; margin-top: 12px; }
 
-  #area-tarjeta.observador .chips-razones,
-  #area-tarjeta.observador .panel-razones { display: none !important; }
+  /* CORREGIDO: antes esto ocultaba las razones en modo observador; el panel
+     de razones debe verse y editarse igual que en modo estudio */
 
   /* NUEVO: galería de imágenes (modo observador) */
   .fila-obs-botones { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
@@ -2667,6 +2667,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       renderNotasPreview();      // NUEVO: notas distintas a las del txt
       renderRevisarGuardadoPreview();  // NUEVO: también al volver por "Volver a temas" del observador
       renderRazonesPreview();    // NUEVO: corrige que no aparecieran al abrir el HTML por primera vez
+      actualizarMarcasTemas();   // NUEVO: refresca ★/💡/🏷 sin resetear las casillas marcadas
     }
     if (nombre !== 'estudio') {
       detenerCronometro();
@@ -2732,6 +2733,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     btn.disabled = n === 0;
   }
 
+  // NUEVO: refresca solo los indicadores ★/💡/🏷 de "Elegir temas" sin
+  // reconstruir la lista (eso reiniciaría las casillas ya marcadas por el usuario)
+  function actualizarMarcasTemas() {
+    elListaTemas.querySelectorAll('.item-tarjeta-check').forEach((fila) => {
+      const c = fila.querySelector('input[data-idx]');
+      const marcas = fila.querySelector('.tc-marcas');
+      if (!c || !marcas) return;
+      const t = tarjetasCompletas[Number(c.dataset.idx)];
+      if (!t) return;
+      marcas.textContent = (esDificil(t) ? '★ ' : '') + (notaEfectivaDe(t) !== '' ? '💡 ' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
+    });
+  }
+
   function construirListaTemas() {
     elListaTemas.innerHTML = '';
     agruparPorTema().forEach((g) => {
@@ -2769,6 +2783,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         });
         fila.appendChild(c);
         fila.appendChild(crearTextosTarjeta(tarjetasCompletas[i]));
+        // NUEVO: indicadores visuales (solo informativos, no clickeables)
+        const marcas = document.createElement('span');
+        marcas.className = 'tc-marcas';
+        marcas.textContent = (esDificil(tarjetasCompletas[i]) ? '★ ' : '') + (notaEfectivaDe(tarjetasCompletas[i]) !== '' ? '💡 ' : '') + (razonesDeTarjeta(tarjetasCompletas[i]).length > 0 ? ' 🏷' : '');
+        fila.appendChild(marcas);
         cuerpo.appendChild(fila);
       });
       det.appendChild(cuerpo);
@@ -2836,7 +2855,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         fila.appendChild(crearTextosTarjeta(t));
         const marcas = document.createElement('span');
         marcas.className = 'tc-marcas';
-        marcas.textContent = (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '');
+        marcas.textContent = (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
         fila.appendChild(marcas);
         fila.addEventListener('click', () => abrirTarjetaObservador(i));
         cuerpo.appendChild(fila);
@@ -5013,11 +5032,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return;
     }
     // NUEVO: Esc sale del cuadro de texto para poder usar las flechas
-    if (evento.key === 'Escape' && (evento.target === elTextoEval || evento.target === elNotaEditor)) {
+    if (evento.key === 'Escape' && (evento.target === elTextoEval || evento.target === elNotaEditor || evento.target === elGaleriaNotaEditor)) {
       evento.target.blur();
       return;
     }
-    if (evento.target === elTextoEval || evento.target === elNotaEditor) return;  // no navegar mientras se escribe
+    if (evento.target === elTextoEval || evento.target === elNotaEditor || evento.target === elGaleriaNotaEditor) return;  // no navegar mientras se escribe
+    // NUEVO: flechas también en la galería de imágenes (Anterior/Siguiente)
+    if (elPantallaGaleria.style.display !== 'none') {
+      if (evento.key === 'ArrowLeft') navegarGaleria(-1);
+      if (evento.key === 'ArrowRight') navegarGaleria(1);
+      return;
+    }
     if (elAreaTarjeta.style.display === 'none') return;
     if (evento.key === 'ArrowLeft') navegar(-1);
     if (evento.key === 'ArrowRight') navegar(1);
@@ -5417,16 +5442,16 @@ txt = filedialog.askopenfilename(
     filetypes=[("Archivo de Texto", "*.txt"), ("Todos los archivos", "*.*")]
 )
 
-if not txt:
-    print("No se seleccionó recordatorio.txt. Saliendo.")
-    raiz.destroy()
-    raise SystemExit
-
 # --- Diálogo 2: respuestas.txt (rutas del diagrama) ---
 txt_respuestas = filedialog.askopenfilename(
     title="Selecciona el archivo respuestas.txt",
     filetypes=[("Archivo de Texto", "*.txt"), ("Todos los archivos", "*.*")]
 )
+
+if not (txt and txt_respuestas):
+    print("No se seleccionó recordatorio.txt. ni respuestas.txt. Saliendo.")
+    raiz.destroy()
+    raise SystemExit
 
 # --- Diálogo 3: drawio (OPCIONAL, para resaltar el diagrama) ---
 ruta_drawio = filedialog.askopenfilename(
@@ -5472,6 +5497,6 @@ if ruta_drawio:
 else:
     print("No se seleccionó drawio; se genera solo el evaluador.")
 
-generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, ruta_drawio, Path(txt).stem)
+generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, ruta_drawio, Path(txt_respuestas).stem)
 
 raiz.destroy()

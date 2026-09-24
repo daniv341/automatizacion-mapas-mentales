@@ -6,7 +6,7 @@
 <title>Tarjetas de Estudio</title>
 <style>
   :root {
-    --fill-color: #FFB6C1;
+    --fill-color: #7F00FF;
     --stroke-color: #5C5C5C;
   }
 
@@ -26,21 +26,21 @@
   .contenedor {
     width: 100%;
     max-width: 560px;
-    padding: 24px;
+    padding: clamp(12px, 4vw, 24px);
     text-align: center;
   }
 
   h1 {
-    font-size: 22px;
+    font-size: clamp(18px, 5vw, 22px);
     font-weight: 600;
-    margin-bottom: 18px;
+    margin-bottom: clamp(10px, 3vw, 18px);
     color: #444;
   }
 
   .subtitulo {
     font-size: 14px;
     color: #888;
-    margin-bottom: 16px;
+    margin-bottom: clamp(8px, 3vw, 16px);
   }
 
   /* ---------- Pantalla de selección de temas ---------- */
@@ -193,7 +193,7 @@
     background: #e2e2ea;
     border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 24px;
+    margin-bottom: clamp(12px, 4vw, 24px);
   }
 
   .barra-progreso-relleno {
@@ -207,7 +207,7 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 18px;
+    margin-bottom: clamp(10px, 3vw, 18px);
     font-weight: 600;
     font-size: 15px;
     color: var(--stroke-color);
@@ -228,14 +228,14 @@
     background: var(--fill-color);
     border: 3px solid var(--stroke-color);
     clip-path: polygon(14% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 14%);
-    min-height: 220px;
+    min-height: clamp(170px, 32vw, 220px);
     border-radius: 6px;
-    padding: 40px 30px;
+    padding: clamp(24px, 7vw, 40px) clamp(18px, 5.5vw, 30px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 20px;
+    gap: clamp(12px, 4vw, 20px);
     box-shadow: 0 10px 24px rgba(0,0,0,0.12);
     opacity: 0;
     transform: translateY(8px);
@@ -262,7 +262,7 @@
   }
 
   .primero {
-    font-size: 19px;
+    font-size: clamp(16.5px, 4.4vw, 19px);
     font-weight: 700;
     color: var(--stroke-color);
     line-height: 1.4;
@@ -272,7 +272,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: clamp(10px, 3vw, 16px);
     width: 100%;
   }
 
@@ -285,7 +285,7 @@
   }
 
   .boton-pista {
-    padding: 10px 22px;
+    padding: clamp(8px, 2.5vw, 10px) clamp(15px, 5vw, 22px);
     border-radius: 20px;
     border: 2px solid var(--stroke-color);
     background: rgba(255,255,255,0.5);
@@ -297,7 +297,7 @@
   }
 
   .boton-respuesta {
-    padding: 10px 22px;
+    padding: clamp(8px, 2.5vw, 10px) clamp(15px, 5vw, 22px);
     border-radius: 20px;
     border: 2px solid var(--stroke-color);
     background: var(--stroke-color);
@@ -314,8 +314,8 @@
 
   /* NUEVO: botón 💡 de nota (toggle) */
   .boton-nota {
-    width: 40px;
-    height: 40px;
+    width: clamp(34px, 9vw, 40px);
+    height: clamp(34px, 9vw, 40px);
     border-radius: 50%;
     border: 2px solid var(--stroke-color);
     background: rgba(255,255,255,0.5);
@@ -656,12 +656,23 @@
   .estado-marca.no { color: #e0574c; }
   .estado-marca.saltar { color: #b8b8c4; }
 
+  /* MODIFICADO: dos filas agrupadas por función (decisión / etiquetas), en vez
+     de una sola fila con wrap. Evita que el ✓ quede solo, descentrado, cuando
+     no entran los 5 botones en una línea (pantallas angostas). */
   .botonera {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .fila-decision, .fila-etiquetas, .fila-galeria-acciones {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 18px;
-    margin-top: 10px;
+    gap: clamp(8px, 3vw, 14px);
+    flex-wrap: wrap;
   }
 
   .boton {
@@ -684,10 +695,10 @@
   }
 
   .boton-circular {
-    width: 64px;
-    height: 64px;
+    width: clamp(50px, 14vw, 64px);
+    height: clamp(50px, 14vw, 64px);
     border-radius: 50%;
-    font-size: 26px;
+    font-size: clamp(20px, 6vw, 26px);
     color: #fff;
     display: flex;
     align-items: center;
@@ -698,7 +709,7 @@
   .boton-si { background: #3aa76d; }
 
   .boton-saltar {
-    padding: 12px 20px;
+    padding: clamp(9px, 3vw, 12px) clamp(14px, 4.5vw, 20px);
     border-radius: 24px;
     background: #ffffff;
     color: #888;
@@ -707,7 +718,7 @@
 
   /* MODIFICADO: botón toggle de tarjeta difícil */
   .boton-dificil {
-    padding: 12px 18px;
+    padding: clamp(9px, 3vw, 12px) clamp(13px, 4vw, 18px);
     border-radius: 24px;
     background: #ffffff;
     color: #888;
@@ -729,7 +740,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 26px;
+    margin-top: clamp(14px, 5vw, 26px);
     gap: 10px;
   }
 
@@ -763,7 +774,7 @@
     display: none;
     background: #ffffff;
     border-radius: 16px;
-    padding: 40px 30px;
+    padding: clamp(20px, 7vw, 40px) clamp(16px, 5.5vw, 30px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   }
 
@@ -773,7 +784,7 @@
   }
 
   .nota-sesion {
-    font-size: 26px;
+    font-size: clamp(21px, 6vw, 26px);
     font-weight: 700;
     margin-bottom: 10px;
     color: #444;
@@ -786,7 +797,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 6px;
+    padding: clamp(9px, 3vw, 14px) 6px;
     border-bottom: 1px solid #eee;
     font-size: 16px;
   }
@@ -813,11 +824,11 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 26px;
+    margin-top: clamp(14px, 5vw, 26px);
   }
 
   .boton-reiniciar, .boton-secundario {
-    padding: 12px 26px;
+    padding: clamp(9px, 3vw, 12px) clamp(18px, 5.5vw, 26px);
     border-radius: 24px;
     font-size: 15px;
     font-weight: 600;
@@ -838,7 +849,7 @@
   }
 
   .listas-resumen {
-    margin-top: 26px;
+    margin-top: clamp(14px, 5vw, 26px);
     text-align: left;
   }
 
@@ -1150,8 +1161,111 @@
   }
 
   #area-tarjeta.observador .grupo-cronometro,
-  #area-tarjeta.observador #btn-pausa,
-  #area-tarjeta.observador #btn-revisar { display: none !important; }
+  #area-tarjeta.observador #btn-pausa { display: none !important; }
+
+  /* NUEVO: botón y panel de razones */
+  .boton-razones { position: relative; }
+  .boton-razones.activa { border-color: #8B5CF6; color: #8B5CF6; }
+  .boton-nota:disabled, .boton-razones:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .badge-conteo {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: #8B5CF6;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  .chips-razones {
+    display: none;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .chip-razon {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1.3px solid;
+    white-space: nowrap;
+  }
+
+  .chip-razon.chico { font-size: 11px; font-weight: 600; padding: 1px 8px; margin: 3px 4px 0 0; }
+  .chip-razon.vacio { border-style: dashed; opacity: 0.7; font-style: italic; font-weight: 500; }
+  .item-razones { margin-top: 4px; }
+  .fila-chips-mini { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+
+  .panel-razones {
+    display: none;
+    margin-top: 14px;
+    text-align: left;
+    background: #F8F9FC;
+    border: 1px solid #E2E4EC;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  .panel-razones-titulo {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 10px;
+  }
+
+  .lista-check-razones { display: flex; flex-direction: column; gap: 9px; }
+
+  .item-check-razon {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    color: #444;
+    cursor: pointer;
+  }
+
+  .item-check-razon input { width: 17px; height: 17px; cursor: pointer; accent-color: var(--stroke-color); }
+  .dot-razon { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .panel-razones-acciones { display: flex; gap: 8px; margin-top: 12px; }
+
+  #area-tarjeta.observador .chips-razones,
+  #area-tarjeta.observador .panel-razones { display: none !important; }
+
+  /* NUEVO: galería de imágenes (modo observador) */
+  .fila-obs-botones { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+
+  .galeria-indicador {
+    font-size: 14px;
+    font-weight: 700;
+    color: #666;
+    margin-bottom: 12px;
+  }
+
+  .galeria-imagen-wrap { display: flex; justify-content: center; }
+
+  .galeria-img {
+    max-width: 100%;
+    max-height: 55vh;
+    border-radius: 10px;
+    border: 2px solid var(--stroke-color);
+    background: #fff;
+    cursor: zoom-in;
+  }
+
+  .galeria-vacia { color: #888; padding: 30px 0; }
 
   .sin-tarjetas {
     color: #888;
@@ -1220,6 +1334,41 @@
         <div id="lista-notas-otras"></div>
       </details>
       <p class="nota-dificiles" id="nota-notas"></p>
+      <button class="boton-mini" id="btn-vaciar-notas" style="display:none;">Vaciar todas</button>
+    </div>
+
+    <!-- NUEVO: tarjetas marcadas 🚩 Revisar (persisten entre sesiones) -->
+    <div class="lista-temas zona-dificiles" id="zona-revisar">
+      <div class="cabecera-dificiles">
+        <span class="titulo-dificiles">🚩 Para revisar guardadas</span>
+        <span class="fila-dificiles-botones">
+          <button class="boton-mini" id="btn-vaciar-revisar" style="display:none;">Vaciar todas</button>
+        </span>
+      </div>
+      <div id="lista-revisar-guardadas"></div>
+      <p class="nota-dificiles" id="nota-revisar"></p>
+    </div>
+
+    <!-- NUEVO: razones guardadas -->
+    <div class="lista-temas zona-dificiles" id="zona-razones">
+      <div class="cabecera-dificiles">
+        <span class="titulo-dificiles">🏷 Razones guardadas</span>
+        <span class="fila-dificiles-botones">
+          <button class="boton-mini" id="btn-exportar-razones">Exportar</button>
+          <button class="boton-mini" id="btn-importar-razones">Importar</button>
+        </span>
+      </div>
+      <input type="file" id="input-importar-razones" accept=".json,application/json" style="display:none">
+      <details id="det-razones-aqui" style="display:none">
+        <summary id="suma-razones-aqui">De este evaluador</summary>
+        <div id="lista-razones-aqui"></div>
+      </details>
+      <details id="det-razones-otras" style="display:none">
+        <summary id="suma-razones-otras">De otros evaluadores</summary>
+        <div id="lista-razones-otras"></div>
+      </details>
+      <p class="nota-dificiles" id="nota-razones"></p>
+      <button class="boton-mini" id="btn-vaciar-razones" style="display:none;">Vaciar todas</button>
     </div>
   </div>
 
@@ -1227,7 +1376,68 @@
   <div id="pantalla-observador" style="display:none;">
     <p class="subtitulo">Modo observador: tocá una tarjeta para verla (sin evaluarte)</p>
     <div class="lista-temas" id="lista-observador"></div>
-    <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
+    <!-- MODIFICADO: se agrega "Ver imágenes" junto al botón de volver -->
+    <div class="fila-obs-botones">
+      <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
+      <button class="boton-secundario" id="btn-ver-imagenes">🖼 Ver imágenes</button>
+    </div>
+
+    <!-- NUEVO: notas y difíciles de imágenes (independiente de las de tarjetas) -->
+    <div class="lista-temas zona-dificiles" id="zona-imagenes">
+      <div class="cabecera-dificiles">
+        <span class="titulo-dificiles">🖼 Datos de imágenes guardados</span>
+        <span class="fila-dificiles-botones">
+          <button class="boton-mini" id="btn-exportar-imagenes">Exportar</button>
+          <button class="boton-mini" id="btn-importar-imagenes">Importar</button>
+        </span>
+      </div>
+      <input type="file" id="input-importar-imagenes" accept=".json,application/json" style="display:none">
+      <details id="det-imagenes" style="display:none">
+        <summary id="suma-imagenes">Con nota o marcadas difícil</summary>
+        <div id="lista-imagenes-guardadas"></div>
+      </details>
+      <p class="nota-dificiles" id="nota-imagenes"></p>
+      <button class="boton-mini" id="btn-vaciar-imagenes" style="display:none;">Vaciar todas</button>
+    </div>
+  </div>
+
+  <!-- NUEVO: galería de imágenes de las rutas, vista secuencial e independiente -->
+  <div id="pantalla-galeria" style="display:none;">
+    <div class="galeria-indicador" id="galeria-indicador"></div>
+    <div class="galeria-imagen-wrap">
+      <img id="galeria-img" class="galeria-img" alt="Imagen de una ruta" style="display:none;">
+    </div>
+    <p class="galeria-vacia" id="galeria-vacia" style="display:none;">No hay imágenes en las rutas de respuestas.txt.</p>
+
+    <div class="fila-galeria-acciones" style="margin-top:14px;">
+      <button class="boton-dificil" id="btn-galeria-dificil" title="Marcar/desmarcar esta imagen como difícil">☆ Difícil</button>
+      <button class="boton-nota" id="btn-galeria-nota" title="Ver/editar nota de esta imagen">💡</button>
+    </div>
+
+    <!-- NUEVO: mismo estilo post-it que la nota de tarjeta -->
+    <div class="panel-nota" id="panel-galeria-nota" style="display:none;">
+      <div class="panel-nota-cabecera">
+        <div class="panel-nota-titulo">💡 Nota de la imagen</div>
+        <div class="panel-nota-versiones" id="galeria-nota-versiones" style="display:none;">
+          <button class="boton-mini" id="btn-galeria-ver-actual">Versión actual</button>
+          <button class="boton-mini" id="btn-galeria-ver-anterior">Versión anterior</button>
+        </div>
+      </div>
+      <div class="panel-nota-texto" id="galeria-nota-texto"></div>
+      <textarea class="panel-nota-editor" id="galeria-nota-editor" style="display:none;" placeholder="Escribí una nota para esta imagen"></textarea>
+      <div class="panel-nota-acciones">
+        <button class="boton-mini" id="btn-galeria-nota-editar">✎ Editar</button>
+        <button class="boton-mini" id="btn-galeria-nota-guardar" style="display:none;">Guardar</button>
+        <button class="boton-mini" id="btn-galeria-nota-cancelar" style="display:none;">Cancelar</button>
+        <button class="boton-mini" id="btn-galeria-nota-revertir" style="display:none;">↩ Revertir a la anterior</button>
+      </div>
+    </div>
+
+    <div class="navegacion" style="margin-top:20px;">
+      <button class="boton-secundario" id="btn-galeria-anterior">&larr; Anterior</button>
+      <button class="boton-secundario" id="btn-galeria-volver">☰ Volver a la lista</button>
+      <button class="boton-secundario" id="btn-galeria-siguiente">Siguiente &rarr;</button>
+    </div>
   </div>
 
   <div id="area-tarjeta" style="display:none;">
@@ -1283,6 +1493,19 @@
       </div>
     </div>
 
+    <!-- NUEVO: chips de razones guardadas (solo lectura) -->
+    <div class="chips-razones" id="chips-razones" style="display:none;"></div>
+
+    <!-- NUEVO: panel de razones (checkboxes de las 6 predefinidas) -->
+    <div class="panel-razones" id="panel-razones" style="display:none;">
+      <div class="panel-razones-titulo">🏷 ¿Por qué la marcaste así?</div>
+      <div class="lista-check-razones" id="lista-check-razones"></div>
+      <div class="panel-razones-acciones">
+        <button class="boton-mini" id="btn-razones-guardar">Guardar</button>
+        <button class="boton-mini" id="btn-razones-cerrar">Cerrar</button>
+      </div>
+    </div>
+
     <div class="zona-eval" id="zona-eval">
       <textarea id="texto-eval" placeholder="Escribí la respuesta con tus palabras (opcional). Enter para evaluar"></textarea>
       <!-- MODIFICADO: id agregado para poder ocultar el botón tras evaluar -->
@@ -1298,11 +1521,17 @@
     <div class="resultado-eval" id="resultado-eval"></div>
 
     <div class="botonera">
-      <button class="boton boton-circular boton-no" id="btn-no" title="No entendido">&#10007;</button>
-      <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar</button>
-      <!-- MODIFICADO: toggle de tarjeta difícil (se guarda entre sesiones) -->
-      <button class="boton-dificil" id="btn-dificil" title="Marcar/desmarcar como difícil (se guarda entre sesiones)">☆ Difícil</button>
-      <button class="boton boton-circular boton-si" id="btn-si" title="Entendido">&#10003;</button>
+      <!-- MODIFICADO: fila de decisión (cambian resultados[] / avanzan la tarjeta) -->
+      <div class="fila-decision">
+        <button class="boton boton-circular boton-no" id="btn-no" title="No entendido">&#10007;</button>
+        <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar</button>
+        <button class="boton boton-circular boton-si" id="btn-si" title="Entendido">&#10003;</button>
+      </div>
+      <!-- MODIFICADO: fila de etiquetas (metadata; no afectan la calificación) -->
+      <div class="fila-etiquetas">
+        <button class="boton-dificil" id="btn-dificil" title="Marcar/desmarcar como difícil (se guarda entre sesiones)">☆ Difícil</button>
+        <button class="boton-dificil boton-razones" id="btn-razones" title="Registrar por qué marcaste esta tarjeta así">🏷 Razones<span class="badge-conteo" id="badge-conteo-razones" style="display:none;"></span></button>
+      </div>
     </div>
 
     <div class="navegacion">
@@ -1403,7 +1632,7 @@
 </div>
 
 <script>
-  const datos = {"tarjetas": [{"tema": "definiciones", "primero": "Que es un sistema?", "segundo": "unidad completa", "rutas": [1], "claves": ["unidad", "completa"], "nota": ""}, {"tema": "definiciones", "primero": "Que es el control?", "segundo": "asegurar", "rutas": [2], "claves": ["asegurar"], "nota": ""}, {"tema": "definiciones", "primero": "Que es un sistema de control?", "segundo": "dirigen", "rutas": [3], "claves": ["dirigen"], "nota": ""}, {"tema": "definiciones", "primero": "Que es una entrada?", "segundo": "estimulo", "rutas": [4], "claves": ["estimulo"], "nota": ""}, {"tema": "definiciones", "primero": "Que es una salida?", "segundo": "respuesta real, diferentes", "rutas": [5, 6], "claves": ["respuesta", "real", "diferentes"], "nota": ""}, {"tema": "definiciones", "primero": "Cual es el proposito de un sistema de control?", "segundo": "identificar", "rutas": [8], "claves": ["identificar"], "nota": ""}, {"tema": "definiciones", "primero": "Que es un subsistema de control?", "segundo": "internas", "rutas": [10], "claves": ["internas"], "nota": ""}, {"tema": "definiciones", "primero": "Que es el ancho de banda?", "segundo": "medida", "rutas": [11], "claves": ["medida"], "nota": ""}, {"tema": "tipos sistemas control segun naturaleza", "primero": "Que define a un sistema de control natural?", "segundo": "dedo", "rutas": [12], "claves": ["dedo"], "nota": ""}, {"tema": "tipos sistemas control segun naturaleza", "primero": "Que define a un sistema de control artificial?", "segundo": "calentador", "rutas": [13], "claves": ["calentador"], "nota": ""}, {"tema": "tipos sistemas control segun naturaleza", "primero": "Que define a un sistema de control mixto?", "segundo": "conduciendo", "rutas": [14], "claves": ["conduciendo"], "nota": ""}, {"tema": "importancia del control", "primero": "Cual es su importancia respecto a los objetivos?", "segundo": "objetivos", "rutas": [15], "claves": ["objetivos"], "nota": ""}, {"tema": "importancia del control", "primero": "En que ambitos se aplica?", "segundo": "aplica todo", "rutas": [16], "claves": ["aplica", "todo"], "nota": ""}, {"tema": "importancia del control", "primero": "Como interviene frente a desviaciones?", "segundo": "causas, desviaciones", "rutas": [17], "claves": ["causas", "desviaciones"], "nota": ""}, {"tema": "importancia del control", "primero": "Que impacto economico o de eficiencia genera?", "segundo": "reduce, ahorra", "rutas": [18], "claves": ["reduce", "ahorra"], "nota": ""}, {"tema": "tipos sistemas control segun malla", "primero": "Que los distingue?", "segundo": "accion control, no movimiento", "rutas": [19], "claves": ["accion", "control", "no", "movimiento"], "nota": ""}, {"tema": "malla abierta", "primero": "Que no tiene?", "segundo": "salida, efecto, medir", "rutas": [20, 21], "claves": ["salida", "efecto", "medir"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "Como se determina la condicion de entrada?", "segundo": "entrada, condicion", "rutas": [22], "claves": ["entrada", "condicion"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "De que depende su precision o funcionamiento?", "segundo": "depende calibracion", "rutas": [23], "claves": ["depende", "calibracion"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "Como responde ante perturbaciones o variaciones?", "segundo": "no adapta cambios", "rutas": [24], "claves": ["no", "adapta", "cambios"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "Que se necesita conocer para su operacion?", "segundo": "conocer relacion, no perturbaciones", "rutas": [25, 26], "claves": ["conocer", "relacion", "no", "perturbaciones"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "De que factor externo depende la accion?", "segundo": "depende criterio", "rutas": [27], "claves": ["depende", "criterio"], "nota": ""}, {"tema": "malla cerrada", "primero": "En que se diferencian?", "segundo": "depende salida", "rutas": [28], "claves": ["depende", "salida"], "nota": ""}, {"tema": "malla cerrada", "primero": "Que es la retroalimentacion?", "segundo": "propiedad, comparar", "rutas": [29], "claves": ["propiedad", "comparar"], "nota": ""}, {"tema": "caracteristicas malla cerrada", "primero": "Como influye la malla cerrada en la exactitud?", "segundo": "exactitud", "rutas": [23], "claves": ["exactitud"], "nota": ""}, {"tema": "caracteristicas malla cerrada", "primero": "Que ocurre con la razon o sensibilidad?", "segundo": "razon", "rutas": [31], "claves": ["razon"], "nota": ""}, {"tema": "caracteristicas malla cerrada", "primero": "Como se ve afectado el ancho de banda?", "segundo": "ancho banda", "rutas": [32], "claves": ["ancho", "banda"], "nota": ""}, {"tema": "tipos sistemas control segun su senal", "primero": "Que es una señal en control?", "segundo": "funcion, t", "rutas": [33], "claves": ["funcion", "t"], "nota": ""}, {"tema": "tipos sistemas control segun su senal", "primero": "Que es una señal analogica?", "segundo": "continuum", "rutas": [34], "claves": ["continuum"], "nota": ""}, {"tema": "tipos sistemas control segun su senal", "primero": "Que es una señal digital?", "segundo": "discretos", "rutas": [36], "claves": ["discretos"], "nota": ""}, {"tema": "otras definiciones", "primero": "Cual es el objetivo de la ingenieria de control?", "segundo": "analisis, diseño", "rutas": [38], "claves": ["analisis", "diseno"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el analisis en control?", "segundo": "investigacion", "rutas": [39], "claves": ["investigacion"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el diseño en control?", "segundo": "ordenamiento, tarea", "rutas": [40], "claves": ["ordenamiento", "tarea"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el diseño por analisis?", "segundo": "modificar, existente", "rutas": [40], "claves": ["modificar", "existente"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el diseño por sintesis?", "segundo": "definir, especificaciones", "rutas": [41], "claves": ["definir", "especificaciones"], "nota": ""}, {"tema": "modelos o representaciones sistemas control", "primero": "Como los resuelvo?", "segundo": "especificar, analisis", "rutas": [42], "claves": ["especificar", "analisis"], "nota": ""}, {"tema": "modelos representativos", "primero": "Que modelo define la relacion cuantitativa y matematica?", "segundo": "relacion cuantitativa, aplicacion, complejidad", "rutas": [43], "claves": ["relacion", "cuantitativa", "aplicacion", "complejidad"], "nota": ""}, {"tema": "modelos representativos", "primero": "Que modelo utiliza diagramas de bloques?", "segundo": "diagrama", "rutas": [45], "claves": ["diagrama"], "nota": ""}, {"tema": "modelos representativos", "primero": "Que modelo utiliza grafos de flujo de señal?", "segundo": "grafos", "rutas": [46], "claves": ["grafos"], "nota": ""}], "rutas": {"1": {"tema": "DEFINICIONES", "lineas": ["SISTEMAS", "Ordenamiento componentes físicos,", "unidos o relacionados", "tal manera", "que forman y/o actúan", "como una unidad completa"]}, "2": {"tema": "DEFINICIONES", "lineas": ["CONTROL", "Proceso para asegurar", "que actividades reales", "se ajusten a", "actividades planificadas"]}, "3": {"tema": "DEFINICIONES", "lineas": ["SISTEMAS CONTROL", "Es 1 ordenamiento componentes físicos", "unidos o relacionados", "tal manera que", "mandan, dirigen o regulan", "al mismo sistema o a otro"]}, "4": {"tema": "DEFINICIONES", "lineas": ["ENTRADA", "estímulo o excitación", "que se aplica", "a 1 Sistema Control,", "generalmente", "desde una fuente energía externa,", "con fin producir,", "una respuesta específica", "del sistema control"]}, "5": {"tema": "DEFINICIONES", "lineas": ["SALIDA", "Es respuesta real", "que se obtiene", "1 sistema control"]}, "6": {"tema": "DEFINICIONES", "lineas": ["Puede ser o no igual", "a respuesta implícita", "especificada por entrada,", "entradas y salidas", "pueden tener", "muchas formas diferentes"]}, "7": {"tema": "DEFINICIONES", "lineas": ["por ej pueden ser", "variables físicas o cantidades más abstractas,", "tales como", "valores referencia, ajuste o deseados", "para salida del sistema control"]}, "8": {"tema": "DEFINICIONES", "lineas": ["PROPÓSITOS DEL SISTEMA CONTROL", "Identificar o definir", "entrada y salida"]}, "9": {"tema": "DEFINICIONES", "lineas": ["Si se dan", "entrada y salida,", "es posible", "identificar, delinear o definir", "naturaleza componentes"]}, "10": {"tema": "DEFINICIONES", "lineas": ["SUBSISTEMA CONTROL", "Un Subsistema Control", "es 1 Sistema Control", "que se encuentra", "dentro otro Sistema Control,", "donde", "entradas y salidas", "son variables internas", "del Sistema Control mayor"]}, "11": {"tema": "DEFINICIONES", "lineas": ["ANCHO BANDA", "es una medida frecuencia", "que bien responde o", "filtra", "las variaciones señal entrada"]}, "12": {"tema": "TIPOS SISTEMAS CONTROL segun Naturaleza", "lineas": ["Naturales", "señalar 1 objeto con dedo,", "transpiración"]}, "13": {"tema": "TIPOS SISTEMAS CONTROL segun Naturaleza", "lineas": ["Artificiales", "Calentador", "horno termostático (calefactor),", "interruptor eléctrico"]}, "14": {"tema": "TIPOS SISTEMAS CONTROL segun Naturaleza", "lineas": ["Mixto", "Un hombre conduciendo 1 automóvil"]}, "15": {"tema": "Importancia del Control", "lineas": ["1", "Establece medidas", "para corregir actividades,", "tal forma", "que se alcancen objetivos", "exitosamente"]}, "16": {"tema": "Importancia del Control", "lineas": ["2", "Se aplica a todo:", "a cosas,", "a personas y", "a actos"]}, "17": {"tema": "Importancia del Control", "lineas": ["3", "Determina y analiza", "rápidamente causas", "que pueden originar desviaciones", "para que no vuelvan", "a presentarse", "en futuro"]}, "18": {"tema": "Importancia del Control", "lineas": ["4", "Reduce costos y ahorra tiempo", "al evitar errores"]}, "19": {"tema": "TIPOS SISTEMAS CONTROL segun Malla", "lineas": ["distinción se determina", "mediante acción control", "(es cantidad responsable", "activar sistema", "para producir salida)", "no implica directamente", "cambio,", "movimiento o", "actividad"]}, "20": {"tema": "MALLA ABIERTA", "lineas": ["sistemas control", "en donde salida", "no tiene efecto", "sobre acción control", "IMG:data:image/png;base64,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i7pO3PORibVr11qHDh3svvvuc/NvvPGGXXLJJW5abBzUCKaGeOqpp+zBBx+0tm3b2pZbbumsvieffNKt69Onj/Xv399Np4Jw5Ip4cJ2+X1gmstFlQdQ9SDuki1xoBVqZdP7KK6+kvRcKv+edd55NmjTJLrjgArvwwgttn332sa+//truuOMOu/nmm6MtRY2AAIqaYcWKFcF3330Xzf1Efn5+NJXbhOJGYSrt77DDDivbRoh05EraKC+d8wvFL9oyPSeeeGJQVFQUhAIZ/Pjjj27Z7bffHvTr189Ni5pDLtAaZNttt3XWXyqZrL+6AlZfrlixVQErvlevXs71NWTIkGip2dy5c23ixInRXHp8i2BRtwjz1Aqt2COPPNKeeOIJa9GihdWvX98tu+KKK2y77bZz06LmkACKaoMO6riC6qLLc8KECRaW5F1fzsLCQtea94ADDrBly5a5vp4+Y0vHH//4R1f/I+oGPp0jfpWBRjN33323HXfccdESsbGQAIqsg8VHZoDVlwt1OuvDmDFjXAOGY445xpXkr776ajv22GPtm2++ibYo5ZNPPrEbb7zRlfC//PJL+/e//22vvfaaPf74484KXLlypav7ueiii5wVSUOJjz76yBUapkyZYpdeeqnNmzfP1RezDft5qEf661//6pY//fTT0VJRU3jhq2o633PPPW2vvfZyBSGxkcEPKkQ2qKjuA+pKHeAHH3wQHHnkkUFYmg9uvvnm4N13343WBEFoHbr7XLRokasTmjx5cvDee+8FV111VVBcXOyWDR06NFizZk3Qo0ePILQGg//+97/Bgw8+GPTv39/tzzYvvvhiMGfOnGCnnXYKpk+fHnz22WdB586dg8WLF7tjd+nSxS3jF2amblkukytpozLpPBO857Fjx9aZev9cRxagyBp11dpLxx577GHjx493rXvpxoLViws0FKdoi9I6306dOtmtt95qoYA5K3CXXXZx69gHC3DGjBn20ksv2b333uv2ffnll916OOqoo6xly5bOWuDYjRs3tqZNm9rq1attt912s3vuucdCQXXu1BUrVth3330X7Smqkw1J55tttpl9+OGHzmMgNj4SQCHWAy9UCFr37t1daLvdd9/dHnnkEbccGjVq5FylBQUFdtttt1nXrl2jNaX88MMPFlp3Ttz4tW7d2kLLIFpr5dYjEk6PfS6++GIn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"]}, "21": {"tema": "MALLA ABIERTA", "lineas": ["No existe acción retroalimentación,", "para comparar señal salida", "con entrada referencia,", "por tanto,", "es necesario", "medir variable salida"]}, "22": {"tema": "Caracteristicas", "lineas": ["a", "Para cada entrada referencia", "corresponde una condición", "de operación establecida"]}, "23": {"tema": "Caracteristicas", "lineas": ["b", "exactitud del sistema", "depende calibración", "del elemento medición"]}, "24": {"tema": "Caracteristicas", "lineas": ["c", "En presencia perturbaciones", "no cumple su función asignada", "debido a que", "no se adapta a cambios"]}, "25": {"tema": "Caracteristicas", "lineas": ["d", "Sólo se debe usar", "cuando se conoce relación", "entre entrada y salida", "del sistema, y"]}, "26": {"tema": "Caracteristicas", "lineas": ["si no hay perturbaciones", "ni internas", "ni externas"]}, "27": {"tema": "Caracteristicas", "lineas": ["e", "Generalmente depende", "del criterio y estimación", "del hombre"]}, "28": {"tema": "MALLA CERRADA", "lineas": ["Son aquellos", "en que acción control", "depende alguna manera,", "salida", "generalmente llamados,", "sistemas control retroalimentados", "IMG:data:image/png;base64,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"]}, "29": {"tema": "MALLA CERRADA", "lineas": ["RETROALIMENTACION", "Es propiedad 1 sistema malla cerrada", "que permite", "que salida se compare", "con entrada del sistema", "tal manera que acción control", "se pueda expresar", "como una función", "entrada y", "salida"]}, "30": {"tema": "Caracteristicas", "lineas": ["a", "Aumento exactitud", "(habilidad para reproducir", "entrada fielmente)"]}, "31": {"tema": "Caracteristicas", "lineas": ["b", "Sensibilidad reducida", "en la razón(division)", "salida a entrada", "frente a variaciones", "en características del sistema"]}, "32": {"tema": "Caracteristicas", "lineas": ["c", "Ancho banda aumentado"]}, "33": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["señales en 1 sistema control", "son funciones", "alguna variable independiente,", "usualmente tiempo,", "denotada por t"]}, "34": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["SEÑAL ANALÓGICA:", "Una señal dependiente", "1 continuum valores", "variable independiente t"]}, "35": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["se llama", "señal continua en tiempo o", "señal datos continuos o", "señal analógica"]}, "36": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["SEÑAL DIGITAL:", "Una señal", "definida o interés solamente", "en instantes discretos", "variable independiente t"]}, "37": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["se llama", "señal discreta en tiempo,", "datos discretos,", "datos muestreados o digital"]}, "38": {"tema": "OTRAS DEFINICIONES", "lineas": ["OBJETIVO INGENIERIA SISTEMAS CONTROL", "ingeniería sistemas control", "consiste", "en análisis y diseño", "configuraciones sistemas control"]}, "39": {"tema": "OTRAS DEFINICIONES", "lineas": ["a", "análisis es investigación", "propiedades 1 sistema existente"]}, "40": {"tema": "OTRAS DEFINICIONES", "lineas": ["b", "diseño es", "elección y ordenamiento", "componentes del sistema", "para desempeñar", "una tarea específica", "Existen dos métodos", "para diseño:", "Diseño por Análisis", "se efectúa al modificar", "características de configuración", "1 sistema", "existente o", "estándar"]}, "41": {"tema": "OTRAS DEFINICIONES", "lineas": ["Diseño por Síntesis", "se efectua al definir", "forma del sistema", "directamente de sus especificaciones"]}, "42": {"tema": "MODELOS O REPRESENTACIONES SISTEMAS CONTROL", "lineas": ["Para resolver 1 problema con Sistema Control,", "se debe", "especificar o describir", "la", "configuración del sistema y sus componentes", "tal manera", "que facilite", "análisis o", "diseño"]}, "43": {"tema": "Modelos representativos", "lineas": ["a", "Modelos Matemáticos", "Estos modelos son necesarios", "cuando se requieren", "relaciones cuantitativas"]}, "44": {"tema": "Modelos representativos", "lineas": ["tambien", "Dependen del área aplicación", "del sistema control y", "complejidad tales modelos", "varía ampliamente"]}, "45": {"tema": "Modelos representativos", "lineas": ["b", "Diagramas Bloques"]}, "46": {"tema": "Modelos representativos", "lineas": ["c", "Grafos Flujos Señales"]}}};
+  const datos = {"tarjetas": [{"tema": "definiciones", "primero": "Que es un sistema?", "segundo": "unidad completa", "rutas": [1], "claves": ["unidad", "completa"], "nota": ""}, {"tema": "definiciones", "primero": "Que es el control?", "segundo": "asegurar", "rutas": [2], "claves": ["asegurar"], "nota": ""}, {"tema": "definiciones", "primero": "Que es un sistema de control?", "segundo": "dirigen", "rutas": [3], "claves": ["dirigen"], "nota": ""}, {"tema": "definiciones", "primero": "Que es una entrada?", "segundo": "estimulo", "rutas": [4], "claves": ["estimulo"], "nota": ""}, {"tema": "definiciones", "primero": "Que es una salida?", "segundo": "respuesta real, diferentes", "rutas": [5, 6], "claves": ["respuesta", "real", "diferentes"], "nota": ""}, {"tema": "definiciones", "primero": "Cual es el proposito de un sistema de control?", "segundo": "identificar, naturaleza", "rutas": [8, 9], "claves": ["identificar", "naturaleza"], "nota": ""}, {"tema": "definiciones", "primero": "Que es un subsistema de control?", "segundo": "internas", "rutas": [10], "claves": ["internas"], "nota": ""}, {"tema": "definiciones", "primero": "Que es el ancho de banda?", "segundo": "medida", "rutas": [11], "claves": ["medida"], "nota": ""}, {"tema": "tipos sistemas control segun naturaleza", "primero": "Que define a un sistema de control natural?", "segundo": "dedo", "rutas": [12], "claves": ["dedo"], "nota": ""}, {"tema": "tipos sistemas control segun naturaleza", "primero": "Que define a un sistema de control artificial?", "segundo": "calentador", "rutas": [13], "claves": ["calentador"], "nota": ""}, {"tema": "tipos sistemas control segun naturaleza", "primero": "Que define a un sistema de control mixto?", "segundo": "conduciendo", "rutas": [14], "claves": ["conduciendo"], "nota": ""}, {"tema": "importancia del control", "primero": "Cual es su importancia respecto a los objetivos?", "segundo": "objetivos", "rutas": [15], "claves": ["objetivos"], "nota": ""}, {"tema": "importancia del control", "primero": "En que ambitos se aplica?", "segundo": "aplica todo", "rutas": [16], "claves": ["aplica", "todo"], "nota": ""}, {"tema": "importancia del control", "primero": "Como interviene frente a desviaciones?", "segundo": "causas, desviaciones", "rutas": [17], "claves": ["causas", "desviaciones"], "nota": ""}, {"tema": "importancia del control", "primero": "Que impacto economico o de eficiencia genera?", "segundo": "reduce, ahorra", "rutas": [18], "claves": ["reduce", "ahorra"], "nota": ""}, {"tema": "tipos sistemas control segun malla", "primero": "Que los distingue?", "segundo": "accion control, no movimiento", "rutas": [19], "claves": ["accion", "control", "no", "movimiento"], "nota": ""}, {"tema": "malla abierta", "primero": "Que no tiene?", "segundo": "salida, efecto, medir", "rutas": [20, 21], "claves": ["salida", "efecto", "medir"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "Como se determina la condicion de entrada?", "segundo": "entrada, condicion", "rutas": [22], "claves": ["entrada", "condicion"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "De que depende su precision o funcionamiento?", "segundo": "depende calibracion", "rutas": [23], "claves": ["depende", "calibracion"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "Como responde ante perturbaciones o variaciones?", "segundo": "no adapta cambios", "rutas": [24], "claves": ["no", "adapta", "cambios"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "Que se necesita conocer para su operacion?", "segundo": "conocer relacion, no perturbaciones", "rutas": [25, 26], "claves": ["conocer", "relacion", "no", "perturbaciones"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "De que factor externo depende la accion?", "segundo": "depende criterio", "rutas": [27], "claves": ["depende", "criterio"], "nota": ""}, {"tema": "malla cerrada", "primero": "En que se diferencian?", "segundo": "depende salida", "rutas": [28], "claves": ["depende", "salida"], "nota": ""}, {"tema": "malla cerrada", "primero": "Que es la retroalimentacion?", "segundo": "propiedad, comparar", "rutas": [29], "claves": ["propiedad", "comparar"], "nota": ""}, {"tema": "caracteristicas malla cerrada", "primero": "Como influye la malla cerrada en la exactitud?", "segundo": "exactitud", "rutas": [23], "claves": ["exactitud"], "nota": ""}, {"tema": "caracteristicas malla cerrada", "primero": "Que ocurre con la razon o sensibilidad?", "segundo": "razon", "rutas": [31], "claves": ["razon"], "nota": ""}, {"tema": "caracteristicas malla cerrada", "primero": "Como se ve afectado el ancho de banda?", "segundo": "ancho banda", "rutas": [32], "claves": ["ancho", "banda"], "nota": ""}, {"tema": "tipos sistemas control segun su senal", "primero": "Que es una señal en control?", "segundo": "funcion, t", "rutas": [33], "claves": ["funcion", "t"], "nota": ""}, {"tema": "tipos sistemas control segun su senal", "primero": "Que es una señal analogica?", "segundo": "continuum", "rutas": [34], "claves": ["continuum"], "nota": ""}, {"tema": "tipos sistemas control segun su senal", "primero": "Que es una señal digital?", "segundo": "discretos", "rutas": [36], "claves": ["discretos"], "nota": ""}, {"tema": "otras definiciones", "primero": "Cual es el objetivo de la ingenieria de control?", "segundo": "analisis, diseño", "rutas": [38], "claves": ["analisis", "diseno"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el analisis en control?", "segundo": "investigacion", "rutas": [39], "claves": ["investigacion"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el diseño en control?", "segundo": "ordenamiento, tarea", "rutas": [40], "claves": ["ordenamiento", "tarea"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el diseño por analisis?", "segundo": "modificar, existente", "rutas": [40], "claves": ["modificar", "existente"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el diseño por sintesis?", "segundo": "definir, especificaciones", "rutas": [41], "claves": ["definir", "especificaciones"], "nota": ""}, {"tema": "modelos o representaciones sistemas control", "primero": "Como los resuelvo?", "segundo": "especificar, analisis", "rutas": [42], "claves": ["especificar", "analisis"], "nota": ""}, {"tema": "modelos representativos", "primero": "Que modelo define la relacion cuantitativa y matematica?", "segundo": "relacion cuantitativa, aplicacion, complejidad", "rutas": [43], "claves": ["relacion", "cuantitativa", "aplicacion", "complejidad"], "nota": ""}, {"tema": "modelos representativos", "primero": "Que modelo utiliza diagramas de bloques?", "segundo": "diagrama", "rutas": [45], "claves": ["diagrama"], "nota": ""}, {"tema": "modelos representativos", "primero": "Que modelo utiliza grafos de flujo de señal?", "segundo": "grafos", "rutas": [46], "claves": ["grafos"], "nota": ""}], "rutas": {"1": {"tema": "DEFINICIONES", "lineas": ["SISTEMAS", "Ordenamiento componentes físicos,", "unidos o relacionados", "tal manera", "que forman y/o actúan", "como una unidad completa"]}, "2": {"tema": "DEFINICIONES", "lineas": ["CONTROL", "Proceso para asegurar", "que actividades reales", "se ajusten a", "actividades planificadas"]}, "3": {"tema": "DEFINICIONES", "lineas": ["SISTEMAS CONTROL", "Es 1 ordenamiento componentes físicos", "unidos o relacionados", "tal manera que", "mandan, dirigen o regulan", "al mismo sistema o a otro"]}, "4": {"tema": "DEFINICIONES", "lineas": ["ENTRADA", "estímulo o excitación", "que se aplica", "a 1 Sistema Control,", "generalmente", "desde una fuente energía externa,", "con fin producir,", "una respuesta específica", "del sistema control"]}, "5": {"tema": "DEFINICIONES", "lineas": ["SALIDA", "Es respuesta real", "que se obtiene", "1 sistema control"]}, "6": {"tema": "DEFINICIONES", "lineas": ["Puede ser o no igual", "a respuesta implícita", "especificada por entrada,", "entradas y salidas", "pueden tener", "muchas formas diferentes"]}, "7": {"tema": "DEFINICIONES", "lineas": ["por ej pueden ser", "variables físicas o cantidades más abstractas,", "tales como", "valores referencia, ajuste o deseados", "para salida del sistema control"]}, "8": {"tema": "DEFINICIONES", "lineas": ["PROPÓSITOS DEL SISTEMA CONTROL", "Identificar o definir", "entrada y salida"]}, "9": {"tema": "DEFINICIONES", "lineas": ["Si se dan", "entrada y salida,", "es posible", "identificar, delinear o definir", "naturaleza componentes"]}, "10": {"tema": "DEFINICIONES", "lineas": ["SUBSISTEMA CONTROL", "Un Subsistema Control", "es 1 Sistema Control", "que se encuentra", "dentro otro Sistema Control,", "donde", "entradas y salidas", "son variables internas", "del Sistema Control mayor"]}, "11": {"tema": "DEFINICIONES", "lineas": ["ANCHO BANDA", "es una medida frecuencia", "que bien responde o", "filtra", "las variaciones señal entrada"]}, "12": {"tema": "TIPOS SISTEMAS CONTROL segun Naturaleza", "lineas": ["Naturales", "señalar 1 objeto con dedo,", "transpiración"]}, "13": {"tema": "TIPOS SISTEMAS CONTROL segun Naturaleza", "lineas": ["Artificiales", "Calentador", "horno termostático (calefactor),", "interruptor eléctrico"]}, "14": {"tema": "TIPOS SISTEMAS CONTROL segun Naturaleza", "lineas": ["Mixto", "Un hombre conduciendo 1 automóvil"]}, "15": {"tema": "Importancia del Control", "lineas": ["1", "Establece medidas", "para corregir actividades,", "tal forma", "que se alcancen objetivos", "exitosamente"]}, "16": {"tema": "Importancia del Control", "lineas": ["2", "Se aplica a todo:", "a cosas,", "a personas y", "a actos"]}, "17": {"tema": "Importancia del Control", "lineas": ["3", "Determina y analiza", "rápidamente causas", "que pueden originar desviaciones", "para que no vuelvan", "a presentarse", "en futuro"]}, "18": {"tema": "Importancia del Control", "lineas": ["4", "Reduce costos y ahorra tiempo", "al evitar errores"]}, "19": {"tema": "TIPOS SISTEMAS CONTROL segun Malla", "lineas": ["distinción se determina", "mediante acción control", "(es cantidad responsable", "activar sistema", "para producir salida)", "no implica directamente", "cambio,", "movimiento o", "actividad"]}, "20": {"tema": "MALLA ABIERTA", "lineas": ["sistemas control", "en donde salida", "no tiene efecto", "sobre acción control", "IMG:data:image/png;base64,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i7pO3PORibVr11qHDh3svvvuc/NvvPGGXXLJJW5abBzUCKaGeOqpp+zBBx+0tm3b2pZbbumsvieffNKt69Onj/Xv399Np4Jw5Ip4cJ2+X1gmstFlQdQ9SDuki1xoBVqZdP7KK6+kvRcKv+edd55NmjTJLrjgArvwwgttn332sa+//truuOMOu/nmm6MtRY2AAIqaYcWKFcF3330Xzf1Efn5+NJXbhOJGYSrt77DDDivbRoh05EraKC+d8wvFL9oyPSeeeGJQVFQUhAIZ/Pjjj27Z7bffHvTr189Ni5pDLtAaZNttt3XWXyqZrL+6AlZfrlixVQErvlevXs71NWTIkGip2dy5c23ixInRXHp8i2BRtwjz1Aqt2COPPNKeeOIJa9GihdWvX98tu+KKK2y77bZz06LmkACKaoMO6riC6qLLc8KECRaW5F1fzsLCQtea94ADDrBly5a5vp4+Y0vHH//4R1f/I+oGPp0jfpWBRjN33323HXfccdESsbGQAIqsg8VHZoDVlwt1OuvDmDFjXAOGY445xpXkr776ajv22GPtm2++ibYo5ZNPPrEbb7zRlfC//PJL+/e//22vvfaaPf74484KXLlypav7ueiii5wVSUOJjz76yBUapkyZYpdeeqnNmzfP1RezDft5qEf661//6pY//fTT0VJRU3jhq2o633PPPW2vvfZyBSGxkcEPKkQ2qKjuA+pKHeAHH3wQHHnkkUFYmg9uvvnm4N13343WBEFoHbr7XLRokasTmjx5cvDee+8FV111VVBcXOyWDR06NFizZk3Qo0ePILQGg//+97/Bgw8+GPTv39/tzzYvvvhiMGfOnGCnnXYKpk+fHnz22WdB586dg8WLF7tjd+nSxS3jF2amblkukytpozLpPBO857Fjx9aZev9cRxagyBp11dpLxx577GHjx493rXvpxoLViws0FKdoi9I6306dOtmtt95qoYA5K3CXXXZx69gHC3DGjBn20ksv2b333uv2ffnll916OOqoo6xly5bOWuDYjRs3tqZNm9rq1attt912s3vuucdCQXXu1BUrVth3330X7Smqkw1J55tttpl9+OGHzmMgNj4SQCHWAy9UCFr37t1daLvdd9/dHnnkEbccGjVq5FylBQUFdtttt1nXrl2jNaX88MMPFlp3Ttz4tW7d2kLLIFpr5dYjEk6PfS6++GIn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"]}, "21": {"tema": "MALLA ABIERTA", "lineas": ["No existe acción retroalimentación,", "para comparar señal salida", "con entrada referencia,", "por tanto,", "es necesario", "medir variable salida"]}, "22": {"tema": "Caracteristicas", "lineas": ["a", "Para cada entrada referencia", "corresponde una condición", "de operación establecida"]}, "23": {"tema": "Caracteristicas", "lineas": ["b", "exactitud del sistema", "depende calibración", "del elemento medición"]}, "24": {"tema": "Caracteristicas", "lineas": ["c", "En presencia perturbaciones", "no cumple su función asignada", "debido a que", "no se adapta a cambios"]}, "25": {"tema": "Caracteristicas", "lineas": ["d", "Sólo se debe usar", "cuando se conoce relación", "entre entrada y salida", "del sistema, y"]}, "26": {"tema": "Caracteristicas", "lineas": ["si no hay perturbaciones", "ni internas", "ni externas"]}, "27": {"tema": "Caracteristicas", "lineas": ["e", "Generalmente depende", "del criterio y estimación", "del hombre"]}, "28": {"tema": "MALLA CERRADA", "lineas": ["Son aquellos", "en que acción control", "depende alguna manera,", "salida", "generalmente llamados,", "sistemas control retroalimentados", "IMG:data:image/png;base64,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"]}, "29": {"tema": "MALLA CERRADA", "lineas": ["RETROALIMENTACION", "Es propiedad 1 sistema malla cerrada", "que permite", "que salida se compare", "con entrada del sistema", "tal manera que acción control", "se pueda expresar", "como una función", "entrada y", "salida"]}, "30": {"tema": "Caracteristicas", "lineas": ["a", "Aumento exactitud", "(habilidad para reproducir", "entrada fielmente)"]}, "31": {"tema": "Caracteristicas", "lineas": ["b", "Sensibilidad reducida", "en la razón(division)", "salida a entrada", "frente a variaciones", "en características del sistema"]}, "32": {"tema": "Caracteristicas", "lineas": ["c", "Ancho banda aumentado"]}, "33": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["señales en 1 sistema control", "son funciones", "alguna variable independiente,", "usualmente tiempo,", "denotada por t"]}, "34": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["SEÑAL ANALÓGICA:", "Una señal dependiente", "1 continuum valores", "variable independiente t"]}, "35": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["se llama", "señal continua en tiempo o", "señal datos continuos o", "señal analógica"]}, "36": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["SEÑAL DIGITAL:", "Una señal", "definida o interés solamente", "en instantes discretos", "variable independiente t"]}, "37": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["se llama", "señal discreta en tiempo,", "datos discretos,", "datos muestreados o digital"]}, "38": {"tema": "OTRAS DEFINICIONES", "lineas": ["OBJETIVO INGENIERIA SISTEMAS CONTROL", "ingeniería sistemas control", "consiste", "en análisis y diseño", "configuraciones sistemas control"]}, "39": {"tema": "OTRAS DEFINICIONES", "lineas": ["a", "análisis es investigación", "propiedades 1 sistema existente"]}, "40": {"tema": "OTRAS DEFINICIONES", "lineas": ["b", "diseño es", "elección y ordenamiento", "componentes del sistema", "para desempeñar", "una tarea específica", "Existen dos métodos", "para diseño:", "Diseño por Análisis", "se efectúa al modificar", "características de configuración", "1 sistema", "existente o", "estándar"]}, "41": {"tema": "OTRAS DEFINICIONES", "lineas": ["Diseño por Síntesis", "se efectua al definir", "forma del sistema", "directamente de sus especificaciones"]}, "42": {"tema": "MODELOS O REPRESENTACIONES SISTEMAS CONTROL", "lineas": ["Para resolver 1 problema con Sistema Control,", "se debe", "especificar o describir", "la", "configuración del sistema y sus componentes", "tal manera", "que facilite", "análisis o", "diseño"]}, "43": {"tema": "Modelos representativos", "lineas": ["a", "Modelos Matemáticos", "Estos modelos son necesarios", "cuando se requieren", "relaciones cuantitativas"]}, "44": {"tema": "Modelos representativos", "lineas": ["tambien", "Dependen del área aplicación", "del sistema control y", "complejidad tales modelos", "varía ampliamente"]}, "45": {"tema": "Modelos representativos", "lineas": ["b", "Diagramas Bloques"]}, "46": {"tema": "Modelos representativos", "lineas": ["c", "Grafos Flujos Señales"]}}};
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
   const modoAleatorio = true;
@@ -1431,8 +1660,46 @@
   let modoObservador = false;  // NUEVO: viendo tarjetas sin evaluarse (sin cronómetro ni calificación)
   let observadorAbiertos = new Set();  // NUEVO: subT abiertos en la lista del observador
   let pausaManual = false;     // NUEVO: cronómetro pausado a mano (botón ⏸ Pausar)
-  let revisar = [];            // NUEVO: tarjetas marcadas 🚩 Revisar (solo memoria, no se guarda)
+  // ---------- MODIFICADO: "Revisar" en memoria, sin persistencia en disco ----------
+  // Vive solo mientras la pestaña está abierta: no lee ni escribe localStorage.
+  // Al recargar o cerrar la página, revisarEnMemoria se pierde por completo (a
+  // propósito). Funciona igual en sesión de estudio y en modo observador, porque
+  // ambos operan sobre tarjetasSesion[indiceActual].
+  let revisarEnMemoria = {};
+
+  function esRevisar(t) { return !!revisarEnMemoria[hashTarjeta(t)]; }
+
+  function toggleRevisarActual() {
+    if (tarjetasSesion.length === 0) return;
+    const t = tarjetasSesion[indiceActual];
+    const h = hashTarjeta(t);
+    if (revisarEnMemoria[h]) {
+      delete revisarEnMemoria[h];
+    } else {
+      revisarEnMemoria[h] = { p: t.primero || '', s: t.segundo || '', t: Date.now() };
+    }
+    renderTarjeta();
+  }
   let porComprension = [];     // NUEVO: tarjetas marcadas Entendida por comprensión
+  let razonesAbierto = false;  // NUEVO: panel de razones abierto (pausa el cronómetro)
+  let razonesPendientes = null; // NUEVO: array de códigos en edición, null si el panel está cerrado
+
+  // NUEVO: razones predefinidas (código fijo, sin texto libre ni personalización)
+  const RAZONES_DEF = [
+    { codigo: 'olvido', texto: 'Olvido', color: '#9CA3AF' },
+    { codigo: 'incompleto', texto: 'Incompleto', color: '#F59E0B' },
+    { codigo: 'confusion', texto: 'Confusión', color: '#EF4444' },
+    { codigo: 'mezcla', texto: 'Mezcla de conceptos', color: '#F97316' },
+    { codigo: 'terminologia', texto: 'Terminología específica', color: '#3B82F6' },
+    { codigo: 'contexto', texto: 'Contexto / redacción', color: '#8B5CF6' },
+  ];
+  const MAPA_RAZONES = new Map(RAZONES_DEF.map((r) => [r.codigo, r]));
+
+  function hexToRgba(hex, alpha) {
+    const v = hex.replace('#', '');
+    const r = parseInt(v.substring(0, 2), 16), g = parseInt(v.substring(2, 4), 16), b = parseInt(v.substring(4, 6), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+  }
   let tiempoInicioTarjeta = 0;
   let cronometroIntervalId = null;
 
@@ -1472,10 +1739,18 @@
     }
   }
 
+  // NUEVO: identifica a ESTE evaluador (nombre de su recordatorio.txt). Se mezcla
+  // en el hash para que dos evaluadores distintos con una tarjeta de texto
+  // idéntico ("primero + segundo" igual) no compartan difíciles, notas ni razones.
+  // Regenerar el HTML desde el MISMO recordatorio.txt mantiene este valor igual
+  // (no invalida lo ya guardado); solo cambia si el archivo cambia de nombre.
+  const ESPACIO_HASH = "recordatorio-U1";
+
   function hashTarjeta(t) {
-    const base = (t.primero || '') + '\u0000' + (t.segundo || '');
+    const base = ESPACIO_HASH + '\u0001' + (t.primero || '') + '\u0000' + (t.segundo || '');
     const norm = normalizarPalabra(base).replace(/\s+/g, ' ').trim();
-    // djb2 -> hash de 32 bits (suficiente y sin dependencias)
+    // djb2 -> hash de 32 bits (suficiente y sin dependencias; se mantiene corto
+    // aunque se agregue el espacio, porque solo se usa como entrada del hash)
     let h = 5381;
     for (let i = 0; i < norm.length; i++) {
       h = ((h << 5) + h + norm.charCodeAt(i)) >>> 0;
@@ -1587,6 +1862,19 @@
   const elPantallaResumen = document.getElementById('pantalla-resumen');
   const elPantallaObservador = document.getElementById('pantalla-observador');
   const elListaObservador = document.getElementById('lista-observador');
+  // NUEVO: galería de imágenes
+  const elPantallaGaleria = document.getElementById('pantalla-galeria');
+  const elGaleriaIndicador = document.getElementById('galeria-indicador');
+  const elGaleriaImg = document.getElementById('galeria-img');
+  const elGaleriaVacia = document.getElementById('galeria-vacia');
+  const elBtnGaleriaDificil = document.getElementById('btn-galeria-dificil');
+  const elBtnGaleriaNota = document.getElementById('btn-galeria-nota');
+  const elPanelGaleriaNota = document.getElementById('panel-galeria-nota');
+  const elGaleriaNotaTexto = document.getElementById('galeria-nota-texto');
+  const elGaleriaNotaEditor = document.getElementById('galeria-nota-editor');
+  const elGaleriaNotaVersiones = document.getElementById('galeria-nota-versiones');
+  const elBtnGaleriaAnterior = document.getElementById('btn-galeria-anterior');
+  const elBtnGaleriaSiguiente = document.getElementById('btn-galeria-siguiente');
   const elBtnPausa = document.getElementById('btn-pausa');
   const elOverlayPausa = document.getElementById('overlay-pausa');
   const elBtnReanudar = document.getElementById('btn-reanudar');
@@ -1626,6 +1914,11 @@
   // MODIFICADO: nuevos elementos
   const elFilaEval = document.getElementById('fila-eval');
   const elBadgeRutas = document.getElementById('badge-rutas');
+  const elBtnRazones = document.getElementById('btn-razones');
+  const elBadgeRazones = document.getElementById('badge-conteo-razones');
+  const elChipsRazones = document.getElementById('chips-razones');
+  const elPanelRazones = document.getElementById('panel-razones');
+  const elListaCheckRazones = document.getElementById('lista-check-razones');
   const elBtnDificil = document.getElementById('btn-dificil');
 
   const elBtnSi = document.getElementById('btn-si');
@@ -1677,10 +1970,17 @@
     elAreaTarjeta.style.display = nombre === 'estudio' ? 'block' : 'none';
     elPantallaResumen.style.display = nombre === 'resumen' ? 'block' : 'none';
     elPantallaObservador.style.display = nombre === 'observador' ? 'block' : 'none';
+    elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  // NUEVO
+
+    if (nombre === 'observador') {
+      renderImagenesPreview();   // NUEVO: refresca también al entrar por primera vez (mismo motivo que "temas")
+    }
 
     if (nombre === 'temas') {
       renderDificilesPreview();  // MODIFICADO: actualizar la vista de difíciles
       renderNotasPreview();      // NUEVO: notas distintas a las del txt
+      renderRevisarGuardadoPreview();  // NUEVO: también al volver por "Volver a temas" del observador
+      renderRazonesPreview();    // NUEVO: corrige que no aparecieran al abrir el HTML por primera vez
     }
     if (nombre !== 'estudio') {
       detenerCronometro();
@@ -1850,7 +2150,7 @@
         fila.appendChild(crearTextosTarjeta(t));
         const marcas = document.createElement('span');
         marcas.className = 'tc-marcas';
-        marcas.textContent = (esDificil(t) ? '★' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '');
+        marcas.textContent = (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '');
         fila.appendChild(marcas);
         fila.addEventListener('click', () => abrirTarjetaObservador(i));
         cuerpo.appendChild(fila);
@@ -1876,12 +2176,11 @@
     respuestaMostrada = new Array(n).fill(false);
     escritos = new Array(n).fill('');
     evaluaciones = new Array(n).fill(null);
-    revisar = new Array(n).fill(false);
     porComprension = new Array(n).fill(false);
     indiceActual = idx;
     cronometroActivo = false;   // sin cronómetro
     indiceCongelado = -1;
-    resetNotaUI();
+    resetPanelesUI();
     modoObservador = true;
     elAreaTarjeta.classList.add('observador');
     mostrarPantalla('estudio');
@@ -1892,7 +2191,7 @@
   function salirObservador() {
     if (!confirmarDescartarBorrador()) return;
     const ultimo = indiceActual;
-    resetNotaUI();
+    resetPanelesUI();
     modoObservador = false;
     elAreaTarjeta.classList.remove('observador');
     construirListaObservador();   // refresca ★ y 💡
@@ -1905,6 +2204,444 @@
       if (fila.scrollIntoView) fila.scrollIntoView({ block: 'center' });
     }
   }
+
+  // ============================================================
+  // NUEVO: galería de imágenes de las rutas (solo desde el modo observador)
+  // ============================================================
+  // Datos completamente independientes de las notas/difíciles de tarjetas:
+  // propia clave de localStorage, propio hash y su propia sección de preview
+  // (no se suman a "Difíciles guardadas" ni "Notas editadas").
+  const CLAVE_IMAGENES = 'datos_imagenes_v1';
+  let datosImagenes = cargarImagenes();
+  let galeriaPos = 0;            // posición actual dentro de INDICE_IMAGENES
+  let galeriaNotaAbierta = false;
+  let galeriaEditando = false;
+  let galeriaVerAnterior = false; // false = versión actual, true = versión anterior
+
+  function cargarImagenes() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_IMAGENES);
+      if (!crudo) return {};
+      const obj = JSON.parse(crudo);
+      return (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function guardarImagenesStorage() {
+    try {
+      localStorage.setItem(CLAVE_IMAGENES, JSON.stringify(datosImagenes));
+    } catch (e) {
+      // sin localStorage: quedan solo en memoria de esta sesión
+    }
+  }
+
+  // Hash liviano: espacio del evaluador + número de ruta + índice de la imagen
+  // DENTRO de esa ruta (solo contando líneas 'IMG:'). Sin base64, sin subT.
+  function hashImagen(ruta, indice) {
+    const base = ESPACIO_HASH + '' + ruta + ' ' + indice;
+    let h = 5381;
+    for (let i = 0; i < base.length; i++) {
+      h = ((h << 5) + h + base.charCodeAt(i)) >>> 0;
+    }
+    return 'i' + h.toString(36);   // prefijo 'i' (imagen) para no confundir con 'h' de tarjeta
+  }
+
+  // Recorre rutasDisp en orden numérico de ruta y arma la lista de coordenadas
+  // {ruta, indice} de TODAS las imágenes, en el mismo orden en que aparecen en
+  // respuestas.txt. No guarda el src acá: eso se busca "al vuelo" al renderizar.
+  function construirIndiceImagenes() {
+    const nav = [];
+    Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
+      const lineas = (rutasDisp[ruta] && rutasDisp[ruta].lineas) || [];
+      const cantidad = lineas.filter(esImagen).length;
+      for (let i = 0; i < cantidad; i++) nav.push({ ruta: ruta, indice: i });
+    });
+    return nav;
+  }
+  const INDICE_IMAGENES = construirIndiceImagenes();   // fijo: no cambia durante la sesión
+
+  // Busca el src de una imagen por coordenadas, filtrando solo líneas 'IMG:'
+  function srcDeImagen(ruta, indice) {
+    const lineas = (rutasDisp[ruta] && rutasDisp[ruta].lineas) || [];
+    const imagenes = lineas.filter(esImagen);
+    const linea = imagenes[indice];
+    return linea ? linea.substring(4) : '';   // quitar el prefijo 'IMG:'
+  }
+
+  function entradaImagenActual() {
+    if (galeriaPos < 0 || galeriaPos >= INDICE_IMAGENES.length) return null;
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    return datosImagenes[hashImagen(ruta, indice)] || null;
+  }
+
+  function notaActualImagen() { const e = entradaImagenActual(); return e ? (e.nota || '') : ''; }
+  function notaBaseImagen() { const e = entradaImagenActual(); return e ? (e.base || '') : ''; }
+  function esDificilImagen() { const e = entradaImagenActual(); return !!(e && e.dificil); }
+
+  // Guarda la entrada de esta imagen, o la borra si queda "vacía" (sin nota y
+  // sin marca de difícil), para no acumular entradas basura en localStorage.
+  function guardarEntradaImagen(ruta, indice, cambios) {
+    const h = hashImagen(ruta, indice);
+    const actual = datosImagenes[h] || { ruta: ruta, indice: indice, nota: '', base: '', dificil: false, t: 0 };
+    const nueva = Object.assign({}, actual, cambios, { ruta: ruta, indice: indice, t: Date.now() });
+    if (!nueva.nota && !nueva.dificil) {
+      delete datosImagenes[h];
+    } else {
+      datosImagenes[h] = nueva;
+    }
+    guardarImagenesStorage();
+  }
+
+  function toggleDificilImagenActual() {
+    if (INDICE_IMAGENES.length === 0) return;
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    guardarEntradaImagen(ruta, indice, { dificil: !esDificilImagen() });
+    renderGaleria();
+  }
+
+  // ---------- Nota de la imagen: ver / editar / revertir a la anterior ----------
+
+  function galeriaCambiosSinGuardar() {
+    if (!galeriaEditando) return false;
+    return elGaleriaNotaEditor.value.trim() !== notaActualImagen();
+  }
+
+  function confirmarDescartarGaleria() {
+    if (!galeriaCambiosSinGuardar()) return true;
+    return confirm('Tenés cambios sin guardar en la nota de esta imagen. ¿Descartarlos?');
+  }
+
+  function resetGaleriaNotaUI() {
+    galeriaNotaAbierta = false;
+    galeriaEditando = false;
+    galeriaVerAnterior = false;
+  }
+
+  function abrirGaleriaNota() {
+    if (INDICE_IMAGENES.length === 0) return;
+    galeriaNotaAbierta = true;
+    galeriaVerAnterior = false;
+    // sin nota y sin versión anterior: directo a escribir
+    galeriaEditando = (notaActualImagen() === '' && notaBaseImagen() === '');
+    if (galeriaEditando) elGaleriaNotaEditor.value = '';
+    renderGaleria();
+    if (galeriaEditando) elGaleriaNotaEditor.focus();
+  }
+
+  function cerrarGaleriaNota() {
+    if (!confirmarDescartarGaleria()) return;
+    resetGaleriaNotaUI();
+    renderGaleria();
+  }
+
+  function empezarEdicionGaleriaNota() {
+    galeriaEditando = true;
+    galeriaVerAnterior = false;
+    elGaleriaNotaEditor.value = notaActualImagen();
+    renderGaleria();
+    elGaleriaNotaEditor.focus();
+  }
+
+  function guardarEdicionGaleriaNota() {
+    if (!galeriaEditando || INDICE_IMAGENES.length === 0) return;
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    const anterior = notaActualImagen();
+    const nueva = elGaleriaNotaEditor.value.trim();
+    // solo se actualiza 'base' (versión anterior) si el texto realmente cambió
+    const cambios = (nueva === anterior) ? { nota: nueva } : { nota: nueva, base: anterior };
+    guardarEntradaImagen(ruta, indice, cambios);
+    galeriaEditando = false;
+    galeriaVerAnterior = false;
+    if (notaActualImagen() === '' && notaBaseImagen() === '') {
+      resetGaleriaNotaUI();
+    }
+    renderGaleria();
+  }
+
+  function cancelarEdicionGaleriaNota() {
+    if (!confirmarDescartarGaleria()) return;
+    galeriaEditando = false;
+    if (notaActualImagen() === '' && notaBaseImagen() === '') {
+      resetGaleriaNotaUI();
+    }
+    renderGaleria();
+  }
+
+  // "Revertir": la versión anterior pasa a ser la actual (deshacer de un solo nivel)
+  function revertirGaleriaNota() {
+    if (INDICE_IMAGENES.length === 0) return;
+    const base = notaBaseImagen();
+    if (base === '' && notaActualImagen() === '') return;
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    guardarEntradaImagen(ruta, indice, { nota: base, base: '' });
+    galeriaVerAnterior = false;
+    renderGaleria();
+  }
+
+  // ---------- Render y navegación ----------
+
+  function renderGaleria() {
+    const total = INDICE_IMAGENES.length;
+
+    if (total === 0) {
+      elGaleriaIndicador.textContent = '';
+      elGaleriaImg.style.display = 'none';
+      elGaleriaVacia.style.display = 'block';
+      elBtnGaleriaDificil.style.display = 'none';
+      elBtnGaleriaNota.style.display = 'none';
+      elPanelGaleriaNota.style.display = 'none';
+      elBtnGaleriaAnterior.disabled = true;
+      elBtnGaleriaSiguiente.disabled = true;
+      return;
+    }
+
+    elGaleriaVacia.style.display = 'none';
+    elGaleriaImg.style.display = 'inline-block';
+    elBtnGaleriaDificil.style.display = 'inline-block';
+    elBtnGaleriaNota.style.display = 'inline-flex';
+    elBtnGaleriaAnterior.disabled = false;
+    elBtnGaleriaSiguiente.disabled = false;
+
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    elGaleriaImg.src = srcDeImagen(ruta, indice);
+    elGaleriaIndicador.textContent = 'Imagen ' + (galeriaPos + 1) + ' de ' + total + ' (Ruta ' + ruta + ')';
+
+    const esDif = esDificilImagen();
+    elBtnGaleriaDificil.textContent = esDif ? '★ Difícil' : '☆ Difícil';
+    elBtnGaleriaDificil.classList.toggle('activa', esDif);
+
+    const actual = notaActualImagen();
+    const base = notaBaseImagen();
+    const hayVersionAnterior = base !== '';
+    elBtnGaleriaNota.classList.toggle('vacia', actual === '' && !hayVersionAnterior && !galeriaNotaAbierta);
+    elBtnGaleriaNota.classList.toggle('activa', actual !== '' || galeriaNotaAbierta);
+    elPanelGaleriaNota.style.display = galeriaNotaAbierta ? 'block' : 'none';
+    if (!galeriaNotaAbierta) return;
+
+    elGaleriaNotaVersiones.style.display = (hayVersionAnterior && !galeriaEditando) ? 'flex' : 'none';
+    document.getElementById('btn-galeria-ver-actual').classList.toggle('activo', !galeriaVerAnterior);
+    document.getElementById('btn-galeria-ver-anterior').classList.toggle('activo', galeriaVerAnterior);
+
+    if (galeriaEditando) {
+      elGaleriaNotaTexto.style.display = 'none';
+      elGaleriaNotaEditor.style.display = 'block';
+      document.getElementById('btn-galeria-nota-editar').style.display = 'none';
+      document.getElementById('btn-galeria-nota-guardar').style.display = 'inline-block';
+      document.getElementById('btn-galeria-nota-cancelar').style.display = 'inline-block';
+      document.getElementById('btn-galeria-nota-revertir').style.display = 'none';
+    } else {
+      elGaleriaNotaEditor.style.display = 'none';
+      elGaleriaNotaTexto.style.display = 'block';
+      let texto, vacio;
+      if (galeriaVerAnterior) {
+        texto = base !== '' ? base : '(sin versión anterior)';
+        vacio = base === '';
+      } else {
+        texto = actual !== '' ? actual : '(sin nota)';
+        vacio = actual === '';
+      }
+      elGaleriaNotaTexto.textContent = texto;
+      elGaleriaNotaTexto.classList.toggle('vacio', vacio);
+      document.getElementById('btn-galeria-nota-editar').style.display = galeriaVerAnterior ? 'none' : 'inline-block';
+      document.getElementById('btn-galeria-nota-editar').textContent = actual !== '' ? '✎ Editar' : '＋ Agregar nota';
+      document.getElementById('btn-galeria-nota-guardar').style.display = 'none';
+      document.getElementById('btn-galeria-nota-cancelar').style.display = 'none';
+      document.getElementById('btn-galeria-nota-revertir').style.display = (!galeriaVerAnterior && hayVersionAnterior) ? 'inline-block' : 'none';
+    }
+  }
+
+  function navegarGaleria(delta) {
+    if (!confirmarDescartarGaleria()) return;
+    const total = INDICE_IMAGENES.length;
+    if (total === 0) return;
+    // navegación continua: de la última imagen de una ruta pasa a la primera de la siguiente
+    galeriaPos = (galeriaPos + delta + total) % total;
+    resetGaleriaNotaUI();
+    renderGaleria();
+  }
+
+  function abrirGaleria() {
+    galeriaPos = 0;
+    resetGaleriaNotaUI();
+    mostrarPantalla('galeria');
+    renderGaleria();
+  }
+
+  function volverListaDesdeGaleria() {
+    if (!confirmarDescartarGaleria()) return;
+    resetGaleriaNotaUI();
+    // MODIFICADO: no se reconstruye la lista del observador (a diferencia de
+    // salirObservador), así los subT que estaban abiertos quedan como estaban.
+    // renderImagenesPreview() ya se llama dentro de mostrarPantalla('observador').
+    mostrarPantalla('observador');
+  }
+
+  // ---------- Preview en el modo observador: "🖼 Datos de imágenes guardados" ----------
+
+  function filaImagenGuardada(hash, entrada) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+
+    const titulo = document.createElement('div');
+    titulo.textContent = 'Ruta ' + entrada.ruta + ' — imagen ' + (entrada.indice + 1) +
+      (entrada.dificil ? ' · ★ difícil' : '');
+    div.appendChild(titulo);
+
+    const src = srcDeImagen(entrada.ruta, entrada.indice);
+    if (src) {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Miniatura';
+      img.style.maxWidth = '90px';
+      img.style.maxHeight = '90px';
+      img.style.borderRadius = '6px';
+      img.style.margin = '6px 0';
+      img.style.cursor = 'zoom-in';
+      img.addEventListener('click', () => abrirLightbox(src));
+      div.appendChild(img);
+    }
+
+    if (entrada.nota) {
+      const nota = document.createElement('div');
+      nota.className = 'bloque-version';
+      nota.textContent = entrada.nota;
+      div.appendChild(nota);
+    }
+
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Borrar', () => {
+      if (!confirm('¿Borrar la nota y la marca de difícil de esta imagen?')) return;
+      delete datosImagenes[hash];
+      guardarImagenesStorage();
+      renderImagenesPreview();
+    }));
+    div.appendChild(acc);
+    return div;
+  }
+
+  function renderImagenesPreview() {
+    const elLista = document.getElementById('lista-imagenes-guardadas');
+    const elDet = document.getElementById('det-imagenes');
+    const elSuma = document.getElementById('suma-imagenes');
+    const elInfo = document.getElementById('nota-imagenes');
+    const elVaciar = document.getElementById('btn-vaciar-imagenes');
+    elLista.innerHTML = '';
+
+    const hashes = Object.keys(datosImagenes);
+    hashes.forEach((h) => elLista.appendChild(filaImagenGuardada(h, datosImagenes[h])));
+    elDet.style.display = hashes.length > 0 ? 'block' : 'none';
+    elSuma.textContent = 'Con nota o marcadas difícil (' + hashes.length + ')';
+    elInfo.textContent = hashes.length === 0
+      ? 'Todavía no marcaste ni anotaste ninguna imagen (galería del modo observador).'
+      : 'Guardadas en este navegador: ' + hashes.length;
+    elVaciar.style.display = hashes.length > 0 ? 'inline-block' : 'none';
+  }
+
+  document.getElementById('btn-vaciar-imagenes').addEventListener('click', () => {
+    if (Object.keys(datosImagenes).length === 0) return;
+    if (!confirm('¿Vaciar TODOS los datos de imágenes guardados? No se puede deshacer.')) return;
+    datosImagenes = {};
+    guardarImagenesStorage();
+    renderImagenesPreview();
+  });
+
+  document.getElementById('btn-exportar-imagenes').addEventListener('click', () => {
+    const lista = Object.keys(datosImagenes).map((h) => ({
+      h: h,
+      ruta: datosImagenes[h].ruta,
+      indice: datosImagenes[h].indice,
+      nota: datosImagenes[h].nota || '',
+      base: datosImagenes[h].base || '',
+      dificil: !!datosImagenes[h].dificil,
+      t: datosImagenes[h].t || 0,
+    }));
+    const contenido = JSON.stringify({ version: 1, imagenes: lista }, null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'datos_imagenes.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-imagenes').addEventListener('click', () => {
+    document.getElementById('input-importar-imagenes').click();
+  });
+
+  document.getElementById('input-importar-imagenes').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      const elInfo = document.getElementById('nota-imagenes');
+      try {
+        const obj = JSON.parse(lector.result);
+        const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.imagenes) ? obj.imagenes : null);
+        if (!lista) throw new Error('formato');
+
+        let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+        lista.forEach((item) => {
+          if (!item || typeof item.h !== 'string' || !item.h ||
+              typeof item.ruta !== 'number' || typeof item.indice !== 'number') {
+            invalidas++;
+            return;
+          }
+          const entrada = {
+            ruta: item.ruta,
+            indice: item.indice,
+            nota: typeof item.nota === 'string' ? item.nota : '',
+            base: typeof item.base === 'string' ? item.base : '',
+            dificil: !!item.dificil,
+            t: typeof item.t === 'number' ? item.t : 0,
+          };
+          const local = datosImagenes[item.h];
+          if (!local) {
+            datosImagenes[item.h] = entrada;
+            nuevas++;
+          } else if ((local.nota || '') === entrada.nota && !!local.dificil === entrada.dificil &&
+                     (local.base || '') === entrada.base) {
+            iguales++;
+          } else if (entrada.t > (local.t || 0)) {
+            datosImagenes[item.h] = entrada;
+            actualizadas++;
+          } else {
+            conservadas++;
+          }
+        });
+        guardarImagenesStorage();
+        renderImagenesPreview();
+        elInfo.textContent = 'Importación: ' + nuevas + ' nueva(s), ' + actualizadas +
+          ' actualizada(s) por ser más recientes, ' + conservadas + ' conservada(s) (la tuya era más reciente), ' +
+          iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+      } catch (e) {
+        elInfo.textContent = 'El archivo no es un JSON válido de imágenes.';
+      }
+    };
+    lector.readAsText(archivo);
+  });
+
+  // ---------- Listeners de la galería ----------
+  document.getElementById('btn-ver-imagenes').addEventListener('click', () => abrirGaleria());
+  document.getElementById('btn-galeria-volver').addEventListener('click', () => volverListaDesdeGaleria());
+  document.getElementById('btn-galeria-anterior').addEventListener('click', () => navegarGaleria(-1));
+  document.getElementById('btn-galeria-siguiente').addEventListener('click', () => navegarGaleria(1));
+  elBtnGaleriaDificil.addEventListener('click', () => toggleDificilImagenActual());
+  elBtnGaleriaNota.addEventListener('click', () => { galeriaNotaAbierta ? cerrarGaleriaNota() : abrirGaleriaNota(); });
+  document.getElementById('btn-galeria-nota-editar').addEventListener('click', () => empezarEdicionGaleriaNota());
+  document.getElementById('btn-galeria-nota-guardar').addEventListener('click', () => guardarEdicionGaleriaNota());
+  document.getElementById('btn-galeria-nota-cancelar').addEventListener('click', () => cancelarEdicionGaleriaNota());
+  document.getElementById('btn-galeria-nota-revertir').addEventListener('click', () => revertirGaleriaNota());
+  document.getElementById('btn-galeria-ver-actual').addEventListener('click', () => { galeriaVerAnterior = false; renderGaleria(); });
+  document.getElementById('btn-galeria-ver-anterior').addEventListener('click', () => { galeriaVerAnterior = true; renderGaleria(); });
+  elGaleriaImg.addEventListener('click', () => { if (elGaleriaImg.src) abrirLightbox(elGaleriaImg.src); });
 
   // ---------- MODIFICADO: modos especiales ----------
 
@@ -2219,7 +2956,17 @@
     elInfo.textContent = total === 0
       ? 'Todavía no editaste ninguna nota (botón 💡 durante el estudio).'
       : 'Guardadas en este navegador: ' + total;
+    document.getElementById('btn-vaciar-notas').style.display = total > 0 ? 'inline-block' : 'none';
   }
+
+  // NUEVO: mismo patrón que "Vaciar todas" de razones
+  document.getElementById('btn-vaciar-notas').addEventListener('click', () => {
+    if (Object.keys(notasLocales).length === 0) return;
+    if (!confirm('¿Vaciar TODAS las notas guardadas? No se puede deshacer.')) return;
+    notasLocales = {};
+    guardarNotas();
+    renderNotasPreview();
+  });
 
   document.getElementById('btn-exportar-notas').addEventListener('click', () => {
     const lista = Object.keys(notasLocales).map((h) => ({
@@ -2300,6 +3047,214 @@
     lector.readAsText(archivo);
   });
 
+  // ---------- NUEVO: "Revisar" guardadas en "Elegir temas" (solo primero + segundo) ----------
+
+  function filaRevisarGuardada(hash, entrada) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+    const titulo = document.createElement('div');
+    titulo.textContent = (entrada.p || '(sin texto)') + (entrada.s ? ' — ' + entrada.s : '');
+    div.appendChild(titulo);
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Quitar', () => {
+      delete revisarEnMemoria[hash];
+      renderRevisarGuardadoPreview();
+    }));
+    div.appendChild(acc);
+    return div;
+  }
+
+  function renderRevisarGuardadoPreview() {
+    const el = document.getElementById('lista-revisar-guardadas');
+    const elInfo = document.getElementById('nota-revisar');
+    const elVaciar = document.getElementById('btn-vaciar-revisar');
+    el.innerHTML = '';
+    const hashes = Object.keys(revisarEnMemoria);
+    hashes.forEach((h) => el.appendChild(filaRevisarGuardada(h, revisarEnMemoria[h])));
+    elInfo.textContent = hashes.length === 0
+      ? 'No tenés tarjetas marcadas para revisar (botón 🚩 durante el estudio).'
+      : 'Marcadas en esta sesión del navegador: ' + hashes.length + ' (se pierden al recargar la página)';
+    elVaciar.style.display = hashes.length > 0 ? 'inline-block' : 'none';
+  }
+
+  document.getElementById('btn-vaciar-revisar').addEventListener('click', () => {
+    if (Object.keys(revisarEnMemoria).length === 0) return;
+    if (!confirm('¿Vaciar todas las tarjetas para revisar? No se puede deshacer.')) return;
+    revisarEnMemoria = {};
+    renderRevisarGuardadoPreview();
+  });
+
+  // ---------- NUEVO: razones guardadas en "Elegir temas" ----------
+
+  function filaRazonGuardada(hash, entrada) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+    const titulo = document.createElement('div');
+    titulo.textContent = (entrada.p || '(sin texto)') + (entrada.s ? ' — ' + entrada.s : '');
+    div.appendChild(titulo);
+
+    const chips = document.createElement('div');
+    chips.className = 'fila-chips-mini';
+    const codigos = entrada.razones || [];
+    if (codigos.length === 0) {
+      const vacio = document.createElement('span');
+      vacio.className = 'chip-razon chico vacio';
+      vacio.textContent = '(sin razones)';
+      chips.appendChild(vacio);
+    } else {
+      codigos.forEach((cod) => {
+        const def = MAPA_RAZONES.get(cod);
+        if (!def) return;
+        const chip = document.createElement('span');
+        chip.className = 'chip-razon chico';
+        chip.textContent = def.texto;
+        chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+        chip.style.borderColor = def.color;
+        chip.style.color = def.color;
+        chips.appendChild(chip);
+      });
+    }
+    div.appendChild(chips);
+
+    if (entrada.estado) {
+      const nombres = { si: 'Entendida', no: 'No entendida', casi: 'Casi', saltar: 'Sin marcar' };
+      const est = document.createElement('div');
+      est.style.fontSize = '11px';
+      est.style.color = '#999';
+      est.textContent = 'Estado al guardar: ' + (nombres[entrada.estado] || entrada.estado);
+      div.appendChild(est);
+    }
+
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Borrar', () => {
+      if (!confirm('¿Borrar por completo este registro de razones?')) return;
+      delete razonesGuardadas[hash];
+      guardarRazones();
+      renderRazonesPreview();
+    }));
+    div.appendChild(acc);
+    return div;
+  }
+
+  function renderRazonesPreview() {
+    const elAqui = document.getElementById('lista-razones-aqui');
+    const elDetAqui = document.getElementById('det-razones-aqui');
+    const elSumaAqui = document.getElementById('suma-razones-aqui');
+    const elOtras = document.getElementById('lista-razones-otras');
+    const elDetOtras = document.getElementById('det-razones-otras');
+    const elSumaOtras = document.getElementById('suma-razones-otras');
+    const elInfo = document.getElementById('nota-razones');
+    const elVaciar = document.getElementById('btn-vaciar-razones');
+    elAqui.innerHTML = '';
+    elOtras.innerHTML = '';
+
+    const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
+    let nAqui = 0, nOtras = 0;
+    Object.keys(razonesGuardadas).forEach((h) => {
+      if (hashesAqui.has(h)) { nAqui++; elAqui.appendChild(filaRazonGuardada(h, razonesGuardadas[h])); }
+      else { nOtras++; elOtras.appendChild(filaRazonGuardada(h, razonesGuardadas[h])); }
+    });
+    elDetAqui.style.display = nAqui > 0 ? 'block' : 'none';
+    elSumaAqui.textContent = 'De este evaluador (' + nAqui + ')';
+    elDetOtras.style.display = nOtras > 0 ? 'block' : 'none';
+    elSumaOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
+    const total = nAqui + nOtras;
+    elInfo.textContent = total === 0
+      ? 'Todavía no guardaste razones (botón 🏷 durante el estudio).'
+      : 'Guardadas en este navegador: ' + total;
+    elVaciar.style.display = total > 0 ? 'inline-block' : 'none';
+  }
+
+  document.getElementById('btn-vaciar-razones').addEventListener('click', () => {
+    if (Object.keys(razonesGuardadas).length === 0) return;
+    if (!confirm('¿Vaciar TODAS las razones guardadas? No se puede deshacer.')) return;
+    razonesGuardadas = {};
+    guardarRazones();
+    renderRazonesPreview();
+  });
+
+  document.getElementById('btn-exportar-razones').addEventListener('click', () => {
+    const lista = Object.keys(razonesGuardadas).map((h) => ({
+      h: h,
+      p: razonesGuardadas[h].p || '',
+      s: razonesGuardadas[h].s || '',
+      razones: razonesGuardadas[h].razones || [],
+      estado: razonesGuardadas[h].estado || null,
+      t: razonesGuardadas[h].t || 0,
+    }));
+    const contenido = JSON.stringify({ version: 1, razones: lista }, null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'razones_tarjetas.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-razones').addEventListener('click', () => {
+    document.getElementById('input-importar-razones').click();
+  });
+
+  document.getElementById('input-importar-razones').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      const elInfo = document.getElementById('nota-razones');
+      try {
+        const obj = JSON.parse(lector.result);
+        const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.razones) ? obj.razones : null);
+        if (!lista) throw new Error('formato');
+
+        let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+        lista.forEach((item) => {
+          if (!item || typeof item.h !== 'string' || !item.h || !Array.isArray(item.razones)) {
+            invalidas++;
+            return;
+          }
+          const codigosValidos = item.razones.filter((c) => MAPA_RAZONES.has(c));
+          const entrada = {
+            p: typeof item.p === 'string' ? item.p : '',
+            s: typeof item.s === 'string' ? item.s : '',
+            razones: codigosValidos,
+            estado: typeof item.estado === 'string' ? item.estado : null,
+            t: typeof item.t === 'number' ? item.t : 0,
+          };
+          const local = razonesGuardadas[item.h];
+          if (!local) {
+            razonesGuardadas[item.h] = entrada;
+            nuevas++;
+          } else if (JSON.stringify((local.razones || []).slice().sort()) === JSON.stringify(entrada.razones.slice().sort()) &&
+                     (local.estado || null) === entrada.estado) {
+            iguales++;
+          } else if (entrada.t > (local.t || 0)) {
+            razonesGuardadas[item.h] = entrada;
+            actualizadas++;
+          } else {
+            conservadas++;
+          }
+        });
+        guardarRazones();
+        renderRazonesPreview();
+        elInfo.textContent = 'Importación: ' + nuevas + ' nueva(s), ' + actualizadas +
+          ' actualizada(s) por ser más recientes, ' + conservadas + ' conservada(s) (la tuya era más reciente), ' +
+          iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+      } catch (e) {
+        elInfo.textContent = 'El archivo no es un JSON válido de razones.';
+      }
+    };
+    lector.readAsText(archivo);
+  });
+
+  // MODIFICADO: renderRevisarGuardadoPreview() y renderRazonesPreview() ya se
+  // llaman dentro de mostrarPantalla('temas'), así que alcanza con esto.
   document.getElementById('btn-elegir-temas').addEventListener('click', () => {
     mostrarPantalla('temas');
   });
@@ -2317,14 +3272,13 @@
     respuestaMostrada = new Array(lista.length).fill(false);
     escritos = new Array(lista.length).fill('');
     evaluaciones = new Array(lista.length).fill(null);
-    revisar = new Array(lista.length).fill(false);
     porComprension = new Array(lista.length).fill(false);
     pausaManual = false;
     elOverlayPausa.classList.remove('abierto');
     indiceActual = 0;
     cronometroActivo = lista.length > 0;
     indiceCongelado = -1;
-    resetNotaUI();
+    resetPanelesUI();
     tiempoInicioTarjeta = Date.now();
 
     mostrarPantalla('estudio');
@@ -2342,9 +3296,9 @@
     tiempoInicioTarjeta = ahora;
   }
 
-  // MODIFICADO: también congela mientras la nota está abierta o hay pausa manual
+  // MODIFICADO: también congela con la nota o el panel de razones abiertos, o en pausa manual
   function cronometroCongelado() {
-    return pausaManual || notaAbierta || indiceCongelado === indiceActual;
+    return pausaManual || notaAbierta || razonesAbierto || indiceCongelado === indiceActual;
   }
 
   function renderTarjeta() {
@@ -2463,8 +3417,8 @@
 
     // NUEVO: botón Pausar (solo mientras el cronómetro corre) y toggle Revisar
     elBtnPausa.style.display = (cronometroActivo && !modoObservador) ? 'inline-block' : 'none';
-    elBtnRevisar.classList.toggle('activa', !!revisar[indiceActual]);
-    elBtnRevisar.textContent = revisar[indiceActual] ? '🚩 Para revisar' : '🚩 Revisar';
+    elBtnRevisar.classList.toggle('activa', esRevisar(actual));
+    elBtnRevisar.textContent = esRevisar(actual) ? '🚩 Para revisar' : '🚩 Revisar';
 
     // MODIFICADO: estado del toggle Difícil (siempre activo, aunque ya marcada)
     const esDif = esDificil(actual);
@@ -2472,6 +3426,7 @@
     elBtnDificil.classList.toggle('activa', esDif);
 
     renderNota(actual);  // NUEVO: botón 💡 + panel de nota
+    renderRazones(actual);  // NUEVO: botón 🏷 + panel de razones
 
     renderRutas(actual);
 
@@ -2880,7 +3835,7 @@
     } else {
       tiempoInicioTarjeta = Date.now();
     }
-    resetNotaUI();
+    resetPanelesUI();
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
 
@@ -2975,7 +3930,7 @@
       indiceActual = nuevo;
     }
 
-    resetNotaUI();  // NUEVO: la nota se cierra al cambiar de tarjeta
+    resetPanelesUI();  // NUEVO: nota y razones se cierran al cambiar de tarjeta
     renderTarjeta();
   }
 
@@ -2989,15 +3944,38 @@
     versionNota = 'local';
   }
 
+  // NUEVO: cierra el panel de razones sin preguntar (usar resetPanelesUI para el caso general)
+  function resetRazonesUI() {
+    razonesAbierto = false;
+    razonesPendientes = null;
+  }
+
+  // NUEVO: cierra nota y razones juntos (cambio de tarjeta, inicio de sesión, etc.)
+  function resetPanelesUI() {
+    resetNotaUI();
+    resetRazonesUI();
+  }
+
   function borradorSinGuardar() {
     if (!editandoNota) return false;
     const actual = tarjetasSesion[indiceActual];
     return actual ? (elNotaEditor.value.trim() !== notaEfectivaDe(actual)) : false;
   }
 
+  // NUEVO: cambios sin guardar en el panel de razones (checkboxes tocados sin apretar Guardar)
+  function razonesSinGuardar() {
+    if (!razonesAbierto || razonesPendientes === null) return false;
+    const actual = tarjetasSesion[indiceActual];
+    if (!actual) return false;
+    const guardado = razonesDeTarjeta(actual).slice().sort().join(',');
+    const pendiente = razonesPendientes.slice().sort().join(',');
+    return guardado !== pendiente;
+  }
+
+  // MODIFICADO: cubre tanto la nota como el panel de razones
   function confirmarDescartarBorrador() {
-    if (!borradorSinGuardar()) return true;
-    return confirm('Tenés cambios sin guardar en la nota. ¿Descartarlos?');
+    if (!borradorSinGuardar() && !razonesSinGuardar()) return true;
+    return confirm('Tenés cambios sin guardar (nota y/o razones). ¿Descartarlos?');
   }
 
   function renderNota(actual) {
@@ -3006,8 +3984,10 @@
     const hayNota = efectiva !== '';
     const hayDif = est !== 'igual';
 
-    // Botón 💡: siempre visible (sin nota = punteado, invita a agregar)
+    // Botón 💡: siempre visible (sin nota = punteado, invita a agregar); deshabilitado
+    // mientras el panel de razones está abierto (solo un panel a la vez)
     elBtnNota.style.display = 'inline-flex';
+    elBtnNota.disabled = razonesAbierto;
     elBtnNota.classList.toggle('activa', notaAbierta);
     elBtnNota.classList.toggle('vacia', !hayNota && !hayDif && !notaAbierta);
     elBtnNota.classList.toggle('dif', hayDif);
@@ -3078,9 +4058,10 @@
 
   function cerrarNota() {
     // Cerrar: reanudar salvo que la respuesta siga mostrada (congelado propio)
+    // o que el panel de razones haya quedado abierto (no se toca acá)
     const siguePorRespuesta = indiceCongelado === indiceActual;
     resetNotaUI();
-    if (cronometroActivo && !siguePorRespuesta) tiempoInicioTarjeta = Date.now();
+    if (cronometroActivo && !siguePorRespuesta && !razonesAbierto) tiempoInicioTarjeta = Date.now();
     actualizarCronometro();
     renderTarjeta();
   }
@@ -3139,6 +4120,143 @@
     cerrarNota();
   }
 
+  // ---------- NUEVO: razones (por qué se marcó así) ----------
+  // Igual patrón que las notas locales: persisten en localStorage, no en el txt.
+  // A diferencia de la nota, no hay "versión del txt": son solo 6 códigos fijos.
+  const CLAVE_RAZONES = 'razones_tarjetas_v1';
+  let razonesGuardadas = cargarRazones();
+
+  function cargarRazones() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_RAZONES);
+      if (!crudo) return {};
+      const obj = JSON.parse(crudo);
+      return (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function guardarRazones() {
+    try {
+      localStorage.setItem(CLAVE_RAZONES, JSON.stringify(razonesGuardadas));
+    } catch (e) {
+      // sin localStorage: quedan solo en memoria de esta sesión
+    }
+  }
+
+  function razonesDeTarjeta(t) {
+    const e = razonesGuardadas[hashTarjeta(t)];
+    return e ? (e.razones || []) : [];
+  }
+
+  function abrirRazones() {
+    const actual = tarjetasSesion[indiceActual];
+    if (!actual || notaAbierta) return;   // un panel a la vez
+    if (cronometroActivo && !cronometroCongelado()) acumularTiempo();
+    razonesAbierto = true;
+    razonesPendientes = razonesDeTarjeta(actual).slice();
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function cerrarRazones() {
+    if (!confirmarDescartarBorrador()) return;
+    const siguePorRespuesta = indiceCongelado === indiceActual;
+    resetRazonesUI();
+    if (cronometroActivo && !siguePorRespuesta && !notaAbierta) tiempoInicioTarjeta = Date.now();
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function toggleRazonCheck(codigo) {
+    if (razonesPendientes === null) return;
+    const i = razonesPendientes.indexOf(codigo);
+    if (i === -1) razonesPendientes.push(codigo);
+    else razonesPendientes.splice(i, 1);
+    renderTarjeta();
+  }
+
+  // "Guardar": persiste los códigos marcados (array vacío si no hay ninguno,
+  // lo que equivale a borrar el registro de esta tarjeta)
+  function guardarRazonesActual() {
+    const actual = tarjetasSesion[indiceActual];
+    if (!actual || razonesPendientes === null) return;
+    const h = hashTarjeta(actual);
+    if (razonesPendientes.length === 0) {
+      delete razonesGuardadas[h];
+    } else {
+      razonesGuardadas[h] = {
+        p: actual.primero || '',
+        s: actual.segundo || '',
+        razones: razonesPendientes.slice(),
+        estado: resultados[indiceActual],
+        t: Date.now(),
+      };
+    }
+    guardarRazones();
+    const siguePorRespuesta = indiceCongelado === indiceActual;
+    resetRazonesUI();
+    if (cronometroActivo && !siguePorRespuesta && !notaAbierta) tiempoInicioTarjeta = Date.now();
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function renderChipsRazones(actual) {
+    const guardadas = razonesDeTarjeta(actual);
+    elChipsRazones.innerHTML = '';
+    if (guardadas.length === 0) {
+      elChipsRazones.style.display = 'none';
+      return;
+    }
+    elChipsRazones.style.display = 'flex';
+    guardadas.forEach((cod) => {
+      const def = MAPA_RAZONES.get(cod);
+      if (!def) return;
+      const chip = document.createElement('span');
+      chip.className = 'chip-razon';
+      chip.textContent = def.texto;
+      chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+      chip.style.borderColor = def.color;
+      chip.style.color = def.color;
+      elChipsRazones.appendChild(chip);
+    });
+  }
+
+  function renderRazones(actual) {
+    const guardadas = razonesDeTarjeta(actual);
+
+    elBadgeRazones.textContent = String(guardadas.length);
+    elBadgeRazones.style.display = guardadas.length > 0 ? 'inline-block' : 'none';
+    elBtnRazones.classList.toggle('activa', guardadas.length > 0 || razonesAbierto);
+    // deshabilitado mientras la nota está abierta (solo un panel a la vez)
+    elBtnRazones.disabled = notaAbierta;
+
+    renderChipsRazones(actual);   // chips de solo lectura (lo ya guardado)
+
+    elPanelRazones.style.display = razonesAbierto ? 'block' : 'none';
+    if (!razonesAbierto) return;
+
+    elListaCheckRazones.innerHTML = '';
+    RAZONES_DEF.forEach((r) => {
+      const label = document.createElement('label');
+      label.className = 'item-check-razon';
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.checked = razonesPendientes.indexOf(r.codigo) !== -1;
+      chk.addEventListener('change', () => toggleRazonCheck(r.codigo));
+      const dot = document.createElement('span');
+      dot.className = 'dot-razon';
+      dot.style.background = r.color;
+      const txt = document.createElement('span');
+      txt.textContent = r.texto;
+      label.appendChild(chk);
+      label.appendChild(dot);
+      label.appendChild(txt);
+      elListaCheckRazones.appendChild(label);
+    });
+  }
+
   // MODIFICADO: registrar el uso de la pista (baja la nota a 0.5 si la tarjeta
   // termina como Entendida)
   elBtnPista.addEventListener('click', () => {
@@ -3153,6 +4271,9 @@
   elBtnNotaGuardar.addEventListener('click', () => guardarEdicionNota());
   elBtnNotaCancelar.addEventListener('click', () => cancelarEdicionNota());
   elBtnNotaBorrar.addEventListener('click', () => borrarNotaActual());
+  elBtnRazones.addEventListener('click', () => { if (razonesAbierto) cerrarRazones(); else abrirRazones(); });
+  document.getElementById('btn-razones-guardar').addEventListener('click', () => guardarRazonesActual());
+  document.getElementById('btn-razones-cerrar').addEventListener('click', () => cerrarRazones());
   elBtnVerLocal.addEventListener('click', () => { versionNota = 'local'; renderTarjeta(); });
   elBtnVerTxt.addEventListener('click', () => { versionNota = 'txt'; renderTarjeta(); });
   elNotaEditor.addEventListener('keydown', (evento) => {
@@ -3185,10 +4306,7 @@
   });
   elBtnPausa.addEventListener('click', () => pausarManual());
   elBtnReanudar.addEventListener('click', () => reanudarManual());
-  elBtnRevisar.addEventListener('click', () => {
-    revisar[indiceActual] = !revisar[indiceActual];
-    renderTarjeta();
-  });
+  elBtnRevisar.addEventListener('click', () => toggleRevisarActual());
   elBtnNo.addEventListener('click', () => marcar('no'));
   elBtnSaltar.addEventListener('click', () => marcar('saltar'));
   elBtnAnterior.addEventListener('click', () => navegar(-1));
@@ -3274,7 +4392,7 @@
   // NUEVO: arma el item de una tarjeta del resumen (conTema=false cuando ya está
   // dentro de un grupo de su subT). Incluye primero + segundo, tiempo, respuesta
   // escrita (si la hubo) y su evaluación; marca ☆ las difíciles.
-  function crearItemResultado(i, conTema) {
+  function crearItemResultado(i, conTema, mostrarRazones) {
     const tarjeta = tarjetasSesion[i];
     const item = document.createElement('div');
     item.className = 'item-lista';
@@ -3319,12 +4437,36 @@
       item.appendChild(resultado);
     }
 
+    // NUEVO: razones guardadas (no se muestran en la sección "Revisar")
+    if (mostrarRazones) {
+      const codigos = razonesDeTarjeta(tarjeta);
+      if (codigos.length > 0) {
+        const fila = document.createElement('div');
+        fila.className = 'item-razones';
+        fila.appendChild(document.createTextNode('🏷 '));
+        codigos.forEach((cod) => {
+          const def = MAPA_RAZONES.get(cod);
+          if (!def) return;
+          const chip = document.createElement('span');
+          chip.className = 'chip-razon chico';
+          chip.textContent = def.texto;
+          chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+          chip.style.borderColor = def.color;
+          chip.style.color = def.color;
+          fila.appendChild(chip);
+        });
+        item.appendChild(fila);
+      }
+    }
+
     return item;
   }
 
   // MODIFICADO: recibe índices y los agrupa en desplegables por subT.
   // Orden: subT en el orden del txt; dentro de cada subT, tarjetas en el orden del txt.
-  function llenarLista(idContenedor, indices) {
+  // mostrarRazones=false se usa para la sección "Revisar" (sin chips de razones).
+  function llenarLista(idContenedor, indices, mostrarRazones) {
+    if (mostrarRazones === undefined) mostrarRazones = true;
     const el = document.getElementById(idContenedor);
     el.innerHTML = '';
 
@@ -3354,7 +4496,7 @@
       const sum = document.createElement('summary');
       sum.textContent = nombre + ' (' + lista.length + ')';
       det.appendChild(sum);
-      lista.forEach((i) => det.appendChild(crearItemResultado(i, false)));
+      lista.forEach((i) => det.appendChild(crearItemResultado(i, false, mostrarRazones)));
       el.appendChild(det);
     });
   }
@@ -3392,8 +4534,8 @@
 
     // NUEVO: tarjetas marcadas con 🚩 Revisar durante la sesión
     const idxRevisar = [];
-    revisar.forEach((v, i) => { if (v) idxRevisar.push(i); });
-    llenarLista('lista-revisar', idxRevisar);
+    tarjetasSesion.forEach((t, i) => { if (esRevisar(t)) idxRevisar.push(i); });
+    llenarLista('lista-revisar', idxRevisar, false);   // NUEVO: sin razones en "Revisar"
     document.getElementById('etq-revisar').textContent = '🚩 Para revisar (' + idxRevisar.length + ')';
 
     // NUEVO: continuar con las no respondidas (pasadas sin marcar)
@@ -3447,7 +4589,7 @@
     indiceActual = primera >= 0 ? primera : 0;
     cronometroActivo = primera >= 0;
     indiceCongelado = -1;
-    resetNotaUI();
+    resetPanelesUI();
     pausaManual = false;
     elOverlayPausa.classList.remove('abierto');
     tiempoInicioTarjeta = Date.now();
