@@ -34,6 +34,7 @@ cuarto paso + asintotas & 44
 cuarto paso que debemos mirar de la ubicacion del punto prueba? + lejos, origen, angulos & 45
 ver imagen ecuacion angulo asintotas + grandes, rectas & 47
 quinto paso + ruptura, llegada & 48
+que es un punto de ruptura + geometricos, convergen 
 donde esta el punto ruptura? + simetria, eje real, pares & 49
 quinto paso que sucede si lugar raices esta entre 1 polo y cero lazo abierto? puede, ruptura & 51
 sexto paso + angulos, partida, complejos & 52

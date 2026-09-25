@@ -24,6 +24,7 @@ Que los distingue? + accion control, no movimiento & 19
 
 subT malla abierta
 Que no tiene? + salida, efecto, medir & 20, 21
+hola + prueba, resaltado & 22
 
 subT caracteristicas malla abierta
 Como se determina la condicion de entrada? + entrada, condicion & 22

@@ -657,10 +657,10 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
 # GENERACIÓN DEL HTML
 # ============================================================
 
-def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, ruta_drawio, espacio_hash):
+def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash):
     datos = {"tarjetas": tarjetas, "rutas": rutas}
     datos_json = json.dumps(datos, ensure_ascii=False)
-    nombre_base = Path(ruta_drawio).stem
+    nombre_base = Path(txt_respuestas).stem
 
     html = HTML_TEMPLATE
     html = html.replace("__FILL_COLOR__", fill_color)
@@ -5433,6 +5433,59 @@ colores = {
     "amarilloClaro": ["#FFFF80", "#5C5C5C"],
 }
 
+def preguntar_resaltado(raiz):
+    """
+    Ventana modal personalizada (mismo estilo que elegir_color) para preguntar 
+    si se desea aplicar el resaltado. Devuelve True (Sí) o False (No).
+    """
+    eleccion = {"aplicar": False}
+    
+    def confirmar(valor):
+        eleccion["aplicar"] = valor
+        vent.destroy()
+        
+    vent = Toplevel(raiz)
+    vent.title("Resaltado en Drawio")
+    vent.resizable(False, False)
+    vent.configure(bg="#f0f0f0")
+    vent.protocol("WM_DELETE_WINDOW", lambda: confirmar(False))
+    
+    Label(
+        vent, text="¿Deseas aplicar el resaltado de palabras clave\nal archivo .drawio seleccionado?",
+        bg="#f0f0f0", fg="#222222", font=("Segoe UI", 12, "bold"),
+        justify="center"
+    ).pack(pady=(20, 20))
+    
+    marco_botones = Frame(vent, bg="#f0f0f0")
+    marco_botones.pack(pady=(0, 20))
+    
+    Button(
+        marco_botones, text="Sí, aplicar", bg="#d4edda", fg="#155724",
+        activebackground="#c3e6cb", activeforeground="#155724",
+        width=14, bd=1, relief="raised", font=("Segoe UI", 10, "bold"),
+        cursor="hand2", command=lambda: confirmar(True)
+    ).grid(row=0, column=0, padx=10, sticky="nsew")
+    
+    Button(
+        marco_botones, text="No, omitir", bg="#f8d7da", fg="#721c24",
+        activebackground="#f5c6cb", activeforeground="#721c24",
+        width=14, bd=1, relief="raised", font=("Segoe UI", 10, "bold"),
+        cursor="hand2", command=lambda: confirmar(False)
+    ).grid(row=0, column=1, padx=10, sticky="nsew")
+    
+    vent.update_idletasks()
+    x = (vent.winfo_screenwidth() - vent.winfo_reqwidth()) // 2
+    y = (vent.winfo_screenheight() - vent.winfo_reqheight()) // 2
+    vent.geometry(f"+{x}+{y}")
+    vent.deiconify()
+    vent.lift()
+    vent.focus_force()
+    vent.wait_visibility()
+    vent.grab_set()
+    raiz.wait_window(vent)
+    
+    return eleccion["aplicar"]
+
 raiz = Tk()
 raiz.withdraw()
 
@@ -5453,16 +5506,19 @@ if not (txt and txt_respuestas):
     raiz.destroy()
     raise SystemExit
 
-# --- Diálogo 3: drawio (OPCIONAL, para resaltar el diagrama) ---
+#--- Diálogo 3: drawio (AHORA OBLIGATORIO) ---
 ruta_drawio = filedialog.askopenfilename(
-    title="Selecciona el archivo .drawio (opcional - Cancelar para omitir)",
-    filetypes=[("Diagrama drawio", "*.drawio"), ("Todos los archivos", "*.*")]
+    title="Selecciona el archivo .drawio (Obligatorio)",
+    filetypes=[("Diagrama drawio", ".drawio"), ("Todos los archivos", ".*")]
 )
+if not ruta_drawio:
+    print("No se seleccionó el archivo .drawio. Saliendo.")
+    raiz.destroy()
+    raise SystemExit
 
-# --- Ventana de elección de color ---
+#--- Ventana de elección de color ---
 opciones = elegir_color(raiz, colores, COLOR_DEFAULT)
 print(f"Color elegido: {opciones}")
-
 if opciones in colores:
     fill_color = colores[opciones][0]
     stroke_color = colores[opciones][-1]
@@ -5470,8 +5526,12 @@ else:
     fill_color = colores[COLOR_DEFAULT][0]
     stroke_color = colores[COLOR_DEFAULT][-1]
 
-# Modo de estudio: 1 = secuencial (orden del recordatorio.txt), 2 = aleatorio
-# El mezclado real ocurre en el navegador (JS), así que "Reiniciar" vuelve a mezclar.
+#--- Ventana personalizada para preguntar por el resaltado ---
+aplicar_resaltado = preguntar_resaltado(raiz)
+print(f"Resaltado en drawio: {'Sí' if aplicar_resaltado else 'No'}")
+
+#Modo de estudio: 1 = secuencial (orden del recordatorio.txt), 2 = aleatorio
+#El mezclado real ocurre en el navegador (JS), así que "Reiniciar" vuelve a mezclar.
 modo = 2
 
 if txt_respuestas:
@@ -5483,8 +5543,8 @@ else:
 tarjetas = parsear_recordatorio(txt)
 reportar_asociaciones(tarjetas, rutas)
 
-# --- Resaltado del drawio (opcional; independiente de respuestas.txt) ---
-if ruta_drawio:
+#--- Resaltado del drawio (según la elección de la ventanita personalizada) ---
+if aplicar_resaltado:
     fn_mapa = cargar_generador_respuestas()
     if fn_mapa is not None:
         try:
@@ -5493,10 +5553,9 @@ if ruta_drawio:
             print(f"AVISO: falló el resaltado del drawio: {error}")
             print("       Se continúa con la generación del evaluador.")
     else:
-        print("Se omite el resaltado del drawio.")
+        print("AVISO: No se pudo cargar el módulo para resaltar el drawio.")
 else:
-    print("No se seleccionó drawio; se genera solo el evaluador.")
+    print("El usuario eligió omitir el resaltado del drawio.")
 
-generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, ruta_drawio, Path(txt_respuestas).stem)
-
+generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, txt_respuestas, Path(txt_respuestas).stem)
 raiz.destroy()

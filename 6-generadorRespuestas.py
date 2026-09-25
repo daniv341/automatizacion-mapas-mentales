@@ -733,6 +733,44 @@ def write_annotated_drawio(
             children_list[idx] = obj
         annotated += 1
 
+    # --- AGREGADO DE 'descripcion' A IMÁGENES ---
+    image_ids = set()
+    for cell in graph_root.iter("mxCell"):
+        if IMAGE_URI_RE.search(cell.get("style", "")):
+            cid = cell.get("id")
+            if cid:
+                image_ids.add(cid)
+                
+    children_list = list(graph_root)
+    for img_id in image_ids:
+        entry = elem_by_id.get(img_id)
+        if not entry:
+            continue
+        elem, already_wrapped = entry
+        
+        if already_wrapped and elem.tag in ("object", "UserObject"):
+            if "descripcion" not in elem.attrib:
+                elem.set("descripcion", "")
+        else:
+            obj = ET.Element("object")
+            obj.set("label", elem.get("value", ""))
+            obj.set("descripcion", "")
+            obj.set("id", img_id)
+            
+            elem.attrib.pop("id", None)
+            elem.attrib.pop("value", None)
+            obj.tail = elem.tail
+            elem.tail = None
+            
+            if elem in children_list:
+                idx = children_list.index(elem)
+                graph_root.remove(elem)
+                obj.append(elem)
+                graph_root.insert(idx, obj)
+                children_list[idx] = obj
+                elem_by_id[img_id] = (obj, True)
+    # --- FIN AGREGADO DE 'descripcion' ---
+
     tree.write(output_path, encoding="utf-8", xml_declaration=True)
     return annotated, missing
 
