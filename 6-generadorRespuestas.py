@@ -684,6 +684,7 @@ def write_annotated_drawio(
     input_path: Path,
     output_path: Path,
     annotations: dict[str, str],
+    image_rutas: dict[str, str],
 ) -> tuple[int, list[str]]:
     """v4.7: escribe el .drawio con las celdas anotadas (idempotente)."""
     tree = ET.parse(input_path)
@@ -733,43 +734,53 @@ def write_annotated_drawio(
             children_list[idx] = obj
         annotated += 1
 
-    # --- AGREGADO DE 'descripcion' A IMÁGENES ---
-    image_ids = set()
-    for cell in graph_root.iter("mxCell"):
-        if IMAGE_URI_RE.search(cell.get("style", "")):
-            cid = cell.get("id")
-            if cid:
+        # --- AGREGADO DE 'descripcion' Y 'ruta' A IMÁGENES ---
+        image_ids = set()
+        for cid, (elem, wrapped) in elem_by_id.items():
+            if wrapped:
+                inner = next((c for c in elem if c.tag == "mxCell"), None)
+                style = inner.get("style", "") if inner is not None else ""
+            else:
+                style = elem.get("style", "")
+            if IMAGE_URI_RE.search(style):
                 image_ids.add(cid)
-                
-    children_list = list(graph_root)
-    for img_id in image_ids:
-        entry = elem_by_id.get(img_id)
-        if not entry:
-            continue
-        elem, already_wrapped = entry
-        
-        if already_wrapped and elem.tag in ("object", "UserObject"):
-            if "descripcion" not in elem.attrib:
-                elem.set("descripcion", "")
-        else:
-            obj = ET.Element("object")
-            obj.set("label", elem.get("value", ""))
-            obj.set("descripcion", "")
-            obj.set("id", img_id)
+
+        children_list = list(graph_root)
+        for img_id in image_ids:
+            entry = elem_by_id.get(img_id)
+            if not entry:
+                continue
+            elem, already_wrapped = entry
             
-            elem.attrib.pop("id", None)
-            elem.attrib.pop("value", None)
-            obj.tail = elem.tail
-            elem.tail = None
+            # Obtener la ruta a la que pertenece esta imagen (si existe en el mapeo)
+            ruta_img = image_rutas.get(img_id)
             
-            if elem in children_list:
-                idx = children_list.index(elem)
-                graph_root.remove(elem)
-                obj.append(elem)
-                graph_root.insert(idx, obj)
-                children_list[idx] = obj
-                elem_by_id[img_id] = (obj, True)
-    # --- FIN AGREGADO DE 'descripcion' ---
+            if already_wrapped and elem.tag in ("object", "UserObject"):
+                if "descripcion" not in elem.attrib:
+                    elem.set("descripcion", "")
+                if ruta_img:
+                    elem.set("ruta", ruta_img)
+            else:
+                obj = ET.Element("object")
+                obj.set("label", elem.get("value", ""))
+                obj.set("descripcion", "")
+                if ruta_img:
+                    obj.set("ruta", ruta_img)
+                obj.set("id", img_id)
+                elem.attrib.pop("id", None)
+                elem.attrib.pop("value", None)
+                obj.tail = elem.tail
+                elem.tail = None
+                if elem in children_list:
+                    idx = children_list.index(elem)
+                    graph_root.remove(elem)
+                    obj.append(elem)
+                    graph_root.insert(idx, obj)
+                    children_list[idx] = obj
+            
+            # Corrección: si ya estaba envuelta, 'elem' es el object; si no, 'obj' es el nuevo object
+            elem_by_id[img_id] = (elem if already_wrapped else obj, True)
+        # --- FIN AGREGADO ---
 
     tree.write(output_path, encoding="utf-8", xml_declaration=True)
     return annotated, missing
@@ -1789,15 +1800,35 @@ def main() -> None:
 
     annotations, unannotated, conflicts = collect_ruta_annotations(
         route_blocks, is_rhombus_key, make_is_tema_lookup(styles, roots))   # v4.17
-    if annotations:
-        annotated_count, missing_cells = write_annotated_drawio(input_path, input_path, annotations)
+
+    # Construir el mapeo de imagenes a su ruta correspondiente
+    fuentes_conv = {key: meta["sources"] for key, meta in convergence_metadata.items()}
+    image_rutas = {}
+    for block in route_blocks:
+        for key, _ in block.items:
+            if not key:
+                continue
+            if key.startswith("__CONVERGENCE__"):
+                candidatos = fuentes_conv.get(key, [])
+            else:
+                candidatos = [key]
+            for cid in candidatos:
+                if cid in styles and IMAGE_URI_RE.search(styles.get(cid, "")):
+                    image_rutas.setdefault(cid, str(block.number))
+    sin_ruta = [cid for cid, v in vertices.items()
+                if IMAGE_LINE_RE.match(v) and cid not in image_rutas]
+    if sin_ruta:
+        print(f"imagenes sin ruta (no aparecen en ninguna ruta): {', '.join(sin_ruta)}")
+
+    if annotations or image_rutas:
+        annotated_count, missing_cells = write_annotated_drawio(input_path, input_path, annotations, image_rutas)
         print(f"drawio actualizado en su lugar: {annotated_count} celdas con dato 'ruta'")
+        if image_rutas:
+            print(f"y {len(image_rutas)} imagen(es) con dato 'ruta' y 'descripcion'")
         if missing_cells:
             print(f"celdas no encontradas en la Hoja 1: {missing_cells}")
     else:
-        print("sin celdas para anotar con dato 'ruta' (el original no se modifico)")
-    if unannotated:
-        print(f"rutas sin celda anotable (solo rombos/sinteticos): {', '.join(unannotated)}")
+        print("sin celdas para anotar con dato 'ruta' ni imagenes (el original no se modifico)")
     if conflicts:
         print("conflictos de anotacion: " + "; ".join(conflicts))
 

@@ -290,6 +290,22 @@ PATRON_LIMPIEZA = re.compile(r'<font style="background-color:[^"]*">([^<]*)</fon
 
 NOMBRE_MODULO_RUTAS = "6-generadorRespuestas.py"
 
+# Índice de la página (pestaña) del .drawio que contiene las imágenes con
+# 'ruta'/'descripcion'. Es la MISMA página que usa resaltar_drawio (la
+# primera, índice 0). Si en algún momento cambiás el diagrama de página,
+# solo hay que actualizar este número.
+INDICE_PAGINA_DRAWIO = 0
+
+# BUGFIX: además de <object>, las versiones recientes de draw.io serializan
+# las celdas con atributos personalizados (id, ruta, descripcion, etc.) como
+# <UserObject> en lugar de <object>. Es habitual que, dentro de un mismo
+# .drawio, las celdas de TEXTO (creadas hace tiempo) queden como <object> y
+# las celdas de IMAGEN (agregadas después, con una versión más nueva de
+# draw.io) queden como <UserObject> -- por eso "descripcion" no se extraía de
+# las imágenes: el código solo miraba <object>. Se centraliza acá para que
+# todo el script reconozca ambas variantes de forma consistente.
+TAGS_OBJETO_DRAWIO = ("object", "UserObject")
+
 
 def normalizar_tema(texto):
     """Normaliza un tema completo (minúsculas, sin acentos, espacios colapsados)."""
@@ -401,7 +417,7 @@ def activar_html_en_celda(elem):
     en el mxCell interno, no en el object.
     """
     tag = elem.tag.split("}")[-1]
-    if tag == "object":
+    if tag in TAGS_OBJETO_DRAWIO:
         style = elem.get("style")
         if style is not None and not style_tiene_html1(style):
             elem.set("style", style_agregar_html1(style))
@@ -474,7 +490,7 @@ def style_de_celda(elem):
     Style 'visual' de la celda. En <object> el style vive en el mxCell
     interno (igual que con html=1); si no hubiera, se usa el del object.
     """
-    if elem.tag.split('}')[-1] == 'object':
+    if elem.tag.split('}')[-1] in TAGS_OBJETO_DRAWIO:
         for hijo in elem:
             if hijo.tag.split('}')[-1] == 'mxCell':
                 style = hijo.get('style')
@@ -570,6 +586,12 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
             continue
         if tag == "object":
             elementos[eid] = (elem, "label")
+        elif tag == "UserObject":
+            # BUGFIX: mismo caso que <object> (ver TAGS_OBJETO_DRAWIO), las
+            # versiones recientes de draw.io usan <UserObject> para celdas
+            # con atributos personalizados (frecuente en imágenes agregadas
+            # después). Antes se ignoraban acá y no se resaltaban ni resolvían.
+            elementos[eid] = (elem, "label")
         elif tag == "mxCell" and eid not in elementos:
             elementos[eid] = (elem, "value")
 
@@ -653,12 +675,76 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
               + ", ".join(map(str, ausentes)))
 
 
+def extraer_descripciones_drawio(ruta_drawio):
+    """
+    NUEVO: lee el .drawio en modo SOLO LECTURA (no lo modifica) y extrae, de
+    las celdas que tienen el atributo personalizado 'ruta' (el mismo que ya
+    usa 6-generadorRespuestas.py para identificar rutas), el atributo
+    personalizado 'descripcion' cuando existe.
+
+    Devuelve { numero_ruta (int): "texto_descripcion" }.
+
+    Independiente de get_routes_id_map y de resaltar_drawio: no comparte
+    estado con ellos ni los modifica, así que una falla acá nunca puede
+    romper el resaltado ni el resto del flujo (se atrapa cualquier excepción
+    y se devuelve un diccionario vacío).
+
+    Usa la misma página que resaltar_drawio: INDICE_PAGINA_DRAWIO.
+    """
+    descripciones = {}
+    con_ruta = 0
+    con_descripcion = 0
+    try:
+        tree = ET.parse(ruta_drawio)
+        root = tree.getroot()
+
+        diagrams = root.findall("./diagram")
+        alcance = diagrams[INDICE_PAGINA_DRAWIO] if diagrams else root
+
+        for elem in alcance.iter():
+            tag = elem.tag.split("}")[-1]
+            if tag not in TAGS_OBJETO_DRAWIO:
+                # 'ruta'/'descripcion' son atributos personalizados: viven
+                # en <object> o <UserObject> (ver TAGS_OBJETO_DRAWIO).
+                continue
+
+            ruta_attr = elem.get("ruta")
+            descripcion = elem.get("descripcion")
+            tiene_ruta = ruta_attr is not None and str(ruta_attr).strip() != ""
+            tiene_descripcion = bool(descripcion) and descripcion.strip() != ""
+            if tiene_ruta:
+                con_ruta += 1
+            if tiene_descripcion:
+                con_descripcion += 1
+            if not (tiene_ruta and tiene_descripcion):
+                continue  # falta uno de los dos atributos: no hay nada que asociar
+
+            try:
+                numero = int(str(ruta_attr).strip())
+            except (TypeError, ValueError):
+                continue  # atributo 'ruta' no numérico: se ignora en silencio
+
+            # Si varias celdas comparten el mismo número de ruta, se
+            # conserva la primera descripción no vacía encontrada.
+            descripciones.setdefault(numero, descripcion.strip())
+    except Exception as error:
+        print(f"AVISO: no pude extraer descripciones del drawio: {error}")
+        return {}
+
+    # NUEVO: diagnóstico para detectar fácilmente por qué no se extrae nada
+    # (p. ej. celdas con 'ruta' pero sin 'descripcion', o viceversa).
+    print(f"  Celdas con 'ruta': {con_ruta}  |  con 'descripcion' no vacía: {con_descripcion}  "
+          f"|  con ambos (usables): {len(descripciones)}")
+
+    return descripciones
+
+
 # ============================================================
 # GENERACIÓN DEL HTML
 # ============================================================
 
-def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash):
-    datos = {"tarjetas": tarjetas, "rutas": rutas}
+def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash, descripciones_rutas=None):
+    datos = {"tarjetas": tarjetas, "rutas": rutas, "descripciones_rutas": descripciones_rutas or {}}
     datos_json = json.dumps(datos, ensure_ascii=False)
     nombre_base = Path(txt_respuestas).stem
 
@@ -1957,6 +2043,89 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     color: #888;
     font-size: 15px;
   }
+
+  /* ===== NUEVO: Buscador Global (Elegir Temas / Observador / Galería) ===== */
+  .zona-buscador {
+    position: relative;
+    text-align: left;
+    margin-bottom: 16px;
+  }
+
+  .input-buscador {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 24px;
+    border: 2px solid #E2E4EC;
+    font-size: 14px;
+    font-family: inherit;
+    color: #333;
+    outline: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: border-color 0.15s;
+  }
+
+  .input-buscador:focus { border-color: var(--stroke-color); }
+
+  /* Galería: la barra debe quedar fija mientras se navega entre imágenes */
+  .zona-buscador.sticky-buscador {
+    position: sticky;
+    top: 0;
+    z-index: 500;
+    background: #eef1f7;
+    padding: 10px 0 8px 0;
+    margin-bottom: 6px;
+  }
+
+  .dropdown-buscador {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #E2E4EC;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    z-index: 900;
+  }
+
+  .dropdown-buscador.abierto { display: block; }
+
+  .item-dropdown-buscador {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: #444;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #f1f1f1;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-dropdown-buscador:last-child { border-bottom: none; }
+  .item-dropdown-buscador:hover { background: #f7f7fb; }
+  .item-dropdown-buscador strong { color: var(--stroke-color); }
+
+  .tag-tema-buscador {
+    color: #999;
+    font-size: 12px;
+    margin-right: 4px;
+  }
+
+  .dropdown-buscador-vacio {
+    padding: 14px;
+    font-size: 13px;
+    color: #999;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
@@ -1966,6 +2135,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   <div id="pantalla-temas">
     <p class="subtitulo">Elegí qué temas (o tarjetas) querés estudiar</p>
+
+    <!-- NUEVO: Buscador Global -->
+    <div class="zona-buscador" id="zona-buscador-temas">
+      <input type="text" class="input-buscador" id="input-buscador-temas" placeholder="Buscar tarjetas o rutas..." autocomplete="off">
+      <div class="dropdown-buscador" id="dropdown-buscador-temas"></div>
+    </div>
+
     <div class="lista-temas" id="lista-temas"></div>
     <button class="boton-principal" id="btn-comenzar">Comenzar estudio</button>
 
@@ -2061,6 +2237,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <!-- NUEVO: modo observador (lista de tarjetas por subT; al tocar una se abre) -->
   <div id="pantalla-observador" style="display:none;">
     <p class="subtitulo">Modo observador: tocá una tarjeta para verla (sin evaluarte)</p>
+
+    <!-- NUEVO: Buscador Global -->
+    <div class="zona-buscador" id="zona-buscador-observador">
+      <input type="text" class="input-buscador" id="input-buscador-observador" placeholder="Buscar tarjetas o rutas..." autocomplete="off">
+      <div class="dropdown-buscador" id="dropdown-buscador-observador"></div>
+    </div>
+
     <div class="lista-temas" id="lista-observador"></div>
     <!-- MODIFICADO: se agrega "Ver imágenes" junto al botón de volver -->
     <div class="fila-obs-botones">
@@ -2089,6 +2272,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   <!-- NUEVO: galería de imágenes de las rutas, vista secuencial e independiente -->
   <div id="pantalla-galeria" style="display:none;">
+    <!-- NUEVO: Buscador Global (fijo/sticky para poder buscar mientras se navega) -->
+    <div class="zona-buscador sticky-buscador" id="zona-buscador-galeria">
+      <input type="text" class="input-buscador" id="input-buscador-galeria" placeholder="Buscar por ruta o descripción..." autocomplete="off">
+      <div class="dropdown-buscador" id="dropdown-buscador-galeria"></div>
+    </div>
+
     <div class="galeria-indicador" id="galeria-indicador"></div>
     <div class="galeria-imagen-wrap">
       <img id="galeria-img" class="galeria-img" alt="Imagen de una ruta" style="display:none;">
@@ -2561,6 +2750,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elGaleriaNotaVersiones = document.getElementById('galeria-nota-versiones');
   const elBtnGaleriaAnterior = document.getElementById('btn-galeria-anterior');
   const elBtnGaleriaSiguiente = document.getElementById('btn-galeria-siguiente');
+  // NUEVO: Buscador Global
+  const elInputBuscadorTemas = document.getElementById('input-buscador-temas');
+  const elDropdownBuscadorTemas = document.getElementById('dropdown-buscador-temas');
+  const elInputBuscadorObservador = document.getElementById('input-buscador-observador');
+  const elDropdownBuscadorObservador = document.getElementById('dropdown-buscador-observador');
+  const elInputBuscadorGaleria = document.getElementById('input-buscador-galeria');
+  const elDropdownBuscadorGaleria = document.getElementById('dropdown-buscador-galeria');
   const elBtnPausa = document.getElementById('btn-pausa');
   const elOverlayPausa = document.getElementById('overlay-pausa');
   const elBtnReanudar = document.getElementById('btn-reanudar');
@@ -3182,6 +3378,239 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     // renderImagenesPreview() ya se llama dentro de mostrarPantalla('observador').
     mostrarPantalla('observador');
   }
+
+  // ============================================================
+  // NUEVO: Buscador Global (Elegir Temas / Observador / Galería)
+  // ============================================================
+  // Opera sobre los datos ya cargados en memoria (tarjetasCompletas,
+  // rutasDisp, datos.descripciones_rutas). No modifica ningún estado de
+  // evaluación, notas, difíciles, razones, cronómetro ni resaltado del
+  // drawio: solo lee y, al seleccionar un resultado, reutiliza funciones
+  // ya existentes (checkbox + 'change', abrirTarjetaObservador, renderGaleria).
+
+  function debounce(fn, ms) {
+    let temporizador = null;
+    return function (...args) {
+      clearTimeout(temporizador);
+      temporizador = setTimeout(() => fn.apply(this, args), ms);
+    };
+  }
+
+  // Devuelve un fragmento con 'texto' resaltando (en <strong>) la primera
+  // coincidencia de 'consultaNorm' (subcadena, ya normalizada). Compara sobre
+  // el texto normalizado pero recorta sobre el texto ORIGINAL, para no perder
+  // acentos/mayúsculas en lo que se muestra.
+  function resaltarCoincidenciaBuscador(texto, consultaNorm) {
+    const frag = document.createDocumentFragment();
+    if (!texto) return frag;
+    if (!consultaNorm) {
+      frag.appendChild(document.createTextNode(texto));
+      return frag;
+    }
+    const norm = normalizarPalabra(texto);
+    const pos = norm.indexOf(consultaNorm);
+    if (pos === -1) {
+      frag.appendChild(document.createTextNode(texto));
+      return frag;
+    }
+    const fin = pos + consultaNorm.length;
+    if (pos > 0) frag.appendChild(document.createTextNode(texto.slice(0, pos)));
+    const marca = document.createElement('strong');
+    marca.textContent = texto.slice(pos, fin);
+    frag.appendChild(marca);
+    if (fin < texto.length) frag.appendChild(document.createTextNode(texto.slice(fin)));
+    return frag;
+  }
+
+  // Texto (sin imágenes) de todas las rutas asociadas a una tarjeta, para
+  // buscar dentro de rutasDisp[id].lineas.
+  function textoRutasDeTarjeta(t) {
+    return rutasValidasDe(t).map((id) => {
+      const lineas = (rutasDisp[id] && rutasDisp[id].lineas) || [];
+      return lineas.filter((linea) => !esImagen(linea)).join(' ');
+    }).join(' ');
+  }
+
+  // Busca en primero / segundo / texto de rutas. Devuelve como mucho UN
+  // resultado por tarjeta (dedupe), con el primer campo que haya coincidido
+  // (prioridad: primero > segundo > rutas).
+  function buscarTarjetasGlobal(consultaNorm) {
+    const resultados = [];
+    tarjetasCompletas.forEach((t, i) => {
+      let campoTexto = null;
+      if (normalizarPalabra(t.primero || '').indexOf(consultaNorm) !== -1) {
+        campoTexto = t.primero;
+      } else if (t.segundo && normalizarPalabra(t.segundo).indexOf(consultaNorm) !== -1) {
+        campoTexto = t.segundo;
+      } else {
+        const textoRutas = textoRutasDeTarjeta(t);
+        if (textoRutas && normalizarPalabra(textoRutas).indexOf(consultaNorm) !== -1) {
+          campoTexto = textoRutas;
+        }
+      }
+      if (campoTexto !== null) resultados.push({ idx: i, texto: campoTexto });
+    });
+    return resultados;
+  }
+
+  function crearItemDropdownBuscador(etiquetaTema, texto, consultaNorm, onClick) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'item-dropdown-buscador';
+    if (etiquetaTema) {
+      const tag = document.createElement('span');
+      tag.className = 'tag-tema-buscador';
+      tag.textContent = etiquetaTema;
+      btn.appendChild(tag);
+    }
+    btn.appendChild(resaltarCoincidenciaBuscador(texto, consultaNorm));
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
+
+  function renderDropdownVacio(elDropdown) {
+    const vacio = document.createElement('div');
+    vacio.className = 'dropdown-buscador-vacio';
+    vacio.textContent = 'Sin resultados';
+    elDropdown.appendChild(vacio);
+  }
+
+  function cerrarDropdownBuscador(elDropdown) {
+    elDropdown.classList.remove('abierto');
+    elDropdown.innerHTML = '';
+  }
+
+  // ---------- Elegir Temas ----------
+
+  function seleccionarResultadoBuscadorTemas(idx) {
+    const input = elListaTemas.querySelector('input[data-idx="' + idx + '"]');
+    if (input) {
+      input.checked = true;
+      input.dispatchEvent(new Event('change'));  // reutiliza actualizarEstadoGrupo/actualizarConteoSeleccion
+      const det = input.closest('details.grupo-tema');
+      if (det) det.open = true;  // auto-expandir: feedback visual de que se marcó
+    }
+    cerrarDropdownBuscador(elDropdownBuscadorTemas);
+    elInputBuscadorTemas.value = '';
+  }
+
+  function renderDropdownBuscadorTemas(consulta) {
+    const consultaNorm = normalizarPalabra((consulta || '').trim());
+    elDropdownBuscadorTemas.innerHTML = '';
+    if (consultaNorm === '') { elDropdownBuscadorTemas.classList.remove('abierto'); return; }
+    const resultados = buscarTarjetasGlobal(consultaNorm).slice(0, 30);
+    if (resultados.length === 0) {
+      renderDropdownVacio(elDropdownBuscadorTemas);
+    } else {
+      resultados.forEach((r) => {
+        const t = tarjetasCompletas[r.idx];
+        elDropdownBuscadorTemas.appendChild(
+          crearItemDropdownBuscador('[' + nombreTema(t) + ']', r.texto, consultaNorm,
+            () => seleccionarResultadoBuscadorTemas(r.idx))
+        );
+      });
+    }
+    elDropdownBuscadorTemas.classList.add('abierto');
+  }
+
+  // ---------- Modo Observador ----------
+
+  function renderDropdownBuscadorObservador(consulta) {
+    const consultaNorm = normalizarPalabra((consulta || '').trim());
+    elDropdownBuscadorObservador.innerHTML = '';
+    if (consultaNorm === '') { elDropdownBuscadorObservador.classList.remove('abierto'); return; }
+    const resultados = buscarTarjetasGlobal(consultaNorm).slice(0, 30);
+    if (resultados.length === 0) {
+      renderDropdownVacio(elDropdownBuscadorObservador);
+    } else {
+      resultados.forEach((r) => {
+        const t = tarjetasCompletas[r.idx];
+        elDropdownBuscadorObservador.appendChild(
+          crearItemDropdownBuscador('[' + nombreTema(t) + ']', r.texto, consultaNorm, () => {
+            cerrarDropdownBuscador(elDropdownBuscadorObservador);
+            elInputBuscadorObservador.value = '';
+            abrirTarjetaObservador(r.idx);
+          })
+        );
+      });
+    }
+    elDropdownBuscadorObservador.classList.add('abierto');
+  }
+
+  // ---------- Galería ----------
+
+  // Busca por número de ruta (ej. "ruta 5") o por descripción extraída del
+  // drawio (datos.descripciones_rutas). Dedupe por índice de imagen: cada
+  // resultado apunta a la primera imagen de la ruta encontrada, y una misma
+  // posición de INDICE_IMAGENES no se repite en la lista.
+  function buscarGaleriaGlobal(consultaNorm) {
+    const resultados = [];
+    const posicionesUsadas = new Set();
+    const descripciones = datos.descripciones_rutas || {};
+    Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
+      const posImg = INDICE_IMAGENES.findIndex((e) => e.ruta === ruta);
+      if (posImg === -1 || posicionesUsadas.has(posImg)) return;  // sin imágenes, o ya usada
+
+      let texto = null;
+      if (normalizarPalabra('ruta ' + ruta).indexOf(consultaNorm) !== -1) {
+        texto = 'Ruta ' + ruta;
+      } else {
+        const desc = descripciones[ruta] || descripciones[String(ruta)] || '';
+        if (desc && normalizarPalabra(desc).indexOf(consultaNorm) !== -1) {
+          texto = desc;
+        }
+      }
+      if (texto !== null) {
+        resultados.push({ ruta: ruta, texto: texto, posImg: posImg });
+        posicionesUsadas.add(posImg);
+      }
+    });
+    return resultados;
+  }
+
+  function renderDropdownBuscadorGaleria(consulta) {
+    const consultaNorm = normalizarPalabra((consulta || '').trim());
+    elDropdownBuscadorGaleria.innerHTML = '';
+    if (consultaNorm === '') { elDropdownBuscadorGaleria.classList.remove('abierto'); return; }
+    const resultados = buscarGaleriaGlobal(consultaNorm).slice(0, 30);
+    if (resultados.length === 0) {
+      renderDropdownVacio(elDropdownBuscadorGaleria);
+    } else {
+      resultados.forEach((r) => {
+        elDropdownBuscadorGaleria.appendChild(
+          crearItemDropdownBuscador('Ruta ' + r.ruta + ':', r.texto, consultaNorm, () => {
+            if (!confirmarDescartarGaleria()) return;
+            cerrarDropdownBuscador(elDropdownBuscadorGaleria);
+            elInputBuscadorGaleria.value = '';
+            galeriaPos = r.posImg;
+            resetGaleriaNotaUI();
+            mostrarPantalla('galeria');
+            renderGaleria();
+          })
+        );
+      });
+    }
+    elDropdownBuscadorGaleria.classList.add('abierto');
+  }
+
+  // ---------- Listeners comunes (debounce, cierre por click afuera / Esc) ----------
+
+  elInputBuscadorTemas.addEventListener('input', debounce(() => renderDropdownBuscadorTemas(elInputBuscadorTemas.value), 200));
+  elInputBuscadorObservador.addEventListener('input', debounce(() => renderDropdownBuscadorObservador(elInputBuscadorObservador.value), 200));
+  elInputBuscadorGaleria.addEventListener('input', debounce(() => renderDropdownBuscadorGaleria(elInputBuscadorGaleria.value), 200));
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#zona-buscador-temas')) cerrarDropdownBuscador(elDropdownBuscadorTemas);
+    if (!e.target.closest('#zona-buscador-observador')) cerrarDropdownBuscador(elDropdownBuscadorObservador);
+    if (!e.target.closest('#zona-buscador-galeria')) cerrarDropdownBuscador(elDropdownBuscadorGaleria);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    cerrarDropdownBuscador(elDropdownBuscadorTemas);
+    cerrarDropdownBuscador(elDropdownBuscadorObservador);
+    cerrarDropdownBuscador(elDropdownBuscadorGaleria);
+  });
 
   // ---------- Preview en el modo observador: "🖼 Datos de imágenes guardados" ----------
 
@@ -5557,5 +5986,10 @@ if aplicar_resaltado:
 else:
     print("El usuario eligió omitir el resaltado del drawio.")
 
-generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, txt_respuestas, Path(txt_respuestas).stem)
+#--- NUEVO: extracción de descripciones para el Buscador Global (independiente
+#    del resaltado: se hace siempre que haya .drawio, sin tocar el archivo) ---
+descripciones_rutas = extraer_descripciones_drawio(ruta_drawio)
+print(f"Descripciones extraídas del drawio: {len(descripciones_rutas)}")
+
+generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, txt_respuestas, Path(txt_respuestas).stem, descripciones_rutas)
 raiz.destroy()
