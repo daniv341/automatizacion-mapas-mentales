@@ -678,11 +678,18 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
 def extraer_descripciones_drawio(ruta_drawio):
     """
     NUEVO: lee el .drawio en modo SOLO LECTURA (no lo modifica) y extrae, de
-    las celdas que tienen el atributo personalizado 'ruta' (el mismo que ya
-    usa 6-generadorRespuestas.py para identificar rutas), el atributo
-    personalizado 'descripcion' cuando existe.
+    las celdas de IMAGEN (style con 'shape=image') que tienen el atributo
+    personalizado 'ruta' (el mismo que ya usa 6-generadorRespuestas.py para
+    identificar rutas), el atributo personalizado 'descripcion'.
 
-    Devuelve { numero_ruta (int): "texto_descripcion" }.
+    Devuelve { numero_ruta (int): ["desc de la imagen 0", "desc de la imagen 1", ...] }
+    Es decir: UNA LISTA por ruta, con una posición por cada imagen de esa
+    ruta encontrada en el drawio (en el orden en que aparecen en el XML),
+    análogo al 'indice' que ya usa la galería para navegar imágenes dentro
+    de una misma ruta (construirIndiceImagenes/INDICE_IMAGENES en el JS). Si
+    una imagen puntual no tiene descripción cargada, su posición queda como
+    "" (string vacío) para no correr el índice de las demás imágenes de esa
+    ruta.
 
     Independiente de get_routes_id_map y de resaltar_drawio: no comparte
     estado con ellos ni los modifica, así que una falla acá nunca puede
@@ -690,6 +697,12 @@ def extraer_descripciones_drawio(ruta_drawio):
     y se devuelve un diccionario vacío).
 
     Usa la misma página que resaltar_drawio: INDICE_PAGINA_DRAWIO.
+
+    IMPORTANTE: el orden de las imágenes acá es el orden en que aparecen en
+    el .drawio (documento XML). Para que el índice coincida con el de la
+    galería (que ordena según las líneas 'IMG:' de respuestas.txt), las
+    imágenes de una misma ruta deben estar en el mismo orden en ambos
+    lugares. Si no coincide, avisá y lo ajustamos.
     """
     descripciones = {}
     con_ruta = 0
@@ -708,33 +721,40 @@ def extraer_descripciones_drawio(ruta_drawio):
                 # en <object> o <UserObject> (ver TAGS_OBJETO_DRAWIO).
                 continue
 
+            estilo = style_de_celda(elem) or ""
+            if "shape=image" not in estilo:
+                continue  # no es una celda de imagen: no aporta al índice de imágenes
+
             ruta_attr = elem.get("ruta")
-            descripcion = elem.get("descripcion")
             tiene_ruta = ruta_attr is not None and str(ruta_attr).strip() != ""
-            tiene_descripcion = bool(descripcion) and descripcion.strip() != ""
-            if tiene_ruta:
-                con_ruta += 1
-            if tiene_descripcion:
-                con_descripcion += 1
-            if not (tiene_ruta and tiene_descripcion):
-                continue  # falta uno de los dos atributos: no hay nada que asociar
+            if not tiene_ruta:
+                continue  # imagen sin ruta asignada: no se puede ubicar en la galería
 
             try:
                 numero = int(str(ruta_attr).strip())
             except (TypeError, ValueError):
                 continue  # atributo 'ruta' no numérico: se ignora en silencio
 
-            # Si varias celdas comparten el mismo número de ruta, se
-            # conserva la primera descripción no vacía encontrada.
-            descripciones.setdefault(numero, descripcion.strip())
+            descripcion = elem.get("descripcion") or ""
+            descripcion = descripcion.strip()
+
+            con_ruta += 1
+            if descripcion:
+                con_descripcion += 1
+
+            # Se agrega SIEMPRE (aunque venga vacía) para no desalinear el
+            # índice de las demás imágenes de esta misma ruta.
+            descripciones.setdefault(numero, []).append(descripcion)
     except Exception as error:
         print(f"AVISO: no pude extraer descripciones del drawio: {error}")
         return {}
 
     # NUEVO: diagnóstico para detectar fácilmente por qué no se extrae nada
     # (p. ej. celdas con 'ruta' pero sin 'descripcion', o viceversa).
-    print(f"  Celdas con 'ruta': {con_ruta}  |  con 'descripcion' no vacía: {con_descripcion}  "
-          f"|  con ambos (usables): {len(descripciones)}")
+    rutas_con_imagenes = len(descripciones)
+    total_imagenes = sum(len(lista) for lista in descripciones.values())
+    print(f"  Imágenes con 'ruta': {con_ruta}  |  con 'descripcion' no vacía: {con_descripcion}  "
+          f"|  rutas con imágenes: {rutas_con_imagenes}  |  imágenes totales indexadas: {total_imagenes}")
 
     return descripciones
 
@@ -2039,6 +2059,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .galeria-vacia { color: #888; padding: 30px 0; }
 
+  /* NUEVO: descripción de la imagen (atributo 'descripcion' del drawio) */
+  .galeria-descripcion {
+    margin: 14px auto 0;
+    max-width: 90%;
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.4;
+    font-style: italic;
+  }
+
   .sin-tarjetas {
     color: #888;
     font-size: 15px;
@@ -2283,6 +2314,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <img id="galeria-img" class="galeria-img" alt="Imagen de una ruta" style="display:none;">
     </div>
     <p class="galeria-vacia" id="galeria-vacia" style="display:none;">No hay imágenes en las rutas de respuestas.txt.</p>
+    <!-- NUEVO: descripción de la imagen (extraída del drawio), debajo de la imagen y arriba de Difícil/Nota -->
+    <p class="galeria-descripcion" id="galeria-descripcion" style="display:none;"></p>
 
     <div class="fila-galeria-acciones" style="margin-top:14px;">
       <button class="boton-dificil" id="btn-galeria-dificil" title="Marcar/desmarcar esta imagen como difícil">☆ Difícil</button>
@@ -2742,6 +2775,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elGaleriaIndicador = document.getElementById('galeria-indicador');
   const elGaleriaImg = document.getElementById('galeria-img');
   const elGaleriaVacia = document.getElementById('galeria-vacia');
+  const elGaleriaDescripcion = document.getElementById('galeria-descripcion');
   const elBtnGaleriaDificil = document.getElementById('btn-galeria-dificil');
   const elBtnGaleriaNota = document.getElementById('btn-galeria-nota');
   const elPanelGaleriaNota = document.getElementById('panel-galeria-nota');
@@ -3171,6 +3205,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return linea ? linea.substring(4) : '';   // quitar el prefijo 'IMG:'
   }
 
+  // NUEVO: descripción de UNA imagen puntual (ruta + posición dentro de la
+  // ruta), extraída del drawio. datos.descripciones_rutas ahora es
+  // { ruta: [desc_img0, desc_img1, ...] } -- una lista por ruta, análoga al
+  // 'indice' que ya usa srcDeImagen/INDICE_IMAGENES para navegar imágenes
+  // dentro de una misma ruta.
+  function descripcionDeImagen(ruta, indice) {
+    const listas = datos.descripciones_rutas || {};
+    const lista = listas[ruta] || listas[String(ruta)] || [];
+    return lista[indice] || '';
+  }
+
   function entradaImagenActual() {
     if (galeriaPos < 0 || galeriaPos >= INDICE_IMAGENES.length) return null;
     const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
@@ -3290,6 +3335,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elGaleriaIndicador.textContent = '';
       elGaleriaImg.style.display = 'none';
       elGaleriaVacia.style.display = 'block';
+      elGaleriaDescripcion.style.display = 'none';
+      elGaleriaDescripcion.textContent = '';
       elBtnGaleriaDificil.style.display = 'none';
       elBtnGaleriaNota.style.display = 'none';
       elPanelGaleriaNota.style.display = 'none';
@@ -3308,6 +3355,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
     elGaleriaImg.src = srcDeImagen(ruta, indice);
     elGaleriaIndicador.textContent = 'Imagen ' + (galeriaPos + 1) + ' de ' + total + ' (Ruta ' + ruta + ')';
+
+    // NUEVO: descripción de ESTA imagen puntual (atributo 'descripcion' del
+    // drawio, indexada por ruta + posición dentro de la ruta, igual que
+    // srcDeImagen/INDICE_IMAGENES).
+    const descripcionImg = descripcionDeImagen(ruta, indice);
+    if (descripcionImg) {
+      elGaleriaDescripcion.textContent = descripcionImg;
+      elGaleriaDescripcion.style.display = 'block';
+    } else {
+      elGaleriaDescripcion.textContent = '';
+      elGaleriaDescripcion.style.display = 'none';
+    }
 
     const esDif = esDificilImagen();
     elBtnGaleriaDificil.textContent = esDif ? '★ Difícil' : '☆ Difícil';
@@ -3539,33 +3598,44 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // ---------- Galería ----------
 
-  // Busca por número de ruta (ej. "ruta 5") o por descripción extraída del
-  // drawio (datos.descripciones_rutas). Dedupe por índice de imagen: cada
-  // resultado apunta a la primera imagen de la ruta encontrada, y una misma
-  // posición de INDICE_IMAGENES no se repite en la lista.
+  // Busca por número de ruta (ej. "ruta 5") o por la descripción de CADA
+  // imagen individual (datos.descripciones_rutas ahora es una lista por
+  // ruta, una posición por imagen). Dedupe por índice de imagen: una misma
+  // posición de INDICE_IMAGENES no se repite en la lista de resultados.
   function buscarGaleriaGlobal(consultaNorm) {
     const resultados = [];
     const posicionesUsadas = new Set();
-    const descripciones = datos.descripciones_rutas || {};
-    Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
-      const posImg = INDICE_IMAGENES.findIndex((e) => e.ruta === ruta);
-      if (posImg === -1 || posicionesUsadas.has(posImg)) return;  // sin imágenes, o ya usada
 
-      let texto = null;
-      if (normalizarPalabra('ruta ' + ruta).indexOf(consultaNorm) !== -1) {
-        texto = 'Ruta ' + ruta;
-      } else {
-        const desc = descripciones[ruta] || descripciones[String(ruta)] || '';
-        if (desc && normalizarPalabra(desc).indexOf(consultaNorm) !== -1) {
-          texto = desc;
-        }
-      }
-      if (texto !== null) {
-        resultados.push({ ruta: ruta, texto: texto, posImg: posImg });
+    // 1) Coincidencias por número de ruta: apuntan a la primera imagen de
+    //    esa ruta (el número de ruta no es específico de una imagen).
+    Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
+      if (normalizarPalabra('ruta ' + ruta).indexOf(consultaNorm) === -1) return;
+      const posImg = INDICE_IMAGENES.findIndex((e) => e.ruta === ruta);
+      if (posImg === -1 || posicionesUsadas.has(posImg)) return;
+      resultados.push({ ruta: ruta, indice: 0, texto: 'Ruta ' + ruta, posImg: posImg });
+      posicionesUsadas.add(posImg);
+    });
+
+    // 2) Coincidencias por descripción de CADA imagen individual: apuntan
+    //    exactamente a esa imagen (no siempre a la primera de la ruta), para
+    //    que en rutas con 2+ imágenes se navegue a la que realmente coincide.
+    INDICE_IMAGENES.forEach((entrada, posImg) => {
+      if (posicionesUsadas.has(posImg)) return;
+      const desc = descripcionDeImagen(entrada.ruta, entrada.indice);
+      if (desc && normalizarPalabra(desc).indexOf(consultaNorm) !== -1) {
+        resultados.push({ ruta: entrada.ruta, indice: entrada.indice, texto: desc, posImg: posImg });
         posicionesUsadas.add(posImg);
       }
     });
+
     return resultados;
+  }
+
+  function etiquetaResultadoGaleria(r) {
+    const totalImgsRuta = INDICE_IMAGENES.filter((e) => e.ruta === r.ruta).length;
+    return totalImgsRuta > 1
+      ? 'Ruta ' + r.ruta + ' (img ' + (r.indice + 1) + '/' + totalImgsRuta + '):'
+      : 'Ruta ' + r.ruta + ':';
   }
 
   function renderDropdownBuscadorGaleria(consulta) {
@@ -3578,7 +3648,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else {
       resultados.forEach((r) => {
         elDropdownBuscadorGaleria.appendChild(
-          crearItemDropdownBuscador('Ruta ' + r.ruta + ':', r.texto, consultaNorm, () => {
+          crearItemDropdownBuscador(etiquetaResultadoGaleria(r), r.texto, consultaNorm, () => {
             if (!confirmarDescartarGaleria()) return;
             cerrarDropdownBuscador(elDropdownBuscadorGaleria);
             elInputBuscadorGaleria.value = '';
@@ -5989,7 +6059,7 @@ else:
 #--- NUEVO: extracción de descripciones para el Buscador Global (independiente
 #    del resaltado: se hace siempre que haya .drawio, sin tocar el archivo) ---
 descripciones_rutas = extraer_descripciones_drawio(ruta_drawio)
-print(f"Descripciones extraídas del drawio: {len(descripciones_rutas)}")
+print(f"Rutas con descripciones de imagen extraídas del drawio: {len(descripciones_rutas)}")
 
 generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, txt_respuestas, Path(txt_respuestas).stem, descripciones_rutas)
 raiz.destroy()

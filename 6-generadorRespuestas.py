@@ -1742,7 +1742,7 @@ def preguntar_accion_primera(root) -> str:
     return eleccion["valor"]
 
 
-OUTPUT_DIR = Path(__file__).resolve().parent / "guardados" / "rutas"
+OUTPUT_DIR = Path(__file__).resolve().parent / "guardados" / "respuestas"
 def main() -> None:
     root = tk.Tk()
     root.withdraw()
