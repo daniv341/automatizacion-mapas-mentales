@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# v2 — reglas refinadas contra los archivos 2-5
-import re, os, glob, unicodedata
+# v3 — reglas refinadas contra los archivos 2-5 + CLI, manejo de errores y auto-test
+import re, os, sys, glob, argparse, unicodedata
 
 # ==================== PARÁMETROS ====================
 ARCHIVOS = ["texto.txt"]        # o: sorted(glob.glob("[0-9]*.txt")) para el lote
@@ -176,9 +176,28 @@ def procesar_linea(linea):
         bloques[0] = marcador + "\n" + bloques[0]
     return bloques
 
-def procesar(entrada):
-    with open(entrada, encoding="utf-8") as f:
-        texto = f.read()
+def procesar(entrada, sufijo=None, forzar=False):
+    sufijo = SUFIJO if sufijo is None else sufijo
+
+    if not os.path.isfile(entrada):
+        print(f"AVISO: no existe '{entrada}', se omite.", file=sys.stderr)
+        return
+    try:
+        with open(entrada, encoding="utf-8") as f:
+            texto = f.read()
+    except UnicodeDecodeError:
+        print(f"AVISO: '{entrada}' no está en UTF-8, se omite.", file=sys.stderr)
+        return
+    except OSError as e:
+        print(f"AVISO: no se pudo leer '{entrada}' ({e}), se omite.", file=sys.stderr)
+        return
+
+    raiz, ext = os.path.splitext(entrada)
+    destino = f"{raiz}{sufijo}{ext}"
+    if os.path.exists(destino) and not forzar:
+        print(f"AVISO: '{destino}' ya existe, se omite (usá --force para sobrescribir).",
+              file=sys.stderr)
+        return
 
     tags = {}                                              # proteger <imagen> etc.
     def guardar(m):
@@ -202,15 +221,67 @@ def procesar(entrada):
         bloques.extend(procesar_linea(ln))
 
     salida = re.sub(r"\n{3,}", "\n\n", "\n\n".join(bloques)).strip() + "\n"
-    for k, v in tags.items():                              # restaurar <imagen>
-        salida = salida.replace(k, v)
+    if tags:                                               # restaurar <imagen> en un solo paso
+        salida = re.sub(r"\x00\d+\x00", lambda m: tags[m.group(0)], salida)
 
-    raiz, ext = os.path.splitext(entrada)
-    destino = f"{raiz}{SUFIJO}{ext}"
-    with open(destino, "w", encoding="utf-8") as f:
-        f.write(salida)
+    try:
+        with open(destino, "w", encoding="utf-8") as f:
+            f.write(salida)
+    except OSError as e:
+        print(f"ERROR: no se pudo escribir '{destino}' ({e}).", file=sys.stderr)
+        return
     print(f"{entrada} -> {destino}")
 
+
+# ==================== AUTO-TEST ====================
+# Casos "dorados": (oración de entrada, líneas esperadas).
+# Correr con --test antes de tocar reglas, para detectar regresiones.
+CASOS_DORADOS = [
+    ("El proceso se aplica cuando el sistema lo requiere",
+     ["el proceso", "se aplica", "cuando sistema", "requiere"]),
+    ("Esto depende de la carga de trabajo del equipo",
+     ["Esto depende carga de trabajo", "del equipo"]),
+]
+
+def autotest():
+    fallos = 0
+    for entrada, esperado in CASOS_DORADOS:
+        obtenido = partir(entrada)
+        estado = "OK" if obtenido == esperado else "FALLO"
+        if estado == "FALLO":
+            fallos += 1
+        print(f"[{estado}] {entrada!r}\n  esperado: {esperado}\n  obtenido: {obtenido}")
+    print(f"\n{len(CASOS_DORADOS) - fallos}/{len(CASOS_DORADOS)} casos OK")
+    return fallos == 0
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        description="Reformatea archivos .txt cortando oraciones en líneas cortas.")
+    ap.add_argument("archivos", nargs="*",
+                     help="Archivos a procesar. Si se omite, usa ARCHIVOS del script "
+                          "o *.txt numerados en el directorio actual.")
+    ap.add_argument("--sufijo", default=None,
+                     help=f"Sufijo del archivo de salida (default: '{SUFIJO}').")
+    ap.add_argument("--force", action="store_true",
+                     help="Sobrescribe el archivo de salida si ya existe.")
+    ap.add_argument("--test", action="store_true",
+                     help="Corre los casos dorados de autotest y sale.")
+    args = ap.parse_args()
+
+    if args.test:
+        ok = autotest()
+        sys.exit(0 if ok else 1)
+
+    archivos = args.archivos or ARCHIVOS or sorted(glob.glob("[0-9]*.txt"))
+    if not archivos:
+        print("No hay archivos para procesar (pasalos como argumento o completá ARCHIVOS).",
+              file=sys.stderr)
+        sys.exit(1)
+
+    for a in archivos:
+        procesar(a, sufijo=args.sufijo, forzar=args.force)
+
+
 if __name__ == "__main__":
-    for a in (ARCHIVOS or sorted(glob.glob("[0-9]*.txt"))):
-        procesar(a)
+    main()

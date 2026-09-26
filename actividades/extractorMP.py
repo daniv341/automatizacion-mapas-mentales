@@ -80,7 +80,7 @@ def clean_drawio_value(value: str) -> str:
 
 def is_rhombus_style(style: str) -> bool:
     lowered = (style or "").lower()
-    return "rhombus" in lowered or "flowchart.decision" in lowered or ("gradientcolor=#" in lowered and "ellipse" in lowered)
+    return "rhombus" in lowered or "flowchart.decision" in lowered or ("gradientcolor=#" in lowered and "ellipse" in lowered) or "shape=offpageconnector" in lowered
 
 
 def parse_first_page(path: Path):
@@ -482,7 +482,7 @@ def render_blocks_txt(blocks: list[RouteBlock], is_rhombus_key) -> str:
 def postprocess_txt(text: str) -> str:
     return re.sub(r"^[ \t]+", "", text, flags=re.MULTILINE)
 
-
+# AQUI DONDE SE GUARDA
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "guardados" / "plantillas"
 
 
@@ -501,6 +501,7 @@ def main() -> None:
     input_path = Path(input_file)
     output_dir = OUTPUT_DIR if OUTPUT_DIR is not None else Path(__file__).parent.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+    # AQUI SE PONE NOMBRE AL TXT
     txt_path = output_dir / f"{input_path.stem}{OUTPUT_SUFFIX}.txt"
 
     vertices, styles, edges, graph, _diagram_name, _diagram_id, _orphan_ids = parse_first_page(input_path)

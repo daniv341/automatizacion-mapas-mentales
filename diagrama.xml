@@ -121,7 +121,7 @@
         <mxCell id="40" value="por empleado" style="shape=process;whiteSpace=wrap;backgroundOutline=1;strokeWidth=3;fillColor=#FF8000;fontSize=16;fontStyle=2;fontColor=#FFFFFF;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="4820" y="130" width="151.12" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="41" value="TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#FF8000;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="41" value=" TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#FF8000;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="5220" y="20" width="230" height="100" as="geometry" />
         </mxCell>
         <mxCell id="42" value=" 1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontStyle=1;strokeWidth=3;fillColor=#FF8000;fontColor=#FFFFFF;fontSize=16;" vertex="1" parent="1">
@@ -967,7 +967,7 @@
         <mxCell id="322" value=" liderazgo" style="shape=process;whiteSpace=wrap;backgroundOutline=1;strokeWidth=3;fillColor=#FF8000;fontSize=16;fontStyle=2;fontColor=#FFFFFF;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="37220" y="20" width="151.12" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="323" value="MÉTODO FEEDBACK" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#FF8000;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
+        <mxCell id="323" value=" MÉTODO FEEDBACK" style="rhombus;whiteSpace=wrap;fontSize=16;fillColor=#FF8000;strokeColor=default;fontColor=#FFFFFF;rounded=1;shadow=0;labelBackgroundColor=none;strokeWidth=4;spacing=5;arcSize=7;fillStyle=auto;gradientColor=none;fontFamily=Helvetica;fontStyle=1;overflow=block;" vertex="1" parent="1">
           <mxGeometry x="37620" y="20" width="175" height="100" as="geometry" />
         </mxCell>
         <mxCell id="324" value="Método SBI (Situación Comportamiento Impacto):" style="shape=process;whiteSpace=wrap;backgroundOutline=1;strokeWidth=3;fillColor=#FF8000;fontSize=16;fontStyle=2;fontColor=#FFFFFF;overflow=block;" vertex="1" parent="1">
