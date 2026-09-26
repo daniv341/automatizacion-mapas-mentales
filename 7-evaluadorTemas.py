@@ -2059,6 +2059,43 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .galeria-vacia { color: #888; padding: 30px 0; }
 
+  /* NUEVO: pantalla "Rutas Huérfanas" */
+  .lista-huerfanas-scroll {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .fila-resumen-huerfana {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .ruta-huerfana-titulo {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Mismo estilo que .boton-revisar pero relative (vive dentro de un <summary>) */
+  .boton-revisar-huerfana {
+    position: relative;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--stroke-color);
+    background: rgba(255,255,255,0.65);
+    border: 1.5px solid var(--stroke-color);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .boton-revisar-huerfana.activa { background: #ffe3c2; border-color: #e0812a; color: #a85a10; }
+
   /* NUEVO: descripción de la imagen (atributo 'descripcion' del drawio) */
   .galeria-descripcion {
     margin: 14px auto 0;
@@ -2278,8 +2315,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="lista-temas" id="lista-observador"></div>
     <!-- MODIFICADO: se agrega "Ver imágenes" junto al botón de volver -->
     <div class="fila-obs-botones">
-      <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
+      <button class="boton-secundario" id="btn-ver-huerfanas">📄 Rutas Huérfanas</button>
       <button class="boton-secundario" id="btn-ver-imagenes">🖼 Ver imágenes</button>
+      <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
     </div>
 
     <!-- NUEVO: notas y difíciles de imágenes (independiente de las de tarjetas) -->
@@ -2345,6 +2383,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-secundario" id="btn-galeria-anterior">&larr; Anterior</button>
       <button class="boton-secundario" id="btn-galeria-volver">☰ Volver a la lista</button>
       <button class="boton-secundario" id="btn-galeria-siguiente">Siguiente &rarr;</button>
+    </div>
+  </div>
+
+  <!-- NUEVO: rutas de respuestas.txt no citadas por ninguna tarjeta -->
+  <div id="pantalla-huerfanas" style="display:none;">
+    <p class="subtitulo">Rutas de respuestas.txt que no están citadas por ninguna tarjeta</p>
+
+    <div class="zona-buscador sticky-buscador" id="zona-buscador-huerfanas">
+      <input type="text" class="input-buscador" id="input-buscador-huerfanas" placeholder="Buscar por ruta o contenido..." autocomplete="off">
+      <div class="dropdown-buscador" id="dropdown-buscador-huerfanas"></div>
+    </div>
+
+    <div class="lista-huerfanas-scroll" id="lista-huerfanas"></div>
+    <p class="galeria-vacia" id="huerfanas-vacia" style="display:none;">No hay rutas huérfanas (todas las rutas de respuestas.txt están asociadas a tarjetas).</p>
+
+    <div style="display:flex; justify-content:center; margin-top:20px;">
+      <button class="boton-secundario" id="btn-huerfanas-volver">☰ Volver a la lista</button>
     </div>
   </div>
 
@@ -2791,6 +2846,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elDropdownBuscadorObservador = document.getElementById('dropdown-buscador-observador');
   const elInputBuscadorGaleria = document.getElementById('input-buscador-galeria');
   const elDropdownBuscadorGaleria = document.getElementById('dropdown-buscador-galeria');
+  // NUEVO: Rutas Huérfanas
+  const elPantallaHuerfanas = document.getElementById('pantalla-huerfanas');
+  const elListaHuerfanas = document.getElementById('lista-huerfanas');
+  const elHuerfanasVacia = document.getElementById('huerfanas-vacia');
+  const elInputBuscadorHuerfanas = document.getElementById('input-buscador-huerfanas');
+  const elDropdownBuscadorHuerfanas = document.getElementById('dropdown-buscador-huerfanas');
   const elBtnPausa = document.getElementById('btn-pausa');
   const elOverlayPausa = document.getElementById('overlay-pausa');
   const elBtnReanudar = document.getElementById('btn-reanudar');
@@ -2887,6 +2948,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elPantallaResumen.style.display = nombre === 'resumen' ? 'block' : 'none';
     elPantallaObservador.style.display = nombre === 'observador' ? 'block' : 'none';
     elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  // NUEVO
+    elPantallaHuerfanas.style.display = nombre === 'huerfanas' ? 'block' : 'none';  // NUEVO
 
     if (nombre === 'observador') {
       renderImagenesPreview();   // NUEVO: refresca también al entrar por primera vez (mismo motivo que "temas")
@@ -3439,6 +3501,188 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   // ============================================================
+  // NUEVO: Rutas Huérfanas (rutas de respuestas.txt no citadas por ninguna
+  // tarjeta). Pantalla independiente, solo accesible desde el observador.
+  // ============================================================
+
+  // Se calcula UNA sola vez: las rutas huérfanas no cambian durante la sesión
+  // (mismo criterio que INDICE_IMAGENES).
+  const rutasHuerfanas = (() => {
+    const citadas = new Set();
+    tarjetasCompletas.forEach((t) => rutasValidasDe(t).forEach((n) => citadas.add(n)));
+    return Object.keys(rutasDisp)
+      .map(Number)
+      .filter((n) => !citadas.has(n))
+      .sort((a, b) => a - b);
+  })();
+
+  // "Revisar" de rutas huérfanas: EFÍMERO en memoria (igual política que
+  // revisarEnMemoria de tarjetas). Objeto paralelo e independiente: nunca se
+  // mezcla con revisarEnMemoria ni aparece en "🚩 Para revisar guardadas".
+  let revisarRutasEnMemoria = {};
+  function esRevisarRuta(numeroRuta) { return !!revisarRutasEnMemoria[numeroRuta]; }
+  function toggleRevisarHuerfana(numeroRuta) {
+    if (revisarRutasEnMemoria[numeroRuta]) {
+      delete revisarRutasEnMemoria[numeroRuta];
+    } else {
+      revisarRutasEnMemoria[numeroRuta] = { ruta: numeroRuta, t: Date.now() };
+    }
+  }
+
+  // Línea de ruta SIN resaltado de palabras clave (no hay tarjeta asociada
+  // de donde sacar claves): a diferencia de agregarLineaResaltada, acá el
+  // texto va tal cual, como nodo de texto (nunca se interpreta como HTML).
+  function agregarLineaPlana(contenedor, linea) {
+    const div = document.createElement('div');
+    div.className = 'ruta-linea';
+    div.textContent = linea;
+    contenedor.appendChild(div);
+  }
+
+  function actualizarBotonRevisarHuerfana(boton, numeroRuta) {
+    const activa = esRevisarRuta(numeroRuta);
+    boton.classList.toggle('activa', activa);
+    boton.textContent = activa ? '🚩 Para revisar' : '🚩 Revisar';
+  }
+
+  // Arma los <details> UNA sola vez (las rutas huérfanas no cambian). Cada
+  // <details> es independiente entre sí: abrir uno no cierra los demás (es
+  // el comportamiento nativo de <details>, no hay nada que coordinarlos).
+  function construirListaHuerfanas() {
+    elListaHuerfanas.innerHTML = '';
+    rutasHuerfanas.forEach((numeroRuta) => {
+      const bloque = rutasDisp[numeroRuta];
+
+      const det = document.createElement('details');
+      det.className = 'ruta-acordeon';
+      det.dataset.ruta = String(numeroRuta);
+
+      const sum = document.createElement('summary');
+      const fila = document.createElement('span');
+      fila.className = 'fila-resumen-huerfana';
+
+      const titulo = document.createElement('span');
+      titulo.className = 'ruta-huerfana-titulo';
+      titulo.textContent = 'Ruta ' + numeroRuta;
+      fila.appendChild(titulo);
+
+      const btnRevisar = document.createElement('button');
+      btnRevisar.type = 'button';
+      btnRevisar.className = 'boton-revisar-huerfana';
+      btnRevisar.dataset.ruta = String(numeroRuta);
+      actualizarBotonRevisarHuerfana(btnRevisar, numeroRuta);
+      btnRevisar.addEventListener('click', (e) => {
+        // No debe colapsar/expandir el <details> al marcar/desmarcar.
+        e.preventDefault();
+        e.stopPropagation();
+        toggleRevisarHuerfana(numeroRuta);
+        actualizarBotonRevisarHuerfana(btnRevisar, numeroRuta);
+      });
+      fila.appendChild(btnRevisar);
+      sum.appendChild(fila);
+
+      const contenido = document.createElement('div');
+      contenido.className = 'ruta-contenido';
+      (bloque.lineas || []).forEach((linea) => {
+        if (esImagen(linea)) {
+          const img = document.createElement('img');
+          img.className = 'ruta-img-thumb';
+          img.src = linea.substring(4);  // quitar el prefijo 'IMG:'
+          img.alt = 'Imagen de la ruta ' + numeroRuta;
+          contenido.appendChild(img);
+        } else {
+          agregarLineaPlana(contenido, linea);
+        }
+      });
+
+      det.appendChild(sum);
+      det.appendChild(contenido);
+      elListaHuerfanas.appendChild(det);
+    });
+  }
+  construirListaHuerfanas();  // una sola vez: no cambia durante la sesión
+
+  // Reutiliza el lightbox ya existente (misma función que usan las rutas de
+  // las tarjetas), con su propio listener delegado sobre esta lista.
+  elListaHuerfanas.addEventListener('click', (evento) => {
+    if (evento.target.classList.contains('ruta-img-thumb')) {
+      abrirLightbox(evento.target.src);
+    }
+  });
+
+  function renderHuerfanas() {
+    const hay = rutasHuerfanas.length > 0;
+    elListaHuerfanas.style.display = hay ? 'block' : 'none';
+    elHuerfanasVacia.style.display = hay ? 'none' : 'block';
+  }
+
+  function abrirHuerfanas() {
+    mostrarPantalla('huerfanas');
+    renderHuerfanas();
+  }
+
+  function volverDesdeHuerfanas() {
+    // Igual que volverListaDesdeGaleria: no se reconstruye la lista del
+    // observador, así los subT que estaban abiertos quedan como estaban.
+    mostrarPantalla('observador');
+  }
+
+  // ---------- Buscador de Rutas Huérfanas (número de ruta + contenido) ----------
+
+  function textoHuerfanaPlano(numeroRuta) {
+    const lineas = (rutasDisp[numeroRuta] && rutasDisp[numeroRuta].lineas) || [];
+    return lineas.filter((linea) => !esImagen(linea)).join(' ');
+  }
+
+  function buscarHuerfanasGlobal(consultaNorm) {
+    const resultados = [];
+    rutasHuerfanas.forEach((numeroRuta) => {
+      let texto = null;
+      if (normalizarPalabra('ruta ' + numeroRuta).indexOf(consultaNorm) !== -1) {
+        texto = 'Ruta ' + numeroRuta;
+      } else {
+        const contenido = textoHuerfanaPlano(numeroRuta);
+        if (contenido && normalizarPalabra(contenido).indexOf(consultaNorm) !== -1) {
+          texto = contenido;
+        }
+      }
+      if (texto !== null) resultados.push({ ruta: numeroRuta, texto: texto });
+    });
+    return resultados;
+  }
+
+  // Al seleccionar: abre ESE <details> puntual (sin cerrar los demás que ya
+  // estuvieran abiertos) y hace scroll hasta él.
+  function seleccionarResultadoHuerfana(numeroRuta) {
+    const det = elListaHuerfanas.querySelector('details[data-ruta="' + numeroRuta + '"]');
+    if (det) {
+      det.open = true;
+      if (det.scrollIntoView) det.scrollIntoView({ block: 'center' });
+    }
+  }
+
+  function renderDropdownBuscadorHuerfanas(consulta) {
+    const consultaNorm = normalizarPalabra((consulta || '').trim());
+    elDropdownBuscadorHuerfanas.innerHTML = '';
+    if (consultaNorm === '') { elDropdownBuscadorHuerfanas.classList.remove('abierto'); return; }
+    const resultados = buscarHuerfanasGlobal(consultaNorm).slice(0, 30);
+    if (resultados.length === 0) {
+      renderDropdownVacio(elDropdownBuscadorHuerfanas);
+    } else {
+      resultados.forEach((r) => {
+        elDropdownBuscadorHuerfanas.appendChild(
+          crearItemDropdownBuscador('Ruta ' + r.ruta + ':', r.texto, consultaNorm, () => {
+            cerrarDropdownBuscador(elDropdownBuscadorHuerfanas);
+            elInputBuscadorHuerfanas.value = '';
+            seleccionarResultadoHuerfana(r.ruta);
+          })
+        );
+      });
+    }
+    elDropdownBuscadorHuerfanas.classList.add('abierto');
+  }
+
+  // ============================================================
   // NUEVO: Buscador Global (Elegir Temas / Observador / Galería)
   // ============================================================
   // Opera sobre los datos ya cargados en memoria (tarjetasCompletas,
@@ -3668,11 +3912,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elInputBuscadorTemas.addEventListener('input', debounce(() => renderDropdownBuscadorTemas(elInputBuscadorTemas.value), 200));
   elInputBuscadorObservador.addEventListener('input', debounce(() => renderDropdownBuscadorObservador(elInputBuscadorObservador.value), 200));
   elInputBuscadorGaleria.addEventListener('input', debounce(() => renderDropdownBuscadorGaleria(elInputBuscadorGaleria.value), 200));
+  elInputBuscadorHuerfanas.addEventListener('input', debounce(() => renderDropdownBuscadorHuerfanas(elInputBuscadorHuerfanas.value), 200));
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#zona-buscador-temas')) cerrarDropdownBuscador(elDropdownBuscadorTemas);
     if (!e.target.closest('#zona-buscador-observador')) cerrarDropdownBuscador(elDropdownBuscadorObservador);
     if (!e.target.closest('#zona-buscador-galeria')) cerrarDropdownBuscador(elDropdownBuscadorGaleria);
+    if (!e.target.closest('#zona-buscador-huerfanas')) cerrarDropdownBuscador(elDropdownBuscadorHuerfanas);
   });
 
   document.addEventListener('keydown', (e) => {
@@ -3680,6 +3926,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cerrarDropdownBuscador(elDropdownBuscadorTemas);
     cerrarDropdownBuscador(elDropdownBuscadorObservador);
     cerrarDropdownBuscador(elDropdownBuscadorGaleria);
+    cerrarDropdownBuscador(elDropdownBuscadorHuerfanas);
   });
 
   // ---------- Preview en el modo observador: "🖼 Datos de imágenes guardados" ----------
@@ -3835,6 +4082,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // ---------- Listeners de la galería ----------
   document.getElementById('btn-ver-imagenes').addEventListener('click', () => abrirGaleria());
   document.getElementById('btn-galeria-volver').addEventListener('click', () => volverListaDesdeGaleria());
+  document.getElementById('btn-ver-huerfanas').addEventListener('click', () => abrirHuerfanas());
+  document.getElementById('btn-huerfanas-volver').addEventListener('click', () => volverDesdeHuerfanas());
   document.getElementById('btn-galeria-anterior').addEventListener('click', () => navegarGaleria(-1));
   document.getElementById('btn-galeria-siguiente').addEventListener('click', () => navegarGaleria(1));
   elBtnGaleriaDificil.addEventListener('click', () => toggleDificilImagenActual());
