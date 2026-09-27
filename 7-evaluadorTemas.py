@@ -2495,9 +2495,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="lista-temas" id="lista-observador"></div>
     <!-- MODIFICADO: se agrega "Ver imágenes" junto al botón de volver -->
     <div class="fila-obs-botones">
-      <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
-      <button class="boton-secundario" id="btn-ver-imagenes">🖼 Ver imágenes</button>
       <button class="boton-secundario" id="btn-ver-huerfanas">📄 Rutas Huérfanas</button>
+      <button class="boton-secundario" id="btn-ver-imagenes">🖼 Ver imágenes</button>
+      <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
     </div>
 
     <!-- NUEVO: notas y difíciles de imágenes (independiente de las de tarjetas) -->
@@ -2578,7 +2578,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="lista-huerfanas-scroll" id="lista-huerfanas"></div>
     <p class="galeria-vacia" id="huerfanas-vacia" style="display:none;">No hay rutas huérfanas (todas las rutas de respuestas.txt están asociadas a tarjetas).</p>
 
-    <div class="navegacion" style="margin-top:20px;">
+    <div style="display:flex; justify-content:center; margin-top:20px;">
       <button class="boton-secundario" id="btn-huerfanas-volver">☰ Volver a la lista</button>
     </div>
   </div>
@@ -2597,7 +2597,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div id="pantalla-historial" style="display:none;">
     <p class="subtitulo">Historial de sesiones</p>
     <div class="fila-acciones-historial">
-      <button class="boton-secundario" id="btn-historial-exportar">Exportar historial (JSON)</button>
+      <button class="boton-secundario" id="btn-historial-exportar">Exportar historial</button>
       <button class="boton-secundario" id="btn-historial-importar">Importar historial</button>
       <input type="file" id="input-importar-historial" accept="application/json,.json" style="display:none;">
       <button class="boton-secundario" id="btn-historial-borrar">Borrar historial</button>
