@@ -6,7 +6,7 @@
 <title>Tarjetas de Estudio</title>
 <style>
   :root {
-    --fill-color: #0BD0AF;
+    --fill-color: #DC7BFF;
     --stroke-color: #5C5C5C;
   }
 
@@ -169,10 +169,43 @@
 
   .barra-superior {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 6px;
     margin-bottom: 8px;
   }
+
+  /* NUEVO: Fila 1 de la barra superior (gamificación) */
+  .fila-gamificacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #666;
+  }
+
+  .stat-gamificacion { white-space: nowrap; }
+
+  .boton-mute {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    font-family: inherit;
+  }
+
+  /* Fila 2 de la barra superior (navegación, ya existía como barra-superior) */
+  .fila-navegacion-superior {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #area-tarjeta.observador .fila-gamificacion { display: none !important; }
 
   .progreso-texto {
     font-size: 14px;
@@ -285,6 +318,7 @@
   }
 
   .boton-pista {
+    position: relative;
     padding: clamp(8px, 2.5vw, 10px) clamp(15px, 5vw, 22px);
     border-radius: 20px;
     border: 2px solid var(--stroke-color);
@@ -709,6 +743,7 @@
   .boton-si { background: #3aa76d; }
 
   .boton-saltar {
+    position: relative;
     padding: clamp(9px, 3vw, 12px) clamp(14px, 4.5vw, 20px);
     border-radius: 24px;
     background: #ffffff;
@@ -792,6 +827,7 @@
 
   .nota-sesion.aprobado { color: #3aa76d; }
   .nota-sesion.desaprobado { color: #e0574c; }
+  .nota-sesion.game-over { color: #c0392b !important; }
 
   .fila-resumen {
     display: flex;
@@ -1160,6 +1196,38 @@
     padding: 8px;
   }
 
+  /* NUEVO: Gamificación — modal de selección de modo */
+  .opciones-modo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px 0;
+  }
+
+  .opcion-modo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 2px solid #e2e4ec;
+    background: #fafafe;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+  }
+
+  .opcion-modo.seleccionada { border-color: var(--stroke-color); background: #fff3ea; }
+  .opcion-modo-icono { font-size: 22px; }
+  .opcion-modo-nombre { font-weight: 700; color: #333; margin-right: auto; }
+  .opcion-modo-detalle { font-size: 12px; color: #888; }
+
+  /* NUEVO: Gamificación — modal de Game Over */
+  .modal-gameover.abierto { background: rgba(60,0,0,0.75); }
+  .modal-caja-gameover { background: #2a1010; }
+  .titulo-gameover { color: #ff5252 !important; font-size: 24px !important; }
+  .modal-caja-gameover p { color: #f0b0b0 !important; }
+
   #area-tarjeta.observador .grupo-cronometro,
   #area-tarjeta.observador #btn-pausa { display: none !important; }
 
@@ -1304,6 +1372,87 @@
 
   .boton-revisar-huerfana.activa { background: #ffe3c2; border-color: #e0812a; color: #a85a10; }
 
+  /* NUEVO: Gamificación — Tienda */
+  .saldo-tienda {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--stroke-color);
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  .grid-tienda {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .item-tienda {
+    border: 2px solid #e2e4ec;
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .item-tienda-icono { font-size: 30px; }
+  .item-tienda-nombre { font-weight: 700; color: #333; }
+  .item-tienda-precio { font-size: 13px; color: #888; }
+  .item-tienda-descripcion { font-size: 12px; color: #999; min-height: 32px; }
+
+  .item-tienda-boton {
+    margin-top: 6px;
+    padding: 8px 14px;
+    border-radius: 18px;
+    border: 2px solid var(--stroke-color);
+    background: var(--stroke-color);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .item-tienda-boton:disabled {
+    background: #eee;
+    border-color: #ddd;
+    color: #aaa;
+    cursor: not-allowed;
+  }
+
+  .item-tienda-inventario { font-size: 12px; color: var(--stroke-color); font-weight: 700; }
+
+  /* NUEVO: Gamificación — Historial */
+  .fila-acciones-historial {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .lista-historial-scroll {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .item-historial {
+    border-bottom: 1px solid #eee;
+    padding: 10px 4px;
+    font-size: 13px;
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .item-historial:last-child { border-bottom: none; }
+  .item-historial-fecha { font-weight: 700; color: #333; }
+  .item-historial-detalle { display: flex; flex-wrap: wrap; gap: 10px; color: #777; }
+
   /* NUEVO: descripción de la imagen (atributo 'descripcion' del drawio) */
   .galeria-descripcion {
     margin: 14px auto 0;
@@ -1319,6 +1468,31 @@
     color: #888;
     font-size: 15px;
   }
+
+  /* NUEVO: Gamificación — iconos circulares (Historial / Tienda) */
+  .fila-iconos-gamificacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .boton-icono-circular {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid #e2e4ec;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    font-family: inherit;
+    padding: 0;
+  }
+  .boton-icono-circular:hover { border-color: var(--stroke-color); }
 
   /* ===== NUEVO: Buscador Global (Elegir Temas / Observador / Galería) ===== */
   .zona-buscador {
@@ -1411,6 +1585,12 @@
 
   <div id="pantalla-temas">
     <p class="subtitulo">Elegí qué temas (o tarjetas) querés estudiar</p>
+
+    <!-- NUEVO: Gamificación — accesos a Historial y Tienda -->
+    <div class="fila-iconos-gamificacion">
+      <button class="boton-icono-circular" id="btn-abrir-historial" title="Historial de sesiones">🕐</button>
+      <button class="boton-icono-circular" id="btn-abrir-tienda" title="Tienda">🛒</button>
+    </div>
 
     <!-- NUEVO: Buscador Global -->
     <div class="zona-buscador" id="zona-buscador-temas">
@@ -1611,13 +1791,49 @@
     </div>
   </div>
 
+  <!-- NUEVO: Gamificación — Tienda -->
+  <div id="pantalla-tienda" style="display:none;">
+    <p class="subtitulo">Tienda</p>
+    <div class="saldo-tienda" id="saldo-tienda">Puntos disponibles: 0</div>
+    <div class="grid-tienda" id="grid-tienda"></div>
+    <div class="navegacion" style="margin-top:20px;">
+      <button class="boton-secundario" id="btn-tienda-volver">← Volver</button>
+    </div>
+  </div>
+
+  <!-- NUEVO: Gamificación — Historial -->
+  <div id="pantalla-historial" style="display:none;">
+    <p class="subtitulo">Historial de sesiones</p>
+    <div class="fila-acciones-historial">
+      <button class="boton-secundario" id="btn-historial-exportar">Exportar historial</button>
+      <button class="boton-secundario" id="btn-historial-importar">Importar historial</button>
+      <input type="file" id="input-importar-historial" accept="application/json,.json" style="display:none;">
+      <button class="boton-secundario" id="btn-historial-borrar">Borrar historial</button>
+    </div>
+    <div class="lista-historial-scroll" id="lista-historial"></div>
+    <p class="galeria-vacia" id="historial-vacio" style="display:none;">Aún no hay sesiones guardadas.</p>
+    <div class="navegacion" style="margin-top:20px;">
+      <button class="boton-secundario" id="btn-historial-volver">← Volver</button>
+    </div>
+  </div>
+
   <div id="area-tarjeta" style="display:none;">
     <div class="barra-superior">
-      <div class="progreso-texto" id="progreso-texto"></div>
-      <div class="grupo-cronometro">
-        <div class="cronometro" id="cronometro">⏱ 00:00</div>
-        <!-- NUEVO: pausa manual (por si dejás de estudiar un rato) -->
-        <button class="boton-pausa" id="btn-pausa" title="Pausar el cronómetro">⏸ Pausar</button>
+      <!-- NUEVO: Fila 1 — estadísticas de gamificación -->
+      <div class="fila-gamificacion" id="fila-gamificacion">
+        <span class="stat-gamificacion" id="stat-puntos">⭐ 0</span>
+        <span class="stat-gamificacion" id="stat-racha">🔥 0</span>
+        <span class="stat-gamificacion" id="stat-vidas"></span>
+        <button class="boton-mute" id="btn-mute" title="Silenciar/activar sonidos">🔊</button>
+      </div>
+      <!-- Fila 2 — navegación (ya existía) -->
+      <div class="fila-navegacion-superior">
+        <div class="progreso-texto" id="progreso-texto"></div>
+        <div class="grupo-cronometro">
+          <div class="cronometro" id="cronometro">⏱ 00:00</div>
+          <!-- NUEVO: pausa manual (por si dejás de estudiar un rato) -->
+          <button class="boton-pausa" id="btn-pausa" title="Pausar el cronómetro">⏸ Pausar</button>
+        </div>
       </div>
     </div>
     <div class="barra-progreso"><div class="barra-progreso-relleno" id="barra-relleno"></div></div>
@@ -1635,7 +1851,7 @@
       <div class="primero" id="tarjeta-primero"></div>
       <div class="zona-segundo" id="zona-segundo">
         <div class="fila-botones-tarjeta">
-          <button class="boton-pista" id="btn-pista">Mostrar pista</button>
+          <button class="boton-pista" id="btn-pista">Mostrar pista<span class="badge-conteo" id="badge-pista-gratis" style="display:none;"></span></button>
           <button class="boton-respuesta" id="btn-respuesta">Mostrar respuesta</button>
           <!-- NUEVO: botón de nota (solo se ve si la tarjeta tiene nota) -->
           <button class="boton-nota" id="btn-nota" title="Ver/ocultar nota (pausa el cronómetro)">💡</button>
@@ -1695,7 +1911,7 @@
       <!-- MODIFICADO: fila de decisión (cambian resultados[] / avanzan la tarjeta) -->
       <div class="fila-decision">
         <button class="boton boton-circular boton-no" id="btn-no" title="No entendido">&#10007;</button>
-        <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar</button>
+        <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar<span class="badge-conteo" id="badge-comodines" style="display:none;"></span></button>
         <button class="boton boton-circular boton-si" id="btn-si" title="Entendido">&#10003;</button>
       </div>
       <!-- MODIFICADO: fila de etiquetas (metadata; no afectan la calificación) -->
@@ -1717,6 +1933,20 @@
   <div class="pantalla-resumen" id="pantalla-resumen">
     <h2>Resumen de la sesión</h2>
     <div class="nota-sesion" id="nota-sesion">🎓 Nota de la sesión: 0.0 / 10</div>
+
+    <!-- NUEVO: Gamificación — puntos, racha y modo jugado -->
+    <div class="listas-resumen" id="resumen-gamificacion" style="display:none;">
+      <div class="fila-resumen">
+        <span class="etiqueta-resumen" id="resumen-puntos">⭐ Puntos ganados: 0</span>
+      </div>
+      <div class="fila-resumen">
+        <span class="etiqueta-resumen" id="resumen-mejor-racha">🔥 Mejor racha: 0</span>
+      </div>
+      <div class="fila-resumen">
+        <span class="etiqueta-resumen" id="resumen-modo">🎮 Modo: Light</span>
+      </div>
+    </div>
+
     <div class="fila-resumen">
       <span class="etiqueta-resumen"><span class="punto punto-si"></span> Entendidas</span>
       <span class="valor-resumen" id="conteo-si">0</span>
@@ -1797,6 +2027,41 @@
   </div>
 </div>
 
+<!-- NUEVO: Gamificación — modal de selección de modo, antes de iniciar sesión -->
+<div class="modal-overlay" id="modal-modo">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>Elegí el modo de juego</h3>
+    <div class="opciones-modo">
+      <button type="button" class="opcion-modo" id="opcion-modo-tryhard" data-modo="tryhard">
+        <span class="opcion-modo-icono">🔥</span>
+        <span class="opcion-modo-nombre">Tryhard</span>
+        <span class="opcion-modo-detalle">1 vida</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-modo-normal" data-modo="normal">
+        <span class="opcion-modo-icono">⚔️</span>
+        <span class="opcion-modo-nombre">Normal</span>
+        <span class="opcion-modo-detalle">3 vidas</span>
+      </button>
+      <button type="button" class="opcion-modo seleccionada" id="opcion-modo-light" data-modo="light">
+        <span class="opcion-modo-icono">🌟</span>
+        <span class="opcion-modo-nombre">Light</span>
+        <span class="opcion-modo-detalle">Sin vidas, sin puntos</span>
+      </button>
+    </div>
+    <button class="boton-principal" id="btn-modo-confirmar">Comenzar</button>
+    <button class="modal-cancelar" id="btn-modo-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<!-- NUEVO: Gamificación — modal de Game Over (solo Tryhard/Normal) -->
+<div class="modal-overlay modal-gameover" id="modal-gameover">
+  <div class="modal-caja modal-caja-gameover" role="dialog" aria-modal="true">
+    <h3 class="titulo-gameover">💀 Game Over</h3>
+    <p>Te quedaste sin vidas.</p>
+    <button class="boton-principal" id="btn-gameover-resumen">Ver resumen</button>
+  </div>
+</div>
+
 <div class="lightbox" id="lightbox">
   <button class="lightbox-cerrar" title="Cerrar">&times;</button>
   <img id="lightbox-img" src="" alt="Imagen ampliada">
@@ -1874,6 +2139,61 @@
   let tiempoInicioTarjeta = 0;
   let cronometroIntervalId = null;
 
+  // ============================================================
+  // NUEVO: Gamificación — persistencia unificada (localStorage)
+  // ============================================================
+  const CLAVE_GAMIFICACION = 'gamificacion_v1';
+
+  function valoresPorDefectoGamificacion() {
+    return { puntosTotales: 0, inventario: { comodines: 0, pistasGratis: 0 }, historial: [] };
+  }
+
+  function cargarGamificacion() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_GAMIFICACION);
+      if (!crudo) return valoresPorDefectoGamificacion();
+      const obj = JSON.parse(crudo);
+      if (!obj || typeof obj !== 'object') return valoresPorDefectoGamificacion();
+      // Retrocompatibilidad: si falta algún campo, se completa con el default.
+      const base = valoresPorDefectoGamificacion();
+      return {
+        puntosTotales: typeof obj.puntosTotales === 'number' ? obj.puntosTotales : base.puntosTotales,
+        inventario: {
+          comodines: (obj.inventario && typeof obj.inventario.comodines === 'number') ? obj.inventario.comodines : base.inventario.comodines,
+          pistasGratis: (obj.inventario && typeof obj.inventario.pistasGratis === 'number') ? obj.inventario.pistasGratis : base.inventario.pistasGratis,
+        },
+        historial: Array.isArray(obj.historial) ? obj.historial : base.historial,
+      };
+    } catch (e) {
+      return valoresPorDefectoGamificacion();
+    }
+  }
+
+  function guardarGamificacion() {
+    try {
+      localStorage.setItem(CLAVE_GAMIFICACION, JSON.stringify(gamificacion));
+    } catch (e) {
+      // Sin localStorage disponible: solo queda en memoria de esta sesión
+    }
+  }
+
+  let gamificacion = cargarGamificacion();
+
+  // ---------- Estado de sesión (se resetea en cada iniciarSesion) ----------
+  let modoJuego = 'light';        // 'tryhard' | 'normal' | 'light'
+  let vidasMaximas = 0;
+  let vidasActuales = 0;
+  let puntosSesion = 0;
+  let rachaActual = 0;
+  let mejorRacha = 0;
+  let multiplicadorActual = 1;
+  let puntosPorTarjeta = [];              // paralelo a resultados: puntos ya sumados por cada tarjeta
+  let pistaGratisUsadaPorTarjeta = [];    // paralelo a resultados
+  let gameOverDisparado = false;
+  let historialGuardadoEstaSesion = false;
+  let modoZombie = false;   // NUEVO: si es true, se ignora POR COMPLETO la lógica de puntos/vidas/racha
+  let sonidosActivos = true;   // NUEVO: efímero (no se guarda en localStorage), como pide el prompt
+
   // ---------- MODIFICADO: estado persistente de tarjetas difíciles ----------
   // Mapa { hash: {p, s, activa} } guardado en localStorage.
   // El hash se calcula sobre el texto normalizado, así el marcado sobrevive
@@ -1943,8 +2263,10 @@
       entrada.activa = false;
     } else if (entrada) {
       entrada.activa = true;
+      if (!modoObservador) reproducirSonido('dificil');  // NUEVO: solo al MARCAR (no al desmarcar), nunca en observador
     } else {
       dificiles[h] = { p: t.primero || '', s: t.segundo || '', activa: true };
+      if (!modoObservador) reproducirSonido('dificil');  // NUEVO
     }
     guardarDificiles();
     renderTarjeta();
@@ -2060,6 +2382,27 @@
   const elHuerfanasVacia = document.getElementById('huerfanas-vacia');
   const elInputBuscadorHuerfanas = document.getElementById('input-buscador-huerfanas');
   const elDropdownBuscadorHuerfanas = document.getElementById('dropdown-buscador-huerfanas');
+  // NUEVO: Gamificación — elementos DOM
+  const elBtnAbrirHistorial = document.getElementById('btn-abrir-historial');
+  const elBtnAbrirTienda = document.getElementById('btn-abrir-tienda');
+  const elPantallaTienda = document.getElementById('pantalla-tienda');
+  const elPantallaHistorial = document.getElementById('pantalla-historial');
+  const elSaldoTienda = document.getElementById('saldo-tienda');
+  const elGridTienda = document.getElementById('grid-tienda');
+  const elListaHistorial = document.getElementById('lista-historial');
+  const elHistorialVacio = document.getElementById('historial-vacio');
+  const elBtnHistorialExportar = document.getElementById('btn-historial-exportar');
+  const elBtnHistorialBorrar = document.getElementById('btn-historial-borrar');
+  const elModalModo = document.getElementById('modal-modo');
+  const elModalGameOver = document.getElementById('modal-gameover');
+  const elFilaGamificacion = document.getElementById('fila-gamificacion');
+  const elStatPuntos = document.getElementById('stat-puntos');
+  const elStatRacha = document.getElementById('stat-racha');
+  const elStatVidas = document.getElementById('stat-vidas');
+  const elBtnMute = document.getElementById('btn-mute');
+  const elBadgePistaGratis = document.getElementById('badge-pista-gratis');
+  const elBadgeComodines = document.getElementById('badge-comodines');
+  const elResumenGamificacion = document.getElementById('resumen-gamificacion');
   const elBtnPausa = document.getElementById('btn-pausa');
   const elOverlayPausa = document.getElementById('overlay-pausa');
   const elBtnReanudar = document.getElementById('btn-reanudar');
@@ -2157,6 +2500,8 @@
     elPantallaObservador.style.display = nombre === 'observador' ? 'block' : 'none';
     elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  // NUEVO
     elPantallaHuerfanas.style.display = nombre === 'huerfanas' ? 'block' : 'none';  // NUEVO
+    elPantallaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';  // NUEVO
+    elPantallaHistorial.style.display = nombre === 'historial' ? 'block' : 'none';  // NUEVO
 
     if (nombre === 'observador') {
       renderImagenesPreview();   // NUEVO: refresca también al entrar por primera vez (mismo motivo que "temas")
@@ -2314,7 +2659,7 @@
     let filtradas = tarjetasCompletas.filter((_, i) => seleccion.has(i));
     if (modoAleatorio) filtradas = mezclar(filtradas);
 
-    iniciarSesion(filtradas);
+    abrirModalSeleccionModo(filtradas);  // MODIFICADO: gamificación
   });
 
   // ---------- NUEVO: modo observador ----------
@@ -2891,6 +3236,587 @@
   }
 
   // ============================================================
+  // NUEVO: Gamificación — sonidos, puntos, rachas, vidas, tienda, historial
+  // ============================================================
+  // Reglas de integración: NADA de esto se activa si modoObservador === true.
+  // No toca localStorage de dificiles/notas/razones/imágenes ni el buscador.
+
+  // ---------- Sonidos (Web Audio API: sin archivos embebidos) ----------
+  let contextoAudio = null;
+  function obtenerContextoAudio() {
+    if (!contextoAudio) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      contextoAudio = new AC();
+    }
+    if (contextoAudio.state === 'suspended') contextoAudio.resume();
+    return contextoAudio;
+  }
+
+  // Tono simple con envolvente (ataque/decaimiento) para no "clickear".
+  function tono(ctx, freq, inicio, duracion, tipo, volumen) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = tipo || 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + inicio);
+    gain.gain.setValueAtTime(0, ctx.currentTime + inicio);
+    gain.gain.linearRampToValueAtTime(volumen || 0.2, ctx.currentTime + inicio + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + inicio + duracion);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime + inicio);
+    osc.stop(ctx.currentTime + inicio + duracion + 0.02);
+  }
+
+  function reproducirSonido(nombre) {
+    if (!sonidosActivos) return;
+    const ctx = obtenerContextoAudio();
+    if (!ctx) return;
+    try {
+      if (nombre === 'bien') {
+        tono(ctx, 880, 0, 0.12, 'sine', 0.2);
+        tono(ctx, 1320, 0.09, 0.15, 'sine', 0.18);
+      } else if (nombre === 'mal') {
+        tono(ctx, 180, 0, 0.28, 'sawtooth', 0.15);
+      } else if (nombre === 'dificil') {
+        tono(ctx, 500, 0, 0.08, 'square', 0.12);
+        tono(ctx, 500, 0.1, 0.08, 'square', 0.12);
+      } else if (nombre === 'racha') {
+        tono(ctx, 660, 0, 0.09, 'triangle', 0.18);
+        tono(ctx, 880, 0.08, 0.09, 'triangle', 0.18);
+        tono(ctx, 1320, 0.16, 0.18, 'triangle', 0.2);
+      } else if (nombre === 'vida_perdida') {
+        tono(ctx, 220, 0, 0.1, 'square', 0.2);
+        tono(ctx, 140, 0.08, 0.18, 'square', 0.2);
+      } else if (nombre === 'game_over') {
+        tono(ctx, 320, 0, 0.25, 'sawtooth', 0.2);
+        tono(ctx, 240, 0.2, 0.25, 'sawtooth', 0.2);
+        tono(ctx, 160, 0.4, 0.45, 'sawtooth', 0.22);
+      }
+    } catch (e) {
+      // Si el navegador bloquea audio (por política de autoplay), se ignora en silencio.
+    }
+  }
+
+  function toggleMute() {
+    sonidosActivos = !sonidosActivos;
+    elBtnMute.textContent = sonidosActivos ? '🔊' : '🔇';
+  }
+  elBtnMute.addEventListener('click', () => toggleMute());
+
+  // ---------- Puntos, rachas y vidas ----------
+
+  // Tabla de puntos base (ver prompt). El multiplicador de racha se aplica
+  // solo a los puntos base POSITIVOS (nunca a la penalización de Saltar).
+  function calcularPuntosBase(resultado, opciones) {
+    opciones = opciones || {};
+    if (resultado === 'si') {
+      if (opciones.pistaGratisUsada) return 15;
+      if (opciones.conPista) return 8;
+      return 15;
+    }
+    if (resultado === 'casi') return 3;
+    if (resultado === 'no') return 0;
+    if (resultado === 'saltar') return opciones.comodinUsado ? 0 : -5;
+    return 0;
+  }
+
+  function puntosFinales(resultado, opciones) {
+    const base = calcularPuntosBase(resultado, opciones);
+    return base > 0 ? Math.round(base * multiplicadorActual) : base;
+  }
+
+  function totalTarjetasSesionActual() {
+    return tarjetasSesion.length || 1;
+  }
+
+  function recalcularMultiplicador() {
+    const pct = rachaActual / totalTarjetasSesionActual();
+    let nuevo = 1;
+    if (pct >= 0.75) nuevo = 2.5;
+    else if (pct >= 0.5) nuevo = 2.0;
+    else if (pct >= 0.3) nuevo = 1.5;
+    const subio = nuevo > multiplicadorActual;
+    multiplicadorActual = nuevo;
+    if (subio) reproducirSonido('racha');
+  }
+
+  function actualizarRachaTrasResultado(resultado, comodinUsado) {
+    const rompeRacha = (resultado === 'no') || (resultado === 'saltar' && !comodinUsado);
+    if (rompeRacha) {
+      rachaActual = 0;
+    } else if (resultado === 'si' || resultado === 'casi') {
+      rachaActual++;
+      if (rachaActual > mejorRacha) mejorRacha = rachaActual;
+    }
+    recalcularMultiplicador();
+  }
+
+  function aplicarPerdidaVida() {
+    if (modoJuego === 'light') return;
+    vidasActuales = Math.max(0, vidasActuales - 1);
+    reproducirSonido('vida_perdida');
+    if (vidasActuales === 0) dispararGameOver();
+  }
+
+  // Hook principal: se llama UNA vez por cada tarjeta que pasa de null a un
+  // resultado final (primera vez que se marca). Nunca en modo observador.
+  function procesarResultadoGamificacion(indice, resultado, opciones) {
+    if (modoObservador) return;
+
+    // NUEVO: "modo zombie" — sesión retomada después de un Game Over. El
+    // usuario puede seguir viendo/respondiendo tarjetas, pero puntos, racha
+    // y vidas quedan CONGELADOS en lo que tenían al momento del Game Over:
+    // se salta por completo la lógica de puntaje/racha/vidas (y su sonido).
+    if (modoZombie) return;
+
+    opciones = opciones || {};
+
+    const puntos = puntosFinales(resultado, opciones);
+    const anterior = puntosPorTarjeta[indice] || 0;
+    const delta = puntos - anterior;
+    puntosPorTarjeta[indice] = puntos;
+    if (modoJuego !== 'light') puntosSesion += delta;
+
+    actualizarRachaTrasResultado(resultado, !!opciones.comodinUsado);
+
+    if (resultado === 'si') {
+      reproducirSonido('bien');
+    } else if (resultado === 'no') {
+      reproducirSonido('mal');
+    } else if (resultado === 'saltar' && !opciones.comodinUsado) {
+      reproducirSonido('mal');
+    }
+
+    const pierdeVida = (resultado === 'no') || (resultado === 'saltar' && !opciones.comodinUsado);
+    if (pierdeVida) aplicarPerdidaVida();
+
+    actualizarBarraGamificacion();
+  }
+
+  // Ajuste de SOLO puntos (usado por "Entendida por comprensión": la tarjeta
+  // ya había sumado puntos como 'casi'/'mal' y ahora pasa a 'si'). No se
+  // retocan racha/vidas/sonido acá para no duplicar efectos ya disparados en
+  // el momento de la evaluación original (limitación documentada).
+  function ajustarPuntosGamificacion(indice, resultado, opciones) {
+    if (modoObservador) return;
+    if (modoZombie) return;   // NUEVO: sesión zombie -> puntaje congelado, ni el ajuste de "entendida" suma
+    const puntos = puntosFinales(resultado, opciones);
+    const anterior = puntosPorTarjeta[indice] || 0;
+    const delta = puntos - anterior;
+    puntosPorTarjeta[indice] = puntos;
+    if (modoJuego !== 'light') puntosSesion += delta;
+    actualizarBarraGamificacion();
+  }
+
+  function configurarModoJuego(modo) {
+    modoJuego = modo;
+    if (modo === 'tryhard') { vidasMaximas = 1; }
+    else if (modo === 'normal') { vidasMaximas = 3; }
+    else { vidasMaximas = 0; }
+  }
+
+  function nombreModoJuego(modo) {
+    if (modo === 'tryhard') return 'Tryhard';
+    if (modo === 'normal') return 'Normal';
+    return 'Light';
+  }
+
+  // Refresca puntos/racha/vidas/badges de inventario. Se llama tras cada
+  // cambio relevante (marcar, comprar, iniciar sesión).
+  function actualizarBarraGamificacion() {
+    if (modoObservador) return;
+
+    elStatPuntos.style.display = modoJuego === 'light' ? 'none' : 'inline';
+    elStatPuntos.textContent = '⭐ ' + puntosSesion;
+
+    elStatRacha.textContent = '🔥 ' + rachaActual + (multiplicadorActual > 1 ? (' x' + multiplicadorActual) : '');
+
+    if (modoJuego === 'light') {
+      elStatVidas.style.display = 'none';
+      elStatVidas.textContent = '';
+    } else {
+      elStatVidas.style.display = 'inline';
+      let corazones = '';
+      for (let i = 0; i < vidasMaximas; i++) corazones += (i < vidasActuales ? '❤️' : '💔');
+      elStatVidas.textContent = corazones;
+    }
+
+    // Badges de inventario en los botones de la tarjeta
+    if (gamificacion.inventario.pistasGratis > 0) {
+      elBadgePistaGratis.textContent = 'x' + gamificacion.inventario.pistasGratis;
+      elBadgePistaGratis.style.display = 'block';
+    } else {
+      elBadgePistaGratis.style.display = 'none';
+    }
+    if (gamificacion.inventario.comodines > 0) {
+      elBadgeComodines.textContent = 'x' + gamificacion.inventario.comodines;
+      elBadgeComodines.style.display = 'block';
+    } else {
+      elBadgeComodines.style.display = 'none';
+    }
+  }
+
+  // ---------- Modal de selección de modo ----------
+  let listaPendienteInicio = null;
+  let modoElegidoEnModal = 'light';
+
+  function seleccionarModoEnModal(modo) {
+    modoElegidoEnModal = modo;
+    document.querySelectorAll('.opcion-modo').forEach((el) => {
+      el.classList.toggle('seleccionada', el.dataset.modo === modo);
+    });
+  }
+
+  function abrirModalSeleccionModo(lista) {
+    if (!lista || lista.length === 0) return;
+    listaPendienteInicio = lista;
+    seleccionarModoEnModal('light');   // Light por defecto
+    elModalModo.classList.add('abierto');
+  }
+
+  function cancelarModalModo() {
+    elModalModo.classList.remove('abierto');
+    listaPendienteInicio = null;
+  }
+
+  function confirmarModoYComenzar() {
+    const lista = listaPendienteInicio;
+    elModalModo.classList.remove('abierto');
+    listaPendienteInicio = null;
+    if (!lista) return;
+    configurarModoJuego(modoElegidoEnModal);
+    iniciarSesion(lista);
+  }
+
+  document.getElementById('opcion-modo-tryhard').addEventListener('click', () => seleccionarModoEnModal('tryhard'));
+  document.getElementById('opcion-modo-normal').addEventListener('click', () => seleccionarModoEnModal('normal'));
+  document.getElementById('opcion-modo-light').addEventListener('click', () => seleccionarModoEnModal('light'));
+  document.getElementById('btn-modo-confirmar').addEventListener('click', () => confirmarModoYComenzar());
+  document.getElementById('btn-modo-cancelar').addEventListener('click', () => cancelarModalModo());
+
+  // ---------- Game Over ----------
+
+  function dispararGameOver() {
+    if (modoJuego === 'light') return;   // nunca en Light
+    if (gameOverDisparado) return;       // no disparar 2 veces
+    gameOverDisparado = true;
+    // Reutiliza el guard ya existente (marcar/evaluarRespuesta/navegar lo
+    // chequean todos): bloquea la sesión sin tocar su lógica.
+    pausaManual = true;
+    reproducirSonido('game_over');
+    elModalGameOver.classList.add('abierto');
+  }
+
+  document.getElementById('btn-gameover-resumen').addEventListener('click', () => {
+    elModalGameOver.classList.remove('abierto');
+    pausaManual = false;
+    finalizarSesion();
+  });
+
+  // ---------- Historial de sesiones (guardado desde mostrarResumen) ----------
+
+  function guardarHistorialSesion(nota) {
+    if (modoObservador) return;
+    if (historialGuardadoEstaSesion) return;   // evita duplicar si mostrarResumen() se llama 2 veces
+    historialGuardadoEstaSesion = true;
+
+    const duracionMs = tiempos.reduce((a, b) => a + b, 0);
+    gamificacion.historial.push({
+      fecha: new Date().toISOString(),
+      modo: modoJuego,
+      nota: Math.round(nota * 10) / 10,
+      duracion_ms: duracionMs,
+      puntos_ganados: modoJuego === 'light' ? 0 : puntosSesion,
+    });
+    if (modoJuego !== 'light') {
+      gamificacion.puntosTotales += puntosSesion;
+    }
+    guardarGamificacion();
+    actualizarBarraGamificacion();
+  }
+
+  function renderResumenGamificacion(nota) {
+    if (modoObservador) { elResumenGamificacion.style.display = 'none'; return; }
+    elResumenGamificacion.style.display = 'block';
+    document.getElementById('resumen-puntos').textContent =
+      modoJuego === 'light' ? '⭐ Puntos ganados: — (modo Light)' : ('⭐ Puntos ganados: ' + puntosSesion);
+    document.getElementById('resumen-mejor-racha').textContent = '🔥 Mejor racha: ' + mejorRacha;
+    document.getElementById('resumen-modo').textContent = '🎮 Modo: ' + nombreModoJuego(modoJuego);
+
+    const elNota = document.getElementById('nota-sesion');
+    if (gameOverDisparado) {
+      elNota.classList.add('game-over');
+      elNota.textContent += ' — 💀 Game Over';
+    } else {
+      elNota.classList.remove('game-over');
+    }
+  }
+
+  // ---------- Tienda ----------
+
+  const ITEMS_TIENDA = [
+    { id: 'comodines', icono: '🃏', nombre: 'Comodín', precio: 100, descripcion: 'Salta una tarjeta sin perder vida ni puntos.' },
+    { id: 'pistasGratis', icono: '💡', nombre: 'Pista Gratis', precio: 50, descripcion: 'Revela la pista manteniendo el puntaje máximo si aciertas.' },
+  ];
+
+  function renderTienda() {
+    elSaldoTienda.textContent = 'Puntos disponibles: ' + gamificacion.puntosTotales;
+    elGridTienda.innerHTML = '';
+    ITEMS_TIENDA.forEach((item) => {
+      const cont = document.createElement('div');
+      cont.className = 'item-tienda';
+
+      const icono = document.createElement('div');
+      icono.className = 'item-tienda-icono';
+      icono.textContent = item.icono;
+      cont.appendChild(icono);
+
+      const nombre = document.createElement('div');
+      nombre.className = 'item-tienda-nombre';
+      nombre.textContent = item.nombre;
+      cont.appendChild(nombre);
+
+      const precio = document.createElement('div');
+      precio.className = 'item-tienda-precio';
+      precio.textContent = item.precio + ' pts';
+      cont.appendChild(precio);
+
+      const desc = document.createElement('div');
+      desc.className = 'item-tienda-descripcion';
+      desc.textContent = item.descripcion;
+      cont.appendChild(desc);
+
+      const cantidad = gamificacion.inventario[item.id] || 0;
+      if (cantidad > 0) {
+        const inv = document.createElement('div');
+        inv.className = 'item-tienda-inventario';
+        inv.textContent = 'Tenés: ' + cantidad;
+        cont.appendChild(inv);
+      }
+
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'item-tienda-boton';
+      boton.textContent = 'Comprar';
+      boton.disabled = gamificacion.puntosTotales < item.precio;
+      boton.addEventListener('click', () => comprarItem(item.id));
+      cont.appendChild(boton);
+
+      elGridTienda.appendChild(cont);
+    });
+  }
+
+  function comprarItem(idItem) {
+    const item = ITEMS_TIENDA.find((i) => i.id === idItem);
+    if (!item) return;
+    if (gamificacion.puntosTotales < item.precio) return;
+    gamificacion.puntosTotales -= item.precio;
+    gamificacion.inventario[idItem] = (gamificacion.inventario[idItem] || 0) + 1;
+    guardarGamificacion();
+    renderTienda();
+    actualizarBarraGamificacion();
+  }
+
+  function abrirTienda() {
+    mostrarPantalla('tienda');
+    renderTienda();
+  }
+
+  elBtnAbrirTienda.addEventListener('click', () => abrirTienda());
+  document.getElementById('btn-tienda-volver').addEventListener('click', () => mostrarPantalla('temas'));
+
+  // ---------- Historial ----------
+
+  function formatearFechaHistorial(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString();
+    } catch (e) {
+      return iso;
+    }
+  }
+
+  function renderHistorial() {
+    const historial = gamificacion.historial;
+    elListaHistorial.innerHTML = '';
+    if (historial.length === 0) {
+      elListaHistorial.style.display = 'none';
+      elHistorialVacio.style.display = 'block';
+      return;
+    }
+    elListaHistorial.style.display = 'block';
+    elHistorialVacio.style.display = 'none';
+
+    // Más reciente primero
+    for (let i = historial.length - 1; i >= 0; i--) {
+      const entrada = historial[i];
+      const item = document.createElement('div');
+      item.className = 'item-historial';
+
+      const fecha = document.createElement('div');
+      fecha.className = 'item-historial-fecha';
+      fecha.textContent = formatearFechaHistorial(entrada.fecha);
+      item.appendChild(fecha);
+
+      const detalle = document.createElement('div');
+      detalle.className = 'item-historial-detalle';
+      const modoTxt = document.createElement('span');
+      modoTxt.textContent = '🎮 ' + nombreModoJuego(entrada.modo);
+      const notaTxt = document.createElement('span');
+      notaTxt.textContent = '🎓 ' + Number(entrada.nota).toFixed(1) + ' / 10';
+      const duracionTxt = document.createElement('span');
+      duracionTxt.textContent = '⏱ ' + formatearTiempo(entrada.duracion_ms || 0);
+      const puntosTxt = document.createElement('span');
+      puntosTxt.textContent = '⭐ ' + (entrada.puntos_ganados || 0);
+      detalle.appendChild(modoTxt);
+      detalle.appendChild(notaTxt);
+      detalle.appendChild(duracionTxt);
+      detalle.appendChild(puntosTxt);
+      item.appendChild(detalle);
+
+      elListaHistorial.appendChild(item);
+    }
+  }
+
+  // MODIFICADO: se exporta el objeto COMPLETO de gamificación (puntosTotales +
+  // inventario + historial) en la raíz, no solo el array de historial, para
+  // poder recuperar todo al importar en otro dispositivo.
+  function exportarHistorial() {
+    const blob = new Blob([JSON.stringify(gamificacion, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gamificacion_export.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function borrarHistorial() {
+    if (gamificacion.historial.length === 0) return;
+    if (!window.confirm('¿Borrar todo el historial de sesiones? Los puntos y el inventario NO se ven afectados.')) return;
+    gamificacion.historial = [];
+    guardarGamificacion();
+    renderHistorial();
+  }
+
+  // NUEVO: Importar historial (fusiona con lo local, ver reglas en el prompt)
+
+  function sesionMasReciente(historial) {
+    if (!historial || historial.length === 0) return null;
+    let mejor = historial[0];
+    for (let i = 1; i < historial.length; i++) {
+      if (String(historial[i].fecha) > String(mejor.fecha)) mejor = historial[i];
+    }
+    return mejor;
+  }
+
+  function fusionarGamificacionImportada(importado) {
+    // Normaliza estructura mínima esperada (por si el archivo viene incompleto)
+    const impPuntos = typeof importado.puntosTotales === 'number' ? importado.puntosTotales : 0;
+    const impInventario = {
+      comodines: (importado.inventario && typeof importado.inventario.comodines === 'number') ? importado.inventario.comodines : 0,
+      pistasGratis: (importado.inventario && typeof importado.inventario.pistasGratis === 'number') ? importado.inventario.pistasGratis : 0,
+    };
+    const impHistorial = Array.isArray(importado.historial) ? importado.historial : [];
+
+    const masRecienteImportado = sesionMasReciente(impHistorial);
+    const masRecienteLocal = sesionMasReciente(gamificacion.historial);
+    const fechaImportado = masRecienteImportado ? String(masRecienteImportado.fecha) : null;
+    const fechaLocal = masRecienteLocal ? String(masRecienteLocal.fecha) : null;
+
+    // La fecha es un ISO string: la comparación lexicográfica alcanza para
+    // saber cuál sesión es más reciente. Si no hay sesión local, se considera
+    // que la importada es "posterior" (no hay nada local con qué comparar).
+    const importadoEsPosterior = fechaImportado !== null && (fechaLocal === null || fechaImportado > fechaLocal);
+
+    if (importadoEsPosterior) {
+      const algoMenor = impPuntos < gamificacion.puntosTotales
+        || impInventario.comodines < gamificacion.inventario.comodines
+        || impInventario.pistasGratis < gamificacion.inventario.pistasGratis;
+
+      if (algoMenor) {
+        const aceptar = window.confirm(
+          `El archivo importado tiene una sesión más reciente, pero sus puntos o su inventario son MENORES que los que tenés ahora acá.
+
+        ¿Querés reemplazar tus puntos y comodines actuales por los del archivo importado?`
+        );
+        if (aceptar) {
+          gamificacion.puntosTotales = impPuntos;
+          gamificacion.inventario = impInventario;
+        }
+        // si rechaza: se mantienen los locales, sin tocar nada
+      } else {
+        // Es posterior y mayor o igual en todo: se reemplaza sin preguntar
+        gamificacion.puntosTotales = impPuntos;
+        gamificacion.inventario = impInventario;
+      }
+    }
+    // Si NO es posterior (la importada es más vieja, o no trae historial):
+    // se mantienen los puntos e inventario locales tal cual están.
+
+    // Fusión del historial: se agregan las sesiones importadas que no estén
+    // ya localmente. Duplicada = mismo string EXACTO en 'fecha'.
+    const fechasLocales = new Set(gamificacion.historial.map((s) => String(s.fecha)));
+    impHistorial.forEach((sesion) => {
+      const f = String(sesion.fecha);
+      if (!fechasLocales.has(f)) {
+        gamificacion.historial.push(sesion);
+        fechasLocales.add(f);
+      }
+    });
+
+    guardarGamificacion();
+    renderHistorial();
+    actualizarBarraGamificacion();
+  }
+
+  function importarHistorial(archivo) {
+    const lector = new FileReader();
+    lector.onload = () => {
+      let importado;
+      try {
+        importado = JSON.parse(lector.result);
+      } catch (e) {
+        window.alert('No se pudo leer el archivo: el JSON no es válido.');
+        return;
+      }
+      if (!importado || typeof importado !== 'object') {
+        window.alert('El archivo no tiene el formato esperado.');
+        return;
+      }
+      fusionarGamificacionImportada(importado);
+      window.alert('Historial importado y fusionado correctamente.');
+    };
+    lector.onerror = () => window.alert('No se pudo leer el archivo.');
+    lector.readAsText(archivo);
+  }
+
+  document.getElementById('btn-historial-importar').addEventListener('click', () => {
+    document.getElementById('input-importar-historial').click();
+  });
+  document.getElementById('input-importar-historial').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    if (archivo) importarHistorial(archivo);
+    evento.target.value = '';   // permite volver a elegir el mismo archivo más adelante
+  });
+
+  function abrirHistorial() {
+    mostrarPantalla('historial');
+    renderHistorial();
+  }
+
+  elBtnAbrirHistorial.addEventListener('click', () => abrirHistorial());
+  document.getElementById('btn-historial-volver').addEventListener('click', () => mostrarPantalla('temas'));
+  elBtnHistorialExportar.addEventListener('click', () => exportarHistorial());
+  elBtnHistorialBorrar.addEventListener('click', () => borrarHistorial());
+
+  // Estado inicial de los stats (por si se entra a 'estudio' antes de iniciar)
+  actualizarBarraGamificacion();
+
+  // ============================================================
   // NUEVO: Buscador Global (Elegir Temas / Observador / Galería)
   // ============================================================
   // Opera sobre los datos ya cargados en memoria (tarjetasCompletas,
@@ -3309,14 +4235,14 @@
   // Modo 1: evaluación completa (todas las tarjetas, ignora los checkboxes)
   document.getElementById('btn-modo-completo').addEventListener('click', () => {
     if (tarjetasCompletas.length === 0) return;
-    iniciarSesion(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);
+    abrirModalSeleccionModo(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);  // MODIFICADO: gamificación
   });
 
   // Modo 2: repasar las difíciles activas (solo las presentes en este evaluador)
   document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
     const paraRepasar = tarjetasCompletas.filter((t) => esDificil(t));
     if (paraRepasar.length === 0) return;
-    iniciarSesion(modoAleatorio ? mezclar(paraRepasar) : paraRepasar);
+    abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar);  // MODIFICADO: gamificación
   });
 
   // ---------- MODIFICADO: vista previa / gestión de difíciles ----------
@@ -3942,6 +4868,20 @@
     resetPanelesUI();
     tiempoInicioTarjeta = Date.now();
 
+    // NUEVO: Gamificación — reset de variables de sesión. Usa el modo ya
+    // elegido en el modal (configurarModoJuego ya seteó vidasMaximas).
+    puntosSesion = 0;
+    rachaActual = 0;
+    mejorRacha = 0;
+    multiplicadorActual = 1;
+    vidasActuales = vidasMaximas;
+    puntosPorTarjeta = new Array(lista.length).fill(0);
+    pistaGratisUsadaPorTarjeta = new Array(lista.length).fill(false);
+    gameOverDisparado = false;
+    historialGuardadoEstaSesion = false;
+    modoZombie = false;   // NUEVO: una sesión nueva nunca arranca en modo zombie
+    actualizarBarraGamificacion();
+
     mostrarPantalla('estudio');
     iniciarCronometro();
     renderTarjeta();
@@ -4455,6 +5395,15 @@
     resultados[indiceActual] = (resultado === 'bien') ? 'si' : (resultado === 'casi' ? 'casi' : 'no');
     revelado[indiceActual] = true;
 
+    // NUEVO: Gamificación — puntos, racha, vidas y sonido (nunca en modo observador)
+    if (!modoObservador) {
+      procesarResultadoGamificacion(indiceActual, resultados[indiceActual], {
+        conPista: !!pistaMostrada[indiceActual],
+        pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
+        comodinUsado: false,
+      });
+    }
+
     renderTarjeta();
   }
 
@@ -4497,8 +5446,28 @@
       tiempoInicioTarjeta = Date.now();
     }
     resetPanelesUI();
+
+    // NUEVO: Gamificación — si se salta con un Comodín disponible, se
+    // consume del inventario PERSISTENTE (no de la sesión) y esta tarjeta
+    // no penaliza puntos ni vidas.
+    let comodinUsado = false;
+    if (!modoObservador && !modoZombie && resultado === 'saltar' && gamificacion.inventario.comodines > 0) {
+      gamificacion.inventario.comodines--;
+      comodinUsado = true;
+      guardarGamificacion();
+    }
+
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
+
+    // NUEVO: Gamificación — puntos, racha, vidas y sonido (nunca en modo observador)
+    if (!modoObservador) {
+      procesarResultadoGamificacion(indiceActual, resultado, {
+        conPista: !!pistaMostrada[indiceActual],
+        pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
+        comodinUsado: comodinUsado,
+      });
+    }
 
     if (indiceActual < tarjetasSesion.length - 1) {
       indiceActual++;
@@ -4533,6 +5502,17 @@
     // Auto-calificar como "No entendida" solo si todavía no estaba marcada.
     if (resultados[indiceActual] === null) {
       resultados[indiceActual] = 'no';
+
+      // NUEVO: Gamificación — "Mostrar respuesta" auto-califica como 'no',
+      // así que debe disparar exactamente la misma lógica de puntos/racha/
+      // vidas que un "Mal" marcado a mano (nunca en observador).
+      if (!modoObservador) {
+        procesarResultadoGamificacion(indiceActual, 'no', {
+          conPista: !!pistaMostrada[indiceActual],
+          pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
+          comodinUsado: false,
+        });
+      }
     }
 
     // NO avanza automáticamente: el usuario se queda leyendo y avanza con "Siguiente".
@@ -4547,8 +5527,32 @@
     const ev = evaluaciones[indiceActual];
     if (!ev || (ev.resultado !== 'casi' && ev.resultado !== 'mal')) return;
     if (resultados[indiceActual] === 'si') return;
+    const resultadoOriginal = ev.resultado;   // 'casi' o 'mal', antes de la corrección
     resultados[indiceActual] = 'si';
     porComprension[indiceActual] = true;
+
+    // NUEVO: Gamificación — solo ajusta el DELTA de puntos (la tarjeta ya
+    // había sumado puntos como 'casi'/'mal'). No se REESCRIBE el pasado de
+    // racha/vidas (limitación documentada), pero sí se reproduce el sonido
+    // que corresponde a este resultado corregido:
+    // - 'casi' -> 'si': el 'casi' YA había sumado un acierto a la racha en su
+    //   momento (no rompe racha), así que acá NO se vuelve a incrementar
+    //   (evita duplicar el conteo). Solo suena "bien".
+    // - 'mal' -> 'si': el 'mal' original SÍ había roto la racha a 0 sin sumar
+    //   ningún acierto. Como esta tarjeta ahora cuenta como entendida, se
+    //   suma como acierto DE ACÁ EN ADELANTE (no retroactivo): puede subir el
+    //   multiplicador y sonar "racha", además de "bien".
+    ajustarPuntosGamificacion(indiceActual, 'si', {
+      conPista: !!pistaMostrada[indiceActual],
+      pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
+      comodinUsado: false,
+    });
+    if (resultadoOriginal === 'mal') {
+      actualizarRachaTrasResultado('si', false);  // incrementa racha + recalcula multiplicador (puede sonar "racha")
+    }
+    reproducirSonido('bien');
+    actualizarBarraGamificacion();
+
     renderTarjeta();
   }
 
@@ -4919,10 +5923,17 @@
   }
 
   // MODIFICADO: registrar el uso de la pista (baja la nota a 0.5 si la tarjeta
-  // termina como Entendida)
+  // termina como Entendida). NUEVO: si hay Pistas Gratis en el inventario, se
+  // consume 1 y esta tarjeta no penaliza puntos por usar pista (15 en vez de 8).
   elBtnPista.addEventListener('click', () => {
     revelado[indiceActual] = true;
     pistaMostrada[indiceActual] = true;
+    if (!modoObservador && !modoZombie && gamificacion.inventario.pistasGratis > 0) {
+      gamificacion.inventario.pistasGratis--;
+      pistaGratisUsadaPorTarjeta[indiceActual] = true;
+      guardarGamificacion();
+      actualizarBarraGamificacion();
+    }
     renderTarjeta();
   });
 
@@ -5225,6 +6236,10 @@
       iniciarSesion(nuevaLista);
     };
 
+    // NUEVO: Gamificación — filas de puntos/racha/modo + guardado en historial
+    renderResumenGamificacion(nota);
+    guardarHistorialSesion(nota);
+
     mostrarPantalla('resumen');
   }
 
@@ -5245,6 +6260,13 @@
   // resultados; solo las pasadas sin marcar vuelven a quedar pendientes.
   function continuarEnEstaSesion() {
     cerrarModalContinuar();
+    // NUEVO: Gamificación — si esta sesión ya tuvo Game Over (0 vidas) y el
+    // usuario igual elige seguir, entra en "modo zombie": puede seguir viendo
+    // y respondiendo tarjetas, pero puntos/racha/vidas quedan CONGELADOS tal
+    // como estaban en el momento del Game Over (no sigue sumando negativo).
+    if (gameOverDisparado) {
+      modoZombie = true;
+    }
     resultados.forEach((r, i) => {
       if (r === 'saltar') {
         resultados[i] = null;
