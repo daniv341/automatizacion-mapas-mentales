@@ -28,6 +28,6 @@ def procesar_lineas_con_simbolos(nombre_archivo, simbolos):
     print(f"Archivo procesado y guardado en '{nombre_archivo}'.")
 
 # Ejemplo de uso
-nombre_archivo= "borrador.txt"  # Nombre del archivo de entrada
+nombre_archivo= "modificables/borrador.txt"  # Nombre del archivo de entrada
 simbolos = {"temaP", "clasP", "temaS", "subT", "textS", "deF", "imP", "cuR", "clasS", "caR", "ejeM", "recoR", "nuM", "pasoS", "preG", "comP"} # Conjunto de palabras clave
 procesar_lineas_con_simbolos(nombre_archivo, simbolos)

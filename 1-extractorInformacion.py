@@ -221,7 +221,7 @@ if __name__ == "__main__":
     # Cambiá esta variable por la ruta del PDF que quieras procesar
     PDF_ARCHIVO = txt
 
-    OUTPUT_TXT = "borrador.txt"
+    OUTPUT_TXT = "modificables/borrador.txt"
     OUTPUT_IMG_FOLDER = "imagenes_salida"
 
     if not os.path.isfile(PDF_ARCHIVO):

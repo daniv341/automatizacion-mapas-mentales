@@ -381,11 +381,11 @@ def extraer_subT(lineas_crudas, salida_recordatorio):
 def main():
     ap = argparse.ArgumentParser(
         description="Genera un mapa mental en XML de draw.io a partir de un archivo de texto.")
-    ap.add_argument("entrada", nargs="?", default="texto.txt",
+    ap.add_argument("entrada", nargs="?", default="modificables/texto.txt",
                      help="Archivo de texto de entrada (default: texto.txt).")
-    ap.add_argument("--salida-xml", default="diagrama.xml",
+    ap.add_argument("--salida-xml", default="modificables/diagrama.xml",
                      help="Archivo XML de salida (default: diagrama.xml).")
-    ap.add_argument("--salida-recordatorio", default="recordatorio.txt",
+    ap.add_argument("--salida-recordatorio", default="modificables/recordatorio.txt",
                      help="Archivo con los renglones 'subT' extraídos (default: recordatorio.txt).")
     args = ap.parse_args()
 

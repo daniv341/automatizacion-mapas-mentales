@@ -197,7 +197,7 @@ def generar_tarjetas():
   </diagram>
 </mxfile>'''
 
-    with open("tarjetas.xml", "w", encoding="utf-8") as archivo:
+    with open("modificables/tarjetas.xml", "w", encoding="utf-8") as archivo:
         archivo.write(contenido)
     print("diagrama creado")
 

@@ -56,7 +56,7 @@ TEMAS_PREFIX = "temaS "          # prefijo del tema secundario (hexagono+gradien
 IMAGE_PLACEHOLDER = "<imagen>"   # marcador donde habia una imagen
 STRIP_JOIN_COMMAS = True         # quita la coma final de cada rama al
                                  # separar una bifurcacion en renglones
-OUTPUT_SUFFIX = "- MP"           # sufijo del nombre del txt generado
+OUTPUT_SUFFIX = "_MP"           # sufijo del nombre del txt generado
 
 IMAGE_URI_RE = re.compile(
     r"image=(data:image/[A-Za-z0-9.+\-]+(?:;base64)?,[A-Za-z0-9+/=%\-_.!~*'()]+)"

@@ -1,11 +1,16 @@
+import argparse
 import json
+import os
 import re
 import sys
 import importlib.util
 import unicodedata
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from tkinter import Tk, filedialog
+try:
+    from tkinter import Tk, filedialog
+except ImportError:   # p. ej. servidor sin tkinter: solo se puede usar --config
+    Tk = filedialog = None
 
 # ---------------- CONFIG EVALUACIÓN DE RESPUESTAS ESCRITAS ----------------
 # Fracción de claves del 'segundo' para llegar a "Casi"
@@ -7709,7 +7714,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 # ---------------- CONFIGURACIÓN ----------------
 
-from tkinter import Toplevel, Label, Frame, Button
+try:
+    from tkinter import Toplevel, Label, Frame, Button
+except ImportError:
+    Toplevel = Label = Frame = Button = None
 
 COLOR_DEFAULT = "rosadoClaro"
 
@@ -7771,7 +7779,8 @@ def elegir_color(raiz, colores, default):
     return eleccion["clave"] if eleccion["clave"] else default
 
 
-colores = {
+# Fuente única de la paleta: la usan la ventana "Selecciona un color" y --config.
+PALETA_COLORES = {
     "amarillo": ["#DEDE00", "#5C5C5C"],
     "celeste": ["#00CCCC", "#5C5C5C"],
     "rojo": ["#FF0000", "#5C5C5C"],
@@ -7853,81 +7862,344 @@ def preguntar_resaltado(raiz):
     
     return eleccion["aplicar"]
 
-raiz = Tk()
-raiz.withdraw()
+# ---------------- PIPELINE (compartido por el modo interactivo y --config) ----------------
 
-# --- Diálogo 1: recordatorio.txt (tarjetas) ---
-txt = filedialog.askopenfilename(
-    title="Selecciona el archivo recordatorio.txt",
-    filetypes=[("Archivo de Texto", "*.txt"), ("Todos los archivos", "*.*")]
-)
+def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, propagar=False):
+    """
+    Genera UN evaluador. Es el pipeline de siempre, sin cambios de lógica:
+    parsear respuestas -> parsear recordatorio -> (resaltar drawio) ->
+    extraer descripciones -> generar_html. ESPACIO_HASH = stem de 'respuestas'.
 
-# --- Diálogo 2: respuestas.txt (rutas del diagrama) ---
-txt_respuestas = filedialog.askopenfilename(
-    title="Selecciona el archivo respuestas.txt",
-    filetypes=[("Archivo de Texto", "*.txt"), ("Todos los archivos", "*.*")]
-)
+    'colores' es un NOMBRE de PALETA_COLORES (si no existe, se usa COLOR_DEFAULT).
+    Devuelve (True, "") si salió bien o (False, motivo) si falló. Con
+    propagar=True las excepciones no se capturan (así el modo interactivo
+    conserva su comportamiento de siempre: traceback).
+    """
+    try:
+        if colores in PALETA_COLORES:
+            fill_color = PALETA_COLORES[colores][0]
+            stroke_color = PALETA_COLORES[colores][-1]
+        else:
+            fill_color = PALETA_COLORES[COLOR_DEFAULT][0]
+            stroke_color = PALETA_COLORES[COLOR_DEFAULT][-1]
 
-if not (txt and txt_respuestas):
-    print("No se seleccionó recordatorio.txt. ni respuestas.txt. Saliendo.")
-    raiz.destroy()
-    raise SystemExit
+        #Modo de estudio: 1 = secuencial (orden del recordatorio.txt), 2 = aleatorio
+        #El mezclado real ocurre en el navegador (JS), así que "Reiniciar" vuelve a mezclar.
+        modo = 2
 
-#--- Diálogo 3: drawio (AHORA OBLIGATORIO) ---
-ruta_drawio = filedialog.askopenfilename(
-    title="Selecciona el archivo .drawio (Obligatorio)",
-    filetypes=[("Diagrama drawio", ".drawio"), ("Todos los archivos", ".*")]
-)
-if not ruta_drawio:
-    print("No se seleccionó el archivo .drawio. Saliendo.")
-    raiz.destroy()
-    raise SystemExit
+        if respuestas:
+            rutas = parsear_respuestas(respuestas)
+        else:
+            rutas = {}
+            print("Aviso: no se seleccionó respuestas.txt; ninguna tarjeta tendrá botón 'Mostrar respuesta'.")
 
-#--- Ventana de elección de color ---
-opciones = elegir_color(raiz, colores, COLOR_DEFAULT)
-print(f"Color elegido: {opciones}")
-if opciones in colores:
-    fill_color = colores[opciones][0]
-    stroke_color = colores[opciones][-1]
-else:
-    fill_color = colores[COLOR_DEFAULT][0]
-    stroke_color = colores[COLOR_DEFAULT][-1]
+        tarjetas = parsear_recordatorio(recordatorio)
+        reportar_asociaciones(tarjetas, rutas)
 
-#--- Ventana personalizada para preguntar por el resaltado ---
-aplicar_resaltado = preguntar_resaltado(raiz)
-print(f"Resaltado en drawio: {'Sí' if aplicar_resaltado else 'No'}")
+        #--- Resaltado del drawio (según la elección) ---
+        if resaltar:
+            fn_mapa = cargar_generador_respuestas()
+            if fn_mapa is not None:
+                try:
+                    resaltar_drawio(drawio, fn_mapa, tarjetas)
+                except Exception as error:
+                    print(f"AVISO: falló el resaltado del drawio: {error}")
+                    print("       Se continúa con la generación del evaluador.")
+            else:
+                print("AVISO: No se pudo cargar el módulo para resaltar el drawio.")
+        else:
+            print("El usuario eligió omitir el resaltado del drawio.")
 
-#Modo de estudio: 1 = secuencial (orden del recordatorio.txt), 2 = aleatorio
-#El mezclado real ocurre en el navegador (JS), así que "Reiniciar" vuelve a mezclar.
-modo = 2
+        #--- NUEVO: extracción de descripciones para el Buscador Global (independiente
+        #    del resaltado: se hace siempre que haya .drawio, sin tocar el archivo) ---
+        descripciones_rutas = extraer_descripciones_drawio(drawio)
+        print(f"Rutas con descripciones de imagen extraídas del drawio: {len(descripciones_rutas)}")
 
-if txt_respuestas:
-    rutas = parsear_respuestas(txt_respuestas)
-else:
-    rutas = {}
-    print("Aviso: no se seleccionó respuestas.txt; ninguna tarjeta tendrá botón 'Mostrar respuesta'.")
+        generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, respuestas, Path(respuestas).stem, descripciones_rutas)
+    except Exception as error:
+        if propagar:
+            raise
+        return False, f"{type(error).__name__}: {error}"
+    return True, ""
 
-tarjetas = parsear_recordatorio(txt)
-reportar_asociaciones(tarjetas, rutas)
 
-#--- Resaltado del drawio (según la elección de la ventanita personalizada) ---
-if aplicar_resaltado:
-    fn_mapa = cargar_generador_respuestas()
-    if fn_mapa is not None:
+# ---------------- MODO --config (sin ninguna UI) ----------------
+
+# campo -> tipo JSON esperado. TODOS son obligatorios.
+CAMPOS_CONFIG = {
+    "recordatorio": str,
+    "respuestas": str,
+    "drawio": str,
+    "resaltar": bool,
+    "colores": str,
+}
+CAMPOS_RUTA = ("recordatorio", "respuestas", "drawio")
+
+
+class ErrorConfig(Exception):
+    """Error global del config (archivo ausente, JSON inválido, estructura...): aborta el lote."""
+
+
+def _tipo_json(valor):
+    if valor is None:
+        return "null"
+    if isinstance(valor, bool):
+        return "booleano"
+    if isinstance(valor, str):
+        return "texto"
+    if isinstance(valor, (int, float)):
+        return "número"
+    if isinstance(valor, list):
+        return "lista"
+    return "objeto"
+
+
+def leer_config(ruta_config):
+    """
+    Lee el config (solo lectura; nunca se modifica) y devuelve (entradas, avisos).
+    Formato obligatorio: {"entradas": [ ... ]}, incluso con un solo evaluador.
+    """
+    ruta = Path(ruta_config)
+    if not ruta.is_file():
+        raise ErrorConfig(f"no existe el archivo de configuración: {ruta}")
+    try:
+        # utf-8-sig: tolera el BOM que agrega el Bloc de notas
+        with open(ruta, "r", encoding="utf-8-sig") as archivo:
+            datos = json.load(archivo)
+    except json.JSONDecodeError as error:
+        raise ErrorConfig(f"JSON inválido en {ruta}: {error}")
+    except (UnicodeDecodeError, OSError) as error:
+        raise ErrorConfig(f"no se pudo leer {ruta}: {error}")
+
+    avisos = []
+    if not isinstance(datos, dict):
+        raise ErrorConfig(
+            "el config debe ser un objeto JSON con la forma {\"entradas\": [ ... ]} "
+            f"(se encontró: {_tipo_json(datos)})"
+        )
+    if "entradas" not in datos:
+        pista = ""
+        if any(campo in datos for campo in CAMPOS_CONFIG):
+            pista = " Parece una entrada suelta: envolvela en una lista, {\"entradas\": [ {...} ]}."
+        raise ErrorConfig(
+            "falta el campo 'entradas': el config debe tener la forma {\"entradas\": [ ... ]}, "
+            "incluso con un solo evaluador." + pista
+        )
+    entradas = datos["entradas"]
+    if not isinstance(entradas, list):
+        raise ErrorConfig(f"'entradas' debe ser una lista (se encontró: {_tipo_json(entradas)})")
+    if not entradas:
+        raise ErrorConfig("'entradas' está vacía: no hay nada que generar")
+    for clave in datos:
+        if clave != "entradas":
+            avisos.append(f"campo desconocido '{clave}' fuera de 'entradas' (se ignora)")
+    return entradas, avisos
+
+
+def validar_entrada(entrada, carpeta_config):
+    """
+    Validación estricta de UNA entrada. Devuelve (resuelta, errores, avisos).
+    'resuelta' (dict con rutas absolutas como Path) es None si hay errores.
+    Las rutas relativas se resuelven contra la carpeta del config, no contra el cwd.
+    """
+    errores, avisos = [], []
+    if not isinstance(entrada, dict):
+        return None, [f"la entrada debe ser un objeto JSON (se encontró: {_tipo_json(entrada)})"], avisos
+
+    for campo in entrada:
+        if campo not in CAMPOS_CONFIG:
+            avisos.append(f"campo desconocido '{campo}' (se ignora)")
+
+    valores = {}
+    for campo, tipo in CAMPOS_CONFIG.items():
+        if campo not in entrada:
+            errores.append(f"falta el campo '{campo}'")
+            continue
+        valor = entrada[campo]
+        if tipo is bool:
+            valido = isinstance(valor, bool)
+        else:
+            valido = isinstance(valor, str)
+        if not valido:
+            esperado = "true/false" if tipo is bool else "texto"
+            errores.append(f"campo '{campo}': debe ser {esperado} (se encontró: {_tipo_json(valor)})")
+        elif tipo is str and not valor.strip():
+            errores.append(f"campo '{campo}': está vacío")
+        else:
+            valores[campo] = valor
+
+    for campo in CAMPOS_RUTA:
+        if campo not in valores:
+            continue
+        ruta = Path(valores[campo])
+        if not ruta.is_absolute():
+            ruta = carpeta_config / ruta
         try:
-            resaltar_drawio(ruta_drawio, fn_mapa, tarjetas)
-        except Exception as error:
-            print(f"AVISO: falló el resaltado del drawio: {error}")
-            print("       Se continúa con la generación del evaluador.")
-    else:
-        print("AVISO: No se pudo cargar el módulo para resaltar el drawio.")
-else:
-    print("El usuario eligió omitir el resaltado del drawio.")
+            ruta = ruta.resolve()
+            existe = ruta.is_file()
+        except (OSError, ValueError):
+            existe = False
+        if existe:
+            valores[campo] = ruta
+        else:
+            errores.append(f"campo '{campo}': no existe el archivo {ruta}")
+            del valores[campo]
 
-#--- NUEVO: extracción de descripciones para el Buscador Global (independiente
-#    del resaltado: se hace siempre que haya .drawio, sin tocar el archivo) ---
-descripciones_rutas = extraer_descripciones_drawio(ruta_drawio)
-print(f"Rutas con descripciones de imagen extraídas del drawio: {len(descripciones_rutas)}")
+    if "colores" in valores and valores["colores"] not in PALETA_COLORES:
+        errores.append(
+            f"campo 'colores': '{valores['colores']}' no es un nombre válido "
+            "(se distinguen mayúsculas y minúsculas; no se aceptan hex). "
+            f"Válidos: {', '.join(PALETA_COLORES)}"
+        )
 
-generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, txt_respuestas, Path(txt_respuestas).stem, descripciones_rutas)
-raiz.destroy()
+    if errores:
+        return None, errores, avisos
+    return valores, errores, avisos
+
+
+def _etiqueta_entrada(entrada, numero):
+    """Nombre para la consola: stem de su respuestas.txt, o 'entrada N' si no se puede saber."""
+    if isinstance(entrada, dict):
+        resp = entrada.get("respuestas")
+        if isinstance(resp, str) and resp.strip():
+            return Path(resp).stem or f"entrada {numero}"
+    return f"entrada {numero}"
+
+
+def ejecutar_config(ruta_config):
+    """Procesa TODAS las entradas aunque alguna falle. Devuelve el código de salida (0 = todo OK)."""
+    try:
+        entradas, avisos_globales = leer_config(ruta_config)
+    except ErrorConfig as error:
+        print(f"ERROR: {error}", file=sys.stderr)
+        return 1
+    for aviso in avisos_globales:
+        print(f"AVISO: {aviso}")
+
+    carpeta_config = Path(ruta_config).resolve().parent
+    total = len(entradas)
+    resultados = [None] * total   # (etiqueta, ok, motivo)
+    validas = {}                  # posición -> (etiqueta, entrada resuelta)
+
+    for pos, entrada in enumerate(entradas):
+        etiqueta = _etiqueta_entrada(entrada, pos + 1)
+        resuelta, errores, avisos = validar_entrada(entrada, carpeta_config)
+        for aviso in avisos:
+            print(f"AVISO [{etiqueta}]: {aviso}")
+        if errores:
+            resultados[pos] = (etiqueta, False, "; ".join(errores))
+        else:
+            validas[pos] = (etiqueta, resuelta)
+
+    # Dos entradas con el mismo stem de respuestas escribirían el MISMO html: ninguna se genera.
+    por_stem = {}
+    for pos, (_, r) in validas.items():
+        por_stem.setdefault(r["respuestas"].stem.casefold(), []).append(pos)
+    for stem, posiciones in por_stem.items():
+        if len(posiciones) > 1:
+            numeros = ", ".join(str(p + 1) for p in posiciones)
+            nombre = validas[posiciones[0]][1]["respuestas"].stem
+            for p in posiciones:
+                resultados[p] = (
+                    validas[p][0], False,
+                    f"las entradas {numeros} comparten el stem de respuestas '{nombre}' y pisarían "
+                    f"el mismo evaluador_{nombre}.html; no se genera ninguna de ellas",
+                )
+                del validas[p]
+
+    # Un .drawio compartido: el resaltado de una pasada limpia el de la anterior.
+    por_drawio = {}
+    for pos, (_, r) in validas.items():
+        por_drawio.setdefault(os.path.normcase(str(r["drawio"])), []).append(pos)
+    for posiciones in por_drawio.values():
+        if len(posiciones) > 1:
+            numeros = ", ".join(str(p + 1) for p in posiciones)
+            print(
+                f"AVISO: las entradas {numeros} usan el mismo .drawio: si más de una tiene resaltar=true, "
+                "cada pasada limpia el resaltado de la anterior (queda solo el de la última)."
+            )
+
+    for pos in sorted(validas):
+        etiqueta, r = validas[pos]
+        print(f"\n[{pos + 1}/{total}] {etiqueta}")
+        ok, motivo = generar_evaluador(
+            str(r["recordatorio"]), str(r["respuestas"]), str(r["drawio"]),
+            r["resaltar"], r["colores"],
+        )
+        resultados[pos] = (etiqueta, ok, motivo)
+
+    print("\n==== RESUMEN ====")
+    for etiqueta, ok, motivo in resultados:
+        print(f"{etiqueta}: OK" if ok else f"{etiqueta}: FALLO: {motivo}")
+    fallos = sum(1 for _, ok, _ in resultados if not ok)
+    print(f"{total - fallos} de {total} evaluadores generados.")
+    return 1 if fallos else 0
+
+
+# ---------------- MODO INTERACTIVO (el flujo de siempre) ----------------
+
+def main_interactivo():
+    if Tk is None or filedialog is None:
+        print("ERROR: tkinter no está disponible en este Python. Usá --config RUTA para correr sin ventanas.")
+        raise SystemExit(1)
+
+    raiz = Tk()
+    raiz.withdraw()
+
+    # --- Diálogo 1: recordatorio.txt (tarjetas) ---
+    txt = filedialog.askopenfilename(
+        title="Selecciona el archivo recordatorio.txt",
+        filetypes=[("Archivo de Texto", "*.txt"), ("Todos los archivos", "*.*")]
+    )
+
+    # --- Diálogo 2: respuestas.txt (rutas del diagrama) ---
+    txt_respuestas = filedialog.askopenfilename(
+        title="Selecciona el archivo respuestas.txt",
+        filetypes=[("Archivo de Texto", "*.txt"), ("Todos los archivos", "*.*")]
+    )
+
+    if not (txt and txt_respuestas):
+        print("No se seleccionó recordatorio.txt. ni respuestas.txt. Saliendo.")
+        raiz.destroy()
+        raise SystemExit
+
+    #--- Diálogo 3: drawio (AHORA OBLIGATORIO) ---
+    ruta_drawio = filedialog.askopenfilename(
+        title="Selecciona el archivo .drawio (Obligatorio)",
+        filetypes=[("Diagrama drawio", ".drawio"), ("Todos los archivos", ".*")]
+    )
+    if not ruta_drawio:
+        print("No se seleccionó el archivo .drawio. Saliendo.")
+        raiz.destroy()
+        raise SystemExit
+
+    #--- Ventana de elección de color ---
+    opciones = elegir_color(raiz, PALETA_COLORES, COLOR_DEFAULT)
+    print(f"Color elegido: {opciones}")
+
+    #--- Ventana personalizada para preguntar por el resaltado ---
+    aplicar_resaltado = preguntar_resaltado(raiz)
+    print(f"Resaltado en drawio: {'Sí' if aplicar_resaltado else 'No'}")
+
+    generar_evaluador(txt, txt_respuestas, ruta_drawio, aplicar_resaltado, opciones, propagar=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Genera el evaluador. Sin argumentos: modo interactivo (ventanas). "
+                    "Con --config: modo por lote, sin ninguna ventana.",
+        allow_abbrev=False,
+    )
+    parser.add_argument(
+        "--config", metavar="RUTA",
+        help="JSON con la forma {\"entradas\": [...]} (obligatorio, aunque sea 1 solo evaluador); cada entrada: "
+             "recordatorio, respuestas, drawio, resaltar, colores (todos obligatorios).",
+    )
+    args = parser.parse_args()
+    if args.config is not None:
+        raise SystemExit(ejecutar_config(args.config))
+    main_interactivo()
+
+
+if __name__ == "__main__":
+    main()

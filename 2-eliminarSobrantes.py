@@ -3,7 +3,7 @@
 import re, os, sys, glob, argparse, unicodedata
 
 # ==================== PARÁMETROS ====================
-ARCHIVOS = ["texto.txt"]        # o: sorted(glob.glob("[0-9]*.txt")) para el lote
+ARCHIVOS = ["modificables/borrador.txt"]        # o: sorted(glob.glob("[0-9]*.txt")) para el lote
 SUFIJO = "_auto"                # texto.txt -> texto_auto.txt (nunca sobrescribe)
 MAX_PALABRAS = 5                # tope blando
 ARTICULO_INICIAL = "conservar"  # "conservar" | "eliminar"
