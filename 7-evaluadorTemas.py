@@ -21,6 +21,14 @@ SIM_SIN_PISTA = 0.5
 # este valor (si no llega => "Casi")
 SIM_CON_PISTA = 0.6
 
+# ---------------- CONFIG ECONOMÍA (tienda) ----------------
+# Valores provisorios. Referencia: Comodín = 100, Pista Gratis = 50, por lo que
+# el orden de precio queda: pista < segunda oportunidad < escudo < comodín.
+PRECIO_ESCUDO_RACHA = 90
+PRECIO_SEGUNDA_OPORTUNIDAD = 70
+# Fracción de los puntos que se cobra al acertar el reintento de la segunda oportunidad
+FACTOR_RECOMPENSA_REINTENTO = 0.5
+
 # Palabras vacías que se ignoran al evaluar (claves, respuesta escrita y texto
 # de referencia de las rutas). Solo afecta la evaluación: el texto de las rutas
 # se muestra completo. Van sin acentos (mismo formato que normalizar_palabra).
@@ -774,6 +782,9 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     html = html.replace("__DATOS_JSON__", datos_json)
     html = html.replace("__MODO_ALEATORIO__", "true" if modo_aleatorio else "false")
     html = html.replace("__UMBRAL_CASI__", str(UMBRAL_CASI))
+    html = html.replace("__PRECIO_ESCUDO_RACHA__", str(PRECIO_ESCUDO_RACHA))
+    html = html.replace("__PRECIO_SEGUNDA_OPORTUNIDAD__", str(PRECIO_SEGUNDA_OPORTUNIDAD))
+    html = html.replace("__FACTOR_RECOMPENSA_REINTENTO__", str(FACTOR_RECOMPENSA_REINTENTO))
     html = html.replace("__SIM_ALTA__", str(SIM_ALTA))
     html = html.replace("__SIM_SIN_PISTA__", str(SIM_SIN_PISTA))
     html = html.replace("__SIM_CON_PISTA__", str(SIM_CON_PISTA))
@@ -2245,6 +2256,65 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .item-historial-fecha { font-weight: 700; color: #333; }
   .item-historial-detalle { display: flex; flex-wrap: wrap; gap: 10px; color: #777; }
 
+  /* NUEVO: chip del espacio (evaluador) en cada sesion */
+  .chip-espacio {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: #eef0f7;
+    color: #555;
+    font-size: 11px;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+  .chip-espacio-sin { background: #f7ecec; color: #a55; }
+
+  .aviso-juego {
+    margin: 8px 0;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background: #fff8e6;
+    border: 1.5px solid #ecd28a;
+    color: #7a5c00;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .item-reintento { display: block; font-size: 12px; color: #a4841c; }
+
+  .fila-acciones-historial button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* NUEVO: grupos de sesiones de otros evaluadores */
+  #zona-historial-otros details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: #444; }
+  .grupo-historial-otro {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px 8px 16px;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+    color: #555;
+    text-align: left;
+  }
+  .grupo-historial-otro:last-child { border-bottom: none; }
+  .grupo-historial-otro .grupo-titulo { font-weight: 700; color: #333; display: block; overflow-wrap: anywhere; }
+  .grupo-historial-otro .grupo-detalle { color: #777; font-size: 12px; }
+
+  /* NUEVO: modal de revinculacion */
+  .vinc-resumen { font-weight: 600; color: #444 !important; }
+  .vinc-aviso {
+    background: #fff4f2;
+    border: 1.5px solid #f0c4bc;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #a4402f;
+    text-align: left;
+  }
+
   /* NUEVO: descripción de la imagen (atributo 'descripcion' del drawio) */
   .galeria-descripcion {
     margin: 14px auto 0;
@@ -2415,6 +2485,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <details id="det-dificiles-otros" style="display:none">
         <summary id="suma-dificiles-otros">De otros evaluadores</summary>
         <div id="lista-dificiles-otros"></div>
+        <button class="boton-mini" id="btn-vincular-dificiles" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
       </details>
       <!-- MODIFICADO: sección de desmarcadas (no se borran, se pueden re-activar) -->
       <details id="det-dificiles-desm" style="display:none">
@@ -2442,6 +2513,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <details id="det-notas-otras" style="display:none">
         <summary id="suma-notas-otras">De otros evaluadores</summary>
         <div id="lista-notas-otras"></div>
+        <button class="boton-mini" id="btn-vincular-notas" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
       </details>
       <p class="nota-dificiles" id="nota-notas"></p>
       <button class="boton-mini" id="btn-vaciar-notas" style="display:none;">Vaciar todas</button>
@@ -2476,6 +2548,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <details id="det-razones-otras" style="display:none">
         <summary id="suma-razones-otras">De otros evaluadores</summary>
         <div id="lista-razones-otras"></div>
+        <button class="boton-mini" id="btn-vincular-razones" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
       </details>
       <p class="nota-dificiles" id="nota-razones"></p>
       <button class="boton-mini" id="btn-vaciar-razones" style="display:none;">Vaciar todas</button>
@@ -2513,6 +2586,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <details id="det-imagenes" style="display:none">
         <summary id="suma-imagenes">Con nota o marcadas difícil</summary>
         <div id="lista-imagenes-guardadas"></div>
+        <button class="boton-mini" id="btn-vincular-imagenes" style="margin: 6px 0 8px 16px; display:none;">Vincular a este evaluador</button>
       </details>
       <p class="nota-dificiles" id="nota-imagenes"></p>
       <button class="boton-mini" id="btn-vaciar-imagenes" style="display:none;">Vaciar todas</button>
@@ -2600,10 +2674,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-secundario" id="btn-historial-exportar">Exportar historial</button>
       <button class="boton-secundario" id="btn-historial-importar">Importar historial</button>
       <input type="file" id="input-importar-historial" accept="application/json,.json" style="display:none;">
-      <button class="boton-secundario" id="btn-historial-borrar">Borrar historial</button>
+      <button class="boton-secundario" id="btn-historial-borrar-este" title="Quita solo las sesiones de este evaluador">Borrar historial de este evaluador</button>
+      <button class="boton-secundario" id="btn-historial-borrar-global" title="Vacia las sesiones de TODOS los evaluadores">Borrar historial global</button>
     </div>
     <div class="lista-historial-scroll" id="lista-historial"></div>
     <p class="galeria-vacia" id="historial-vacio" style="display:none;">Aún no hay sesiones guardadas.</p>
+    <!-- NUEVO: sesiones de otros evaluadores (solo lectura, agrupadas por espacio) -->
+    <div class="lista-temas zona-dificiles" id="zona-historial-otros" style="display:none; margin-top:14px;">
+      <details id="det-historial-otros">
+        <summary id="suma-historial-otros">Sesiones de otros evaluadores</summary>
+        <div id="lista-historial-otros"></div>
+      </details>
+    </div>
     <div class="navegacion" style="margin-top:20px;">
       <button class="boton-secundario" id="btn-historial-volver">← Volver</button>
     </div>
@@ -2616,6 +2698,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="stat-gamificacion" id="stat-puntos">⭐ 0</span>
         <span class="stat-gamificacion" id="stat-racha">🔥 0</span>
         <span class="stat-gamificacion" id="stat-vidas"></span>
+        <span class="stat-gamificacion" id="stat-escudo" title="Escudos de racha"></span>
+        <span class="stat-gamificacion" id="stat-segunda" title="Segundas oportunidades"></span>
         <button class="boton-mute" id="btn-mute" title="Silenciar/activar sonidos">🔊</button>
       </div>
       <!-- Fila 2 — navegación (ya existía) -->
@@ -2695,6 +2779,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <div class="rutas-contenedor" id="rutas-contenedor"></div>
 
+    <!-- NUEVO: avisos de consumibles (escudo / segunda oportunidad) -->
+    <div class="aviso-juego" id="aviso-juego" role="status" style="display:none;"></div>
+
     <div class="estado-marca" id="estado-marca"></div>
 
     <div class="resultado-eval" id="resultado-eval"></div>
@@ -2740,22 +2827,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <div class="fila-resumen">
-      <span class="etiqueta-resumen"><span class="punto punto-si"></span> Entendidas</span>
-      <span class="valor-resumen" id="conteo-si">0</span>
-    </div>
-    <div class="fila-resumen">
-      <span class="etiqueta-resumen"><span class="punto punto-casi"></span> Casi</span>
-      <span class="valor-resumen" id="conteo-casi">0</span>
-    </div>
-    <div class="fila-resumen">
-      <span class="etiqueta-resumen"><span class="punto punto-no"></span> No entendidas</span>
-      <span class="valor-resumen" id="conteo-no">0</span>
-    </div>
-    <div class="fila-resumen">
-      <span class="etiqueta-resumen"><span class="punto punto-saltar"></span> Pasadas sin marcar</span>
-      <span class="valor-resumen" id="conteo-saltar">0</span>
-    </div>
-    <div class="fila-resumen">
       <span class="etiqueta-resumen">⏱ Tiempo total</span>
       <span class="valor-resumen chico" id="tiempo-total">00:00</span>
     </div>
@@ -2768,19 +2839,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <!-- MODIFICADO: solo 3 desplegables; tiempo, respuesta escrita y
            evaluación de cada tarjeta se muestran dentro de cada item -->
       <details class="lista-desplegable">
-        <summary><span class="etiqueta-resumen"><span class="punto punto-si"></span> Entendidas</span></summary>
+        <summary><span class="etiqueta-resumen"><span class="punto punto-si"></span> <span id="etq-si">Entendidas (0)</span></span></summary>
         <div class="lista-contenido" id="lista-si"></div>
       </details>
       <details class="lista-desplegable">
-        <summary><span class="etiqueta-resumen"><span class="punto punto-casi"></span> Casi</span></summary>
+        <summary><span class="etiqueta-resumen"><span class="punto punto-casi"></span> <span id="etq-casi">Casi (0)</span></span></summary>
         <div class="lista-contenido" id="lista-casi"></div>
       </details>
       <details class="lista-desplegable">
-        <summary><span class="etiqueta-resumen"><span class="punto punto-no"></span> No entendidas</span></summary>
+        <summary><span class="etiqueta-resumen"><span class="punto punto-no"></span> <span id="etq-no">No entendidas (0)</span></span></summary>
         <div class="lista-contenido" id="lista-no"></div>
       </details>
       <details class="lista-desplegable">
-        <summary><span class="etiqueta-resumen"><span class="punto punto-saltar"></span> Pasadas sin marcar</span></summary>
+        <summary><span class="etiqueta-resumen"><span class="punto punto-saltar"></span> <span id="etq-saltar">Pasadas sin marcar (0)</span></span></summary>
         <div class="lista-contenido" id="lista-saltar"></div>
       </details>
       <!-- NUEVO: tarjetas marcadas con 🚩 Revisar durante la sesión -->
@@ -2816,6 +2887,35 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <button class="boton-secundario" id="btn-modal-ronda">Iniciar nueva ronda</button>
     <div class="modal-ayuda">Sesión nueva solo con esas tarjetas (nota y tiempos aparte).</div>
     <button class="modal-cancelar" id="btn-modal-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<!-- NUEVO: modal Sí/No de la Segunda oportunidad -->
+<div class="modal-overlay" id="modal-segunda">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>🔁 Segunda oportunidad</h3>
+    <p id="modal-segunda-texto"></p>
+    <div class="modal-ayuda" id="modal-segunda-ayuda"></div>
+    <button class="boton-reiniciar" id="btn-segunda-si">Sí, reintentar</button>
+    <button class="boton-secundario" id="btn-segunda-no">No, seguir</button>
+  </div>
+</div>
+
+<!-- NUEVO: modal de revinculación (recuperar datos de un evaluador renombrado) -->
+<div class="modal-overlay" id="modal-vincular">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3 id="vinc-titulo">Vincular a este evaluador</h3>
+    <p id="vinc-descripcion"></p>
+    <div id="vinc-campo-espacio" style="display:none;">
+      <input type="text" class="input-buscador" id="vinc-espacio" list="vinc-espacios" placeholder="Nombre anterior del recordatorio (sin .txt)" autocomplete="off">
+      <datalist id="vinc-espacios"></datalist>
+    </div>
+    <p id="vinc-resumen" class="vinc-resumen"></p>
+    <div class="vinc-aviso" id="vinc-aviso"></div>
+    <div class="modal-ayuda">Para confirmar, escribí CONFIRMAR:</div>
+    <input type="text" class="input-buscador" id="vinc-confirmar" placeholder="CONFIRMAR" autocomplete="off">
+    <button class="boton-reiniciar" id="btn-vinc-aceptar" disabled>Vincular</button>
+    <button class="modal-cancelar" id="btn-vinc-cancelar">Cancelar</button>
   </div>
 </div>
 
@@ -2865,6 +2965,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
   const modoAleatorio = __MODO_ALEATORIO__;
   const UMBRAL_CASI = __UMBRAL_CASI__;
+  // NUEVO: economía de los consumibles de la tienda (se editan arriba, en el .py)
+  const PRECIO_ESCUDO_RACHA = __PRECIO_ESCUDO_RACHA__;
+  const PRECIO_SEGUNDA_OPORTUNIDAD = __PRECIO_SEGUNDA_OPORTUNIDAD__;
+  const FACTOR_RECOMPENSA_REINTENTO = __FACTOR_RECOMPENSA_REINTENTO__;
   const SIM_ALTA = __SIM_ALTA__;
   const SIM_SIN_PISTA = __SIM_SIN_PISTA__;   // NUEVO: todas las claves, sin pista
   const SIM_CON_PISTA = __SIM_CON_PISTA__;   // NUEVO: todas las claves, con pista (debe ser MAYOR)
@@ -2937,7 +3041,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const CLAVE_GAMIFICACION = 'gamificacion_v1';
 
   function valoresPorDefectoGamificacion() {
-    return { puntosTotales: 0, inventario: { comodines: 0, pistasGratis: 0 }, historial: [] };
+    return { puntosTotales: 0, inventario: { comodines: 0, pistasGratis: 0, escudosRacha: 0, segundasOportunidades: 0 }, historial: [] };
   }
 
   function cargarGamificacion() {
@@ -2953,6 +3057,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         inventario: {
           comodines: (obj.inventario && typeof obj.inventario.comodines === 'number') ? obj.inventario.comodines : base.inventario.comodines,
           pistasGratis: (obj.inventario && typeof obj.inventario.pistasGratis === 'number') ? obj.inventario.pistasGratis : base.inventario.pistasGratis,
+          escudosRacha: (obj.inventario && typeof obj.inventario.escudosRacha === 'number') ? obj.inventario.escudosRacha : base.inventario.escudosRacha,
+          segundasOportunidades: (obj.inventario && typeof obj.inventario.segundasOportunidades === 'number') ? obj.inventario.segundasOportunidades : base.inventario.segundasOportunidades,
         },
         historial: Array.isArray(obj.historial) ? obj.historial : base.historial,
       };
@@ -2983,6 +3089,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let pistaGratisUsadaPorTarjeta = [];    // paralelo a resultados
   let gameOverDisparado = false;
   let historialGuardadoEstaSesion = false;
+  // NUEVO: segunda oportunidad / escudo. SOLO en memoria: se reinician en cada sesión.
+  let reintentadasSesion = new Set();      // tarjetas (objeto) que ya usaron su reintento en esta sesión
+  let primerIntentoFallido = new Set();    // índices que fallaron el primer intento y usaron segunda oportunidad (quedan para repaso)
+  let reintentoExitoso = new Set();        // subconjunto: el reintento salió bien (recompensa reducida)
+  let segundaPendiente = false;            // hay un diálogo Sí/No abierto
   let modoZombie = false;   // NUEVO: si es true, se ignora POR COMPLETO la lógica de puntos/vidas/racha
   let sonidosActivos = true;   // NUEVO: efímero (no se guarda en localStorage), como pide el prompt
 
@@ -3029,8 +3140,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // (no invalida lo ya guardado); solo cambia si el archivo cambia de nombre.
   const ESPACIO_HASH = __ESPACIO__;
 
-  function hashTarjeta(t) {
-    const base = ESPACIO_HASH + '\\u0001' + (t.primero || '') + '\\u0000' + (t.segundo || '');
+  function hashTarjetaCon(espacio, t) {
+    const base = espacio + '\\u0001' + (t.primero || '') + '\\u0000' + (t.segundo || '');
     const norm = normalizarPalabra(base).replace(/\\s+/g, ' ').trim();
     // djb2 -> hash de 32 bits (suficiente y sin dependencias; se mantiene corto
     // aunque se agregue el espacio, porque solo se usa como entrada del hash)
@@ -3040,6 +3151,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     return 'h' + h.toString(36);
   }
+
+  // NUEVO: hash de ESTE evaluador (el de siempre). hashTarjetaCon permite
+  // recomputar el hash que tendria una tarjeta bajo OTRO espacio (revinculacion).
+  function hashTarjeta(t) { return hashTarjetaCon(ESPACIO_HASH, t); }
 
   function esDificil(t) {
     const e = dificiles[hashTarjeta(t)];
@@ -3184,13 +3299,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elListaHistorial = document.getElementById('lista-historial');
   const elHistorialVacio = document.getElementById('historial-vacio');
   const elBtnHistorialExportar = document.getElementById('btn-historial-exportar');
-  const elBtnHistorialBorrar = document.getElementById('btn-historial-borrar');
+  const elBtnHistorialBorrarEste = document.getElementById('btn-historial-borrar-este');
+  const elBtnHistorialBorrarGlobal = document.getElementById('btn-historial-borrar-global');
+  const elZonaHistorialOtros = document.getElementById('zona-historial-otros');
+  const elSumaHistorialOtros = document.getElementById('suma-historial-otros');
+  const elListaHistorialOtros = document.getElementById('lista-historial-otros');
   const elModalModo = document.getElementById('modal-modo');
   const elModalGameOver = document.getElementById('modal-gameover');
   const elFilaGamificacion = document.getElementById('fila-gamificacion');
   const elStatPuntos = document.getElementById('stat-puntos');
   const elStatRacha = document.getElementById('stat-racha');
   const elStatVidas = document.getElementById('stat-vidas');
+  const elStatEscudo = document.getElementById('stat-escudo');
+  const elStatSegunda = document.getElementById('stat-segunda');
+  const elAvisoJuego = document.getElementById('aviso-juego');
+  const elModalSegunda = document.getElementById('modal-segunda');
   const elBtnMute = document.getElementById('btn-mute');
   const elBadgePistaGratis = document.getElementById('badge-pista-gratis');
   const elBadgeComodines = document.getElementById('badge-comodines');
@@ -3581,14 +3704,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // Hash liviano: espacio del evaluador + número de ruta + índice de la imagen
   // DENTRO de esa ruta (solo contando líneas 'IMG:'). Sin base64, sin subT.
-  function hashImagen(ruta, indice) {
-    const base = ESPACIO_HASH + '\u0001' + ruta + '\u0000' + indice;
+  function hashImagenCon(espacio, ruta, indice) {
+    const base = espacio + '\u0001' + ruta + '\u0000' + indice;
     let h = 5381;
     for (let i = 0; i < base.length; i++) {
       h = ((h << 5) + h + base.charCodeAt(i)) >>> 0;
     }
     return 'i' + h.toString(36);   // prefijo 'i' (imagen) para no confundir con 'h' de tarjeta
   }
+
+  function hashImagen(ruta, indice) { return hashImagenCon(ESPACIO_HASH, ruta, indice); }
 
   // Recorre rutasDisp en orden numérico de ruta y arma la lista de coordenadas
   // {ruta, indice} de TODAS las imágenes, en el mismo orden en que aparecen en
@@ -4115,7 +4240,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function puntosFinales(resultado, opciones) {
     const base = calcularPuntosBase(resultado, opciones);
-    return base > 0 ? Math.round(base * multiplicadorActual) : base;
+    const factor = (opciones && typeof opciones.factor === 'number') ? opciones.factor : 1;   // 1 = sin cambios
+    return base > 0 ? Math.round(base * multiplicadorActual * factor) : base;
   }
 
   function totalTarjetasSesionActual() {
@@ -4133,8 +4259,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (subio) reproducirSonido('racha');
   }
 
-  function actualizarRachaTrasResultado(resultado, comodinUsado) {
-    const rompeRacha = (resultado === 'no') || (resultado === 'saltar' && !comodinUsado);
+  function actualizarRachaTrasResultado(resultado, comodinUsado, escudoUsado) {
+    // El escudo de racha solo evita que el 'no' rompa la racha (y con ella el multiplicador)
+    const rompeRacha = ((resultado === 'no') && !escudoUsado) || (resultado === 'saltar' && !comodinUsado);
     if (rompeRacha) {
       rachaActual = 0;
     } else if (resultado === 'si' || resultado === 'casi') {
@@ -4170,7 +4297,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     puntosPorTarjeta[indice] = puntos;
     if (modoJuego !== 'light') puntosSesion += delta;
 
-    actualizarRachaTrasResultado(resultado, !!opciones.comodinUsado);
+    // NUEVO: Escudo de racha (pasivo). Solo actúa ante un fallo ('no') y si hay racha
+    // que proteger; con racha 0 NO se consume. La penitencia (vida, sonido) se cobra
+    // completa igual: el escudo únicamente conserva racha y multiplicador.
+    let escudoUsado = false;
+    if (resultado === 'no' && rachaActual > 0 && (gamificacion.inventario.escudosRacha || 0) > 0) {
+      gamificacion.inventario.escudosRacha--;
+      guardarGamificacion();
+      escudoUsado = true;
+    }
+
+    actualizarRachaTrasResultado(resultado, !!opciones.comodinUsado, escudoUsado);
 
     if (resultado === 'si') {
       reproducirSonido('bien');
@@ -4182,6 +4319,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const pierdeVida = (resultado === 'no') || (resultado === 'saltar' && !opciones.comodinUsado);
     if (pierdeVida) aplicarPerdidaVida();
+
+    if (escudoUsado) {
+      const quedan = gamificacion.inventario.escudosRacha;
+      mostrarAviso(primerIntentoFallido.has(indice)
+        ? '🔁 El reintento también falló. Consumidos: 🔁 Segunda oportunidad + 🛡 Escudo de racha. Tu racha continúa (penitencia cobrada una sola vez). Escudos restantes: ' + quedan
+        : '🛡 Escudo de racha usado: tu racha continúa (la penitencia se cobró igual). Escudos restantes: ' + quedan);
+    }
 
     actualizarBarraGamificacion();
   }
@@ -4223,6 +4367,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elStatPuntos.textContent = '⭐ ' + puntosSesion;
 
     elStatRacha.textContent = '🔥 ' + rachaActual + (multiplicadorActual > 1 ? (' x' + multiplicadorActual) : '');
+
+    // NUEVO: contadores de consumibles (icono + cantidad); atenuados en 0
+    const nEscudos = gamificacion.inventario.escudosRacha || 0;
+    const nSegundas = gamificacion.inventario.segundasOportunidades || 0;
+    elStatEscudo.textContent = '🛡 ' + nEscudos;
+    elStatEscudo.style.opacity = nEscudos > 0 ? '1' : '0.4';
+    elStatSegunda.textContent = '🔁 ' + nSegundas;
+    elStatSegunda.style.opacity = nSegundas > 0 ? '1' : '0.4';
 
     if (modoJuego === 'light') {
       elStatVidas.style.display = 'none';
@@ -4320,6 +4472,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       nota: Math.round(nota * 10) / 10,
       duracion_ms: duracionMs,
       puntos_ganados: modoJuego === 'light' ? 0 : puntosSesion,
+      espacio: ESPACIO_HASH,   // NUEVO: de que evaluador es esta sesion
     });
     if (modoJuego !== 'light') {
       gamificacion.puntosTotales += puntosSesion;
@@ -4350,6 +4503,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const ITEMS_TIENDA = [
     { id: 'comodines', icono: '🃏', nombre: 'Comodín', precio: 100, descripcion: 'Salta una tarjeta sin perder vida ni puntos.' },
     { id: 'pistasGratis', icono: '💡', nombre: 'Pista Gratis', precio: 50, descripcion: 'Revela la pista manteniendo el puntaje máximo si aciertas.' },
+    { id: 'segundasOportunidades', icono: '🔁', nombre: 'Segunda oportunidad', precio: PRECIO_SEGUNDA_OPORTUNIDAD,
+      descripcion: 'Si fallás una respuesta escrita, te deja reintentar esa tarjeta una vez. Si acertás cobrás el ' + Math.round(FACTOR_RECOMPENSA_REINTENTO * 100) + ' % de los puntos.' },
+    { id: 'escudosRacha', icono: '🛡', nombre: 'Escudo de racha', precio: PRECIO_ESCUDO_RACHA,
+      descripcion: 'Al fallar conserva tu racha y su multiplicador (la penitencia se cobra igual). No se gasta si tu racha es 0.' },
   ];
 
   function renderTienda() {
@@ -4429,9 +4586,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
+  // NUEVO: espacio (evaluador) de una sesion. '' = sesion sin identificar.
+  function espacioDeSesion(s) {
+    return (s && typeof s.espacio === 'string') ? s.espacio : '';
+  }
+  function esSesionLocal(s) { return espacioDeSesion(s) === ESPACIO_HASH; }
+  function etiquetaEspacio(esp) { return esp ? esp : 'Sin identificar'; }
+
   function renderHistorial() {
-    const historial = gamificacion.historial;
+    const todas = gamificacion.historial;
+    const historial = todas.filter(esSesionLocal);   // la lista principal es solo de ESTE evaluador
     elListaHistorial.innerHTML = '';
+
+    elBtnHistorialBorrarEste.disabled = historial.length === 0;
+    elBtnHistorialBorrarGlobal.disabled = todas.length === 0;
+    renderHistorialOtros(todas.filter((s) => !esSesionLocal(s)));
+
     if (historial.length === 0) {
       elListaHistorial.style.display = 'none';
       elHistorialVacio.style.display = 'block';
@@ -4449,6 +4619,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const fecha = document.createElement('div');
       fecha.className = 'item-historial-fecha';
       fecha.textContent = formatearFechaHistorial(entrada.fecha);
+      const chip = document.createElement('span');
+      chip.className = 'chip-espacio';
+      chip.textContent = etiquetaEspacio(espacioDeSesion(entrada));
+      fecha.appendChild(chip);
       item.appendChild(fecha);
 
       const detalle = document.createElement('div');
@@ -4471,11 +4645,62 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
+  // NUEVO: "Sesiones de otros evaluadores" (solo lectura), agrupadas por espacio
+  function renderHistorialOtros(otras) {
+    elListaHistorialOtros.innerHTML = '';
+    if (otras.length === 0) {
+      elZonaHistorialOtros.style.display = 'none';
+      return;
+    }
+    const mapa = new Map();
+    otras.forEach((s) => {
+      const esp = espacioDeSesion(s);
+      if (!mapa.has(esp)) mapa.set(esp, []);
+      mapa.get(esp).push(s);
+    });
+    const grupos = Array.from(mapa.entries()).map(([esp, lista]) => {
+      let ultima = '';
+      lista.forEach((s) => { const f = String(s.fecha || ''); if (f > ultima) ultima = f; });
+      return { esp: esp, cantidad: lista.length, ultima: ultima };
+    });
+    grupos.sort((a, b) => (a.ultima < b.ultima ? 1 : (a.ultima > b.ultima ? -1 : 0)));
+
+    grupos.forEach((g) => {
+      const fila = document.createElement('div');
+      fila.className = 'grupo-historial-otro';
+
+      const info = document.createElement('div');
+      const titulo = document.createElement('span');
+      titulo.className = 'grupo-titulo';
+      titulo.textContent = etiquetaEspacio(g.esp);
+      const detalle = document.createElement('span');
+      detalle.className = 'grupo-detalle';
+      detalle.textContent = g.cantidad + ' sesión(es) · última: ' + (g.ultima ? formatearFechaHistorial(g.ultima) : '—');
+      info.appendChild(titulo);
+      info.appendChild(detalle);
+
+      const btn = document.createElement('button');
+      btn.className = 'boton-mini';
+      btn.textContent = 'Vincular a este evaluador';
+      btn.addEventListener('click', () => abrirModalVincular('sesiones', g.esp));
+
+      fila.appendChild(info);
+      fila.appendChild(btn);
+      elListaHistorialOtros.appendChild(fila);
+    });
+    elSumaHistorialOtros.textContent = 'Sesiones de otros evaluadores (' + otras.length + ')';
+    elZonaHistorialOtros.style.display = 'block';
+  }
+
   // MODIFICADO: se exporta el objeto COMPLETO de gamificación (puntosTotales +
   // inventario + historial) en la raíz, no solo el array de historial, para
   // poder recuperar todo al importar en otro dispositivo.
   function exportarHistorial() {
-    const blob = new Blob([JSON.stringify(gamificacion, null, 2)], { type: 'application/json' });
+    // cada sesion sale con su "espacio" ('' = sin identificar)
+    const salida = Object.assign({}, gamificacion, {
+      historial: gamificacion.historial.map((s) => Object.assign({}, s, { espacio: espacioDeSesion(s) })),
+    });
+    const blob = new Blob([JSON.stringify(salida, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -4486,9 +4711,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     URL.revokeObjectURL(url);
   }
 
-  function borrarHistorial() {
-    if (gamificacion.historial.length === 0) return;
-    if (!window.confirm('¿Borrar todo el historial de sesiones? Los puntos y el inventario NO se ven afectados.')) return;
+  function borrarHistorialEste() {
+    const n = gamificacion.historial.filter(esSesionLocal).length;
+    if (n === 0) return;
+    if (!window.confirm('¿Borrar las ' + n + ' sesión(es) de ESTE evaluador («' + ESPACIO_HASH + '»)? Las sesiones de otros evaluadores, los puntos y el inventario NO se ven afectados.')) return;
+    gamificacion.historial = gamificacion.historial.filter((s) => !esSesionLocal(s));
+    guardarGamificacion();
+    renderHistorial();
+  }
+
+  function borrarHistorialGlobal() {
+    const n = gamificacion.historial.length;
+    if (n === 0) return;
+    if (!window.confirm('¿Borrar el historial GLOBAL (' + n + ' sesión(es) de TODOS los evaluadores, incluidas las sin identificar)? Los puntos y el inventario NO se ven afectados.')) return;
     gamificacion.historial = [];
     guardarGamificacion();
     renderHistorial();
@@ -4505,59 +4740,34 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return mejor;
   }
 
+  // A5: merge sin pisar. Concatena las sesiones descartando duplicados exactos
+  // (misma 'fecha'); puntosTotales = max(actual, importado); cada item de
+  // inventario = max. Lo importado de otros espacios aparece en "Sesiones de
+  // otros evaluadores"; lo importado con el espacio actual cuenta como local.
   function fusionarGamificacionImportada(importado) {
-    // Normaliza estructura mínima esperada (por si el archivo viene incompleto)
     const impPuntos = typeof importado.puntosTotales === 'number' ? importado.puntosTotales : 0;
-    const impInventario = {
-      comodines: (importado.inventario && typeof importado.inventario.comodines === 'number') ? importado.inventario.comodines : 0,
-      pistasGratis: (importado.inventario && typeof importado.inventario.pistasGratis === 'number') ? importado.inventario.pistasGratis : 0,
-    };
+    const impInv = importado.inventario || {};
+    const impComodines = typeof impInv.comodines === 'number' ? impInv.comodines : 0;
+    const impPistas = typeof impInv.pistasGratis === 'number' ? impInv.pistasGratis : 0;
     const impHistorial = Array.isArray(importado.historial) ? importado.historial : [];
 
-    const masRecienteImportado = sesionMasReciente(impHistorial);
-    const masRecienteLocal = sesionMasReciente(gamificacion.historial);
-    const fechaImportado = masRecienteImportado ? String(masRecienteImportado.fecha) : null;
-    const fechaLocal = masRecienteLocal ? String(masRecienteLocal.fecha) : null;
+    gamificacion.puntosTotales = Math.max(gamificacion.puntosTotales, impPuntos);
+    gamificacion.inventario.comodines = Math.max(gamificacion.inventario.comodines, impComodines);
+    gamificacion.inventario.pistasGratis = Math.max(gamificacion.inventario.pistasGratis, impPistas);
+    gamificacion.inventario.escudosRacha = Math.max(gamificacion.inventario.escudosRacha || 0,
+      typeof impInv.escudosRacha === 'number' ? impInv.escudosRacha : 0);
+    gamificacion.inventario.segundasOportunidades = Math.max(gamificacion.inventario.segundasOportunidades || 0,
+      typeof impInv.segundasOportunidades === 'number' ? impInv.segundasOportunidades : 0);
 
-    // La fecha es un ISO string: la comparación lexicográfica alcanza para
-    // saber cuál sesión es más reciente. Si no hay sesión local, se considera
-    // que la importada es "posterior" (no hay nada local con qué comparar).
-    const importadoEsPosterior = fechaImportado !== null && (fechaLocal === null || fechaImportado > fechaLocal);
-
-    if (importadoEsPosterior) {
-      const algoMenor = impPuntos < gamificacion.puntosTotales
-        || impInventario.comodines < gamificacion.inventario.comodines
-        || impInventario.pistasGratis < gamificacion.inventario.pistasGratis;
-
-      if (algoMenor) {
-        const aceptar = window.confirm(
-          `El archivo importado tiene una sesión más reciente, pero sus puntos o su inventario son MENORES que los que tenés ahora acá.
-
-        ¿Querés reemplazar tus puntos y comodines actuales por los del archivo importado?`
-        );
-        if (aceptar) {
-          gamificacion.puntosTotales = impPuntos;
-          gamificacion.inventario = impInventario;
-        }
-        // si rechaza: se mantienen los locales, sin tocar nada
-      } else {
-        // Es posterior y mayor o igual en todo: se reemplaza sin preguntar
-        gamificacion.puntosTotales = impPuntos;
-        gamificacion.inventario = impInventario;
-      }
-    }
-    // Si NO es posterior (la importada es más vieja, o no trae historial):
-    // se mantienen los puntos e inventario locales tal cual están.
-
-    // Fusión del historial: se agregan las sesiones importadas que no estén
-    // ya localmente. Duplicada = mismo string EXACTO en 'fecha'.
     const fechasLocales = new Set(gamificacion.historial.map((s) => String(s.fecha)));
     impHistorial.forEach((sesion) => {
+      if (!sesion || typeof sesion !== 'object') return;
       const f = String(sesion.fecha);
-      if (!fechasLocales.has(f)) {
-        gamificacion.historial.push(sesion);
-        fechasLocales.add(f);
-      }
+      if (fechasLocales.has(f)) return;
+      const copia = Object.assign({}, sesion);
+      if (typeof copia.espacio !== 'string') delete copia.espacio;   // sin identificar
+      gamificacion.historial.push(copia);
+      fechasLocales.add(f);
     });
 
     guardarGamificacion();
@@ -4603,7 +4813,261 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnAbrirHistorial.addEventListener('click', () => abrirHistorial());
   document.getElementById('btn-historial-volver').addEventListener('click', () => mostrarPantalla('temas'));
   elBtnHistorialExportar.addEventListener('click', () => exportarHistorial());
-  elBtnHistorialBorrar.addEventListener('click', () => borrarHistorial());
+  elBtnHistorialBorrarEste.addEventListener('click', () => borrarHistorialEste());
+  elBtnHistorialBorrarGlobal.addEventListener('click', () => borrarHistorialGlobal());
+
+  // ============================================================
+  // NUEVO: Revinculación — recuperar datos de un evaluador renombrado
+  // ============================================================
+  // Si se renombra el recordatorio.txt cambia ESPACIO_HASH y todo lo guardado
+  // bajo el nombre viejo queda "de otro evaluador". Acá se recomputa el hash que
+  // tendría cada tarjeta ACTUAL bajo el espacio viejo (hashTarjetaCon /
+  // hashImagenCon) y se mueven esas entradas al hash nuevo. Es de un solo
+  // sentido (sin deshacer). puntosTotales e inventario nunca se tocan.
+
+  function tieneClave(obj, k) { return Object.prototype.hasOwnProperty.call(obj, k); }
+
+  // Zonas con datos por tarjeta/imagen. 'explicitas' = campos donde un valor
+  // vacío/false es una decisión del usuario y NO se pisa al completar.
+  const ZONAS_VINCULO = {
+    dificiles: {
+      plural: 'difíciles', titulo: 'difíciles',
+      almacen: () => dificiles, guardar: () => guardarDificiles(),
+      repintar: () => renderDificilesPreview(), explicitas: ['activa'],
+    },
+    notas: {
+      plural: 'notas', titulo: 'notas',
+      almacen: () => notasLocales, guardar: () => guardarNotas(),
+      repintar: () => renderNotasPreview(), explicitas: ['nota'],
+    },
+    razones: {
+      plural: 'razones', titulo: 'razones',
+      almacen: () => razonesGuardadas, guardar: () => guardarRazones(),
+      repintar: () => renderRazonesPreview(), explicitas: [],
+    },
+    imagenes: {
+      plural: 'imágenes', titulo: 'datos de imágenes',
+      almacen: () => datosImagenes, guardar: () => guardarImagenesStorage(),
+      repintar: () => renderImagenesPreview(), explicitas: [],
+    },
+  };
+
+  // Entradas de una zona que NO corresponden a ninguna tarjeta/imagen actual
+  function contarOtrasTarjetas(almacen) {
+    const propios = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
+    return Object.keys(almacen).filter((h) => !propios.has(h)).length;
+  }
+  function contarOtrasImagenes() {
+    return Object.keys(datosImagenes).filter((h) => {
+      const e = datosImagenes[h] || {};
+      return h !== hashImagen(e.ruta, e.indice);
+    }).length;
+  }
+  function contarOtrasZona(zona) {
+    return zona === 'imagenes' ? contarOtrasImagenes() : contarOtrasTarjetas(ZONAS_VINCULO[zona].almacen());
+  }
+
+  // Lista de {de, a}: solo tarjetas/imágenes ACTUALES cuyo hash viejo existe.
+  // Las entradas que no corresponden a ninguna quedan donde están.
+  function movimientosVinculo(zona, viejo) {
+    const movs = [];
+    const vistos = new Set();
+    if (zona === 'imagenes') {
+      INDICE_IMAGENES.forEach((c) => {
+        const de = hashImagenCon(viejo, c.ruta, c.indice);
+        const a = hashImagen(c.ruta, c.indice);
+        if (de === a || vistos.has(de) || !tieneClave(datosImagenes, de)) return;
+        vistos.add(de);
+        movs.push({ de: de, a: a });
+      });
+      return movs;
+    }
+    const almacen = ZONAS_VINCULO[zona].almacen();
+    tarjetasCompletas.forEach((t) => {
+      const de = hashTarjetaCon(viejo, t);
+      const a = hashTarjeta(t);
+      if (de === a || vistos.has(de) || !tieneClave(almacen, de)) return;
+      vistos.add(de);
+      movs.push({ de: de, a: a });
+    });
+    return movs;
+  }
+
+  function esVacioVinculo(clave, v, explicitas) {
+    if (v === undefined || v === null) return true;
+    if (explicitas.indexOf(clave) !== -1) return false;
+    return v === '' || v === false || (Array.isArray(v) && v.length === 0);
+  }
+
+  // Colisión: gana el existente; solo se completan campos vacíos. Las listas
+  // (ej. códigos de razones) se unen sin duplicados.
+  function fusionarEntradaVinculo(existente, entrante, explicitas) {
+    const res = Object.assign({}, existente);
+    Object.keys(entrante).forEach((k) => {
+      const nuevo = entrante[k];
+      if (Array.isArray(nuevo) && Array.isArray(res[k])) {
+        const union = res[k].slice();
+        nuevo.forEach((x) => { if (union.indexOf(x) === -1) union.push(x); });
+        res[k] = union;
+      } else if (esVacioVinculo(k, res[k], explicitas)) {
+        res[k] = nuevo;
+      }
+    });
+    return res;
+  }
+
+  function normalizarEspacioViejo(texto) {
+    return String(texto || '').trim().replace(/[.]txt$/i, '').trim();
+  }
+  function mismoEspacioQueActual(viejo) {
+    return viejo.toLowerCase() === ESPACIO_HASH.toLowerCase();
+  }
+
+  // Vista previa (sin modificar nada): cuánto se movería
+  function resumenVinculo(zona, viejo) {
+    if (zona === 'sesiones') {
+      const n = gamificacion.historial.filter((s) => espacioDeSesion(s) === viejo).length;
+      return { cantidad: n, texto: 'Se vincularían ' + n + ' sesión(es).' };
+    }
+    const z = ZONAS_VINCULO[zona];
+    if (!viejo) {
+      return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
+    }
+    if (mismoEspacioQueActual(viejo)) {
+      return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
+    }
+    const n = movimientosVinculo(zona, viejo).length;
+    const resto = Math.max(0, contarOtrasZona(zona) - n);
+    if (n === 0) {
+      return { cantidad: 0, texto: 'No se encontró ninguna entrada de ' + z.plural + ' bajo «' + viejo + '» que corresponda a las tarjetas actuales.' };
+    }
+    return {
+      cantidad: n,
+      texto: 'Se moverían ' + n + ' ' + z.plural + '.' +
+        (resto > 0 ? ' Otras ' + resto + ' entrada(s) no corresponden a ninguna tarjeta actual y NO se moverían.' : ''),
+    };
+  }
+
+  // Ejecuta el movimiento y devuelve { movidas, sin }
+  function ejecutarVinculo(zona, viejo) {
+    if (zona === 'sesiones') {
+      let n = 0;
+      gamificacion.historial.forEach((s) => {
+        if (espacioDeSesion(s) === viejo) { s.espacio = ESPACIO_HASH; n++; }
+      });
+      guardarGamificacion();
+      renderHistorial();
+      return { movidas: n, sin: 0 };
+    }
+    const z = ZONAS_VINCULO[zona];
+    const almacen = z.almacen();
+    const movs = movimientosVinculo(zona, viejo);
+    const tomadas = movs.map((m) => ({ a: m.a, v: almacen[m.de] }));
+    movs.forEach((m) => { delete almacen[m.de]; });
+    tomadas.forEach((x) => {
+      almacen[x.a] = tieneClave(almacen, x.a)
+        ? fusionarEntradaVinculo(almacen[x.a], x.v, z.explicitas)
+        : x.v;
+    });
+    z.guardar();
+    z.repintar();
+    return { movidas: movs.length, sin: contarOtrasZona(zona) };
+  }
+
+  // ---------- Modal ----------
+  const elModalVincular = document.getElementById('modal-vincular');
+  const elVincTitulo = document.getElementById('vinc-titulo');
+  const elVincDescripcion = document.getElementById('vinc-descripcion');
+  const elVincCampoEspacio = document.getElementById('vinc-campo-espacio');
+  const elVincEspacio = document.getElementById('vinc-espacio');
+  const elVincEspacios = document.getElementById('vinc-espacios');
+  const elVincResumen = document.getElementById('vinc-resumen');
+  const elVincAviso = document.getElementById('vinc-aviso');
+  const elVincConfirmar = document.getElementById('vinc-confirmar');
+  const elBtnVincAceptar = document.getElementById('btn-vinc-aceptar');
+  let vincZona = null;
+  let vincEspacioFijo = null;   // null = el usuario lo escribe; string = viene de un grupo de sesiones
+
+  function espacioViejoActual() {
+    return vincEspacioFijo !== null ? vincEspacioFijo : normalizarEspacioViejo(elVincEspacio.value);
+  }
+
+  function refrescarModalVincular() {
+    if (!vincZona) return;
+    const viejo = espacioViejoActual();
+    const r = resumenVinculo(vincZona, viejo);
+    elVincResumen.textContent = r.texto;
+    const nombreViejo = viejo ? '«' + viejo + '»' : 'el nombre viejo';
+    elVincAviso.textContent =
+      '⚠ No se puede deshacer. Si todavía usás el evaluador con ' + nombreViejo +
+      ', ESTE dejará de ver esos datos. Si otro evaluador comparte contenido con este, ' +
+      'sus datos se mezclarán (si ya hay un dato para la misma tarjeta, gana el que ya está acá).';
+    const coincide = elVincConfirmar.value.trim() === 'CONFIRMAR';
+    elBtnVincAceptar.disabled = !(coincide && r.cantidad > 0);
+  }
+
+  function abrirModalVincular(zona, espacioFijo) {
+    vincZona = zona;
+    vincEspacioFijo = (typeof espacioFijo === 'string') ? espacioFijo : null;
+    const titulo = zona === 'sesiones' ? 'sesiones' : ZONAS_VINCULO[zona].titulo;
+    elVincTitulo.textContent = 'Vincular ' + titulo + ' a este evaluador';
+    if (vincEspacioFijo !== null) {
+      elVincDescripcion.textContent = 'Grupo: ' + etiquetaEspacio(vincEspacioFijo) + '. Pasarán a ser de este evaluador («' + ESPACIO_HASH + '»).';
+      elVincCampoEspacio.style.display = 'none';
+    } else {
+      elVincDescripcion.textContent = 'Indicá con qué nombre de recordatorio se guardaron estos datos. Pasarán a ser de este evaluador («' + ESPACIO_HASH + '»).';
+      elVincCampoEspacio.style.display = 'block';
+      elVincEspacio.value = '';
+      // sugerencias: espacios de otros evaluadores que ya aparecen en el historial
+      elVincEspacios.innerHTML = '';
+      const vistos = new Set();
+      gamificacion.historial.forEach((s) => {
+        const esp = espacioDeSesion(s);
+        if (!esp || esp === ESPACIO_HASH || vistos.has(esp)) return;
+        vistos.add(esp);
+        const op = document.createElement('option');
+        op.value = esp;
+        elVincEspacios.appendChild(op);
+      });
+    }
+    elVincConfirmar.value = '';
+    refrescarModalVincular();
+    elModalVincular.classList.add('abierto');
+    (vincEspacioFijo !== null ? elVincConfirmar : elVincEspacio).focus();
+  }
+
+  function cerrarModalVincular() {
+    elModalVincular.classList.remove('abierto');
+    vincZona = null;
+    vincEspacioFijo = null;
+  }
+
+  function aceptarVinculo() {
+    if (!vincZona || elBtnVincAceptar.disabled) return;
+    const zona = vincZona;
+    const viejo = espacioViejoActual();
+    let r;
+    try {
+      r = ejecutarVinculo(zona, viejo);
+    } catch (e) {
+      cerrarModalVincular();
+      window.alert('No se pudo completar la vinculación: ' + e.message);
+      return;
+    }
+    cerrarModalVincular();
+    window.alert('Vinculación terminada: movidas ' + r.movidas + ', sin corresponder ' + r.sin + '.' +
+      (r.sin > 0 ? ' Las ' + r.sin + ' sin corresponder quedan sin mover (en «De otros evaluadores»).' : ''));
+  }
+
+  elVincEspacio.addEventListener('input', refrescarModalVincular);
+  elVincConfirmar.addEventListener('input', refrescarModalVincular);
+  elVincConfirmar.addEventListener('keydown', (e) => { if (e.key === 'Enter') aceptarVinculo(); });
+  elBtnVincAceptar.addEventListener('click', () => aceptarVinculo());
+  document.getElementById('btn-vinc-cancelar').addEventListener('click', () => cerrarModalVincular());
+
+  ['dificiles', 'notas', 'razones', 'imagenes'].forEach((zona) => {
+    document.getElementById('btn-vincular-' + zona).addEventListener('click', () => abrirModalVincular(zona));
+  });
 
   // Estado inicial de los stats (por si se entra a 'estudio' antes de iniciar)
   actualizarBarraGamificacion();
@@ -4911,6 +5375,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     hashes.forEach((h) => elLista.appendChild(filaImagenGuardada(h, datosImagenes[h])));
     elDet.style.display = hashes.length > 0 ? 'block' : 'none';
     elSuma.textContent = 'Con nota o marcadas difícil (' + hashes.length + ')';
+    document.getElementById('btn-vincular-imagenes').style.display = contarOtrasImagenes() > 0 ? 'inline-block' : 'none';
     elInfo.textContent = hashes.length === 0
       ? 'Todavía no marcaste ni anotaste ninguna imagen (galería del modo observador).'
       : 'Guardadas en este navegador: ' + hashes.length;
@@ -5672,6 +6137,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gameOverDisparado = false;
     historialGuardadoEstaSesion = false;
     modoZombie = false;   // NUEVO: una sesión nueva nunca arranca en modo zombie
+    reintentadasSesion = new Set();
+    primerIntentoFallido = new Set();
+    reintentoExitoso = new Set();
+    segundaPendiente = false;
+    limpiarAviso();
     actualizarBarraGamificacion();
 
     mostrarPantalla('estudio');
@@ -6110,11 +6580,100 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elResultadoEval.appendChild(extra);
     }
 
+    if (primerIntentoFallido.has(indiceActual)) {
+      const extraR = document.createElement('div');
+      extraR.textContent = reintentoExitoso.has(indiceActual)
+        ? '🔁 Acertada en segunda oportunidad (recompensa reducida al ' + Math.round(FACTOR_RECOMPENSA_REINTENTO * 100) + ' %)'
+        : '🔁 Segunda oportunidad usada: el reintento también falló';
+      elResultadoEval.appendChild(extraR);
+    }
+
     elResultadoEval.className = 'resultado-eval ' + ev.resultado;
   }
 
+  // ============================================================
+  // NUEVO: avisos y Segunda oportunidad
+  // ============================================================
+  let avisoTimer = null;
+
+  function mostrarAviso(texto) {
+    elAvisoJuego.textContent = texto;
+    elAvisoJuego.style.display = 'block';
+    if (avisoTimer !== null) clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(limpiarAviso, 10000);
+  }
+
+  function limpiarAviso() {
+    if (avisoTimer !== null) { clearTimeout(avisoTimer); avisoTimer = null; }
+    elAvisoJuego.textContent = '';
+    elAvisoJuego.style.display = 'none';
+  }
+
+  // Solo aplica a un fallo de RESPUESTA ESCRITA (evaluada por el sistema). Nada de
+  // esto corre en modo observador ni zombie (no se aplica nada, no se consume nada).
+  function puedeSegundaOportunidad(idx) {
+    if (modoObservador || modoZombie || segundaPendiente) return false;
+    if ((gamificacion.inventario.segundasOportunidades || 0) <= 0) return false;
+    return !reintentadasSesion.has(tarjetasSesion[idx]);
+  }
+
+  let segundaCallback = null;
+
+  function pedirSegundaOportunidad(alDecidir) {
+    segundaCallback = alDecidir;
+    const n = gamificacion.inventario.segundasOportunidades || 0;
+    document.getElementById('modal-segunda-texto').textContent =
+      'Tu respuesta no alcanzó. ¿Usar una segunda oportunidad para reintentar esta tarjeta? Te quedan ' + n + '.';
+    document.getElementById('modal-segunda-ayuda').textContent =
+      'Si acertás el reintento cobrás el ' + Math.round(FACTOR_RECOMPENSA_REINTENTO * 100) +
+      ' % de los puntos y tu racha sigue creciendo. La tarjeta igual queda para repaso.';
+    elModalSegunda.classList.add('abierto');
+  }
+
+  function resolverSegundaOportunidad(acepta) {
+    elModalSegunda.classList.remove('abierto');
+    const cb = segundaCallback;
+    segundaCallback = null;
+    if (cb) cb(acepta);
+  }
+
+  document.getElementById('btn-segunda-si').addEventListener('click', () => resolverSegundaOportunidad(true));
+  document.getElementById('btn-segunda-no').addEventListener('click', () => resolverSegundaOportunidad(false));
+
+  // Acepta: consume 1, marca la tarjeta como fallada-para-repaso y pide una nueva respuesta.
+  // Racha y multiplicador NO se tocan (el fallo todavía no se aplica).
+  function iniciarReintento(idx) {
+    gamificacion.inventario.segundasOportunidades--;
+    guardarGamificacion();
+    reintentadasSesion.add(tarjetasSesion[idx]);
+    primerIntentoFallido.add(idx);
+    elTextoEval.value = '';
+    escritos[idx] = '';
+    elBtnEvaluar.disabled = true;
+    actualizarBarraGamificacion();
+    mostrarAviso('🔁 Segunda oportunidad usada (te quedan ' + gamificacion.inventario.segundasOportunidades +
+      '): volvé a responder. Tu racha sigue intacta.');
+    elTextoEval.focus();
+  }
+
+  // Factor de recompensa: solo baja si esta tarjeta falló el primer intento y ahora sale bien.
+  function factorReintento(idx, resultado) {
+    if (modoObservador || !primerIntentoFallido.has(idx)) return 1;
+    if (resultado === 'si' || resultado === 'casi') {
+      reintentoExitoso.add(idx);
+      return FACTOR_RECOMPENSA_REINTENTO;
+    }
+    return 1;
+  }
+
+  function avisoReintentoAcertado(idx) {
+    const pts = puntosPorTarjeta[idx] || 0;
+    mostrarAviso('🔁 Reintento acertado: recompensa reducida al ' + Math.round(FACTOR_RECOMPENSA_REINTENTO * 100) + ' %' +
+      (modoJuego !== 'light' ? ' (+' + pts + ' pts)' : '') + '. Tu racha crece normal.');
+  }
+
   function evaluarRespuesta() {
-    if (pausaManual) return;
+    if (pausaManual || segundaPendiente) return;
     if (resultados[indiceActual] !== null) return;
     const texto = elTextoEval.value;
     if (texto.trim() === '') return;
@@ -6164,8 +6723,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       else resultado = 'mal';
     }
 
-    escritos[indiceActual] = texto;
-    evaluaciones[indiceActual] = {
+    const detalleEval = {
       resultado,
       acertadas,
       faltaron,
@@ -6178,6 +6736,29 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       totalEscritas: escritas.length,
       totalReferencia: referencia.length,
     };
+
+    // NUEVO: cascada de fallo, paso 1 — Segunda oportunidad. Se pregunta ANTES de
+    // consumir y ANTES de comprometer el resultado (si acepta, nada de esto se aplica).
+    if (resultado === 'mal' && puedeSegundaOportunidad(indiceActual)) {
+      const idx = indiceActual;
+      segundaPendiente = true;
+      elTextoEval.blur();
+      pedirSegundaOportunidad((acepta) => {
+        segundaPendiente = false;
+        if (indiceActual !== idx || resultados[idx] !== null) return;
+        if (acepta) iniciarReintento(idx);
+        else confirmarEvaluacion(texto, resultado, detalleEval);
+      });
+      return;
+    }
+    confirmarEvaluacion(texto, resultado, detalleEval);
+  }
+
+  // Aplica la evaluación (lógica original, sin cambios salvo el factor del reintento).
+  // Si es un fallo, procesarResultadoGamificacion sigue la cascada: escudo -> fallo normal.
+  function confirmarEvaluacion(texto, resultado, detalleEval) {
+    escritos[indiceActual] = texto;
+    evaluaciones[indiceActual] = detalleEval;
 
     // Auto-marca: bien -> Entendida; casi -> Casi (0.5); mal -> No entendida.
     // NO avanza: el feedback queda a la vista y el avance es manual.
@@ -6193,7 +6774,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         conPista: !!pistaMostrada[indiceActual],
         pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
         comodinUsado: false,
+        factor: factorReintento(indiceActual, resultados[indiceActual]),
       });
+      if (reintentoExitoso.has(indiceActual)) avisoReintentoAcertado(indiceActual);
     }
 
     renderTarjeta();
@@ -6258,7 +6841,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         conPista: !!pistaMostrada[indiceActual],
         pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
         comodinUsado: comodinUsado,
+        factor: factorReintento(indiceActual, resultado),
       });
+      if (reintentoExitoso.has(indiceActual)) avisoReintentoAcertado(indiceActual);
     }
 
     if (indiceActual < tarjetasSesion.length - 1) {
@@ -6338,6 +6923,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       conPista: !!pistaMostrada[indiceActual],
       pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
       comodinUsado: false,
+      factor: reintentoExitoso.has(indiceActual) ? FACTOR_RECOMPENSA_REINTENTO : 1,
     });
     if (resultadoOriginal === 'mal') {
       actualizarRachaTrasResultado('si', false);  // incrementa racha + recalcula multiplicador (puede sonar "racha")
@@ -6778,6 +7364,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnFinalizar.addEventListener('click', () => finalizarSesion());
 
   document.addEventListener('keydown', (evento) => {
+    if (elModalSegunda.classList.contains('abierto')) return;   // NUEVO: dialogo de segunda oportunidad abierto
     if (elModalContinuar.classList.contains('abierto')) {
       if (evento.key === 'Escape') cerrarModalContinuar();
       return;
@@ -6853,7 +7440,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function calcularNota() {
     let puntos = 0;
     resultados.forEach((r, i) => {
-      if (r === 'si') puntos += pistaMostrada[i] ? 0.5 : 1;
+      if (r === 'si') puntos += (pistaMostrada[i] || reintentoExitoso.has(i)) ? 0.5 : 1;   // reintento acertado = 0.5
       else if (r === 'casi') puntos += 0.5;   // NUEVO: Casi = 0.5
     });
     return tarjetasSesion.length > 0 ? (10 * puntos) / tarjetasSesion.length : 0;
@@ -6905,6 +7492,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       txt += ' — coincidencia ' + Math.round(ev.sim * 100) + '% (' + ev.comunes + ' en común)';
       resultado.textContent = txt;
       item.appendChild(resultado);
+    }
+
+    if (primerIntentoFallido.has(i)) {
+      const tag = document.createElement('span');
+      tag.className = 'item-reintento';
+      tag.textContent = '🔁 Falló el primer intento (segunda oportunidad: ' +
+        (reintentoExitoso.has(i) ? 'reintento acertado, cuenta 50 %' : 'reintento fallido') + ')';
+      item.appendChild(tag);
     }
 
     // NUEVO: razones guardadas (no se muestran en la sección "Revisar")
@@ -6987,10 +7582,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elNota.textContent = '🎓 Nota de la sesión: ' + nota.toFixed(1) + ' / 10';
     elNota.className = 'nota-sesion ' + (nota >= 6 ? 'aprobado' : 'desaprobado');
 
-    document.getElementById('conteo-si').textContent = conteos.si;
-    document.getElementById('conteo-casi').textContent = conteos.casi;
-    document.getElementById('conteo-no').textContent = conteos.no;
-    document.getElementById('conteo-saltar').textContent = conteos.saltar;
+    document.getElementById('etq-si').textContent = 'Entendidas (' + conteos.si + ')';
+    document.getElementById('etq-casi').textContent = 'Casi (' + conteos.casi + ')';
+    document.getElementById('etq-no').textContent = 'No entendidas (' + conteos.no + ')';
+    document.getElementById('etq-saltar').textContent = 'Pasadas sin marcar (' + conteos.saltar + ')';
 
     const tiempoTotalMs = tiempos.reduce((a, b) => a + b, 0);
     const promedioMs = tarjetasSesion.length > 0 ? tiempoTotalMs / tarjetasSesion.length : 0;
@@ -7016,9 +7611,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     // "Casi" también se repasa (antes contaba como No entendida)
     const elBtnRepasarNo = document.getElementById('btn-repasar-no');
-    elBtnRepasarNo.style.display = (conteos.no + conteos.casi) > 0 ? 'block' : 'none';
+    // NUEVO: también van a repaso las que fallaron el primer intento (segunda oportunidad)
+    const paraRepaso = (i) => resultados[i] === 'no' || resultados[i] === 'casi' || primerIntentoFallido.has(i);
+    elBtnRepasarNo.style.display = tarjetasSesion.some((_, i) => paraRepaso(i)) ? 'block' : 'none';
     elBtnRepasarNo.onclick = () => {
-      let pendientes = tarjetasSesion.filter((_, i) => resultados[i] === 'no' || resultados[i] === 'casi');
+      let pendientes = tarjetasSesion.filter((_, i) => paraRepaso(i));
       if (modoAleatorio) pendientes = mezclar(pendientes);
       iniciarSesion(pendientes);
     };

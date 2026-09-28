@@ -1,6 +1,8 @@
-FUNCION TRANSFERENCIA
-POLOS REALES
-DEFINICIÓN FUNCIONES TRANSFERENCIA UN SISTEMA CONTINUO
+temaP FUNCION TRANSFERENCIA
+
+temaS POLOS REALES
+
+subT DEFINICIÓN FUNCIONES TRANSFERENCIA UN SISTEMA CONTINUO
 Se considerará primero
 funciones transferencia continuas,
 para sistemas
@@ -18,7 +20,6 @@ aquel factor en ecuación Y(s)
 que multiplica
 a transformada entrada U(s)
 
-subT DEFINICIÓN FUNCIONES TRANSFERENCIA UN SISTEMA CONTINUO
 función transferencia
 se define como
 transformada Laplace salida
@@ -183,8 +184,7 @@ subT ganancia respuesta tiempo
 diagrama respuesta en tiempo
 <imagen>
 
-subT EFP metodo grafico
-<imagen>
+subT EFP  metodo grafico
 <imagen>
 <imagen>
 ganancia
@@ -197,9 +197,9 @@ subT conceptos previos
 <imagen>
 <imagen>
 
-POLOS COMPLEJOS
-EFP 
-metodo grafico
+temaS POLOS COMPLEJOS
+
+subT EFP metodo grafico
 variable compleja
 en forma binomica
 considera como expresion
@@ -212,14 +212,13 @@ numeros reales
 unidad imaginaria con propiedades
 <imagen>
 polos en grafico
-son triangulitos
+son triangulos
 <imagen>
 <imagen>
 
-subT EFP metodo grafico
 obteniendo valores
 s1 s2
-expresar polinomio
+podemos expresar polinomio
 <imagen>
 como
 <imagen>

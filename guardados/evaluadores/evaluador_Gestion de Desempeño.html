@@ -6,7 +6,7 @@
 <title>Tarjetas de Estudio</title>
 <style>
   :root {
-    --fill-color: #FF5A36;
+    --fill-color: #DC7BFF;
     --stroke-color: #5C5C5C;
   }
 
@@ -169,10 +169,43 @@
 
   .barra-superior {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 6px;
     margin-bottom: 8px;
   }
+
+  /* NUEVO: Fila 1 de la barra superior (gamificación) */
+  .fila-gamificacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #666;
+  }
+
+  .stat-gamificacion { white-space: nowrap; }
+
+  .boton-mute {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    font-family: inherit;
+  }
+
+  /* Fila 2 de la barra superior (navegación, ya existía como barra-superior) */
+  .fila-navegacion-superior {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #area-tarjeta.observador .fila-gamificacion { display: none !important; }
 
   .progreso-texto {
     font-size: 14px;
@@ -285,6 +318,7 @@
   }
 
   .boton-pista {
+    position: relative;
     padding: clamp(8px, 2.5vw, 10px) clamp(15px, 5vw, 22px);
     border-radius: 20px;
     border: 2px solid var(--stroke-color);
@@ -709,6 +743,7 @@
   .boton-si { background: #3aa76d; }
 
   .boton-saltar {
+    position: relative;
     padding: clamp(9px, 3vw, 12px) clamp(14px, 4.5vw, 20px);
     border-radius: 24px;
     background: #ffffff;
@@ -792,6 +827,7 @@
 
   .nota-sesion.aprobado { color: #3aa76d; }
   .nota-sesion.desaprobado { color: #e0574c; }
+  .nota-sesion.game-over { color: #c0392b !important; }
 
   .fila-resumen {
     display: flex;
@@ -1160,6 +1196,38 @@
     padding: 8px;
   }
 
+  /* NUEVO: Gamificación — modal de selección de modo */
+  .opciones-modo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px 0;
+  }
+
+  .opcion-modo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 2px solid #e2e4ec;
+    background: #fafafe;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+  }
+
+  .opcion-modo.seleccionada { border-color: var(--stroke-color); background: #fff3ea; }
+  .opcion-modo-icono { font-size: 22px; }
+  .opcion-modo-nombre { font-weight: 700; color: #333; margin-right: auto; }
+  .opcion-modo-detalle { font-size: 12px; color: #888; }
+
+  /* NUEVO: Gamificación — modal de Game Over */
+  .modal-gameover.abierto { background: rgba(60,0,0,0.75); }
+  .modal-caja-gameover { background: #2a1010; }
+  .titulo-gameover { color: #ff5252 !important; font-size: 24px !important; }
+  .modal-caja-gameover p { color: #f0b0b0 !important; }
+
   #area-tarjeta.observador .grupo-cronometro,
   #area-tarjeta.observador #btn-pausa { display: none !important; }
 
@@ -1267,10 +1335,210 @@
 
   .galeria-vacia { color: #888; padding: 30px 0; }
 
+  /* NUEVO: pantalla "Rutas Huérfanas" */
+  .lista-huerfanas-scroll {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .fila-resumen-huerfana {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .ruta-huerfana-titulo {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Mismo estilo que .boton-revisar pero relative (vive dentro de un <summary>) */
+  .boton-revisar-huerfana {
+    position: relative;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--stroke-color);
+    background: rgba(255,255,255,0.65);
+    border: 1.5px solid var(--stroke-color);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .boton-revisar-huerfana.activa { background: #ffe3c2; border-color: #e0812a; color: #a85a10; }
+
+  /* NUEVO: Gamificación — Tienda */
+  .saldo-tienda {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--stroke-color);
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  .grid-tienda {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .item-tienda {
+    border: 2px solid #e2e4ec;
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .item-tienda-icono { font-size: 30px; }
+  .item-tienda-nombre { font-weight: 700; color: #333; }
+  .item-tienda-precio { font-size: 13px; color: #888; }
+  .item-tienda-descripcion { font-size: 12px; color: #999; min-height: 32px; }
+
+  .item-tienda-boton {
+    margin-top: 6px;
+    padding: 8px 14px;
+    border-radius: 18px;
+    border: 2px solid var(--stroke-color);
+    background: var(--stroke-color);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .item-tienda-boton:disabled {
+    background: #eee;
+    border-color: #ddd;
+    color: #aaa;
+    cursor: not-allowed;
+  }
+
+  .item-tienda-inventario { font-size: 12px; color: var(--stroke-color); font-weight: 700; }
+
+  /* NUEVO: Gamificación — Historial */
+  .fila-acciones-historial {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .lista-historial-scroll {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .item-historial {
+    border-bottom: 1px solid #eee;
+    padding: 10px 4px;
+    font-size: 13px;
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .item-historial:last-child { border-bottom: none; }
+  .item-historial-fecha { font-weight: 700; color: #333; }
+  .item-historial-detalle { display: flex; flex-wrap: wrap; gap: 10px; color: #777; }
+
+  /* NUEVO: chip del espacio (evaluador) en cada sesion */
+  .chip-espacio {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: #eef0f7;
+    color: #555;
+    font-size: 11px;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+  .chip-espacio-sin { background: #f7ecec; color: #a55; }
+
+  .fila-acciones-historial button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* NUEVO: grupos de sesiones de otros evaluadores */
+  #zona-historial-otros details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: #444; }
+  .grupo-historial-otro {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px 8px 16px;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+    color: #555;
+    text-align: left;
+  }
+  .grupo-historial-otro:last-child { border-bottom: none; }
+  .grupo-historial-otro .grupo-titulo { font-weight: 700; color: #333; display: block; overflow-wrap: anywhere; }
+  .grupo-historial-otro .grupo-detalle { color: #777; font-size: 12px; }
+
+  /* NUEVO: modal de revinculacion */
+  .vinc-resumen { font-weight: 600; color: #444 !important; }
+  .vinc-aviso {
+    background: #fff4f2;
+    border: 1.5px solid #f0c4bc;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #a4402f;
+    text-align: left;
+  }
+
+  /* NUEVO: descripción de la imagen (atributo 'descripcion' del drawio) */
+  .galeria-descripcion {
+    margin: 14px auto 0;
+    max-width: 90%;
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.4;
+    font-style: italic;
+  }
+
   .sin-tarjetas {
     color: #888;
     font-size: 15px;
   }
+
+  /* NUEVO: Gamificación — iconos circulares (Historial / Tienda) */
+  .fila-iconos-gamificacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .boton-icono-circular {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid #e2e4ec;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    font-family: inherit;
+    padding: 0;
+  }
+  .boton-icono-circular:hover { border-color: var(--stroke-color); }
 
   /* ===== NUEVO: Buscador Global (Elegir Temas / Observador / Galería) ===== */
   .zona-buscador {
@@ -1364,6 +1632,12 @@
   <div id="pantalla-temas">
     <p class="subtitulo">Elegí qué temas (o tarjetas) querés estudiar</p>
 
+    <!-- NUEVO: Gamificación — accesos a Historial y Tienda -->
+    <div class="fila-iconos-gamificacion">
+      <button class="boton-icono-circular" id="btn-abrir-historial" title="Historial de sesiones">🕐</button>
+      <button class="boton-icono-circular" id="btn-abrir-tienda" title="Tienda">🛒</button>
+    </div>
+
     <!-- NUEVO: Buscador Global -->
     <div class="zona-buscador" id="zona-buscador-temas">
       <input type="text" class="input-buscador" id="input-buscador-temas" placeholder="Buscar tarjetas o rutas..." autocomplete="off">
@@ -1395,6 +1669,7 @@
       <details id="det-dificiles-otros" style="display:none">
         <summary id="suma-dificiles-otros">De otros evaluadores</summary>
         <div id="lista-dificiles-otros"></div>
+        <button class="boton-mini" id="btn-vincular-dificiles" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
       </details>
       <!-- MODIFICADO: sección de desmarcadas (no se borran, se pueden re-activar) -->
       <details id="det-dificiles-desm" style="display:none">
@@ -1422,6 +1697,7 @@
       <details id="det-notas-otras" style="display:none">
         <summary id="suma-notas-otras">De otros evaluadores</summary>
         <div id="lista-notas-otras"></div>
+        <button class="boton-mini" id="btn-vincular-notas" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
       </details>
       <p class="nota-dificiles" id="nota-notas"></p>
       <button class="boton-mini" id="btn-vaciar-notas" style="display:none;">Vaciar todas</button>
@@ -1456,6 +1732,7 @@
       <details id="det-razones-otras" style="display:none">
         <summary id="suma-razones-otras">De otros evaluadores</summary>
         <div id="lista-razones-otras"></div>
+        <button class="boton-mini" id="btn-vincular-razones" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
       </details>
       <p class="nota-dificiles" id="nota-razones"></p>
       <button class="boton-mini" id="btn-vaciar-razones" style="display:none;">Vaciar todas</button>
@@ -1475,8 +1752,9 @@
     <div class="lista-temas" id="lista-observador"></div>
     <!-- MODIFICADO: se agrega "Ver imágenes" junto al botón de volver -->
     <div class="fila-obs-botones">
-      <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
+      <button class="boton-secundario" id="btn-ver-huerfanas">📄 Rutas Huérfanas</button>
       <button class="boton-secundario" id="btn-ver-imagenes">🖼 Ver imágenes</button>
+      <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
     </div>
 
     <!-- NUEVO: notas y difíciles de imágenes (independiente de las de tarjetas) -->
@@ -1492,6 +1770,7 @@
       <details id="det-imagenes" style="display:none">
         <summary id="suma-imagenes">Con nota o marcadas difícil</summary>
         <div id="lista-imagenes-guardadas"></div>
+        <button class="boton-mini" id="btn-vincular-imagenes" style="margin: 6px 0 8px 16px; display:none;">Vincular a este evaluador</button>
       </details>
       <p class="nota-dificiles" id="nota-imagenes"></p>
       <button class="boton-mini" id="btn-vaciar-imagenes" style="display:none;">Vaciar todas</button>
@@ -1511,6 +1790,8 @@
       <img id="galeria-img" class="galeria-img" alt="Imagen de una ruta" style="display:none;">
     </div>
     <p class="galeria-vacia" id="galeria-vacia" style="display:none;">No hay imágenes en las rutas de respuestas.txt.</p>
+    <!-- NUEVO: descripción de la imagen (extraída del drawio), debajo de la imagen y arriba de Difícil/Nota -->
+    <p class="galeria-descripcion" id="galeria-descripcion" style="display:none;"></p>
 
     <div class="fila-galeria-acciones" style="margin-top:14px;">
       <button class="boton-dificil" id="btn-galeria-dificil" title="Marcar/desmarcar esta imagen como difícil">☆ Difícil</button>
@@ -1543,13 +1824,74 @@
     </div>
   </div>
 
+  <!-- NUEVO: rutas de respuestas.txt no citadas por ninguna tarjeta -->
+  <div id="pantalla-huerfanas" style="display:none;">
+    <p class="subtitulo">Rutas de respuestas.txt que no están citadas por ninguna tarjeta</p>
+
+    <div class="zona-buscador sticky-buscador" id="zona-buscador-huerfanas">
+      <input type="text" class="input-buscador" id="input-buscador-huerfanas" placeholder="Buscar por ruta o contenido..." autocomplete="off">
+      <div class="dropdown-buscador" id="dropdown-buscador-huerfanas"></div>
+    </div>
+
+    <div class="lista-huerfanas-scroll" id="lista-huerfanas"></div>
+    <p class="galeria-vacia" id="huerfanas-vacia" style="display:none;">No hay rutas huérfanas (todas las rutas de respuestas.txt están asociadas a tarjetas).</p>
+
+    <div style="display:flex; justify-content:center; margin-top:20px;">
+      <button class="boton-secundario" id="btn-huerfanas-volver">☰ Volver a la lista</button>
+    </div>
+  </div>
+
+  <!-- NUEVO: Gamificación — Tienda -->
+  <div id="pantalla-tienda" style="display:none;">
+    <p class="subtitulo">Tienda</p>
+    <div class="saldo-tienda" id="saldo-tienda">Puntos disponibles: 0</div>
+    <div class="grid-tienda" id="grid-tienda"></div>
+    <div class="navegacion" style="margin-top:20px;">
+      <button class="boton-secundario" id="btn-tienda-volver">← Volver</button>
+    </div>
+  </div>
+
+  <!-- NUEVO: Gamificación — Historial -->
+  <div id="pantalla-historial" style="display:none;">
+    <p class="subtitulo">Historial de sesiones</p>
+    <div class="fila-acciones-historial">
+      <button class="boton-secundario" id="btn-historial-exportar">Exportar historial</button>
+      <button class="boton-secundario" id="btn-historial-importar">Importar historial</button>
+      <input type="file" id="input-importar-historial" accept="application/json,.json" style="display:none;">
+      <button class="boton-secundario" id="btn-historial-borrar-este" title="Quita solo las sesiones de este evaluador">Borrar historial de este evaluador</button>
+      <button class="boton-secundario" id="btn-historial-borrar-global" title="Vacia las sesiones de TODOS los evaluadores">Borrar historial global</button>
+    </div>
+    <div class="lista-historial-scroll" id="lista-historial"></div>
+    <p class="galeria-vacia" id="historial-vacio" style="display:none;">Aún no hay sesiones guardadas.</p>
+    <!-- NUEVO: sesiones de otros evaluadores (solo lectura, agrupadas por espacio) -->
+    <div class="lista-temas zona-dificiles" id="zona-historial-otros" style="display:none; margin-top:14px;">
+      <details id="det-historial-otros">
+        <summary id="suma-historial-otros">Sesiones de otros evaluadores</summary>
+        <div id="lista-historial-otros"></div>
+      </details>
+    </div>
+    <div class="navegacion" style="margin-top:20px;">
+      <button class="boton-secundario" id="btn-historial-volver">← Volver</button>
+    </div>
+  </div>
+
   <div id="area-tarjeta" style="display:none;">
     <div class="barra-superior">
-      <div class="progreso-texto" id="progreso-texto"></div>
-      <div class="grupo-cronometro">
-        <div class="cronometro" id="cronometro">⏱ 00:00</div>
-        <!-- NUEVO: pausa manual (por si dejás de estudiar un rato) -->
-        <button class="boton-pausa" id="btn-pausa" title="Pausar el cronómetro">⏸ Pausar</button>
+      <!-- NUEVO: Fila 1 — estadísticas de gamificación -->
+      <div class="fila-gamificacion" id="fila-gamificacion">
+        <span class="stat-gamificacion" id="stat-puntos">⭐ 0</span>
+        <span class="stat-gamificacion" id="stat-racha">🔥 0</span>
+        <span class="stat-gamificacion" id="stat-vidas"></span>
+        <button class="boton-mute" id="btn-mute" title="Silenciar/activar sonidos">🔊</button>
+      </div>
+      <!-- Fila 2 — navegación (ya existía) -->
+      <div class="fila-navegacion-superior">
+        <div class="progreso-texto" id="progreso-texto"></div>
+        <div class="grupo-cronometro">
+          <div class="cronometro" id="cronometro">⏱ 00:00</div>
+          <!-- NUEVO: pausa manual (por si dejás de estudiar un rato) -->
+          <button class="boton-pausa" id="btn-pausa" title="Pausar el cronómetro">⏸ Pausar</button>
+        </div>
       </div>
     </div>
     <div class="barra-progreso"><div class="barra-progreso-relleno" id="barra-relleno"></div></div>
@@ -1567,7 +1909,7 @@
       <div class="primero" id="tarjeta-primero"></div>
       <div class="zona-segundo" id="zona-segundo">
         <div class="fila-botones-tarjeta">
-          <button class="boton-pista" id="btn-pista">Mostrar pista</button>
+          <button class="boton-pista" id="btn-pista">Mostrar pista<span class="badge-conteo" id="badge-pista-gratis" style="display:none;"></span></button>
           <button class="boton-respuesta" id="btn-respuesta">Mostrar respuesta</button>
           <!-- NUEVO: botón de nota (solo se ve si la tarjeta tiene nota) -->
           <button class="boton-nota" id="btn-nota" title="Ver/ocultar nota (pausa el cronómetro)">💡</button>
@@ -1627,7 +1969,7 @@
       <!-- MODIFICADO: fila de decisión (cambian resultados[] / avanzan la tarjeta) -->
       <div class="fila-decision">
         <button class="boton boton-circular boton-no" id="btn-no" title="No entendido">&#10007;</button>
-        <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar</button>
+        <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar<span class="badge-conteo" id="badge-comodines" style="display:none;"></span></button>
         <button class="boton boton-circular boton-si" id="btn-si" title="Entendido">&#10003;</button>
       </div>
       <!-- MODIFICADO: fila de etiquetas (metadata; no afectan la calificación) -->
@@ -1649,22 +1991,20 @@
   <div class="pantalla-resumen" id="pantalla-resumen">
     <h2>Resumen de la sesión</h2>
     <div class="nota-sesion" id="nota-sesion">🎓 Nota de la sesión: 0.0 / 10</div>
-    <div class="fila-resumen">
-      <span class="etiqueta-resumen"><span class="punto punto-si"></span> Entendidas</span>
-      <span class="valor-resumen" id="conteo-si">0</span>
+
+    <!-- NUEVO: Gamificación — puntos, racha y modo jugado -->
+    <div class="listas-resumen" id="resumen-gamificacion" style="display:none;">
+      <div class="fila-resumen">
+        <span class="etiqueta-resumen" id="resumen-puntos">⭐ Puntos ganados: 0</span>
+      </div>
+      <div class="fila-resumen">
+        <span class="etiqueta-resumen" id="resumen-mejor-racha">🔥 Mejor racha: 0</span>
+      </div>
+      <div class="fila-resumen">
+        <span class="etiqueta-resumen" id="resumen-modo">🎮 Modo: Light</span>
+      </div>
     </div>
-    <div class="fila-resumen">
-      <span class="etiqueta-resumen"><span class="punto punto-casi"></span> Casi</span>
-      <span class="valor-resumen" id="conteo-casi">0</span>
-    </div>
-    <div class="fila-resumen">
-      <span class="etiqueta-resumen"><span class="punto punto-no"></span> No entendidas</span>
-      <span class="valor-resumen" id="conteo-no">0</span>
-    </div>
-    <div class="fila-resumen">
-      <span class="etiqueta-resumen"><span class="punto punto-saltar"></span> Pasadas sin marcar</span>
-      <span class="valor-resumen" id="conteo-saltar">0</span>
-    </div>
+
     <div class="fila-resumen">
       <span class="etiqueta-resumen">⏱ Tiempo total</span>
       <span class="valor-resumen chico" id="tiempo-total">00:00</span>
@@ -1678,19 +2018,19 @@
       <!-- MODIFICADO: solo 3 desplegables; tiempo, respuesta escrita y
            evaluación de cada tarjeta se muestran dentro de cada item -->
       <details class="lista-desplegable">
-        <summary><span class="etiqueta-resumen"><span class="punto punto-si"></span> Entendidas</span></summary>
+        <summary><span class="etiqueta-resumen"><span class="punto punto-si"></span> <span id="etq-si">Entendidas (0)</span></span></summary>
         <div class="lista-contenido" id="lista-si"></div>
       </details>
       <details class="lista-desplegable">
-        <summary><span class="etiqueta-resumen"><span class="punto punto-casi"></span> Casi</span></summary>
+        <summary><span class="etiqueta-resumen"><span class="punto punto-casi"></span> <span id="etq-casi">Casi (0)</span></span></summary>
         <div class="lista-contenido" id="lista-casi"></div>
       </details>
       <details class="lista-desplegable">
-        <summary><span class="etiqueta-resumen"><span class="punto punto-no"></span> No entendidas</span></summary>
+        <summary><span class="etiqueta-resumen"><span class="punto punto-no"></span> <span id="etq-no">No entendidas (0)</span></span></summary>
         <div class="lista-contenido" id="lista-no"></div>
       </details>
       <details class="lista-desplegable">
-        <summary><span class="etiqueta-resumen"><span class="punto punto-saltar"></span> Pasadas sin marcar</span></summary>
+        <summary><span class="etiqueta-resumen"><span class="punto punto-saltar"></span> <span id="etq-saltar">Pasadas sin marcar (0)</span></span></summary>
         <div class="lista-contenido" id="lista-saltar"></div>
       </details>
       <!-- NUEVO: tarjetas marcadas con 🚩 Revisar durante la sesión -->
@@ -1729,13 +2069,66 @@
   </div>
 </div>
 
+<!-- NUEVO: modal de revinculación (recuperar datos de un evaluador renombrado) -->
+<div class="modal-overlay" id="modal-vincular">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3 id="vinc-titulo">Vincular a este evaluador</h3>
+    <p id="vinc-descripcion"></p>
+    <div id="vinc-campo-espacio" style="display:none;">
+      <input type="text" class="input-buscador" id="vinc-espacio" list="vinc-espacios" placeholder="Nombre anterior del recordatorio (sin .txt)" autocomplete="off">
+      <datalist id="vinc-espacios"></datalist>
+    </div>
+    <p id="vinc-resumen" class="vinc-resumen"></p>
+    <div class="vinc-aviso" id="vinc-aviso"></div>
+    <div class="modal-ayuda">Para confirmar, escribí CONFIRMAR:</div>
+    <input type="text" class="input-buscador" id="vinc-confirmar" placeholder="CONFIRMAR" autocomplete="off">
+    <button class="boton-reiniciar" id="btn-vinc-aceptar" disabled>Vincular</button>
+    <button class="modal-cancelar" id="btn-vinc-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<!-- NUEVO: Gamificación — modal de selección de modo, antes de iniciar sesión -->
+<div class="modal-overlay" id="modal-modo">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>Elegí el modo de juego</h3>
+    <div class="opciones-modo">
+      <button type="button" class="opcion-modo" id="opcion-modo-tryhard" data-modo="tryhard">
+        <span class="opcion-modo-icono">🔥</span>
+        <span class="opcion-modo-nombre">Tryhard</span>
+        <span class="opcion-modo-detalle">1 vida</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-modo-normal" data-modo="normal">
+        <span class="opcion-modo-icono">⚔️</span>
+        <span class="opcion-modo-nombre">Normal</span>
+        <span class="opcion-modo-detalle">3 vidas</span>
+      </button>
+      <button type="button" class="opcion-modo seleccionada" id="opcion-modo-light" data-modo="light">
+        <span class="opcion-modo-icono">🌟</span>
+        <span class="opcion-modo-nombre">Light</span>
+        <span class="opcion-modo-detalle">Sin vidas, sin puntos</span>
+      </button>
+    </div>
+    <button class="boton-principal" id="btn-modo-confirmar">Comenzar</button>
+    <button class="modal-cancelar" id="btn-modo-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<!-- NUEVO: Gamificación — modal de Game Over (solo Tryhard/Normal) -->
+<div class="modal-overlay modal-gameover" id="modal-gameover">
+  <div class="modal-caja modal-caja-gameover" role="dialog" aria-modal="true">
+    <h3 class="titulo-gameover">💀 Game Over</h3>
+    <p>Te quedaste sin vidas.</p>
+    <button class="boton-principal" id="btn-gameover-resumen">Ver resumen</button>
+  </div>
+</div>
+
 <div class="lightbox" id="lightbox">
   <button class="lightbox-cerrar" title="Cerrar">&times;</button>
   <img id="lightbox-img" src="" alt="Imagen ampliada">
 </div>
 
 <script>
-  const datos = {"tarjetas": [{"tema": "definiciones", "primero": "Que es un sistema?", "segundo": "unidad completa", "rutas": [1], "claves": ["unidad", "completa"], "nota": ""}, {"tema": "definiciones", "primero": "Que es el control?", "segundo": "asegurar", "rutas": [2], "claves": ["asegurar"], "nota": ""}, {"tema": "definiciones", "primero": "Que es un sistema de control?", "segundo": "dirigen", "rutas": [3], "claves": ["dirigen"], "nota": ""}, {"tema": "definiciones", "primero": "Que es una entrada?", "segundo": "estimulo", "rutas": [4], "claves": ["estimulo"], "nota": ""}, {"tema": "definiciones", "primero": "Que es una salida?", "segundo": "respuesta real, diferentes", "rutas": [5, 6], "claves": ["respuesta", "real", "diferentes"], "nota": ""}, {"tema": "definiciones", "primero": "Cual es el proposito de un sistema de control?", "segundo": "identificar, naturaleza", "rutas": [8, 9], "claves": ["identificar", "naturaleza"], "nota": ""}, {"tema": "definiciones", "primero": "Que es un subsistema de control?", "segundo": "internas", "rutas": [10], "claves": ["internas"], "nota": ""}, {"tema": "definiciones", "primero": "Que es el ancho de banda?", "segundo": "medida", "rutas": [11], "claves": ["medida"], "nota": ""}, {"tema": "tipos sistemas control segun naturaleza", "primero": "Que define a un sistema de control natural?", "segundo": "dedo", "rutas": [12], "claves": ["dedo"], "nota": ""}, {"tema": "tipos sistemas control segun naturaleza", "primero": "Que define a un sistema de control artificial?", "segundo": "calentador", "rutas": [13], "claves": ["calentador"], "nota": ""}, {"tema": "tipos sistemas control segun naturaleza", "primero": "Que define a un sistema de control mixto?", "segundo": "conduciendo", "rutas": [14], "claves": ["conduciendo"], "nota": ""}, {"tema": "importancia del control", "primero": "Cual es su importancia respecto a los objetivos?", "segundo": "objetivos", "rutas": [15], "claves": ["objetivos"], "nota": ""}, {"tema": "importancia del control", "primero": "En que ambitos se aplica?", "segundo": "aplica todo", "rutas": [16], "claves": ["aplica", "todo"], "nota": ""}, {"tema": "importancia del control", "primero": "Como interviene frente a desviaciones?", "segundo": "causas, desviaciones", "rutas": [17], "claves": ["causas", "desviaciones"], "nota": ""}, {"tema": "importancia del control", "primero": "Que impacto economico o de eficiencia genera?", "segundo": "reduce, ahorra", "rutas": [18], "claves": ["reduce", "ahorra"], "nota": ""}, {"tema": "tipos sistemas control segun malla", "primero": "Que los distingue?", "segundo": "accion control, no movimiento", "rutas": [19], "claves": ["accion", "control", "no", "movimiento"], "nota": ""}, {"tema": "malla abierta", "primero": "Que no tiene?", "segundo": "salida, efecto, medir", "rutas": [20, 21], "claves": ["salida", "efecto", "medir"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "Como se determina la condicion de entrada?", "segundo": "entrada, condicion", "rutas": [22], "claves": ["entrada", "condicion"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "De que depende su precision o funcionamiento?", "segundo": "depende calibracion", "rutas": [23], "claves": ["depende", "calibracion"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "Como responde ante perturbaciones o variaciones?", "segundo": "no adapta cambios", "rutas": [24], "claves": ["no", "adapta", "cambios"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "Que se necesita conocer para su operacion?", "segundo": "conocer relacion, no perturbaciones", "rutas": [25, 26], "claves": ["conocer", "relacion", "no", "perturbaciones"], "nota": ""}, {"tema": "caracteristicas malla abierta", "primero": "De que factor externo depende la accion?", "segundo": "depende criterio", "rutas": [27], "claves": ["depende", "criterio"], "nota": ""}, {"tema": "malla cerrada", "primero": "En que se diferencian?", "segundo": "depende salida", "rutas": [28], "claves": ["depende", "salida"], "nota": ""}, {"tema": "malla cerrada", "primero": "Que es la retroalimentacion?", "segundo": "propiedad, comparar", "rutas": [29], "claves": ["propiedad", "comparar"], "nota": ""}, {"tema": "caracteristicas malla cerrada", "primero": "Como influye la malla cerrada en la exactitud?", "segundo": "exactitud", "rutas": [23], "claves": ["exactitud"], "nota": ""}, {"tema": "caracteristicas malla cerrada", "primero": "Que ocurre con la razon o sensibilidad?", "segundo": "razon", "rutas": [31], "claves": ["razon"], "nota": ""}, {"tema": "caracteristicas malla cerrada", "primero": "Como se ve afectado el ancho de banda?", "segundo": "ancho banda", "rutas": [32], "claves": ["ancho", "banda"], "nota": ""}, {"tema": "tipos sistemas control segun su senal", "primero": "Que es una señal en control?", "segundo": "funcion, t", "rutas": [33], "claves": ["funcion", "t"], "nota": ""}, {"tema": "tipos sistemas control segun su senal", "primero": "Que es una señal analogica?", "segundo": "continuum", "rutas": [34], "claves": ["continuum"], "nota": ""}, {"tema": "tipos sistemas control segun su senal", "primero": "Que es una señal digital?", "segundo": "discretos", "rutas": [36], "claves": ["discretos"], "nota": ""}, {"tema": "otras definiciones", "primero": "Cual es el objetivo de la ingenieria de control?", "segundo": "analisis, diseño", "rutas": [38], "claves": ["analisis", "diseno"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el analisis en control?", "segundo": "investigacion", "rutas": [39], "claves": ["investigacion"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el diseño en control?", "segundo": "ordenamiento, tarea", "rutas": [40], "claves": ["ordenamiento", "tarea"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el diseño por analisis?", "segundo": "modificar, existente", "rutas": [40], "claves": ["modificar", "existente"], "nota": ""}, {"tema": "otras definiciones", "primero": "Que es el diseño por sintesis?", "segundo": "definir, especificaciones", "rutas": [41], "claves": ["definir", "especificaciones"], "nota": ""}, {"tema": "modelos o representaciones sistemas control", "primero": "Como los resuelvo?", "segundo": "especificar, analisis", "rutas": [42], "claves": ["especificar", "analisis"], "nota": ""}, {"tema": "modelos representativos", "primero": "Que modelo define la relacion cuantitativa y matematica?", "segundo": "relacion cuantitativa, aplicacion, complejidad", "rutas": [43], "claves": ["relacion", "cuantitativa", "aplicacion", "complejidad"], "nota": ""}, {"tema": "modelos representativos", "primero": "Que modelo utiliza diagramas de bloques?", "segundo": "diagrama", "rutas": [45], "claves": ["diagrama"], "nota": ""}, {"tema": "modelos representativos", "primero": "Que modelo utiliza grafos de flujo de señal?", "segundo": "grafos", "rutas": [46], "claves": ["grafos"], "nota": ""}], "rutas": {"1": {"tema": "DEFINICIONES", "lineas": ["SISTEMAS", "Ordenamiento componentes físicos,", "unidos o relacionados", "tal manera", "que forman y/o actúan", "como una unidad completa"]}, "2": {"tema": "DEFINICIONES", "lineas": ["CONTROL", "Proceso para asegurar", "que actividades reales", "se ajusten a", "actividades planificadas"]}, "3": {"tema": "DEFINICIONES", "lineas": ["SISTEMAS CONTROL", "Es 1 ordenamiento componentes físicos", "unidos o relacionados", "tal manera que", "mandan, dirigen o regulan", "al mismo sistema o a otro"]}, "4": {"tema": "DEFINICIONES", "lineas": ["ENTRADA", "estímulo o excitación", "que se aplica", "a 1 Sistema Control,", "generalmente", "desde una fuente energía externa,", "con fin producir,", "una respuesta específica", "del sistema control"]}, "5": {"tema": "DEFINICIONES", "lineas": ["SALIDA", "Es respuesta real", "que se obtiene", "1 sistema control"]}, "6": {"tema": "DEFINICIONES", "lineas": ["Puede ser o no igual", "a respuesta implícita", "especificada por entrada,", "entradas y salidas", "pueden tener", "muchas formas diferentes"]}, "7": {"tema": "DEFINICIONES", "lineas": ["por ej pueden ser", "variables físicas o cantidades más abstractas,", "tales como", "valores referencia, ajuste o deseados", "para salida del sistema control"]}, "8": {"tema": "DEFINICIONES", "lineas": ["PROPÓSITOS DEL SISTEMA CONTROL", "Identificar o definir", "entrada y salida"]}, "9": {"tema": "DEFINICIONES", "lineas": ["Si se dan", "entrada y salida,", "es posible", "identificar, delinear o definir", "naturaleza componentes"]}, "10": {"tema": "DEFINICIONES", "lineas": ["SUBSISTEMA CONTROL", "Un Subsistema Control", "es 1 Sistema Control", "que se encuentra", "dentro otro Sistema Control,", "donde", "entradas y salidas", "son variables internas", "del Sistema Control mayor"]}, "11": {"tema": "DEFINICIONES", "lineas": ["ANCHO BANDA", "es una medida frecuencia", "que bien responde o", "filtra", "las variaciones señal entrada"]}, "12": {"tema": "TIPOS SISTEMAS CONTROL segun Naturaleza", "lineas": ["Naturales", "señalar 1 objeto con dedo,", "transpiración"]}, "13": {"tema": "TIPOS SISTEMAS CONTROL segun Naturaleza", "lineas": ["Artificiales", "Calentador", "horno termostático (calefactor),", "interruptor eléctrico"]}, "14": {"tema": "TIPOS SISTEMAS CONTROL segun Naturaleza", "lineas": ["Mixto", "Un hombre conduciendo 1 automóvil"]}, "15": {"tema": "Importancia del Control", "lineas": ["1", "Establece medidas", "para corregir actividades,", "tal forma", "que se alcancen objetivos", "exitosamente"]}, "16": {"tema": "Importancia del Control", "lineas": ["2", "Se aplica a todo:", "a cosas,", "a personas y", "a actos"]}, "17": {"tema": "Importancia del Control", "lineas": ["3", "Determina y analiza", "rápidamente causas", "que pueden originar desviaciones", "para que no vuelvan", "a presentarse", "en futuro"]}, "18": {"tema": "Importancia del Control", "lineas": ["4", "Reduce costos y ahorra tiempo", "al evitar errores"]}, "19": {"tema": "TIPOS SISTEMAS CONTROL segun Malla", "lineas": ["distinción se determina", "mediante acción control", "(es cantidad responsable", "activar sistema", "para producir salida)", "no implica directamente", "cambio,", "movimiento o", "actividad"]}, "20": {"tema": "MALLA ABIERTA", "lineas": ["sistemas control", "en donde salida", "no tiene efecto", "sobre acción control"]}, "21": {"tema": "MALLA ABIERTA", "lineas": ["No existe acción retroalimentación,", "para comparar señal salida", "con entrada referencia,", "por tanto,", "es necesario", "medir variable salida"]}, "22": {"tema": "MALLA ABIERTA", "lineas": ["IMG:data:image/png;base64,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i7pO3PORibVr11qHDh3svvvuc/NvvPGGXXLJJW5abBzUCKaGeOqpp+zBBx+0tm3b2pZbbumsvieffNKt69Onj/Xv399Np4Jw5Ip4cJ2+X1gmstFlQdQ9SDuki1xoBVqZdP7KK6+kvRcKv+edd55NmjTJLrjgArvwwgttn332sa+//truuOMOu/nmm6MtRY2AAIqaYcWKFcF3330Xzf1Efn5+NJXbhOJGYSrt77DDDivbRoh05EraKC+d8wvFL9oyPSeeeGJQVFQUhAIZ/Pjjj27Z7bffHvTr189Ni5pDLtAaZNttt3XWXyqZrL+6AlZfrlixVQErvlevXs71NWTIkGip2dy5c23ixInRXHp8i2BRtwjz1Aqt2COPPNKeeOIJa9GihdWvX98tu+KKK2y77bZz06LmkACKaoMO6riC6qLLc8KECRaW5F1fzsLCQtea94ADDrBly5a5vp4+Y0vHH//4R1f/I+oGPp0jfpWBRjN33323HXfccdESsbGQAIqsg8VHZoDVlwt1OuvDmDFjXAOGY445xpXkr776ajv22GPtm2++ibYo5ZNPPrEbb7zRlfC//PJL+/e//22vvfaaPf74484KXLlypav7ueiii5wVSUOJjz76yBUapkyZYpdeeqnNmzfP1RezDft5qEf661//6pY//fTT0VJRU3jhq2o633PPPW2vvfZyBSGxkcEPKkQ2qKjuA+pKHeAHH3wQHHnkkUFYmg9uvvnm4N13343WBEFoHbr7XLRokasTmjx5cvDee+8FV111VVBcXOyWDR06NFizZk3Qo0ePILQGg//+97/Bgw8+GPTv39/tzzYvvvhiMGfOnGCnnXYKpk+fHnz22WdB586dg8WLF7tjd+nSxS3jF2amblkukytpozLpPBO857Fjx9aZev9cRxagyBp11dpLxx577GHjx493rXvpxoLViws0FKdoi9I6306dOtmtt95qoYA5K3CXXXZx69gHC3DGjBn20ksv2b333uv2ffnll916OOqoo6xly5bOWuDYjRs3tqZNm9rq1attt912s3vuucdCQXXu1BUrVth3330X7Smqkw1J55tttpl9+OGHzmMgNj4SQCHWAy9UCFr37t1daLvdd9/dHnnkEbccGjVq5FylBQUFdtttt1nXrl2jNaX88MMPFlp3Ttz4tW7d2kLLIFpr5dYjEk6PfS6++GIn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", "hola", "esto es una prueba", "resaltado"]}, "23": {"tema": "Caracteristicas", "lineas": ["a", "Para cada entrada referencia", "corresponde una condición", "de operación establecida"]}, "24": {"tema": "Caracteristicas", "lineas": ["b", "exactitud del sistema", "depende calibración", "del elemento medición"]}, "25": {"tema": "Caracteristicas", "lineas": ["c", "En presencia perturbaciones", "no cumple su función asignada", "debido a que", "no se adapta a cambios"]}, "26": {"tema": "Caracteristicas", "lineas": ["d", "Sólo se debe usar", "cuando se conoce relación", "entre entrada y salida", "del sistema, y"]}, "27": {"tema": "Caracteristicas", "lineas": ["si no hay perturbaciones", "ni internas", "ni externas"]}, "28": {"tema": "Caracteristicas", "lineas": ["e", "Generalmente depende", "del criterio y estimación", "del hombre"]}, "29": {"tema": "MALLA CERRADA", "lineas": ["Son aquellos", "en que acción control", "depende alguna manera,", "salida", "generalmente llamados,", "sistemas control retroalimentados", "IMG:data:image/png;base64,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"]}, "30": {"tema": "MALLA CERRADA", "lineas": ["RETROALIMENTACION", "Es propiedad 1 sistema malla cerrada", "que permite", "que salida se compare", "con entrada del sistema", "tal manera que acción control", "se pueda expresar", "como una función", "entrada y", "salida"]}, "31": {"tema": "Caracteristicas", "lineas": ["a", "Aumento exactitud", "(habilidad para reproducir", "entrada fielmente)"]}, "32": {"tema": "Caracteristicas", "lineas": ["b", "Sensibilidad reducida", "en la razón(division)", "salida a entrada", "frente a variaciones", "en características del sistema"]}, "33": {"tema": "Caracteristicas", "lineas": ["c", "Ancho banda aumentado"]}, "34": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["señales en 1 sistema control", "son funciones", "alguna variable independiente,", "usualmente tiempo,", "denotada por t"]}, "35": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["SEÑAL ANALÓGICA:", "Una señal dependiente", "1 continuum valores", "variable independiente t"]}, "36": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["se llama", "señal continua en tiempo o", "señal datos continuos o", "señal analógica"]}, "37": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["SEÑAL DIGITAL:", "Una señal", "definida o interés solamente", "en instantes discretos", "variable independiente t"]}, "38": {"tema": "TIPOS SISTEMAS CONTROL segun su Señal", "lineas": ["se llama", "señal discreta en tiempo,", "datos discretos,", "datos muestreados o digital"]}, "39": {"tema": "OTRAS DEFINICIONES", "lineas": ["OBJETIVO INGENIERIA SISTEMAS CONTROL", "ingeniería sistemas control", "consiste", "en análisis y diseño", "configuraciones sistemas control"]}, "40": {"tema": "OTRAS DEFINICIONES", "lineas": ["a", "análisis es investigación", "propiedades 1 sistema existente"]}, "41": {"tema": "OTRAS DEFINICIONES", "lineas": ["b", "diseño es", "elección y ordenamiento", "componentes del sistema", "para desempeñar", "una tarea específica", "Existen dos métodos", "para diseño:", "Diseño por Análisis", "se efectúa al modificar", "características de configuración", "1 sistema", "existente o", "estándar"]}, "42": {"tema": "OTRAS DEFINICIONES", "lineas": ["Diseño por Síntesis", "se efectua al definir", "forma del sistema", "directamente de sus especificaciones"]}, "43": {"tema": "MODELOS O REPRESENTACIONES SISTEMAS CONTROL", "lineas": ["Para resolver 1 problema con Sistema Control,", "se debe", "especificar o describir", "la", "configuración del sistema y sus componentes", "tal manera", "que facilite", "análisis o", "diseño"]}, "44": {"tema": "Modelos representativos", "lineas": ["a", "Modelos Matemáticos", "Estos modelos son necesarios", "cuando se requieren", "relaciones cuantitativas"]}, "45": {"tema": "Modelos representativos", "lineas": ["tambien", "Dependen del área aplicación", "del sistema control y", "complejidad tales modelos", "varía ampliamente"]}, "46": {"tema": "Modelos representativos", "lineas": ["b", "Diagramas Bloques"]}, "47": {"tema": "Modelos representativos", "lineas": ["c", "Grafos Flujos Señales"]}}, "descripciones_rutas": {}};
+  const datos = {"tarjetas": [{"tema": "DEFINICIÓN Y CONCEPTO", "primero": "que es?", "segundo": "monitorea trabajo", "rutas": [1], "claves": ["monitorea", "trabajo"], "nota": ""}, {"tema": "DEFINICIÓN Y CONCEPTO", "primero": "en que se basa?", "segundo": "combinacion, objetivos", "rutas": [2], "claves": ["combinacion", "objetivos"], "nota": ""}, {"tema": "DEFINICIÓN Y CONCEPTO", "primero": "porque es bueno aplicarlo?", "segundo": "productividad, involucra", "rutas": [4], "claves": ["productividad", "involucra"], "nota": ""}, {"tema": "TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO", "primero": "1", "segundo": "planificar", "rutas": [5], "claves": ["planificar"], "nota": ""}, {"tema": "TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO", "primero": "2", "segundo": "monitorear", "rutas": [7], "claves": ["monitorear"], "nota": ""}, {"tema": "TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO", "primero": "3", "segundo": "reconocer", "rutas": [9], "claves": ["reconocer"], "nota": ""}, {"tema": "ROLES Y USUARIOS", "primero": "quien lo usa?", "segundo": "lider, garantizar, participen", "rutas": [16], "claves": ["lider", "garantizar", "participen"], "nota": ""}, {"tema": "ROLES Y USUARIOS", "primero": "que otra responsabilidad tienen?", "segundo": "desempeño, objetivos", "rutas": [17], "claves": ["desempeno", "objetivos"], "nota": ""}, {"tema": "ROLES Y USUARIOS", "primero": "con quienes trabajan?", "segundo": "gerentes, justos", "rutas": [19], "claves": ["gerentes", "justos"], "nota": ""}, {"tema": "IMPORTANCIA Y PROBLEMAS QUE RESUELVE", "primero": "que importancia tiene?", "segundo": "interraciones", "rutas": [20], "claves": ["interraciones"], "nota": ""}, {"tema": "IMPORTANCIA Y PROBLEMAS QUE RESUELVE", "primero": "que brinda?", "segundo": "vision, ayuda", "rutas": [21], "claves": ["vision", "ayuda"], "nota": ""}, {"tema": "IMPORTANCIA Y PROBLEMAS QUE RESUELVE", "primero": "que problemas resuelve?", "segundo": "financieras, metodologia, incapacidad, perdida", "rutas": [22, 23, 24, 25], "claves": ["financieras", "metodologia", "incapacidad", "perdida"], "nota": ""}, {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "primero": "evaluacion 90", "segundo": "directo, autoridad", "rutas": [29], "claves": ["directo", "autoridad"], "nota": ""}, {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "primero": "autoevaluacion", "segundo": "propio, discrepancias, complemento", "rutas": [32], "claves": ["propio", "discrepancias", "complemento"], "nota": ""}, {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "primero": "evaluacion por pares", "segundo": "compañeros, anonima", "rutas": [35], "claves": ["companeros", "anonima"], "nota": ""}, {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "primero": "assesment center", "segundo": "externos, objetivo", "rutas": [37], "claves": ["externos", "objetivo"], "nota": ""}, {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "primero": "evaluacion por equipo", "segundo": "colectivo, complementa", "rutas": [40], "claves": ["colectivo", "complementa"], "nota": ""}, {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "primero": "evaluacion del cliente", "segundo": "interactua, contacto clientes", "rutas": [43], "claves": ["interactua", "contacto", "clientes"], "nota": ""}, {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "primero": "evaluacion 360", "segundo": "recoge, completa", "rutas": [46, 47], "claves": ["recoge", "completa"], "nota": ""}], "rutas": {"1": {"tema": "DEFINICIÓN Y CONCEPTO", "lineas": ["Un sistema gestión del desempeño", "monitorea", "trabajo del personal", "en forma", "consistente y", "medible"]}, "2": {"tema": "DEFINICIÓN Y CONCEPTO", "lineas": ["Se basa en una combinación", "tecnologías y metodologías", "para garantizar", "que toda organización", "esté alineada", "con objetivos estratégicos del negocio y", "contribuya a ellos"]}, "3": {"tema": "DEFINICIÓN Y CONCEPTO", "lineas": ["sistema es colaborativo,", "ya que", "gerentes y personal", "trabajan juntos", "para fijar expectativas,", "identificar objetivos del empleado,", "definir medidas del desempeño,", "compartir revisiones y evaluaciones,", "y brindar feedback"]}, "4": {"tema": "DEFINICIÓN Y CONCEPTO", "lineas": ["Cuando se", "define y aplica", "correctamente,", "un sistema gestión del desempeño", "aumenta productividad general", "de fuerza laboral,", "el personal", "se involucra más en su trabajo,", "hay menos rotación,", "y se maximizan ingresos", "por empleado"]}, "5": {"tema": "TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO", "lineas": ["1", "Planificar y actuar", "con gestión objetivos:", "Alinear desempeño del personal", "con objetivos organización", "Adaptar rápidamente objetivos", "cuando cambian prioridades negocio"]}, "6": {"tema": "TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO", "lineas": ["Asignar trabajo", "que sea", "significativo y satisfactorio", "para aumentar", "compromiso del personal"]}, "7": {"tema": "TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO", "lineas": ["2", "Monitorear", "con gestión del desempeño continua:", "Monitorear objetivos personales", "para garantizar", "que siempre estén alineados", "con corporativos", "Reconocer buenos resultados", "cuando estos ocurren"]}, "8": {"tema": "TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO", "lineas": ["Brindar", "feedback y orientación", "para mejorar desempeño"]}, "9": {"tema": "TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO", "lineas": ["3", "Evaluar y reconocer", "mediante evaluaciones desempeño:", "Evaluar desempeño manera", "consistente y", "precisa"]}, "10": {"tema": "TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO", "lineas": ["se debe", "Reconocer y recompensar", "a quienes tienen", "1 desempeño sólido"]}, "11": {"tema": "TRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO", "lineas": ["Usar información estratégica", "del sistema", "para cuantificar valor", "su fuerza laboral", "para negocio"]}, "12": {"tema": "EVOLUCIÓN HISTÓRICA", "lineas": ["Uno primeros modelos formalizados", "fue introducido durante", "Primera y Segunda", "Guerra Mundial,", "para que ejércitos conocieran", "fortalezas y capacidades", "cada miembro", "para fundamentar", "estrategias militares"]}, "13": {"tema": "EVOLUCIÓN HISTÓRICA", "lineas": ["A mediados siglo XX,", "empresas usaban evaluaciones desempeño", "para", "calificar y asignar", "recompensas al personal"]}, "14": {"tema": "EVOLUCIÓN HISTÓRICA", "lineas": ["En década 1960,", "foco comenzó trasladarse", "hacia desarrollo del personal,", "y había charlas", "entre", "gerentes y empleados", "para evaluar desempeño y", "si era necesario", "definir capacitación", "para que avanzaran", "en sus carreras"]}, "15": {"tema": "EVOLUCIÓN HISTÓRICA", "lineas": ["Algunos aspectos", "del software tradicional", "para gestión del desempeño", "han evolucionado", "con mejores tecnologías", "tales como", "computación en nube, mejoras en interfaces usuario, inteligencia artificial (IA) y machine learning", "empresas están adoptando", "1 enfoque más holístico,", "que brinda", "feedback y orientación", "continuos", "para ayudar a que personal", "logre sus objetivos"]}, "16": {"tema": "ROLES Y USUARIOS", "lineas": ["El", "Líder equipo o gerente", "con subordinados directos:", "son usuarios principales del sistema y", "deben garantizar", "que todos empleados", "participen activamente", "en proceso"]}, "17": {"tema": "ROLES Y USUARIOS", "lineas": ["También tienen responsabilidad final", "del desempeño su(s) equipo(s)", "personal trabaja", "con gerentes", "para definir sus objetivos"]}, "18": {"tema": "ROLES Y USUARIOS", "lineas": ["Crean", "evaluaciones desempeño individual", "dentro del sistema,", "y participan", "en evaluaciones integrales", "si modelo", "está en uso", "Profesionales RR HH definen", "procesos y sistemas", "que dan soporte", "a gestión del desempeño"]}, "19": {"tema": "ROLES Y USUARIOS", "lineas": ["Trabajan con", "gerentes y empleados", "para garantizar que procesos", "sean justos y", "que cada etapa", "se cumpla a tiempo"]}, "20": {"tema": "IMPORTANCIA Y PROBLEMAS QUE RESUELVE", "lineas": ["El sistema", "Almacena y cuantifica", "datos interacciones entre", "personal y gerentes,", "incluyendo aspiraciones profesionales,", "habilidades apropiadas y", "aptitudes", "para planificación sucesión"]}, "21": {"tema": "IMPORTANCIA Y PROBLEMAS QUE RESUELVE", "lineas": ["Brinda una visión", "precisa y en tiempo real", "fuerza laboral", "que ayuda en su", "planificación y", "estrategia"]}, "22": {"tema": "IMPORTANCIA Y PROBLEMAS QUE RESUELVE", "lineas": ["Problemas que resuelve:", "Pérdida del mejor talento", "por falta", "reconocimiento y", "recompensas"]}, "23": {"tema": "IMPORTANCIA Y PROBLEMAS QUE RESUELVE", "lineas": ["Pérdidas financieras debido", "a prácticas trabajo ineficientes", "no alineadas", "con objetivos del negocio"]}, "24": {"tema": "IMPORTANCIA Y PROBLEMAS QUE RESUELVE", "lineas": ["Falta una metodología estandarizada", "para guiar remuneración,", "ascensos y", "desvinculación"]}, "25": {"tema": "IMPORTANCIA Y PROBLEMAS QUE RESUELVE", "lineas": ["Incapacidad", "para demostrar", "que estas decisiones", "son justificadas", "en caso ser", "cuestionadas legalmente"]}, "26": {"tema": "DEFINICIÓN", "lineas": ["ejemplos evaluación del desempeño son", "modelos, técnicas y preguntas concretas", "que RR HH usa", "para medir rendimiento plantilla", "forma objetiva"]}, "27": {"tema": "DEFINICIÓN", "lineas": ["Sirven", "para estructurar proceso, reducir sesgos y convertir feedback", "en decisiones", "desarrollo,", "compensación y", "promoción interna"]}, "28": {"tema": "DEFINICIÓN", "lineas": ["Diseñar una evaluación del desempeño", "desde cero,", "sin referencias ni estructura,", "garantiza que", "cada manager evalúe", "con criterios distintos y", "que feedback", "que recibe empleado", "dependa más", "quién le evalúa", "que cómo trabaja"]}, "29": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Evaluación del superior (90°):", "manager directo", "evalúa al empleado", "en función sus", "objetivos,", "competencias y", "resultados"]}, "30": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Es modelo", "más extendido y que mayor autoridad tiene", "en", "decisiones", "compensación y", "promoción"]}, "31": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Su principal limitación", "es que depende", "una sola perspectiva"]}, "32": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Autoevaluación:", "empleado valora", "su propio desempeño", "con criterios predefinidos"]}, "33": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Sirve para detectar discrepancias", "entre", "percepción propia y", "del manager,", "y abre diálogo", "en reunión feedback"]}, "34": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Funciona mejor como complemento", "otras evaluaciones,", "no como sistema único"]}, "35": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Evaluación por pares:", "compañeros equipo", "evalúan al empleado forma anónima"]}, "36": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Aporta información sobre", "competencias relacionales y colaboración", "que manager no puede observar directamente,", "como fiabilidad en entregas o", "apoyo al equipo"]}, "37": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Assessment center:", "observadores externos especializados", "evalúan competencias del empleado", "en situaciones simuladas"]}, "38": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Es método", "más objetivo y", "más costoso"]}, "39": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Se usa principalmente", "en procesos", "selección interna o", "evaluación perfiles directivos"]}, "40": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Evaluación equipo:", "se evalúa rendimiento colectivo", "del equipo, no individual"]}, "41": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Útil para", "medir cohesión,", "distribución carga trabajo y", "clima laboral"]}, "42": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["No sustituye", "a evaluación individual,", "complementa"]}, "43": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Evaluación del cliente:", "cliente", "interno externo o", "valora desempeño del empleado", "con que interactúa"]}, "44": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Aporta una perspectiva", "que ningún evaluador interno", "puede replicar"]}, "45": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Solo aplica en puestos", "con contacto", "directo y frecuente", "con clientes"]}, "46": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Evaluación 360°:", "recoge feedback", "sobre desempeño", "1 empleado", "desde todas perspectivas posibles:", "manager directo,", "compañeros equipo,", "subordinados y,", "en algunos casos de clientes"]}, "47": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Ofrece una imagen completa", "cómo trabaja y se relaciona", "esa persona", "dentro organización"]}, "48": {"tema": "TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA", "lineas": ["Es modelo más adecuado", "para evaluar competencias", "relacionales y", "liderazgo"]}, "49": {"tema": "MÉTODO FEEDBACK", "lineas": ["Método SBI (Situación Comportamiento Impacto):", "modelo estructurado", "para transmitir feedback", "claro y objetivo,", "describiendo", "situación exacta,", "comportamiento observado,", "impacto o", "consecuencia generada"]}}, "descripciones_rutas": {}};
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
   const modoAleatorio = true;
@@ -1806,6 +2199,61 @@
   let tiempoInicioTarjeta = 0;
   let cronometroIntervalId = null;
 
+  // ============================================================
+  // NUEVO: Gamificación — persistencia unificada (localStorage)
+  // ============================================================
+  const CLAVE_GAMIFICACION = 'gamificacion_v1';
+
+  function valoresPorDefectoGamificacion() {
+    return { puntosTotales: 0, inventario: { comodines: 0, pistasGratis: 0 }, historial: [] };
+  }
+
+  function cargarGamificacion() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_GAMIFICACION);
+      if (!crudo) return valoresPorDefectoGamificacion();
+      const obj = JSON.parse(crudo);
+      if (!obj || typeof obj !== 'object') return valoresPorDefectoGamificacion();
+      // Retrocompatibilidad: si falta algún campo, se completa con el default.
+      const base = valoresPorDefectoGamificacion();
+      return {
+        puntosTotales: typeof obj.puntosTotales === 'number' ? obj.puntosTotales : base.puntosTotales,
+        inventario: {
+          comodines: (obj.inventario && typeof obj.inventario.comodines === 'number') ? obj.inventario.comodines : base.inventario.comodines,
+          pistasGratis: (obj.inventario && typeof obj.inventario.pistasGratis === 'number') ? obj.inventario.pistasGratis : base.inventario.pistasGratis,
+        },
+        historial: Array.isArray(obj.historial) ? obj.historial : base.historial,
+      };
+    } catch (e) {
+      return valoresPorDefectoGamificacion();
+    }
+  }
+
+  function guardarGamificacion() {
+    try {
+      localStorage.setItem(CLAVE_GAMIFICACION, JSON.stringify(gamificacion));
+    } catch (e) {
+      // Sin localStorage disponible: solo queda en memoria de esta sesión
+    }
+  }
+
+  let gamificacion = cargarGamificacion();
+
+  // ---------- Estado de sesión (se resetea en cada iniciarSesion) ----------
+  let modoJuego = 'light';        // 'tryhard' | 'normal' | 'light'
+  let vidasMaximas = 0;
+  let vidasActuales = 0;
+  let puntosSesion = 0;
+  let rachaActual = 0;
+  let mejorRacha = 0;
+  let multiplicadorActual = 1;
+  let puntosPorTarjeta = [];              // paralelo a resultados: puntos ya sumados por cada tarjeta
+  let pistaGratisUsadaPorTarjeta = [];    // paralelo a resultados
+  let gameOverDisparado = false;
+  let historialGuardadoEstaSesion = false;
+  let modoZombie = false;   // NUEVO: si es true, se ignora POR COMPLETO la lógica de puntos/vidas/racha
+  let sonidosActivos = true;   // NUEVO: efímero (no se guarda en localStorage), como pide el prompt
+
   // ---------- MODIFICADO: estado persistente de tarjetas difíciles ----------
   // Mapa { hash: {p, s, activa} } guardado en localStorage.
   // El hash se calcula sobre el texto normalizado, así el marcado sobrevive
@@ -1847,10 +2295,10 @@
   // idéntico ("primero + segundo" igual) no compartan difíciles, notas ni razones.
   // Regenerar el HTML desde el MISMO recordatorio.txt mantiene este valor igual
   // (no invalida lo ya guardado); solo cambia si el archivo cambia de nombre.
-  const ESPACIO_HASH = "1 - Sistemas de Control - copia";
+  const ESPACIO_HASH = "Gestion de Desempe\u00f1o";
 
-  function hashTarjeta(t) {
-    const base = ESPACIO_HASH + '\u0001' + (t.primero || '') + '\u0000' + (t.segundo || '');
+  function hashTarjetaCon(espacio, t) {
+    const base = espacio + '\u0001' + (t.primero || '') + '\u0000' + (t.segundo || '');
     const norm = normalizarPalabra(base).replace(/\s+/g, ' ').trim();
     // djb2 -> hash de 32 bits (suficiente y sin dependencias; se mantiene corto
     // aunque se agregue el espacio, porque solo se usa como entrada del hash)
@@ -1860,6 +2308,10 @@
     }
     return 'h' + h.toString(36);
   }
+
+  // NUEVO: hash de ESTE evaluador (el de siempre). hashTarjetaCon permite
+  // recomputar el hash que tendria una tarjeta bajo OTRO espacio (revinculacion).
+  function hashTarjeta(t) { return hashTarjetaCon(ESPACIO_HASH, t); }
 
   function esDificil(t) {
     const e = dificiles[hashTarjeta(t)];
@@ -1875,8 +2327,10 @@
       entrada.activa = false;
     } else if (entrada) {
       entrada.activa = true;
+      if (!modoObservador) reproducirSonido('dificil');  // NUEVO: solo al MARCAR (no al desmarcar), nunca en observador
     } else {
       dificiles[h] = { p: t.primero || '', s: t.segundo || '', activa: true };
+      if (!modoObservador) reproducirSonido('dificil');  // NUEVO
     }
     guardarDificiles();
     renderTarjeta();
@@ -1970,6 +2424,7 @@
   const elGaleriaIndicador = document.getElementById('galeria-indicador');
   const elGaleriaImg = document.getElementById('galeria-img');
   const elGaleriaVacia = document.getElementById('galeria-vacia');
+  const elGaleriaDescripcion = document.getElementById('galeria-descripcion');
   const elBtnGaleriaDificil = document.getElementById('btn-galeria-dificil');
   const elBtnGaleriaNota = document.getElementById('btn-galeria-nota');
   const elPanelGaleriaNota = document.getElementById('panel-galeria-nota');
@@ -1985,6 +2440,37 @@
   const elDropdownBuscadorObservador = document.getElementById('dropdown-buscador-observador');
   const elInputBuscadorGaleria = document.getElementById('input-buscador-galeria');
   const elDropdownBuscadorGaleria = document.getElementById('dropdown-buscador-galeria');
+  // NUEVO: Rutas Huérfanas
+  const elPantallaHuerfanas = document.getElementById('pantalla-huerfanas');
+  const elListaHuerfanas = document.getElementById('lista-huerfanas');
+  const elHuerfanasVacia = document.getElementById('huerfanas-vacia');
+  const elInputBuscadorHuerfanas = document.getElementById('input-buscador-huerfanas');
+  const elDropdownBuscadorHuerfanas = document.getElementById('dropdown-buscador-huerfanas');
+  // NUEVO: Gamificación — elementos DOM
+  const elBtnAbrirHistorial = document.getElementById('btn-abrir-historial');
+  const elBtnAbrirTienda = document.getElementById('btn-abrir-tienda');
+  const elPantallaTienda = document.getElementById('pantalla-tienda');
+  const elPantallaHistorial = document.getElementById('pantalla-historial');
+  const elSaldoTienda = document.getElementById('saldo-tienda');
+  const elGridTienda = document.getElementById('grid-tienda');
+  const elListaHistorial = document.getElementById('lista-historial');
+  const elHistorialVacio = document.getElementById('historial-vacio');
+  const elBtnHistorialExportar = document.getElementById('btn-historial-exportar');
+  const elBtnHistorialBorrarEste = document.getElementById('btn-historial-borrar-este');
+  const elBtnHistorialBorrarGlobal = document.getElementById('btn-historial-borrar-global');
+  const elZonaHistorialOtros = document.getElementById('zona-historial-otros');
+  const elSumaHistorialOtros = document.getElementById('suma-historial-otros');
+  const elListaHistorialOtros = document.getElementById('lista-historial-otros');
+  const elModalModo = document.getElementById('modal-modo');
+  const elModalGameOver = document.getElementById('modal-gameover');
+  const elFilaGamificacion = document.getElementById('fila-gamificacion');
+  const elStatPuntos = document.getElementById('stat-puntos');
+  const elStatRacha = document.getElementById('stat-racha');
+  const elStatVidas = document.getElementById('stat-vidas');
+  const elBtnMute = document.getElementById('btn-mute');
+  const elBadgePistaGratis = document.getElementById('badge-pista-gratis');
+  const elBadgeComodines = document.getElementById('badge-comodines');
+  const elResumenGamificacion = document.getElementById('resumen-gamificacion');
   const elBtnPausa = document.getElementById('btn-pausa');
   const elOverlayPausa = document.getElementById('overlay-pausa');
   const elBtnReanudar = document.getElementById('btn-reanudar');
@@ -2081,6 +2567,9 @@
     elPantallaResumen.style.display = nombre === 'resumen' ? 'block' : 'none';
     elPantallaObservador.style.display = nombre === 'observador' ? 'block' : 'none';
     elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  // NUEVO
+    elPantallaHuerfanas.style.display = nombre === 'huerfanas' ? 'block' : 'none';  // NUEVO
+    elPantallaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';  // NUEVO
+    elPantallaHistorial.style.display = nombre === 'historial' ? 'block' : 'none';  // NUEVO
 
     if (nombre === 'observador') {
       renderImagenesPreview();   // NUEVO: refresca también al entrar por primera vez (mismo motivo que "temas")
@@ -2238,7 +2727,7 @@
     let filtradas = tarjetasCompletas.filter((_, i) => seleccion.has(i));
     if (modoAleatorio) filtradas = mezclar(filtradas);
 
-    iniciarSesion(filtradas);
+    abrirModalSeleccionModo(filtradas);  // MODIFICADO: gamificación
   });
 
   // ---------- NUEVO: modo observador ----------
@@ -2368,14 +2857,16 @@
 
   // Hash liviano: espacio del evaluador + número de ruta + índice de la imagen
   // DENTRO de esa ruta (solo contando líneas 'IMG:'). Sin base64, sin subT.
-  function hashImagen(ruta, indice) {
-    const base = ESPACIO_HASH + '' + ruta + ' ' + indice;
+  function hashImagenCon(espacio, ruta, indice) {
+    const base = espacio + '' + ruta + ' ' + indice;
     let h = 5381;
     for (let i = 0; i < base.length; i++) {
       h = ((h << 5) + h + base.charCodeAt(i)) >>> 0;
     }
     return 'i' + h.toString(36);   // prefijo 'i' (imagen) para no confundir con 'h' de tarjeta
   }
+
+  function hashImagen(ruta, indice) { return hashImagenCon(ESPACIO_HASH, ruta, indice); }
 
   // Recorre rutasDisp en orden numérico de ruta y arma la lista de coordenadas
   // {ruta, indice} de TODAS las imágenes, en el mismo orden en que aparecen en
@@ -2397,6 +2888,17 @@
     const imagenes = lineas.filter(esImagen);
     const linea = imagenes[indice];
     return linea ? linea.substring(4) : '';   // quitar el prefijo 'IMG:'
+  }
+
+  // NUEVO: descripción de UNA imagen puntual (ruta + posición dentro de la
+  // ruta), extraída del drawio. datos.descripciones_rutas ahora es
+  // { ruta: [desc_img0, desc_img1, ...] } -- una lista por ruta, análoga al
+  // 'indice' que ya usa srcDeImagen/INDICE_IMAGENES para navegar imágenes
+  // dentro de una misma ruta.
+  function descripcionDeImagen(ruta, indice) {
+    const listas = datos.descripciones_rutas || {};
+    const lista = listas[ruta] || listas[String(ruta)] || [];
+    return lista[indice] || '';
   }
 
   function entradaImagenActual() {
@@ -2518,6 +3020,8 @@
       elGaleriaIndicador.textContent = '';
       elGaleriaImg.style.display = 'none';
       elGaleriaVacia.style.display = 'block';
+      elGaleriaDescripcion.style.display = 'none';
+      elGaleriaDescripcion.textContent = '';
       elBtnGaleriaDificil.style.display = 'none';
       elBtnGaleriaNota.style.display = 'none';
       elPanelGaleriaNota.style.display = 'none';
@@ -2536,6 +3040,18 @@
     const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
     elGaleriaImg.src = srcDeImagen(ruta, indice);
     elGaleriaIndicador.textContent = 'Imagen ' + (galeriaPos + 1) + ' de ' + total + ' (Ruta ' + ruta + ')';
+
+    // NUEVO: descripción de ESTA imagen puntual (atributo 'descripcion' del
+    // drawio, indexada por ruta + posición dentro de la ruta, igual que
+    // srcDeImagen/INDICE_IMAGENES).
+    const descripcionImg = descripcionDeImagen(ruta, indice);
+    if (descripcionImg) {
+      elGaleriaDescripcion.textContent = descripcionImg;
+      elGaleriaDescripcion.style.display = 'block';
+    } else {
+      elGaleriaDescripcion.textContent = '';
+      elGaleriaDescripcion.style.display = 'none';
+    }
 
     const esDif = esDificilImagen();
     elBtnGaleriaDificil.textContent = esDif ? '★ Difícil' : '☆ Difícil';
@@ -2606,6 +3122,1073 @@
     // renderImagenesPreview() ya se llama dentro de mostrarPantalla('observador').
     mostrarPantalla('observador');
   }
+
+  // ============================================================
+  // NUEVO: Rutas Huérfanas (rutas de respuestas.txt no citadas por ninguna
+  // tarjeta). Pantalla independiente, solo accesible desde el observador.
+  // ============================================================
+
+  // Se calcula UNA sola vez: las rutas huérfanas no cambian durante la sesión
+  // (mismo criterio que INDICE_IMAGENES).
+  const rutasHuerfanas = (() => {
+    const citadas = new Set();
+    tarjetasCompletas.forEach((t) => rutasValidasDe(t).forEach((n) => citadas.add(n)));
+    return Object.keys(rutasDisp)
+      .map(Number)
+      .filter((n) => !citadas.has(n))
+      .sort((a, b) => a - b);
+  })();
+
+  // "Revisar" de rutas huérfanas: EFÍMERO en memoria (igual política que
+  // revisarEnMemoria de tarjetas). Objeto paralelo e independiente: nunca se
+  // mezcla con revisarEnMemoria ni aparece en "🚩 Para revisar guardadas".
+  let revisarRutasEnMemoria = {};
+  function esRevisarRuta(numeroRuta) { return !!revisarRutasEnMemoria[numeroRuta]; }
+  function toggleRevisarHuerfana(numeroRuta) {
+    if (revisarRutasEnMemoria[numeroRuta]) {
+      delete revisarRutasEnMemoria[numeroRuta];
+    } else {
+      revisarRutasEnMemoria[numeroRuta] = { ruta: numeroRuta, t: Date.now() };
+    }
+  }
+
+  // Línea de ruta SIN resaltado de palabras clave (no hay tarjeta asociada
+  // de donde sacar claves): a diferencia de agregarLineaResaltada, acá el
+  // texto va tal cual, como nodo de texto (nunca se interpreta como HTML).
+  function agregarLineaPlana(contenedor, linea) {
+    const div = document.createElement('div');
+    div.className = 'ruta-linea';
+    div.textContent = linea;
+    contenedor.appendChild(div);
+  }
+
+  function actualizarBotonRevisarHuerfana(boton, numeroRuta) {
+    const activa = esRevisarRuta(numeroRuta);
+    boton.classList.toggle('activa', activa);
+    boton.textContent = activa ? '🚩 Para revisar' : '🚩 Revisar';
+  }
+
+  // Arma los <details> UNA sola vez (las rutas huérfanas no cambian). Cada
+  // <details> es independiente entre sí: abrir uno no cierra los demás (es
+  // el comportamiento nativo de <details>, no hay nada que coordinarlos).
+  function construirListaHuerfanas() {
+    elListaHuerfanas.innerHTML = '';
+    rutasHuerfanas.forEach((numeroRuta) => {
+      const bloque = rutasDisp[numeroRuta];
+
+      const det = document.createElement('details');
+      det.className = 'ruta-acordeon';
+      det.dataset.ruta = String(numeroRuta);
+
+      const sum = document.createElement('summary');
+      const fila = document.createElement('span');
+      fila.className = 'fila-resumen-huerfana';
+
+      const titulo = document.createElement('span');
+      titulo.className = 'ruta-huerfana-titulo';
+      titulo.textContent = 'Ruta ' + numeroRuta;
+      fila.appendChild(titulo);
+
+      const btnRevisar = document.createElement('button');
+      btnRevisar.type = 'button';
+      btnRevisar.className = 'boton-revisar-huerfana';
+      btnRevisar.dataset.ruta = String(numeroRuta);
+      actualizarBotonRevisarHuerfana(btnRevisar, numeroRuta);
+      btnRevisar.addEventListener('click', (e) => {
+        // No debe colapsar/expandir el <details> al marcar/desmarcar.
+        e.preventDefault();
+        e.stopPropagation();
+        toggleRevisarHuerfana(numeroRuta);
+        actualizarBotonRevisarHuerfana(btnRevisar, numeroRuta);
+      });
+      fila.appendChild(btnRevisar);
+      sum.appendChild(fila);
+
+      const contenido = document.createElement('div');
+      contenido.className = 'ruta-contenido';
+      (bloque.lineas || []).forEach((linea) => {
+        if (esImagen(linea)) {
+          const img = document.createElement('img');
+          img.className = 'ruta-img-thumb';
+          img.src = linea.substring(4);  // quitar el prefijo 'IMG:'
+          img.alt = 'Imagen de la ruta ' + numeroRuta;
+          contenido.appendChild(img);
+        } else {
+          agregarLineaPlana(contenido, linea);
+        }
+      });
+
+      det.appendChild(sum);
+      det.appendChild(contenido);
+      elListaHuerfanas.appendChild(det);
+    });
+  }
+  construirListaHuerfanas();  // una sola vez: no cambia durante la sesión
+
+  // Reutiliza el lightbox ya existente (misma función que usan las rutas de
+  // las tarjetas), con su propio listener delegado sobre esta lista.
+  elListaHuerfanas.addEventListener('click', (evento) => {
+    if (evento.target.classList.contains('ruta-img-thumb')) {
+      abrirLightbox(evento.target.src);
+    }
+  });
+
+  function renderHuerfanas() {
+    const hay = rutasHuerfanas.length > 0;
+    elListaHuerfanas.style.display = hay ? 'block' : 'none';
+    elHuerfanasVacia.style.display = hay ? 'none' : 'block';
+  }
+
+  function abrirHuerfanas() {
+    mostrarPantalla('huerfanas');
+    renderHuerfanas();
+  }
+
+  function volverDesdeHuerfanas() {
+    // Igual que volverListaDesdeGaleria: no se reconstruye la lista del
+    // observador, así los subT que estaban abiertos quedan como estaban.
+    mostrarPantalla('observador');
+  }
+
+  // ---------- Buscador de Rutas Huérfanas (número de ruta + contenido) ----------
+
+  function textoHuerfanaPlano(numeroRuta) {
+    const lineas = (rutasDisp[numeroRuta] && rutasDisp[numeroRuta].lineas) || [];
+    return lineas.filter((linea) => !esImagen(linea)).join(' ');
+  }
+
+  function buscarHuerfanasGlobal(consultaNorm) {
+    const resultados = [];
+    rutasHuerfanas.forEach((numeroRuta) => {
+      let texto = null;
+      if (normalizarPalabra('ruta ' + numeroRuta).indexOf(consultaNorm) !== -1) {
+        texto = 'Ruta ' + numeroRuta;
+      } else {
+        const contenido = textoHuerfanaPlano(numeroRuta);
+        if (contenido && normalizarPalabra(contenido).indexOf(consultaNorm) !== -1) {
+          texto = contenido;
+        }
+      }
+      if (texto !== null) resultados.push({ ruta: numeroRuta, texto: texto });
+    });
+    return resultados;
+  }
+
+  // Al seleccionar: abre ESE <details> puntual (sin cerrar los demás que ya
+  // estuvieran abiertos) y hace scroll hasta él.
+  function seleccionarResultadoHuerfana(numeroRuta) {
+    const det = elListaHuerfanas.querySelector('details[data-ruta="' + numeroRuta + '"]');
+    if (det) {
+      det.open = true;
+      if (det.scrollIntoView) det.scrollIntoView({ block: 'center' });
+    }
+  }
+
+  function renderDropdownBuscadorHuerfanas(consulta) {
+    const consultaNorm = normalizarPalabra((consulta || '').trim());
+    elDropdownBuscadorHuerfanas.innerHTML = '';
+    if (consultaNorm === '') { elDropdownBuscadorHuerfanas.classList.remove('abierto'); return; }
+    const resultados = buscarHuerfanasGlobal(consultaNorm).slice(0, 30);
+    if (resultados.length === 0) {
+      renderDropdownVacio(elDropdownBuscadorHuerfanas);
+    } else {
+      resultados.forEach((r) => {
+        elDropdownBuscadorHuerfanas.appendChild(
+          crearItemDropdownBuscador('Ruta ' + r.ruta + ':', r.texto, consultaNorm, () => {
+            cerrarDropdownBuscador(elDropdownBuscadorHuerfanas);
+            elInputBuscadorHuerfanas.value = '';
+            seleccionarResultadoHuerfana(r.ruta);
+          })
+        );
+      });
+    }
+    elDropdownBuscadorHuerfanas.classList.add('abierto');
+  }
+
+  // ============================================================
+  // NUEVO: Gamificación — sonidos, puntos, rachas, vidas, tienda, historial
+  // ============================================================
+  // Reglas de integración: NADA de esto se activa si modoObservador === true.
+  // No toca localStorage de dificiles/notas/razones/imágenes ni el buscador.
+
+  // ---------- Sonidos (Web Audio API: sin archivos embebidos) ----------
+  let contextoAudio = null;
+  function obtenerContextoAudio() {
+    if (!contextoAudio) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      contextoAudio = new AC();
+    }
+    if (contextoAudio.state === 'suspended') contextoAudio.resume();
+    return contextoAudio;
+  }
+
+  // Tono simple con envolvente (ataque/decaimiento) para no "clickear".
+  function tono(ctx, freq, inicio, duracion, tipo, volumen) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = tipo || 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + inicio);
+    gain.gain.setValueAtTime(0, ctx.currentTime + inicio);
+    gain.gain.linearRampToValueAtTime(volumen || 0.2, ctx.currentTime + inicio + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + inicio + duracion);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime + inicio);
+    osc.stop(ctx.currentTime + inicio + duracion + 0.02);
+  }
+
+  function reproducirSonido(nombre) {
+    if (!sonidosActivos) return;
+    const ctx = obtenerContextoAudio();
+    if (!ctx) return;
+    try {
+      if (nombre === 'bien') {
+        tono(ctx, 880, 0, 0.12, 'sine', 0.2);
+        tono(ctx, 1320, 0.09, 0.15, 'sine', 0.18);
+      } else if (nombre === 'mal') {
+        tono(ctx, 180, 0, 0.28, 'sawtooth', 0.15);
+      } else if (nombre === 'dificil') {
+        tono(ctx, 500, 0, 0.08, 'square', 0.12);
+        tono(ctx, 500, 0.1, 0.08, 'square', 0.12);
+      } else if (nombre === 'racha') {
+        tono(ctx, 660, 0, 0.09, 'triangle', 0.18);
+        tono(ctx, 880, 0.08, 0.09, 'triangle', 0.18);
+        tono(ctx, 1320, 0.16, 0.18, 'triangle', 0.2);
+      } else if (nombre === 'vida_perdida') {
+        tono(ctx, 220, 0, 0.1, 'square', 0.2);
+        tono(ctx, 140, 0.08, 0.18, 'square', 0.2);
+      } else if (nombre === 'game_over') {
+        tono(ctx, 320, 0, 0.25, 'sawtooth', 0.2);
+        tono(ctx, 240, 0.2, 0.25, 'sawtooth', 0.2);
+        tono(ctx, 160, 0.4, 0.45, 'sawtooth', 0.22);
+      }
+    } catch (e) {
+      // Si el navegador bloquea audio (por política de autoplay), se ignora en silencio.
+    }
+  }
+
+  function toggleMute() {
+    sonidosActivos = !sonidosActivos;
+    elBtnMute.textContent = sonidosActivos ? '🔊' : '🔇';
+  }
+  elBtnMute.addEventListener('click', () => toggleMute());
+
+  // ---------- Puntos, rachas y vidas ----------
+
+  // Tabla de puntos base (ver prompt). El multiplicador de racha se aplica
+  // solo a los puntos base POSITIVOS (nunca a la penalización de Saltar).
+  function calcularPuntosBase(resultado, opciones) {
+    opciones = opciones || {};
+    if (resultado === 'si') {
+      if (opciones.pistaGratisUsada) return 15;
+      if (opciones.conPista) return 8;
+      return 15;
+    }
+    if (resultado === 'casi') return 3;
+    if (resultado === 'no') return 0;
+    if (resultado === 'saltar') return opciones.comodinUsado ? 0 : -5;
+    return 0;
+  }
+
+  function puntosFinales(resultado, opciones) {
+    const base = calcularPuntosBase(resultado, opciones);
+    return base > 0 ? Math.round(base * multiplicadorActual) : base;
+  }
+
+  function totalTarjetasSesionActual() {
+    return tarjetasSesion.length || 1;
+  }
+
+  function recalcularMultiplicador() {
+    const pct = rachaActual / totalTarjetasSesionActual();
+    let nuevo = 1;
+    if (pct >= 0.75) nuevo = 2.5;
+    else if (pct >= 0.5) nuevo = 2.0;
+    else if (pct >= 0.3) nuevo = 1.5;
+    const subio = nuevo > multiplicadorActual;
+    multiplicadorActual = nuevo;
+    if (subio) reproducirSonido('racha');
+  }
+
+  function actualizarRachaTrasResultado(resultado, comodinUsado) {
+    const rompeRacha = (resultado === 'no') || (resultado === 'saltar' && !comodinUsado);
+    if (rompeRacha) {
+      rachaActual = 0;
+    } else if (resultado === 'si' || resultado === 'casi') {
+      rachaActual++;
+      if (rachaActual > mejorRacha) mejorRacha = rachaActual;
+    }
+    recalcularMultiplicador();
+  }
+
+  function aplicarPerdidaVida() {
+    if (modoJuego === 'light') return;
+    vidasActuales = Math.max(0, vidasActuales - 1);
+    reproducirSonido('vida_perdida');
+    if (vidasActuales === 0) dispararGameOver();
+  }
+
+  // Hook principal: se llama UNA vez por cada tarjeta que pasa de null a un
+  // resultado final (primera vez que se marca). Nunca en modo observador.
+  function procesarResultadoGamificacion(indice, resultado, opciones) {
+    if (modoObservador) return;
+
+    // NUEVO: "modo zombie" — sesión retomada después de un Game Over. El
+    // usuario puede seguir viendo/respondiendo tarjetas, pero puntos, racha
+    // y vidas quedan CONGELADOS en lo que tenían al momento del Game Over:
+    // se salta por completo la lógica de puntaje/racha/vidas (y su sonido).
+    if (modoZombie) return;
+
+    opciones = opciones || {};
+
+    const puntos = puntosFinales(resultado, opciones);
+    const anterior = puntosPorTarjeta[indice] || 0;
+    const delta = puntos - anterior;
+    puntosPorTarjeta[indice] = puntos;
+    if (modoJuego !== 'light') puntosSesion += delta;
+
+    actualizarRachaTrasResultado(resultado, !!opciones.comodinUsado);
+
+    if (resultado === 'si') {
+      reproducirSonido('bien');
+    } else if (resultado === 'no') {
+      reproducirSonido('mal');
+    } else if (resultado === 'saltar' && !opciones.comodinUsado) {
+      reproducirSonido('mal');
+    }
+
+    const pierdeVida = (resultado === 'no') || (resultado === 'saltar' && !opciones.comodinUsado);
+    if (pierdeVida) aplicarPerdidaVida();
+
+    actualizarBarraGamificacion();
+  }
+
+  // Ajuste de SOLO puntos (usado por "Entendida por comprensión": la tarjeta
+  // ya había sumado puntos como 'casi'/'mal' y ahora pasa a 'si'). No se
+  // retocan racha/vidas/sonido acá para no duplicar efectos ya disparados en
+  // el momento de la evaluación original (limitación documentada).
+  function ajustarPuntosGamificacion(indice, resultado, opciones) {
+    if (modoObservador) return;
+    if (modoZombie) return;   // NUEVO: sesión zombie -> puntaje congelado, ni el ajuste de "entendida" suma
+    const puntos = puntosFinales(resultado, opciones);
+    const anterior = puntosPorTarjeta[indice] || 0;
+    const delta = puntos - anterior;
+    puntosPorTarjeta[indice] = puntos;
+    if (modoJuego !== 'light') puntosSesion += delta;
+    actualizarBarraGamificacion();
+  }
+
+  function configurarModoJuego(modo) {
+    modoJuego = modo;
+    if (modo === 'tryhard') { vidasMaximas = 1; }
+    else if (modo === 'normal') { vidasMaximas = 3; }
+    else { vidasMaximas = 0; }
+  }
+
+  function nombreModoJuego(modo) {
+    if (modo === 'tryhard') return 'Tryhard';
+    if (modo === 'normal') return 'Normal';
+    return 'Light';
+  }
+
+  // Refresca puntos/racha/vidas/badges de inventario. Se llama tras cada
+  // cambio relevante (marcar, comprar, iniciar sesión).
+  function actualizarBarraGamificacion() {
+    if (modoObservador) return;
+
+    elStatPuntos.style.display = modoJuego === 'light' ? 'none' : 'inline';
+    elStatPuntos.textContent = '⭐ ' + puntosSesion;
+
+    elStatRacha.textContent = '🔥 ' + rachaActual + (multiplicadorActual > 1 ? (' x' + multiplicadorActual) : '');
+
+    if (modoJuego === 'light') {
+      elStatVidas.style.display = 'none';
+      elStatVidas.textContent = '';
+    } else {
+      elStatVidas.style.display = 'inline';
+      let corazones = '';
+      for (let i = 0; i < vidasMaximas; i++) corazones += (i < vidasActuales ? '❤️' : '💔');
+      elStatVidas.textContent = corazones;
+    }
+
+    // Badges de inventario en los botones de la tarjeta
+    if (gamificacion.inventario.pistasGratis > 0) {
+      elBadgePistaGratis.textContent = 'x' + gamificacion.inventario.pistasGratis;
+      elBadgePistaGratis.style.display = 'block';
+    } else {
+      elBadgePistaGratis.style.display = 'none';
+    }
+    if (gamificacion.inventario.comodines > 0) {
+      elBadgeComodines.textContent = 'x' + gamificacion.inventario.comodines;
+      elBadgeComodines.style.display = 'block';
+    } else {
+      elBadgeComodines.style.display = 'none';
+    }
+  }
+
+  // ---------- Modal de selección de modo ----------
+  let listaPendienteInicio = null;
+  let modoElegidoEnModal = 'light';
+
+  function seleccionarModoEnModal(modo) {
+    modoElegidoEnModal = modo;
+    document.querySelectorAll('.opcion-modo').forEach((el) => {
+      el.classList.toggle('seleccionada', el.dataset.modo === modo);
+    });
+  }
+
+  function abrirModalSeleccionModo(lista) {
+    if (!lista || lista.length === 0) return;
+    listaPendienteInicio = lista;
+    seleccionarModoEnModal('light');   // Light por defecto
+    elModalModo.classList.add('abierto');
+  }
+
+  function cancelarModalModo() {
+    elModalModo.classList.remove('abierto');
+    listaPendienteInicio = null;
+  }
+
+  function confirmarModoYComenzar() {
+    const lista = listaPendienteInicio;
+    elModalModo.classList.remove('abierto');
+    listaPendienteInicio = null;
+    if (!lista) return;
+    configurarModoJuego(modoElegidoEnModal);
+    iniciarSesion(lista);
+  }
+
+  document.getElementById('opcion-modo-tryhard').addEventListener('click', () => seleccionarModoEnModal('tryhard'));
+  document.getElementById('opcion-modo-normal').addEventListener('click', () => seleccionarModoEnModal('normal'));
+  document.getElementById('opcion-modo-light').addEventListener('click', () => seleccionarModoEnModal('light'));
+  document.getElementById('btn-modo-confirmar').addEventListener('click', () => confirmarModoYComenzar());
+  document.getElementById('btn-modo-cancelar').addEventListener('click', () => cancelarModalModo());
+
+  // ---------- Game Over ----------
+
+  function dispararGameOver() {
+    if (modoJuego === 'light') return;   // nunca en Light
+    if (gameOverDisparado) return;       // no disparar 2 veces
+    gameOverDisparado = true;
+    // Reutiliza el guard ya existente (marcar/evaluarRespuesta/navegar lo
+    // chequean todos): bloquea la sesión sin tocar su lógica.
+    pausaManual = true;
+    reproducirSonido('game_over');
+    elModalGameOver.classList.add('abierto');
+  }
+
+  document.getElementById('btn-gameover-resumen').addEventListener('click', () => {
+    elModalGameOver.classList.remove('abierto');
+    pausaManual = false;
+    finalizarSesion();
+  });
+
+  // ---------- Historial de sesiones (guardado desde mostrarResumen) ----------
+
+  function guardarHistorialSesion(nota) {
+    if (modoObservador) return;
+    if (historialGuardadoEstaSesion) return;   // evita duplicar si mostrarResumen() se llama 2 veces
+    historialGuardadoEstaSesion = true;
+
+    const duracionMs = tiempos.reduce((a, b) => a + b, 0);
+    gamificacion.historial.push({
+      fecha: new Date().toISOString(),
+      modo: modoJuego,
+      nota: Math.round(nota * 10) / 10,
+      duracion_ms: duracionMs,
+      puntos_ganados: modoJuego === 'light' ? 0 : puntosSesion,
+      espacio: ESPACIO_HASH,   // NUEVO: de que evaluador es esta sesion
+    });
+    if (modoJuego !== 'light') {
+      gamificacion.puntosTotales += puntosSesion;
+    }
+    guardarGamificacion();
+    actualizarBarraGamificacion();
+  }
+
+  function renderResumenGamificacion(nota) {
+    if (modoObservador) { elResumenGamificacion.style.display = 'none'; return; }
+    elResumenGamificacion.style.display = 'block';
+    document.getElementById('resumen-puntos').textContent =
+      modoJuego === 'light' ? '⭐ Puntos ganados: — (modo Light)' : ('⭐ Puntos ganados: ' + puntosSesion);
+    document.getElementById('resumen-mejor-racha').textContent = '🔥 Mejor racha: ' + mejorRacha;
+    document.getElementById('resumen-modo').textContent = '🎮 Modo: ' + nombreModoJuego(modoJuego);
+
+    const elNota = document.getElementById('nota-sesion');
+    if (gameOverDisparado) {
+      elNota.classList.add('game-over');
+      elNota.textContent += ' — 💀 Game Over';
+    } else {
+      elNota.classList.remove('game-over');
+    }
+  }
+
+  // ---------- Tienda ----------
+
+  const ITEMS_TIENDA = [
+    { id: 'comodines', icono: '🃏', nombre: 'Comodín', precio: 100, descripcion: 'Salta una tarjeta sin perder vida ni puntos.' },
+    { id: 'pistasGratis', icono: '💡', nombre: 'Pista Gratis', precio: 50, descripcion: 'Revela la pista manteniendo el puntaje máximo si aciertas.' },
+  ];
+
+  function renderTienda() {
+    elSaldoTienda.textContent = 'Puntos disponibles: ' + gamificacion.puntosTotales;
+    elGridTienda.innerHTML = '';
+    ITEMS_TIENDA.forEach((item) => {
+      const cont = document.createElement('div');
+      cont.className = 'item-tienda';
+
+      const icono = document.createElement('div');
+      icono.className = 'item-tienda-icono';
+      icono.textContent = item.icono;
+      cont.appendChild(icono);
+
+      const nombre = document.createElement('div');
+      nombre.className = 'item-tienda-nombre';
+      nombre.textContent = item.nombre;
+      cont.appendChild(nombre);
+
+      const precio = document.createElement('div');
+      precio.className = 'item-tienda-precio';
+      precio.textContent = item.precio + ' pts';
+      cont.appendChild(precio);
+
+      const desc = document.createElement('div');
+      desc.className = 'item-tienda-descripcion';
+      desc.textContent = item.descripcion;
+      cont.appendChild(desc);
+
+      const cantidad = gamificacion.inventario[item.id] || 0;
+      if (cantidad > 0) {
+        const inv = document.createElement('div');
+        inv.className = 'item-tienda-inventario';
+        inv.textContent = 'Tenés: ' + cantidad;
+        cont.appendChild(inv);
+      }
+
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'item-tienda-boton';
+      boton.textContent = 'Comprar';
+      boton.disabled = gamificacion.puntosTotales < item.precio;
+      boton.addEventListener('click', () => comprarItem(item.id));
+      cont.appendChild(boton);
+
+      elGridTienda.appendChild(cont);
+    });
+  }
+
+  function comprarItem(idItem) {
+    const item = ITEMS_TIENDA.find((i) => i.id === idItem);
+    if (!item) return;
+    if (gamificacion.puntosTotales < item.precio) return;
+    gamificacion.puntosTotales -= item.precio;
+    gamificacion.inventario[idItem] = (gamificacion.inventario[idItem] || 0) + 1;
+    guardarGamificacion();
+    renderTienda();
+    actualizarBarraGamificacion();
+  }
+
+  function abrirTienda() {
+    mostrarPantalla('tienda');
+    renderTienda();
+  }
+
+  elBtnAbrirTienda.addEventListener('click', () => abrirTienda());
+  document.getElementById('btn-tienda-volver').addEventListener('click', () => mostrarPantalla('temas'));
+
+  // ---------- Historial ----------
+
+  function formatearFechaHistorial(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString();
+    } catch (e) {
+      return iso;
+    }
+  }
+
+  // NUEVO: espacio (evaluador) de una sesion. '' = sesion sin identificar.
+  function espacioDeSesion(s) {
+    return (s && typeof s.espacio === 'string') ? s.espacio : '';
+  }
+  function esSesionLocal(s) { return espacioDeSesion(s) === ESPACIO_HASH; }
+  function etiquetaEspacio(esp) { return esp ? esp : 'Sin identificar'; }
+
+  function renderHistorial() {
+    const todas = gamificacion.historial;
+    const historial = todas.filter(esSesionLocal);   // la lista principal es solo de ESTE evaluador
+    elListaHistorial.innerHTML = '';
+
+    elBtnHistorialBorrarEste.disabled = historial.length === 0;
+    elBtnHistorialBorrarGlobal.disabled = todas.length === 0;
+    renderHistorialOtros(todas.filter((s) => !esSesionLocal(s)));
+
+    if (historial.length === 0) {
+      elListaHistorial.style.display = 'none';
+      elHistorialVacio.style.display = 'block';
+      return;
+    }
+    elListaHistorial.style.display = 'block';
+    elHistorialVacio.style.display = 'none';
+
+    // Más reciente primero
+    for (let i = historial.length - 1; i >= 0; i--) {
+      const entrada = historial[i];
+      const item = document.createElement('div');
+      item.className = 'item-historial';
+
+      const fecha = document.createElement('div');
+      fecha.className = 'item-historial-fecha';
+      fecha.textContent = formatearFechaHistorial(entrada.fecha);
+      const chip = document.createElement('span');
+      chip.className = 'chip-espacio';
+      chip.textContent = etiquetaEspacio(espacioDeSesion(entrada));
+      fecha.appendChild(chip);
+      item.appendChild(fecha);
+
+      const detalle = document.createElement('div');
+      detalle.className = 'item-historial-detalle';
+      const modoTxt = document.createElement('span');
+      modoTxt.textContent = '🎮 ' + nombreModoJuego(entrada.modo);
+      const notaTxt = document.createElement('span');
+      notaTxt.textContent = '🎓 ' + Number(entrada.nota).toFixed(1) + ' / 10';
+      const duracionTxt = document.createElement('span');
+      duracionTxt.textContent = '⏱ ' + formatearTiempo(entrada.duracion_ms || 0);
+      const puntosTxt = document.createElement('span');
+      puntosTxt.textContent = '⭐ ' + (entrada.puntos_ganados || 0);
+      detalle.appendChild(modoTxt);
+      detalle.appendChild(notaTxt);
+      detalle.appendChild(duracionTxt);
+      detalle.appendChild(puntosTxt);
+      item.appendChild(detalle);
+
+      elListaHistorial.appendChild(item);
+    }
+  }
+
+  // NUEVO: "Sesiones de otros evaluadores" (solo lectura), agrupadas por espacio
+  function renderHistorialOtros(otras) {
+    elListaHistorialOtros.innerHTML = '';
+    if (otras.length === 0) {
+      elZonaHistorialOtros.style.display = 'none';
+      return;
+    }
+    const mapa = new Map();
+    otras.forEach((s) => {
+      const esp = espacioDeSesion(s);
+      if (!mapa.has(esp)) mapa.set(esp, []);
+      mapa.get(esp).push(s);
+    });
+    const grupos = Array.from(mapa.entries()).map(([esp, lista]) => {
+      let ultima = '';
+      lista.forEach((s) => { const f = String(s.fecha || ''); if (f > ultima) ultima = f; });
+      return { esp: esp, cantidad: lista.length, ultima: ultima };
+    });
+    grupos.sort((a, b) => (a.ultima < b.ultima ? 1 : (a.ultima > b.ultima ? -1 : 0)));
+
+    grupos.forEach((g) => {
+      const fila = document.createElement('div');
+      fila.className = 'grupo-historial-otro';
+
+      const info = document.createElement('div');
+      const titulo = document.createElement('span');
+      titulo.className = 'grupo-titulo';
+      titulo.textContent = etiquetaEspacio(g.esp);
+      const detalle = document.createElement('span');
+      detalle.className = 'grupo-detalle';
+      detalle.textContent = g.cantidad + ' sesión(es) · última: ' + (g.ultima ? formatearFechaHistorial(g.ultima) : '—');
+      info.appendChild(titulo);
+      info.appendChild(detalle);
+
+      const btn = document.createElement('button');
+      btn.className = 'boton-mini';
+      btn.textContent = 'Vincular a este evaluador';
+      btn.addEventListener('click', () => abrirModalVincular('sesiones', g.esp));
+
+      fila.appendChild(info);
+      fila.appendChild(btn);
+      elListaHistorialOtros.appendChild(fila);
+    });
+    elSumaHistorialOtros.textContent = 'Sesiones de otros evaluadores (' + otras.length + ')';
+    elZonaHistorialOtros.style.display = 'block';
+  }
+
+  // MODIFICADO: se exporta el objeto COMPLETO de gamificación (puntosTotales +
+  // inventario + historial) en la raíz, no solo el array de historial, para
+  // poder recuperar todo al importar en otro dispositivo.
+  function exportarHistorial() {
+    // cada sesion sale con su "espacio" ('' = sin identificar)
+    const salida = Object.assign({}, gamificacion, {
+      historial: gamificacion.historial.map((s) => Object.assign({}, s, { espacio: espacioDeSesion(s) })),
+    });
+    const blob = new Blob([JSON.stringify(salida, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gamificacion_export.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function borrarHistorialEste() {
+    const n = gamificacion.historial.filter(esSesionLocal).length;
+    if (n === 0) return;
+    if (!window.confirm('¿Borrar las ' + n + ' sesión(es) de ESTE evaluador («' + ESPACIO_HASH + '»)? Las sesiones de otros evaluadores, los puntos y el inventario NO se ven afectados.')) return;
+    gamificacion.historial = gamificacion.historial.filter((s) => !esSesionLocal(s));
+    guardarGamificacion();
+    renderHistorial();
+  }
+
+  function borrarHistorialGlobal() {
+    const n = gamificacion.historial.length;
+    if (n === 0) return;
+    if (!window.confirm('¿Borrar el historial GLOBAL (' + n + ' sesión(es) de TODOS los evaluadores, incluidas las sin identificar)? Los puntos y el inventario NO se ven afectados.')) return;
+    gamificacion.historial = [];
+    guardarGamificacion();
+    renderHistorial();
+  }
+
+  // NUEVO: Importar historial (fusiona con lo local, ver reglas en el prompt)
+
+  function sesionMasReciente(historial) {
+    if (!historial || historial.length === 0) return null;
+    let mejor = historial[0];
+    for (let i = 1; i < historial.length; i++) {
+      if (String(historial[i].fecha) > String(mejor.fecha)) mejor = historial[i];
+    }
+    return mejor;
+  }
+
+  // A5: merge sin pisar. Concatena las sesiones descartando duplicados exactos
+  // (misma 'fecha'); puntosTotales = max(actual, importado); cada item de
+  // inventario = max. Lo importado de otros espacios aparece en "Sesiones de
+  // otros evaluadores"; lo importado con el espacio actual cuenta como local.
+  function fusionarGamificacionImportada(importado) {
+    const impPuntos = typeof importado.puntosTotales === 'number' ? importado.puntosTotales : 0;
+    const impInv = importado.inventario || {};
+    const impComodines = typeof impInv.comodines === 'number' ? impInv.comodines : 0;
+    const impPistas = typeof impInv.pistasGratis === 'number' ? impInv.pistasGratis : 0;
+    const impHistorial = Array.isArray(importado.historial) ? importado.historial : [];
+
+    gamificacion.puntosTotales = Math.max(gamificacion.puntosTotales, impPuntos);
+    gamificacion.inventario.comodines = Math.max(gamificacion.inventario.comodines, impComodines);
+    gamificacion.inventario.pistasGratis = Math.max(gamificacion.inventario.pistasGratis, impPistas);
+
+    const fechasLocales = new Set(gamificacion.historial.map((s) => String(s.fecha)));
+    impHistorial.forEach((sesion) => {
+      if (!sesion || typeof sesion !== 'object') return;
+      const f = String(sesion.fecha);
+      if (fechasLocales.has(f)) return;
+      const copia = Object.assign({}, sesion);
+      if (typeof copia.espacio !== 'string') delete copia.espacio;   // sin identificar
+      gamificacion.historial.push(copia);
+      fechasLocales.add(f);
+    });
+
+    guardarGamificacion();
+    renderHistorial();
+    actualizarBarraGamificacion();
+  }
+
+  function importarHistorial(archivo) {
+    const lector = new FileReader();
+    lector.onload = () => {
+      let importado;
+      try {
+        importado = JSON.parse(lector.result);
+      } catch (e) {
+        window.alert('No se pudo leer el archivo: el JSON no es válido.');
+        return;
+      }
+      if (!importado || typeof importado !== 'object') {
+        window.alert('El archivo no tiene el formato esperado.');
+        return;
+      }
+      fusionarGamificacionImportada(importado);
+      window.alert('Historial importado y fusionado correctamente.');
+    };
+    lector.onerror = () => window.alert('No se pudo leer el archivo.');
+    lector.readAsText(archivo);
+  }
+
+  document.getElementById('btn-historial-importar').addEventListener('click', () => {
+    document.getElementById('input-importar-historial').click();
+  });
+  document.getElementById('input-importar-historial').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    if (archivo) importarHistorial(archivo);
+    evento.target.value = '';   // permite volver a elegir el mismo archivo más adelante
+  });
+
+  function abrirHistorial() {
+    mostrarPantalla('historial');
+    renderHistorial();
+  }
+
+  elBtnAbrirHistorial.addEventListener('click', () => abrirHistorial());
+  document.getElementById('btn-historial-volver').addEventListener('click', () => mostrarPantalla('temas'));
+  elBtnHistorialExportar.addEventListener('click', () => exportarHistorial());
+  elBtnHistorialBorrarEste.addEventListener('click', () => borrarHistorialEste());
+  elBtnHistorialBorrarGlobal.addEventListener('click', () => borrarHistorialGlobal());
+
+  // ============================================================
+  // NUEVO: Revinculación — recuperar datos de un evaluador renombrado
+  // ============================================================
+  // Si se renombra el recordatorio.txt cambia ESPACIO_HASH y todo lo guardado
+  // bajo el nombre viejo queda "de otro evaluador". Acá se recomputa el hash que
+  // tendría cada tarjeta ACTUAL bajo el espacio viejo (hashTarjetaCon /
+  // hashImagenCon) y se mueven esas entradas al hash nuevo. Es de un solo
+  // sentido (sin deshacer). puntosTotales e inventario nunca se tocan.
+
+  function tieneClave(obj, k) { return Object.prototype.hasOwnProperty.call(obj, k); }
+
+  // Zonas con datos por tarjeta/imagen. 'explicitas' = campos donde un valor
+  // vacío/false es una decisión del usuario y NO se pisa al completar.
+  const ZONAS_VINCULO = {
+    dificiles: {
+      plural: 'difíciles', titulo: 'difíciles',
+      almacen: () => dificiles, guardar: () => guardarDificiles(),
+      repintar: () => renderDificilesPreview(), explicitas: ['activa'],
+    },
+    notas: {
+      plural: 'notas', titulo: 'notas',
+      almacen: () => notasLocales, guardar: () => guardarNotas(),
+      repintar: () => renderNotasPreview(), explicitas: ['nota'],
+    },
+    razones: {
+      plural: 'razones', titulo: 'razones',
+      almacen: () => razonesGuardadas, guardar: () => guardarRazones(),
+      repintar: () => renderRazonesPreview(), explicitas: [],
+    },
+    imagenes: {
+      plural: 'imágenes', titulo: 'datos de imágenes',
+      almacen: () => datosImagenes, guardar: () => guardarImagenesStorage(),
+      repintar: () => renderImagenesPreview(), explicitas: [],
+    },
+  };
+
+  // Entradas de una zona que NO corresponden a ninguna tarjeta/imagen actual
+  function contarOtrasTarjetas(almacen) {
+    const propios = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
+    return Object.keys(almacen).filter((h) => !propios.has(h)).length;
+  }
+  function contarOtrasImagenes() {
+    return Object.keys(datosImagenes).filter((h) => {
+      const e = datosImagenes[h] || {};
+      return h !== hashImagen(e.ruta, e.indice);
+    }).length;
+  }
+  function contarOtrasZona(zona) {
+    return zona === 'imagenes' ? contarOtrasImagenes() : contarOtrasTarjetas(ZONAS_VINCULO[zona].almacen());
+  }
+
+  // Lista de {de, a}: solo tarjetas/imágenes ACTUALES cuyo hash viejo existe.
+  // Las entradas que no corresponden a ninguna quedan donde están.
+  function movimientosVinculo(zona, viejo) {
+    const movs = [];
+    const vistos = new Set();
+    if (zona === 'imagenes') {
+      INDICE_IMAGENES.forEach((c) => {
+        const de = hashImagenCon(viejo, c.ruta, c.indice);
+        const a = hashImagen(c.ruta, c.indice);
+        if (de === a || vistos.has(de) || !tieneClave(datosImagenes, de)) return;
+        vistos.add(de);
+        movs.push({ de: de, a: a });
+      });
+      return movs;
+    }
+    const almacen = ZONAS_VINCULO[zona].almacen();
+    tarjetasCompletas.forEach((t) => {
+      const de = hashTarjetaCon(viejo, t);
+      const a = hashTarjeta(t);
+      if (de === a || vistos.has(de) || !tieneClave(almacen, de)) return;
+      vistos.add(de);
+      movs.push({ de: de, a: a });
+    });
+    return movs;
+  }
+
+  function esVacioVinculo(clave, v, explicitas) {
+    if (v === undefined || v === null) return true;
+    if (explicitas.indexOf(clave) !== -1) return false;
+    return v === '' || v === false || (Array.isArray(v) && v.length === 0);
+  }
+
+  // Colisión: gana el existente; solo se completan campos vacíos. Las listas
+  // (ej. códigos de razones) se unen sin duplicados.
+  function fusionarEntradaVinculo(existente, entrante, explicitas) {
+    const res = Object.assign({}, existente);
+    Object.keys(entrante).forEach((k) => {
+      const nuevo = entrante[k];
+      if (Array.isArray(nuevo) && Array.isArray(res[k])) {
+        const union = res[k].slice();
+        nuevo.forEach((x) => { if (union.indexOf(x) === -1) union.push(x); });
+        res[k] = union;
+      } else if (esVacioVinculo(k, res[k], explicitas)) {
+        res[k] = nuevo;
+      }
+    });
+    return res;
+  }
+
+  function normalizarEspacioViejo(texto) {
+    return String(texto || '').trim().replace(/[.]txt$/i, '').trim();
+  }
+  function mismoEspacioQueActual(viejo) {
+    return viejo.toLowerCase() === ESPACIO_HASH.toLowerCase();
+  }
+
+  // Vista previa (sin modificar nada): cuánto se movería
+  function resumenVinculo(zona, viejo) {
+    if (zona === 'sesiones') {
+      const n = gamificacion.historial.filter((s) => espacioDeSesion(s) === viejo).length;
+      return { cantidad: n, texto: 'Se vincularían ' + n + ' sesión(es).' };
+    }
+    const z = ZONAS_VINCULO[zona];
+    if (!viejo) {
+      return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
+    }
+    if (mismoEspacioQueActual(viejo)) {
+      return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
+    }
+    const n = movimientosVinculo(zona, viejo).length;
+    const resto = Math.max(0, contarOtrasZona(zona) - n);
+    if (n === 0) {
+      return { cantidad: 0, texto: 'No se encontró ninguna entrada de ' + z.plural + ' bajo «' + viejo + '» que corresponda a las tarjetas actuales.' };
+    }
+    return {
+      cantidad: n,
+      texto: 'Se moverían ' + n + ' ' + z.plural + '.' +
+        (resto > 0 ? ' Otras ' + resto + ' entrada(s) no corresponden a ninguna tarjeta actual y NO se moverían.' : ''),
+    };
+  }
+
+  // Ejecuta el movimiento y devuelve { movidas, sin }
+  function ejecutarVinculo(zona, viejo) {
+    if (zona === 'sesiones') {
+      let n = 0;
+      gamificacion.historial.forEach((s) => {
+        if (espacioDeSesion(s) === viejo) { s.espacio = ESPACIO_HASH; n++; }
+      });
+      guardarGamificacion();
+      renderHistorial();
+      return { movidas: n, sin: 0 };
+    }
+    const z = ZONAS_VINCULO[zona];
+    const almacen = z.almacen();
+    const movs = movimientosVinculo(zona, viejo);
+    const tomadas = movs.map((m) => ({ a: m.a, v: almacen[m.de] }));
+    movs.forEach((m) => { delete almacen[m.de]; });
+    tomadas.forEach((x) => {
+      almacen[x.a] = tieneClave(almacen, x.a)
+        ? fusionarEntradaVinculo(almacen[x.a], x.v, z.explicitas)
+        : x.v;
+    });
+    z.guardar();
+    z.repintar();
+    return { movidas: movs.length, sin: contarOtrasZona(zona) };
+  }
+
+  // ---------- Modal ----------
+  const elModalVincular = document.getElementById('modal-vincular');
+  const elVincTitulo = document.getElementById('vinc-titulo');
+  const elVincDescripcion = document.getElementById('vinc-descripcion');
+  const elVincCampoEspacio = document.getElementById('vinc-campo-espacio');
+  const elVincEspacio = document.getElementById('vinc-espacio');
+  const elVincEspacios = document.getElementById('vinc-espacios');
+  const elVincResumen = document.getElementById('vinc-resumen');
+  const elVincAviso = document.getElementById('vinc-aviso');
+  const elVincConfirmar = document.getElementById('vinc-confirmar');
+  const elBtnVincAceptar = document.getElementById('btn-vinc-aceptar');
+  let vincZona = null;
+  let vincEspacioFijo = null;   // null = el usuario lo escribe; string = viene de un grupo de sesiones
+
+  function espacioViejoActual() {
+    return vincEspacioFijo !== null ? vincEspacioFijo : normalizarEspacioViejo(elVincEspacio.value);
+  }
+
+  function refrescarModalVincular() {
+    if (!vincZona) return;
+    const viejo = espacioViejoActual();
+    const r = resumenVinculo(vincZona, viejo);
+    elVincResumen.textContent = r.texto;
+    const nombreViejo = viejo ? '«' + viejo + '»' : 'el nombre viejo';
+    elVincAviso.textContent =
+      '⚠ No se puede deshacer. Si todavía usás el evaluador con ' + nombreViejo +
+      ', ESTE dejará de ver esos datos. Si otro evaluador comparte contenido con este, ' +
+      'sus datos se mezclarán (si ya hay un dato para la misma tarjeta, gana el que ya está acá).';
+    const coincide = elVincConfirmar.value.trim() === 'CONFIRMAR';
+    elBtnVincAceptar.disabled = !(coincide && r.cantidad > 0);
+  }
+
+  function abrirModalVincular(zona, espacioFijo) {
+    vincZona = zona;
+    vincEspacioFijo = (typeof espacioFijo === 'string') ? espacioFijo : null;
+    const titulo = zona === 'sesiones' ? 'sesiones' : ZONAS_VINCULO[zona].titulo;
+    elVincTitulo.textContent = 'Vincular ' + titulo + ' a este evaluador';
+    if (vincEspacioFijo !== null) {
+      elVincDescripcion.textContent = 'Grupo: ' + etiquetaEspacio(vincEspacioFijo) + '. Pasarán a ser de este evaluador («' + ESPACIO_HASH + '»).';
+      elVincCampoEspacio.style.display = 'none';
+    } else {
+      elVincDescripcion.textContent = 'Indicá con qué nombre de recordatorio se guardaron estos datos. Pasarán a ser de este evaluador («' + ESPACIO_HASH + '»).';
+      elVincCampoEspacio.style.display = 'block';
+      elVincEspacio.value = '';
+      // sugerencias: espacios de otros evaluadores que ya aparecen en el historial
+      elVincEspacios.innerHTML = '';
+      const vistos = new Set();
+      gamificacion.historial.forEach((s) => {
+        const esp = espacioDeSesion(s);
+        if (!esp || esp === ESPACIO_HASH || vistos.has(esp)) return;
+        vistos.add(esp);
+        const op = document.createElement('option');
+        op.value = esp;
+        elVincEspacios.appendChild(op);
+      });
+    }
+    elVincConfirmar.value = '';
+    refrescarModalVincular();
+    elModalVincular.classList.add('abierto');
+    (vincEspacioFijo !== null ? elVincConfirmar : elVincEspacio).focus();
+  }
+
+  function cerrarModalVincular() {
+    elModalVincular.classList.remove('abierto');
+    vincZona = null;
+    vincEspacioFijo = null;
+  }
+
+  function aceptarVinculo() {
+    if (!vincZona || elBtnVincAceptar.disabled) return;
+    const zona = vincZona;
+    const viejo = espacioViejoActual();
+    let r;
+    try {
+      r = ejecutarVinculo(zona, viejo);
+    } catch (e) {
+      cerrarModalVincular();
+      window.alert('No se pudo completar la vinculación: ' + e.message);
+      return;
+    }
+    cerrarModalVincular();
+    window.alert('Vinculación terminada: movidas ' + r.movidas + ', sin corresponder ' + r.sin + '.' +
+      (r.sin > 0 ? ' Las ' + r.sin + ' sin corresponder quedan sin mover (en «De otros evaluadores»).' : ''));
+  }
+
+  elVincEspacio.addEventListener('input', refrescarModalVincular);
+  elVincConfirmar.addEventListener('input', refrescarModalVincular);
+  elVincConfirmar.addEventListener('keydown', (e) => { if (e.key === 'Enter') aceptarVinculo(); });
+  elBtnVincAceptar.addEventListener('click', () => aceptarVinculo());
+  document.getElementById('btn-vinc-cancelar').addEventListener('click', () => cerrarModalVincular());
+
+  ['dificiles', 'notas', 'razones', 'imagenes'].forEach((zona) => {
+    document.getElementById('btn-vincular-' + zona).addEventListener('click', () => abrirModalVincular(zona));
+  });
+
+  // Estado inicial de los stats (por si se entra a 'estudio' antes de iniciar)
+  actualizarBarraGamificacion();
 
   // ============================================================
   // NUEVO: Buscador Global (Elegir Temas / Observador / Galería)
@@ -2767,33 +4350,44 @@
 
   // ---------- Galería ----------
 
-  // Busca por número de ruta (ej. "ruta 5") o por descripción extraída del
-  // drawio (datos.descripciones_rutas). Dedupe por índice de imagen: cada
-  // resultado apunta a la primera imagen de la ruta encontrada, y una misma
-  // posición de INDICE_IMAGENES no se repite en la lista.
+  // Busca por número de ruta (ej. "ruta 5") o por la descripción de CADA
+  // imagen individual (datos.descripciones_rutas ahora es una lista por
+  // ruta, una posición por imagen). Dedupe por índice de imagen: una misma
+  // posición de INDICE_IMAGENES no se repite en la lista de resultados.
   function buscarGaleriaGlobal(consultaNorm) {
     const resultados = [];
     const posicionesUsadas = new Set();
-    const descripciones = datos.descripciones_rutas || {};
-    Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
-      const posImg = INDICE_IMAGENES.findIndex((e) => e.ruta === ruta);
-      if (posImg === -1 || posicionesUsadas.has(posImg)) return;  // sin imágenes, o ya usada
 
-      let texto = null;
-      if (normalizarPalabra('ruta ' + ruta).indexOf(consultaNorm) !== -1) {
-        texto = 'Ruta ' + ruta;
-      } else {
-        const desc = descripciones[ruta] || descripciones[String(ruta)] || '';
-        if (desc && normalizarPalabra(desc).indexOf(consultaNorm) !== -1) {
-          texto = desc;
-        }
-      }
-      if (texto !== null) {
-        resultados.push({ ruta: ruta, texto: texto, posImg: posImg });
+    // 1) Coincidencias por número de ruta: apuntan a la primera imagen de
+    //    esa ruta (el número de ruta no es específico de una imagen).
+    Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
+      if (normalizarPalabra('ruta ' + ruta).indexOf(consultaNorm) === -1) return;
+      const posImg = INDICE_IMAGENES.findIndex((e) => e.ruta === ruta);
+      if (posImg === -1 || posicionesUsadas.has(posImg)) return;
+      resultados.push({ ruta: ruta, indice: 0, texto: 'Ruta ' + ruta, posImg: posImg });
+      posicionesUsadas.add(posImg);
+    });
+
+    // 2) Coincidencias por descripción de CADA imagen individual: apuntan
+    //    exactamente a esa imagen (no siempre a la primera de la ruta), para
+    //    que en rutas con 2+ imágenes se navegue a la que realmente coincide.
+    INDICE_IMAGENES.forEach((entrada, posImg) => {
+      if (posicionesUsadas.has(posImg)) return;
+      const desc = descripcionDeImagen(entrada.ruta, entrada.indice);
+      if (desc && normalizarPalabra(desc).indexOf(consultaNorm) !== -1) {
+        resultados.push({ ruta: entrada.ruta, indice: entrada.indice, texto: desc, posImg: posImg });
         posicionesUsadas.add(posImg);
       }
     });
+
     return resultados;
+  }
+
+  function etiquetaResultadoGaleria(r) {
+    const totalImgsRuta = INDICE_IMAGENES.filter((e) => e.ruta === r.ruta).length;
+    return totalImgsRuta > 1
+      ? 'Ruta ' + r.ruta + ' (img ' + (r.indice + 1) + '/' + totalImgsRuta + '):'
+      : 'Ruta ' + r.ruta + ':';
   }
 
   function renderDropdownBuscadorGaleria(consulta) {
@@ -2806,7 +4400,7 @@
     } else {
       resultados.forEach((r) => {
         elDropdownBuscadorGaleria.appendChild(
-          crearItemDropdownBuscador('Ruta ' + r.ruta + ':', r.texto, consultaNorm, () => {
+          crearItemDropdownBuscador(etiquetaResultadoGaleria(r), r.texto, consultaNorm, () => {
             if (!confirmarDescartarGaleria()) return;
             cerrarDropdownBuscador(elDropdownBuscadorGaleria);
             elInputBuscadorGaleria.value = '';
@@ -2826,11 +4420,13 @@
   elInputBuscadorTemas.addEventListener('input', debounce(() => renderDropdownBuscadorTemas(elInputBuscadorTemas.value), 200));
   elInputBuscadorObservador.addEventListener('input', debounce(() => renderDropdownBuscadorObservador(elInputBuscadorObservador.value), 200));
   elInputBuscadorGaleria.addEventListener('input', debounce(() => renderDropdownBuscadorGaleria(elInputBuscadorGaleria.value), 200));
+  elInputBuscadorHuerfanas.addEventListener('input', debounce(() => renderDropdownBuscadorHuerfanas(elInputBuscadorHuerfanas.value), 200));
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#zona-buscador-temas')) cerrarDropdownBuscador(elDropdownBuscadorTemas);
     if (!e.target.closest('#zona-buscador-observador')) cerrarDropdownBuscador(elDropdownBuscadorObservador);
     if (!e.target.closest('#zona-buscador-galeria')) cerrarDropdownBuscador(elDropdownBuscadorGaleria);
+    if (!e.target.closest('#zona-buscador-huerfanas')) cerrarDropdownBuscador(elDropdownBuscadorHuerfanas);
   });
 
   document.addEventListener('keydown', (e) => {
@@ -2838,6 +4434,7 @@
     cerrarDropdownBuscador(elDropdownBuscadorTemas);
     cerrarDropdownBuscador(elDropdownBuscadorObservador);
     cerrarDropdownBuscador(elDropdownBuscadorGaleria);
+    cerrarDropdownBuscador(elDropdownBuscadorHuerfanas);
   });
 
   // ---------- Preview en el modo observador: "🖼 Datos de imágenes guardados" ----------
@@ -2896,6 +4493,7 @@
     hashes.forEach((h) => elLista.appendChild(filaImagenGuardada(h, datosImagenes[h])));
     elDet.style.display = hashes.length > 0 ? 'block' : 'none';
     elSuma.textContent = 'Con nota o marcadas difícil (' + hashes.length + ')';
+    document.getElementById('btn-vincular-imagenes').style.display = contarOtrasImagenes() > 0 ? 'inline-block' : 'none';
     elInfo.textContent = hashes.length === 0
       ? 'Todavía no marcaste ni anotaste ninguna imagen (galería del modo observador).'
       : 'Guardadas en este navegador: ' + hashes.length;
@@ -2993,6 +4591,8 @@
   // ---------- Listeners de la galería ----------
   document.getElementById('btn-ver-imagenes').addEventListener('click', () => abrirGaleria());
   document.getElementById('btn-galeria-volver').addEventListener('click', () => volverListaDesdeGaleria());
+  document.getElementById('btn-ver-huerfanas').addEventListener('click', () => abrirHuerfanas());
+  document.getElementById('btn-huerfanas-volver').addEventListener('click', () => volverDesdeHuerfanas());
   document.getElementById('btn-galeria-anterior').addEventListener('click', () => navegarGaleria(-1));
   document.getElementById('btn-galeria-siguiente').addEventListener('click', () => navegarGaleria(1));
   elBtnGaleriaDificil.addEventListener('click', () => toggleDificilImagenActual());
@@ -3010,14 +4610,14 @@
   // Modo 1: evaluación completa (todas las tarjetas, ignora los checkboxes)
   document.getElementById('btn-modo-completo').addEventListener('click', () => {
     if (tarjetasCompletas.length === 0) return;
-    iniciarSesion(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);
+    abrirModalSeleccionModo(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);  // MODIFICADO: gamificación
   });
 
   // Modo 2: repasar las difíciles activas (solo las presentes en este evaluador)
   document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
     const paraRepasar = tarjetasCompletas.filter((t) => esDificil(t));
     if (paraRepasar.length === 0) return;
-    iniciarSesion(modoAleatorio ? mezclar(paraRepasar) : paraRepasar);
+    abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar);  // MODIFICADO: gamificación
   });
 
   // ---------- MODIFICADO: vista previa / gestión de difíciles ----------
@@ -3643,6 +5243,20 @@
     resetPanelesUI();
     tiempoInicioTarjeta = Date.now();
 
+    // NUEVO: Gamificación — reset de variables de sesión. Usa el modo ya
+    // elegido en el modal (configurarModoJuego ya seteó vidasMaximas).
+    puntosSesion = 0;
+    rachaActual = 0;
+    mejorRacha = 0;
+    multiplicadorActual = 1;
+    vidasActuales = vidasMaximas;
+    puntosPorTarjeta = new Array(lista.length).fill(0);
+    pistaGratisUsadaPorTarjeta = new Array(lista.length).fill(false);
+    gameOverDisparado = false;
+    historialGuardadoEstaSesion = false;
+    modoZombie = false;   // NUEVO: una sesión nueva nunca arranca en modo zombie
+    actualizarBarraGamificacion();
+
     mostrarPantalla('estudio');
     iniciarCronometro();
     renderTarjeta();
@@ -4156,6 +5770,15 @@
     resultados[indiceActual] = (resultado === 'bien') ? 'si' : (resultado === 'casi' ? 'casi' : 'no');
     revelado[indiceActual] = true;
 
+    // NUEVO: Gamificación — puntos, racha, vidas y sonido (nunca en modo observador)
+    if (!modoObservador) {
+      procesarResultadoGamificacion(indiceActual, resultados[indiceActual], {
+        conPista: !!pistaMostrada[indiceActual],
+        pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
+        comodinUsado: false,
+      });
+    }
+
     renderTarjeta();
   }
 
@@ -4198,8 +5821,28 @@
       tiempoInicioTarjeta = Date.now();
     }
     resetPanelesUI();
+
+    // NUEVO: Gamificación — si se salta con un Comodín disponible, se
+    // consume del inventario PERSISTENTE (no de la sesión) y esta tarjeta
+    // no penaliza puntos ni vidas.
+    let comodinUsado = false;
+    if (!modoObservador && !modoZombie && resultado === 'saltar' && gamificacion.inventario.comodines > 0) {
+      gamificacion.inventario.comodines--;
+      comodinUsado = true;
+      guardarGamificacion();
+    }
+
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
+
+    // NUEVO: Gamificación — puntos, racha, vidas y sonido (nunca en modo observador)
+    if (!modoObservador) {
+      procesarResultadoGamificacion(indiceActual, resultado, {
+        conPista: !!pistaMostrada[indiceActual],
+        pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
+        comodinUsado: comodinUsado,
+      });
+    }
 
     if (indiceActual < tarjetasSesion.length - 1) {
       indiceActual++;
@@ -4234,6 +5877,17 @@
     // Auto-calificar como "No entendida" solo si todavía no estaba marcada.
     if (resultados[indiceActual] === null) {
       resultados[indiceActual] = 'no';
+
+      // NUEVO: Gamificación — "Mostrar respuesta" auto-califica como 'no',
+      // así que debe disparar exactamente la misma lógica de puntos/racha/
+      // vidas que un "Mal" marcado a mano (nunca en observador).
+      if (!modoObservador) {
+        procesarResultadoGamificacion(indiceActual, 'no', {
+          conPista: !!pistaMostrada[indiceActual],
+          pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
+          comodinUsado: false,
+        });
+      }
     }
 
     // NO avanza automáticamente: el usuario se queda leyendo y avanza con "Siguiente".
@@ -4248,8 +5902,32 @@
     const ev = evaluaciones[indiceActual];
     if (!ev || (ev.resultado !== 'casi' && ev.resultado !== 'mal')) return;
     if (resultados[indiceActual] === 'si') return;
+    const resultadoOriginal = ev.resultado;   // 'casi' o 'mal', antes de la corrección
     resultados[indiceActual] = 'si';
     porComprension[indiceActual] = true;
+
+    // NUEVO: Gamificación — solo ajusta el DELTA de puntos (la tarjeta ya
+    // había sumado puntos como 'casi'/'mal'). No se REESCRIBE el pasado de
+    // racha/vidas (limitación documentada), pero sí se reproduce el sonido
+    // que corresponde a este resultado corregido:
+    // - 'casi' -> 'si': el 'casi' YA había sumado un acierto a la racha en su
+    //   momento (no rompe racha), así que acá NO se vuelve a incrementar
+    //   (evita duplicar el conteo). Solo suena "bien".
+    // - 'mal' -> 'si': el 'mal' original SÍ había roto la racha a 0 sin sumar
+    //   ningún acierto. Como esta tarjeta ahora cuenta como entendida, se
+    //   suma como acierto DE ACÁ EN ADELANTE (no retroactivo): puede subir el
+    //   multiplicador y sonar "racha", además de "bien".
+    ajustarPuntosGamificacion(indiceActual, 'si', {
+      conPista: !!pistaMostrada[indiceActual],
+      pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
+      comodinUsado: false,
+    });
+    if (resultadoOriginal === 'mal') {
+      actualizarRachaTrasResultado('si', false);  // incrementa racha + recalcula multiplicador (puede sonar "racha")
+    }
+    reproducirSonido('bien');
+    actualizarBarraGamificacion();
+
     renderTarjeta();
   }
 
@@ -4620,10 +6298,17 @@
   }
 
   // MODIFICADO: registrar el uso de la pista (baja la nota a 0.5 si la tarjeta
-  // termina como Entendida)
+  // termina como Entendida). NUEVO: si hay Pistas Gratis en el inventario, se
+  // consume 1 y esta tarjeta no penaliza puntos por usar pista (15 en vez de 8).
   elBtnPista.addEventListener('click', () => {
     revelado[indiceActual] = true;
     pistaMostrada[indiceActual] = true;
+    if (!modoObservador && !modoZombie && gamificacion.inventario.pistasGratis > 0) {
+      gamificacion.inventario.pistasGratis--;
+      pistaGratisUsadaPorTarjeta[indiceActual] = true;
+      guardarGamificacion();
+      actualizarBarraGamificacion();
+    }
     renderTarjeta();
   });
 
@@ -4885,10 +6570,10 @@
     elNota.textContent = '🎓 Nota de la sesión: ' + nota.toFixed(1) + ' / 10';
     elNota.className = 'nota-sesion ' + (nota >= 6 ? 'aprobado' : 'desaprobado');
 
-    document.getElementById('conteo-si').textContent = conteos.si;
-    document.getElementById('conteo-casi').textContent = conteos.casi;
-    document.getElementById('conteo-no').textContent = conteos.no;
-    document.getElementById('conteo-saltar').textContent = conteos.saltar;
+    document.getElementById('etq-si').textContent = 'Entendidas (' + conteos.si + ')';
+    document.getElementById('etq-casi').textContent = 'Casi (' + conteos.casi + ')';
+    document.getElementById('etq-no').textContent = 'No entendidas (' + conteos.no + ')';
+    document.getElementById('etq-saltar').textContent = 'Pasadas sin marcar (' + conteos.saltar + ')';
 
     const tiempoTotalMs = tiempos.reduce((a, b) => a + b, 0);
     const promedioMs = tarjetasSesion.length > 0 ? tiempoTotalMs / tarjetasSesion.length : 0;
@@ -4926,6 +6611,10 @@
       iniciarSesion(nuevaLista);
     };
 
+    // NUEVO: Gamificación — filas de puntos/racha/modo + guardado en historial
+    renderResumenGamificacion(nota);
+    guardarHistorialSesion(nota);
+
     mostrarPantalla('resumen');
   }
 
@@ -4946,6 +6635,13 @@
   // resultados; solo las pasadas sin marcar vuelven a quedar pendientes.
   function continuarEnEstaSesion() {
     cerrarModalContinuar();
+    // NUEVO: Gamificación — si esta sesión ya tuvo Game Over (0 vidas) y el
+    // usuario igual elige seguir, entra en "modo zombie": puede seguir viendo
+    // y respondiendo tarjetas, pero puntos/racha/vidas quedan CONGELADOS tal
+    // como estaban en el momento del Game Over (no sigue sumando negativo).
+    if (gameOverDisparado) {
+      modoZombie = true;
+    }
     resultados.forEach((r, i) => {
       if (r === 'saltar') {
         resultados[i] = null;
