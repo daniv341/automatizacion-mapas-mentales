@@ -1,11 +1,11 @@
 {
   "entradas": [
     {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U3.txt",
-      "respuestas": "../guardados/rutas/3 - Estrategias de Control.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\3 - Estrategias de Control.drawio",
+      "recordatorio": "../guardados/recordatorios/recordatorio-U4.txt",
+      "respuestas": "../guardados/rutas/4 - Funcion de Transferencia.txt",
+      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\4 - Funcion de Transferencia.drawio",
       "resaltar": false,
-      "colores": "bordo"
+      "colores": "fucsia"
     }
   ]
 }
