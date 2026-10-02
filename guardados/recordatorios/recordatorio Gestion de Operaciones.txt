@@ -1,0 +1,35 @@
+subT INTRODUCCION
+que garantiza la gestion operaciones? + perfeccion, empresa & 1
+cuantas y que funciones tiene gestion operaciones? + planificacion, calidad, estrategia, aspectos & 5, 6
+cual es su rol principal? + mantener, eficacia & 8
+a que debemos estar atentos? + avances, cuellos & 9
+
+subT MATERIALES Y RECURSOS
+que se debe asignar y gestionar? + presupuesto, recursos & 10
+se puede determinar costo abastecimiento materia prima? + mantener, competitivos, presupuesto & 11, 12
+
+subT INFORMACIÓN
+que se debe realizar y obtener? + investigacion, procesar & 13
+que plan debemos crear y compartir? + acciones, interesadas, acceder & 15, 16
+que habilidad es clave? + interpretar & 17
+como director que cosa es importante? + convertir, comunicar, competencia & 18
+que otra habilidad es clave? + decisiones & 19
+como hacemos precisos nuestros pronosticos? + predicciones, hechos, tendencias, planes & 20, 21, 22
+
+subT PLANIFICACIÓN
+cual es la funcion mas importante de gestion operaciones? + planificacion & 23
+que responsabilidades tiene el rol de gestor operaciones? + inventario, produccion & 24
+como aseguramos el exito financiero? + anticipacion & 26
+que puede abarcar una estrategia en este campo? + supervision, analisis & 29
+cual es el objetivo de gestion estrategica? + garantizar, comerciales & 30
+
+subT PROCESOS
+que debemos tener para mantener eficiencia? + creatividad, financieras & 32, 33
+alcanzamos la mayor calidad en primera ronda? + no todos, rediseños & 34, 35
+que acciones debe tomar primero equipo durante control calidad? + investigacion, estandares & 36
+para que equipo trabaje mas rapido que necesitamos? + optimizas, proceso & 38
+
+subT CADENA SUMINISTROS (SUPPLY CHAIN)
+que beneficio nos da comprender funcion operativa de empresa? + desarrollar, trabajar & 41
+que debemos mantener intacto y porque? + intacta, incovenientes & 44
+que hace tradicionalmente la gestion de operaciones? + interna, suministro & 46

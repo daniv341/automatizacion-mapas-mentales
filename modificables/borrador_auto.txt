@@ -1,0 +1,309 @@
+temaP GESTIÓN OPERACIONES
+
+temaS 
+
+subT INTRODUCCION
+imP la gestión operaciones
+garantiza
+que procesos funcionen a perfección
+dentro de empresas
+
+cuR Imagina a tu empresa
+como 1 aeropuerto
+
+cuR Cada equipo
+es 1 avión que despega
+hacia 1 destino dado
+con sus 
+proyectos e
+ideas 
+a bordo
+
+cuR Como director operaciones,
+eres controlador tránsito aéreo
+que debe asegurarse
+que todos y
+todo 
+funcione correctamente
+
+imP de 1 modo similar,
+gestión operaciones
+es responsable supervisar 
+estas siete funciones
+Planificación operativa
+Finanzas
+Diseño productos
+Control calidad
+Pronósticos
+Estrategia
+Gestión cadena suministro
+
+deF las operaciones 
+que están involucradas 
+en casi todos aspectos 
+una empresa
+
+ejeM Por ejemplo,
+si 1 gerente proyectos 
+quiere contratar 
+a 1 nuevo miembro para equipo,
+equipo operaciones 
+deberá realizar primero
+1 análisis costocuR beneficio o,
+si equipo producción 
+quiere desarrollar
+1 producto nuevo,
+solicitud del cliente deberá
+ser evaluada primero
+por equipo operaciones
+
+imP el rol principal 
+gestión operaciones
+es mantener eficiencia operativa
+
+imP Es importante estar siempre atento
+a últimos avances
+para eliminar cuellos botella y
+mejorar estrategia operativa
+
+
+subT MATERIALES Y RECURSOS
+imP Asignar presupuestos y
+gestionar recursos
+
+preG ¿Podemos determinar 
+costos abastecimiento 
+materias primas?
+caR Puedes mantener 
+bajos costos producción
+al encontrar proveedores
+que ofrezcan productos 
+gran calidad
+a precios competitivos
+
+imP lo ideal
+es poder desarrollar 
+1 producto primer nivel
+que se encuentre
+dentro del presupuesto tu cliente
+
+subT INFORMACIÓN
+deF Realizar una investigación mercado y
+obtener resultados fáciles procesar
+
+deF Compartir resultados
+con equipo diseño de productos
+
+deF Crea 1 plan proyecto central
+para dar seguimiento
+a acciones pendientes,
+a información y
+comentarios relevantes
+
+caR Luego,
+compártelo
+con todas partes interesadas 
+en una herramienta 
+gestión proyectos
+para que todos puedan 
+acceder fácilmente y
+ver cambios en tiempo real
+
+imP la capacidad interpretar datos
+es una habilidad clave 
+en gestión operativa
+
+imP Como director operaciones,
+es importante
+que puedas convertir datos 
+en instrucciones concretas,
+ya que tu objetivo
+debe ser comunicar claramente
+cómo deseas
+que tu producto cumpla
+con estándares del mercado 
+o incluso 
+supere a productos desarrollados
+por competencia
+
+imP la toma decisiones 
+basada en datos 
+es una habilidad muy útil
+para muchas funciones 
+de gestión operaciones
+
+deF la única forma 
+realizar pronósticos precisos 
+es basar tus predicciones
+en hechos
+
+cuR Te recomendamos empezar
+por pronosticar 
+demanda del producto
+analizando tendencias pasadas
+
+cuR Luego,
+comparte conclusiones
+con directores cada departamento
+para que puedan 
+ajustar planes futuros 
+en consecuencia
+
+
+subT PLANIFICACIÓN
+deF la planificación operativa
+es función más importante gestión operaciones
+
+imP Tus responsabilidades en este rol
+pueden incluir
+caR Supervisar producción diaria mercadería
+Gestionar y
+controlar tu inventario
+Supervisar desempeño y
+bienestar miembros del equipo
+Planificar producción
+
+deF la planificación financiera consiste en
+determinar
+si tu empresa
+cuenta
+con presupuesto
+para lograr objetivos y
+metas estratégicos
+
+imP Para asegurar éxito financiero del
+equipo directivo,
+deberás planificar
+con anticipación
+
+preG ¿Qué promociones y
+operaciones marketing debemos planificar
+para este producto?
+
+preG ¿Qué iniciativas venta debemos planificar
+para este producto?
+
+cuR la estrategia
+es 1 campo muy amplio gestión operaciones
+que puede incluir varios aspectos
+como planificación operativa,
+supervisión y
+análisis
+
+imP el objetivo gestión estratégica
+es garantizar
+que decisiones producción
+estén alineadas
+con objetivos comerciales empresa
+
+
+subT PROCESOS
+deF la gestión operaciones
+garantiza que procesos 
+funcionen a perfección
+dentro de empresas
+
+caR Si tienes creatividad,
+te resultará mucho más fácil
+mantener eficiencia 
+procesos comerciales
+
+deF Sin embargo,
+función del director operaciones 
+se limita 
+a gestionar operaciones financieras
+relacionadas
+con proceso producción
+
+cuR No todos productos 
+alcanzarán mejor calidad 
+en primera ronda 
+del proceso producción
+
+cuR Puede tomar varias rondas 
+rediseños y
+modificaciones
+para crear 1 producto calidad
+que cumpla
+con estándares deseados
+
+deF Una de las primeras acciones
+que debe tomar equipo 
+durante proceso control calidad
+es realizar 
+una investigación mercado
+para determinar qué estándares
+se aplican en sector
+
+imP Mejorar sistema producción
+Aumentar productividad
+implementando 
+1 proceso entrega producto
+más eficiente
+
+cuR los miembros del equipo 
+tu empresa 
+pueden trabajar más rápido
+cuando optimizas 
+proceso producción
+
+
+subT CADENA SUMINISTROS (SUPPLY CHAIN)
+deF Como director operaciones,
+seguramente dediques 
+más tiempo a gestionar 
+algunas funciones que otras
+
+ejeM Por ejemplo,
+si tu empresa no provee
+1 producto físico,
+es probable
+que no te centres demasiado
+en gestión cadena suministro
+
+imP Sin embargo,
+comprender 
+cada función operativa 
+una empresa 
+es mejor manera 
+desarrollar tus habilidades y
+prepararte 
+para trabajar en cualquier sector
+
+deF Quizás te preguntes
+por qué gestión cadena suministro
+es una principales funciones 
+gestión operativa
+cuando se trata 
+1 departamento independiente
+
+deF Aunque posiblemente 
+haya 1 equipo responsable 
+cadena suministro,
+problemas cadena suministro 
+relacionados con producción interna 
+estarán 
+bajo tu responsabilidad
+
+imP Sin embargo,
+es importante 
+poder mantener intacta 
+cadena suministro
+ya que si 
+se genera 1 cuello botella 
+en alguna etapas,
+puede causar grandes inconvenientes 
+en todo ciclo
+
+deF Aunque estos dos procesos 
+suelen estar estrechamente relacionados,
+cada equipo 
+se centra en
+sus propias prioridades
+
+cuR Tradicionalmente,
+gestión operativa 
+implica parte interna producción,
+mientras que 
+gestión cadena suministro
+implica parte externa

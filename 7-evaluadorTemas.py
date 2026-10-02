@@ -27,8 +27,9 @@ SIM_SIN_PISTA = 0.5
 SIM_CON_PISTA = 0.6
 
 # ---------------- CONFIG ECONOMÍA (tienda) ----------------
-# Valores provisorios. Referencia: Comodín = 100, Pista Gratis = 50, por lo que
-# el orden de precio queda: pista < segunda oportunidad < escudo < comodín.
+# Valores provisorios. Orden de precio: pista < segunda oportunidad < escudo < comodín.
+PRECIO_COMODIN = 100
+PRECIO_PISTA_GRATIS = 50
 PRECIO_ESCUDO_RACHA = 90
 PRECIO_SEGUNDA_OPORTUNIDAD = 70
 # Fracción de los puntos que se cobra al acertar el reintento de la segunda oportunidad
@@ -787,6 +788,8 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     html = html.replace("__DATOS_JSON__", datos_json)
     html = html.replace("__MODO_ALEATORIO__", "true" if modo_aleatorio else "false")
     html = html.replace("__UMBRAL_CASI__", str(UMBRAL_CASI))
+    html = html.replace("__PRECIO_COMODIN__", str(PRECIO_COMODIN))
+    html = html.replace("__PRECIO_PISTA_GRATIS__", str(PRECIO_PISTA_GRATIS))
     html = html.replace("__PRECIO_ESCUDO_RACHA__", str(PRECIO_ESCUDO_RACHA))
     html = html.replace("__PRECIO_SEGUNDA_OPORTUNIDAD__", str(PRECIO_SEGUNDA_OPORTUNIDAD))
     html = html.replace("__FACTOR_RECOMPENSA_REINTENTO__", str(FACTOR_RECOMPENSA_REINTENTO))
@@ -2247,9 +2250,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   /* NUEVO: Gamificación — Historial */
   .fila-acciones-historial {
     display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 10px;
     margin-bottom: 14px;
-    flex-wrap: wrap;
   }
 
   .lista-historial-scroll {
@@ -2257,6 +2261,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     overflow-y: auto;
     padding-right: 4px;
   }
+
+  /* NUEVO: paginación del historial */
+  .historial-paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 12px;
+  }
+  .historial-paginacion-texto { font-size: 13px; color: #666; font-weight: 600; }
 
   .item-historial {
     border-bottom: 1px solid #eee;
@@ -2356,6 +2370,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .modal-caja-ancha { width: min(92vw, 520px); text-align: left; max-height: 82vh; overflow-y: auto; }
   .sync-seccion-titulo { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #999; margin: 14px 0 6px; text-align: center; }
+  .fila-borrar-evaluador {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px;
+    border-bottom: 1px solid #eee;
+  }
+  .fila-borrar-evaluador:last-child { border-bottom: none; }
+  .fila-borrar-evaluador .nombre-evaluador-borrar { font-size: 13px; color: #333; font-weight: 600; overflow-wrap: anywhere; }
   .fila-backup-zona { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 7px 4px; border-bottom: 1px solid #eee; }
   .fila-backup-zona:last-of-type { border-bottom: none; }
   .fila-backup-zona .zona-nombre { font-size: 13px; font-weight: 700; color: #333; }
@@ -2760,7 +2784,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   <!-- NUEVO: rutas de respuestas.txt no citadas por ninguna tarjeta -->
   <div id="pantalla-huerfanas" style="display:none;">
-    <p class="subtitulo">Rutas de respuestas.txt que no están citadas por ninguna tarjeta</p>
+    <p class="subtitulo" id="huerfanas-subtitulo">Rutas de respuestas.txt que no están citadas por ninguna tarjeta</p>
 
     <div class="zona-buscador sticky-buscador" id="zona-buscador-huerfanas">
       <input type="text" class="input-buscador" id="input-buscador-huerfanas" placeholder="Buscar por ruta o contenido..." autocomplete="off">
@@ -2794,6 +2818,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-secundario" id="btn-historial-borrar-global" title="Vacia las sesiones de TODOS los evaluadores">Borrar historial global</button>
     </div>
     <div class="lista-historial-scroll" id="lista-historial"></div>
+    <div class="historial-paginacion" id="historial-paginacion" style="display:none;"></div>
     <p class="galeria-vacia" id="historial-vacio" style="display:none;">Aún no hay sesiones guardadas.</p>
     <!-- NUEVO: sesiones de otros evaluadores (solo lectura, agrupadas por espacio) -->
     <div class="lista-temas zona-dificiles" id="zona-historial-otros" style="display:none; margin-top:14px;">
@@ -3037,6 +3062,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
     <p class="lista-detalle" id="sync-backup-info"></p>
     <button class="boton-mini" id="btn-vincular-todo" style="width:100%; margin-bottom: 6px;">🔗 Vincular todo a este evaluador</button>
+    <button class="boton-mini boton-mini-peligro" id="btn-borrar-evaluador" style="width:100%; margin-bottom: 6px;">🗑 Borrar un evaluador completo</button>
+    <div id="lista-borrar-evaluador" style="display:none; margin-bottom: 6px;"></div>
 
     <div class="sync-seccion-titulo">Backups individuales</div>
     <div class="fila-backup-zona">
@@ -3208,6 +3235,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const modoAleatorio = __MODO_ALEATORIO__;
   const UMBRAL_CASI = __UMBRAL_CASI__;
   // NUEVO: economía de los consumibles de la tienda (se editan arriba, en el .py)
+  const PRECIO_COMODIN = __PRECIO_COMODIN__;
+  const PRECIO_PISTA_GRATIS = __PRECIO_PISTA_GRATIS__;
   const PRECIO_ESCUDO_RACHA = __PRECIO_ESCUDO_RACHA__;
   const PRECIO_SEGUNDA_OPORTUNIDAD = __PRECIO_SEGUNDA_OPORTUNIDAD__;
   const FACTOR_RECOMPENSA_REINTENTO = __FACTOR_RECOMPENSA_REINTENTO__;
@@ -4380,6 +4409,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       .sort((a, b) => a - b);
   })();
 
+  // NUEVO: indicador de cantidad, en el botón que abre la pantalla y en su
+  // subtítulo (rutasHuerfanas no cambia durante la sesión, así que alcanza
+  // con fijar el texto una sola vez, al cargar).
+  document.getElementById('btn-ver-huerfanas').textContent = '📄 Rutas Huérfanas (' + rutasHuerfanas.length + ')';
+  document.getElementById('huerfanas-subtitulo').textContent =
+    'Rutas de respuestas.txt que no están citadas por ninguna tarjeta (' + rutasHuerfanas.length + ')';
+
   // "Revisar" de rutas huérfanas: EFÍMERO en memoria (igual política que
   // revisarEnMemoria de tarjetas). Objeto paralelo e independiente: nunca se
   // mezcla con revisarEnMemoria ni aparece en "🚩 Para revisar guardadas".
@@ -4903,8 +4939,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // ---------- Tienda ----------
 
   const ITEMS_TIENDA = [
-    { id: 'comodines', icono: '🃏', nombre: 'Comodín', precio: 100, descripcion: 'Salta una tarjeta sin perder vida ni puntos.' },
-    { id: 'pistasGratis', icono: '💡', nombre: 'Pista Gratis', precio: 50, descripcion: 'Revela la pista manteniendo el puntaje máximo si aciertas.' },
+    { id: 'comodines', icono: '🃏', nombre: 'Comodín', precio: PRECIO_COMODIN, descripcion: 'Salta una tarjeta sin perder vida ni puntos.' },
+    { id: 'pistasGratis', icono: '💡', nombre: 'Pista Gratis', precio: PRECIO_PISTA_GRATIS, descripcion: 'Revela la pista manteniendo el puntaje máximo si aciertas.' },
     { id: 'segundasOportunidades', icono: '🔁', nombre: 'Segunda oportunidad', precio: PRECIO_SEGUNDA_OPORTUNIDAD,
       descripcion: 'Si fallás una respuesta escrita, te deja reintentar esa tarjeta una vez. Si acertás cobrás el ' + Math.round(FACTOR_RECOMPENSA_REINTENTO * 100) + ' % de los puntos.' },
     { id: 'escudosRacha', icono: '🛡', nombre: 'Escudo de racha', precio: PRECIO_ESCUDO_RACHA,
@@ -5624,14 +5660,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (historial.length === 0) {
       elListaHistorial.style.display = 'none';
       elHistorialVacio.style.display = 'block';
+      document.getElementById('historial-paginacion').style.display = 'none';   // NUEVO: oculta los controles si no hay nada que paginar
       return;
     }
     elListaHistorial.style.display = 'block';
     elHistorialVacio.style.display = 'none';
 
-    // Más reciente primero
-    for (let i = historial.length - 1; i >= 0; i--) {
-      const entrada = historial[i];
+    // NUEVO: paginación — 15 por página, más reciente primero. Clampea la
+    // página actual por si el total cambió (p. ej. tras borrar sesiones).
+    const masRecientePrimero = historial.slice().reverse();
+    const totalPaginas = Math.max(1, Math.ceil(masRecientePrimero.length / HISTORIAL_POR_PAGINA));
+    if (historialPaginaActual > totalPaginas) historialPaginaActual = totalPaginas;
+    if (historialPaginaActual < 1) historialPaginaActual = 1;
+    const inicioPagina = (historialPaginaActual - 1) * HISTORIAL_POR_PAGINA;
+    const pagina = masRecientePrimero.slice(inicioPagina, inicioPagina + HISTORIAL_POR_PAGINA);
+
+    pagina.forEach((entrada) => {
       const item = document.createElement('div');
       item.className = 'item-historial';
 
@@ -5674,7 +5718,39 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       item.appendChild(detalle);
 
       elListaHistorial.appendChild(item);
-    }
+    });
+
+    renderHistorialPaginacion(totalPaginas);
+  }
+
+  // NUEVO: controles "Anterior / Página X de Y / Siguiente". Solo re-renderiza
+  // la lista (sin scroll propio ni ajeno) para no afectar la posición de vista.
+  function renderHistorialPaginacion(totalPaginas) {
+    const el = document.getElementById('historial-paginacion');
+    el.innerHTML = '';
+    el.style.display = 'flex';
+
+    const btnAnterior = document.createElement('button');
+    btnAnterior.type = 'button';
+    btnAnterior.className = 'boton-mini';
+    btnAnterior.textContent = 'Anterior';
+    btnAnterior.disabled = historialPaginaActual <= 1;
+    btnAnterior.addEventListener('click', () => { historialPaginaActual--; renderHistorial(); });
+
+    const texto = document.createElement('span');
+    texto.className = 'historial-paginacion-texto';
+    texto.textContent = 'Página ' + historialPaginaActual + ' de ' + totalPaginas;
+
+    const btnSiguiente = document.createElement('button');
+    btnSiguiente.type = 'button';
+    btnSiguiente.className = 'boton-mini';
+    btnSiguiente.textContent = 'Siguiente';
+    btnSiguiente.disabled = historialPaginaActual >= totalPaginas;
+    btnSiguiente.addEventListener('click', () => { historialPaginaActual++; renderHistorial(); });
+
+    el.appendChild(btnAnterior);
+    el.appendChild(texto);
+    el.appendChild(btnSiguiente);
   }
 
   // NUEVO: "Sesiones de otros evaluadores" (solo lectura), agrupadas por espacio
@@ -5842,7 +5918,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     evento.target.value = '';   // permite volver a elegir el mismo archivo más adelante
   });
 
+  let historialPaginaActual = 1;   // NUEVO: página actual del historial (1-indexado)
+  const HISTORIAL_POR_PAGINA = 15;
+
   function abrirHistorial() {
+    historialPaginaActual = 1;
     mostrarPantalla('historial');
     renderHistorial();
   }
@@ -6171,6 +6251,114 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         window.alert('Se borraron ' + n + ' entrada(s).');
       }
     }
+  }
+
+
+  // ============================================================
+  // NUEVO: Borrado total de los datos de UN evaluador específico
+  // ============================================================
+
+  // Nombres de "espacio" con sesiones en el historial, sin contar este
+  // evaluador (no puede borrarse a sí mismo) ni las sesiones sin identificar.
+  function espaciosBorrables() {
+    const set = new Set();
+    gamificacion.historial.forEach((s) => {
+      const esp = espacioDeSesion(s);
+      if (esp && esp !== ESPACIO_HASH) set.add(esp);
+    });
+    return Array.from(set).sort();
+  }
+
+  function renderListaBorrarEvaluador() {
+    const el = document.getElementById('lista-borrar-evaluador');
+    const espacios = espaciosBorrables();
+    el.innerHTML = '';
+    if (espacios.length === 0) {
+      const p = document.createElement('p');
+      p.className = 'galeria-vacia';
+      p.textContent = 'No hay otros evaluadores con sesiones guardadas.';
+      el.appendChild(p);
+      return;
+    }
+    espacios.forEach((esp) => {
+      const fila = document.createElement('div');
+      fila.className = 'fila-borrar-evaluador';
+      const nombre = document.createElement('span');
+      nombre.className = 'nombre-evaluador-borrar';
+      nombre.textContent = esp;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'boton-mini boton-mini-peligro';
+      btn.textContent = 'Borrar';
+      btn.addEventListener('click', () => borrarEvaluadorCompleto(esp));
+      fila.appendChild(nombre);
+      fila.appendChild(btn);
+      el.appendChild(fila);
+    });
+  }
+
+  document.getElementById('btn-borrar-evaluador').addEventListener('click', () => {
+    const el = document.getElementById('lista-borrar-evaluador');
+    if (el.style.display === 'block') { el.style.display = 'none'; return; }
+    renderListaBorrarEvaluador();
+    el.style.display = 'block';
+  });
+
+  // Borra TODO lo asociado a 'espacio', salvo puntosTotales e inventario
+  // (son globales). Las entradas por tarjeta/imagen se identifican
+  // recomputando el hash que tendría cada elemento ACTUAL bajo ese espacio
+  // (misma técnica que la revinculación): una entrada de una tarjeta ya
+  // editada o borrada del recordatorio no se puede identificar con certeza
+  // y queda sin tocar, igual que en el resto del sistema de vinculación.
+  function borrarEvaluadorCompleto(espacio) {
+    if (!window.confirm('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes y listas)? ' +
+      'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.')) return;
+
+    // Sesiones
+    gamificacion.historial = gamificacion.historial.filter((s) => espacioDeSesion(s) !== espacio);
+    guardarGamificacion();
+
+    // Difíciles / notas / razones: mismo hash de tarjeta en las tres zonas
+    const hashesTarjetas = new Set(tarjetasCompletas.map((t) => hashTarjetaCon(espacio, t)));
+    hashesTarjetas.forEach((h) => {
+      delete dificiles[h];
+      delete notasLocales[h];
+      delete razonesGuardadas[h];
+    });
+    guardarDificiles();
+    guardarNotas();
+    guardarRazones();
+
+    // Imágenes
+    INDICE_IMAGENES.forEach((c) => {
+      delete datosImagenes[hashImagenCon(espacio, c.ruta, c.indice)];
+    });
+    guardarImagenesStorage();
+
+    // Listas: se quitan los hashes de ese espacio; si una lista queda vacía, se borra
+    listas = listas.filter((lista) => {
+      lista.hashes = lista.hashes.filter((h) => !hashesTarjetas.has(h));
+      return lista.hashes.length > 0;
+    });
+    guardarListas();
+
+    // Claves de backup (timestamp y snapshot) asociadas a ese espacio
+    try {
+      localStorage.removeItem('ultimo_backup_' + espacio);
+      localStorage.removeItem('ultimo_backup_snapshot_' + espacio);
+    } catch (e) {
+      // sin localStorage disponible: nada que limpiar ahí
+    }
+
+    document.getElementById('lista-borrar-evaluador').style.display = 'none';
+    renderHistorial();
+    renderDificilesPreview();
+    renderNotasPreview();
+    renderRazonesPreview();
+    renderImagenesPreview();
+    renderListasGuardadas();
+    actualizarIndicadorSync();
+    window.alert('Se borraron los datos de «' + espacio + '».');
   }
 
   document.getElementById('btn-vincular-todo').addEventListener('click', () => {
@@ -6538,6 +6726,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cerrarDropdownBuscador(elDropdownBuscadorObservador);
     cerrarDropdownBuscador(elDropdownBuscadorGaleria);
     cerrarDropdownBuscador(elDropdownBuscadorHuerfanas);
+  });
+
+  // NUEVO: ESC cierra modales y vuelve atrás en pantallas secundarias.
+  document.addEventListener('keydown', (evento) => {
+    if (evento.key !== 'Escape') return;
+    // 4) Condición de foco: no interferir mientras se escribe en un input/textarea
+    const activo = document.activeElement;
+    if (activo && (activo.tagName === 'INPUT' || activo.tagName === 'TEXTAREA')) return;
+    // 3) Excepción obligatoria: el aviso de Repaso Espaciado nunca se cierra con ESC
+    if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
+
+    // 1) Modales
+    if (elModalSync.classList.contains('abierto')) { elModalSync.classList.remove('abierto'); return; }
+    if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
+    if (elModalGuardarLista.classList.contains('abierto')) { cerrarModalGuardarLista(); return; }
+    if (elModalModo.classList.contains('abierto')) { cancelarModalModo(); return; }
+    if (elModalVincular.classList.contains('abierto')) { cerrarModalVincular(); return; }
+
+    // 2) Pantallas: volver atrás (la tarjeta abierta del observador, antes que su lista)
+    if (elAreaTarjeta.style.display !== 'none' && elAreaTarjeta.classList.contains('observador')) { salirObservador(); return; }
+    if (elPantallaHistorial.style.display !== 'none') { mostrarPantalla('temas'); return; }
+    if (elPantallaTienda.style.display !== 'none') { mostrarPantalla('temas'); return; }
+    if (elPantallaObservador.style.display !== 'none') { mostrarPantalla('temas'); return; }
+    if (elPantallaGaleria.style.display !== 'none') { volverListaDesdeGaleria(); return; }
+    if (elPantallaHuerfanas.style.display !== 'none') { volverDesdeHuerfanas(); return; }
   });
 
   // ---------- Preview en el modo observador: "🖼 Datos de imágenes guardados" ----------

@@ -6,7 +6,7 @@
 <title>Tarjetas de Estudio</title>
 <style>
   :root {
-    --fill-color: #FF0080;
+    --fill-color: #FFFF80;
     --stroke-color: #5C5C5C;
   }
 
@@ -21,6 +21,17 @@
     background: linear-gradient(135deg, #f5f3fa 0%, #eef1f7 100%);
     font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
     color: #333;
+  }
+
+  .nombre-evaluador {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--stroke-color);
+    opacity: 0.75;
+    margin-bottom: 2px;
   }
 
   .contenedor {
@@ -1428,9 +1439,10 @@
   /* NUEVO: Gamificación — Historial */
   .fila-acciones-historial {
     display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 10px;
     margin-bottom: 14px;
-    flex-wrap: wrap;
   }
 
   .lista-historial-scroll {
@@ -1438,6 +1450,16 @@
     overflow-y: auto;
     padding-right: 4px;
   }
+
+  /* NUEVO: paginación del historial */
+  .historial-paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 12px;
+  }
+  .historial-paginacion-texto { font-size: 13px; color: #666; font-weight: 600; }
 
   .item-historial {
     border-bottom: 1px solid #eee;
@@ -1500,6 +1522,130 @@
   .grupo-historial-otro .grupo-detalle { color: #777; font-size: 12px; }
 
   /* NUEVO: modal de revinculacion */
+  /* NUEVO: chip de lista activa en "Elegir temas" */
+  .chip-lista-activa {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 6px 0 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #eef2ff;
+    border: 1.5px solid #c7d2fe;
+    color: #3742a0;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .chip-lista-activa button {
+    background: none;
+    border: none;
+    color: #3742a0;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 6px;
+  }
+
+  .boton-guardar-lista {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+  }
+  .pantalla-resumen { position: relative; }
+
+  .nota-listado { font-size: 12px; color: #888; margin-top: -4px; margin-bottom: 8px; }
+
+  .modal-caja-ancha { width: min(92vw, 520px); text-align: left; max-height: 82vh; overflow-y: auto; }
+  .sync-seccion-titulo { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #999; margin: 14px 0 6px; text-align: center; }
+  .fila-borrar-evaluador {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px;
+    border-bottom: 1px solid #eee;
+  }
+  .fila-borrar-evaluador:last-child { border-bottom: none; }
+  .fila-borrar-evaluador .nombre-evaluador-borrar { font-size: 13px; color: #333; font-weight: 600; overflow-wrap: anywhere; }
+  .fila-backup-zona { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 7px 4px; border-bottom: 1px solid #eee; }
+  .fila-backup-zona:last-of-type { border-bottom: none; }
+  .fila-backup-zona .zona-nombre { font-size: 13px; font-weight: 700; color: #333; }
+  .fila-backup-zona .zona-botones { display: flex; gap: 6px; }
+  .modal-caja-ancha h3, .modal-caja-ancha > p.modal-ayuda { text-align: center; }
+
+  .fila-acciones-listas { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 10px; }
+  .boton-mini-peligro { color: #a4402f; border-color: #f0c4bc; }
+  .boton-lista-fila { width: 100%; margin-bottom: 10px; }
+
+  .fila-lista-guardada {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 4px;
+    border-bottom: 1px solid #eee;
+  }
+  .fila-lista-guardada:last-child { border-bottom: none; }
+  .lista-fila-cabecera { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .fila-lista-guardada .lista-nombre-btn {
+    background: none; border: none; padding: 0; text-align: left; cursor: pointer;
+    font-size: 14px; font-weight: 700; color: #333;
+  }
+  .fila-lista-guardada .lista-nombre-btn:hover { text-decoration: underline; }
+  .fila-lista-guardada .lista-detalle { font-size: 12px; color: #777; }
+  .fila-lista-guardada .lista-aviso { font-size: 12px; color: #a4402f; margin-top: 2px; }
+  .fila-lista-guardada .lista-acciones { display: flex; gap: 10px; margin-left: 28px; }
+  .fila-lista-guardada .lista-acciones button {
+    background: none; border: none; cursor: pointer; font-size: 12px; color: #555; padding: 2px 4px;
+  }
+
+  /* NUEVO: botón 🧠 (Repaso Espaciado) con sus 3 estados */
+  .lista-srs-btn {
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 15px;
+    line-height: 1;
+    padding: 4px 7px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .lista-srs-btn.srs-activo { background: #ff8c1a; border-color: #ff8c1a; color: #fff; }
+  .lista-srs-btn.srs-graduado { background: #2b6fe0; border-color: #2b6fe0; color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; padding: 4px 8px; }
+  .lista-srs-estado { font-size: 11px; color: #a4841c; font-weight: 600; white-space: nowrap; }
+  .lista-ojo-btn { border: none; background: none; font-size: 15px; cursor: pointer; margin-left: auto; padding: 2px 6px; flex-shrink: 0; }
+
+  .lista-ver-tarjetas {
+    max-height: 160px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 6px 8px;
+    margin-top: 2px;
+    margin-left: 28px;
+    font-size: 12px;
+    background: #fafafa;
+  }
+  .lista-ver-tarjeta-item { padding: 3px 0; border-bottom: 1px solid #f0f0f0; }
+  .lista-ver-tarjeta-item:last-child { border-bottom: none; }
+  .lista-ver-tarjeta-item.lista-ver-tarjeta-faltante { color: #999; }
+  .lista-ver-tarjeta-nota { margin-top: 4px; font-size: 11px; color: #999; font-style: italic; }
+
+  /* NUEVO: badge de sesión de Repaso Espaciado */
+  .badge-srs {
+    display: inline-block;
+    background: #ff8c1a;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 6px;
+  }
+
+  #vinc-zonas { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: center; margin-bottom: 10px; text-align: left; }
+  .vinc-zona-item { font-size: 13px; color: #444; display: flex; align-items: center; gap: 4px; cursor: pointer; }
   .vinc-resumen { font-weight: 600; color: #444 !important; }
   .vinc-aviso {
     background: #fff4f2;
@@ -1640,6 +1786,7 @@
 <body>
 
 <div class="contenedor">
+  <div class="nombre-evaluador" id="nombre-evaluador"></div>
   <h1>Tarjetas de Estudio</h1>
 
   <div id="pantalla-temas">
@@ -1648,6 +1795,7 @@
     <!-- NUEVO: Gamificación — accesos a Historial y Tienda -->
     <div class="fila-iconos-gamificacion">
       <button class="boton-icono-circular" id="btn-abrir-historial" title="Historial de sesiones">🕐</button>
+      <button class="boton-icono-circular" id="btn-abrir-listas" title="Listas guardadas">📋</button>
       <button class="boton-icono-circular" id="btn-abrir-tienda" title="Tienda">🛒</button>
     </div>
 
@@ -1655,6 +1803,12 @@
     <div class="zona-buscador" id="zona-buscador-temas">
       <input type="text" class="input-buscador" id="input-buscador-temas" placeholder="Buscar tarjetas o rutas..." autocomplete="off">
       <div class="dropdown-buscador" id="dropdown-buscador-temas"></div>
+    </div>
+
+    <!-- NUEVO: chip de la lista guardada activa (si hay una seleccionada) -->
+    <div class="chip-lista-activa" id="chip-lista-activa" style="display:none;">
+      <span>📋 Usando lista: "<span id="chip-lista-nombre"></span>"</span>
+      <button type="button" id="btn-chip-lista-quitar" title="Quitar lista activa">✕</button>
     </div>
 
     <div class="lista-temas" id="lista-temas"></div>
@@ -1672,12 +1826,7 @@
     <div class="lista-temas zona-dificiles" id="zona-dificiles">
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">☆ Difíciles guardadas</span>
-        <span class="fila-dificiles-botones">
-          <button class="boton-mini" id="btn-exportar-dificiles" title="Descarga las difíciles activas como JSON">Exportar</button>
-          <button class="boton-mini" id="btn-importar-dificiles" title="Agrega las difíciles de un JSON (fusiona con las actuales)">Importar</button>
-        </span>
       </div>
-      <input type="file" id="input-importar" accept=".json,application/json" style="display:none">
       <div id="lista-dificiles"></div>
       <details id="det-dificiles-otros" style="display:none">
         <summary id="suma-dificiles-otros">De otros evaluadores</summary>
@@ -1697,12 +1846,7 @@
     <div class="lista-temas zona-dificiles" id="zona-notas">
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">💡 Notas editadas</span>
-        <span class="fila-dificiles-botones">
-          <button class="boton-mini" id="btn-exportar-notas" title="Descarga tus notas editadas como JSON">Exportar</button>
-          <button class="boton-mini" id="btn-importar-notas" title="Fusiona las notas de un JSON (gana la más reciente)">Importar</button>
-        </span>
       </div>
-      <input type="file" id="input-importar-notas" accept=".json,application/json" style="display:none">
       <details id="det-notas-dif" style="display:none">
         <summary id="suma-notas-dif">Distintas a las del txt</summary>
         <div id="lista-notas-dif"></div>
@@ -1732,12 +1876,7 @@
     <div class="lista-temas zona-dificiles" id="zona-razones">
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">🏷 Razones guardadas</span>
-        <span class="fila-dificiles-botones">
-          <button class="boton-mini" id="btn-exportar-razones">Exportar</button>
-          <button class="boton-mini" id="btn-importar-razones">Importar</button>
-        </span>
       </div>
-      <input type="file" id="input-importar-razones" accept=".json,application/json" style="display:none">
       <details id="det-razones-aqui" style="display:none">
         <summary id="suma-razones-aqui">De este evaluador</summary>
         <div id="lista-razones-aqui"></div>
@@ -1774,12 +1913,7 @@
     <div class="lista-temas zona-dificiles" id="zona-imagenes">
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">🖼 Datos de imágenes guardados</span>
-        <span class="fila-dificiles-botones">
-          <button class="boton-mini" id="btn-exportar-imagenes">Exportar</button>
-          <button class="boton-mini" id="btn-importar-imagenes">Importar</button>
-        </span>
       </div>
-      <input type="file" id="input-importar-imagenes" accept=".json,application/json" style="display:none">
       <details id="det-imagenes" style="display:none">
         <summary id="suma-imagenes">Con nota o marcadas difícil</summary>
         <div id="lista-imagenes-guardadas"></div>
@@ -1868,13 +2002,12 @@
   <div id="pantalla-historial" style="display:none;">
     <p class="subtitulo">Historial de sesiones</p>
     <div class="fila-acciones-historial">
-      <button class="boton-secundario" id="btn-historial-exportar">Exportar historial</button>
-      <button class="boton-secundario" id="btn-historial-importar">Importar historial</button>
-      <input type="file" id="input-importar-historial" accept="application/json,.json" style="display:none;">
+      <button class="boton-secundario" id="btn-abrir-sync" title="Backup completo y respaldos individuales">🔄 Sincronización</button>
       <button class="boton-secundario" id="btn-historial-borrar-este" title="Quita solo las sesiones de este evaluador">Borrar historial de este evaluador</button>
       <button class="boton-secundario" id="btn-historial-borrar-global" title="Vacia las sesiones de TODOS los evaluadores">Borrar historial global</button>
     </div>
     <div class="lista-historial-scroll" id="lista-historial"></div>
+    <div class="historial-paginacion" id="historial-paginacion" style="display:none;"></div>
     <p class="galeria-vacia" id="historial-vacio" style="display:none;">Aún no hay sesiones guardadas.</p>
     <!-- NUEVO: sesiones de otros evaluadores (solo lectura, agrupadas por espacio) -->
     <div class="lista-temas zona-dificiles" id="zona-historial-otros" style="display:none; margin-top:14px;">
@@ -1889,6 +2022,8 @@
   </div>
 
   <div id="area-tarjeta" style="display:none;">
+    <!-- NUEVO: badge visible durante toda una sesión de Repaso Espaciado -->
+    <div class="badge-srs" id="badge-srs" style="display:none;">🧠 Repaso Espaciado</div>
     <div class="barra-superior">
       <!-- NUEVO: Fila 1 — estadísticas de gamificación -->
       <div class="fila-gamificacion" id="fila-gamificacion">
@@ -2007,8 +2142,11 @@
   </div>
 
   <div class="pantalla-resumen" id="pantalla-resumen">
+    <!-- NUEVO: guardar la selección de esta sesión como lista (solo si no venía de una lista) -->
+    <button class="boton-icono-circular boton-guardar-lista" id="btn-resumen-guardar-lista" title="Guardar esta selección como lista" style="display:none;">📋</button>
     <h2>Resumen de la sesión</h2>
     <div class="nota-sesion" id="nota-sesion">🎓 Nota de la sesión: 0.0 / 10</div>
+    <div class="nota-listado" id="nota-listado" style="display:none;"></div>
 
     <!-- NUEVO: Gamificación — puntos, racha y modo jugado -->
     <div class="listas-resumen" id="resumen-gamificacion" style="display:none;">
@@ -2098,11 +2236,134 @@
   </div>
 </div>
 
+<!-- NUEVO: modal de sincronización (backup unificado) -->
+<div class="modal-overlay" id="modal-sync">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>🔄 Sincronización</h3>
+    <p class="modal-ayuda" id="sync-fecha-backup">📅 Sin backups realizados</p>
+    <div class="vinc-aviso" id="sync-aviso-pendientes" style="display:none;">⚠ Hay cambios sin respaldar</div>
+
+    <div class="sync-seccion-titulo">Backup completo</div>
+    <div class="fila-acciones-listas">
+      <button class="boton-mini" id="btn-backup-exportar">📦 Exportar backup</button>
+      <button class="boton-mini" id="btn-backup-importar">📥 Importar backup</button>
+      <input type="file" id="input-backup-importar" accept="application/json,.json" style="display:none;">
+    </div>
+    <p class="lista-detalle" id="sync-backup-info"></p>
+    <button class="boton-mini" id="btn-vincular-todo" style="width:100%; margin-bottom: 6px;">🔗 Vincular todo a este evaluador</button>
+    <button class="boton-mini boton-mini-peligro" id="btn-borrar-evaluador" style="width:100%; margin-bottom: 6px;">🗑 Borrar un evaluador completo</button>
+    <div id="lista-borrar-evaluador" style="display:none; margin-bottom: 6px;"></div>
+
+    <div class="sync-seccion-titulo">Backups individuales</div>
+    <div class="fila-backup-zona">
+      <span class="zona-nombre">⭐ Gamificación</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-historial-exportar">Exportar</button>
+        <button class="boton-mini" id="btn-historial-importar">Importar</button>
+        <input type="file" id="input-importar-historial" accept="application/json,.json" style="display:none;">
+      </span>
+    </div>
+    <div class="fila-backup-zona">
+      <span class="zona-nombre">☆ Difíciles</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-exportar-dificiles" title="Descarga las difíciles activas como JSON">Exportar</button>
+        <button class="boton-mini" id="btn-importar-dificiles" title="Agrega las difíciles de un JSON (fusiona con las actuales)">Importar</button>
+        <input type="file" id="input-importar" accept=".json,application/json" style="display:none">
+      </span>
+    </div>
+    <div class="fila-backup-zona">
+      <span class="zona-nombre">💡 Notas</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-exportar-notas" title="Descarga tus notas editadas como JSON">Exportar</button>
+        <button class="boton-mini" id="btn-importar-notas" title="Fusiona las notas de un JSON (gana la más reciente)">Importar</button>
+        <input type="file" id="input-importar-notas" accept=".json,application/json" style="display:none">
+      </span>
+    </div>
+    <div class="fila-backup-zona">
+      <span class="zona-nombre">🏷 Razones</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-exportar-razones">Exportar</button>
+        <button class="boton-mini" id="btn-importar-razones">Importar</button>
+        <input type="file" id="input-importar-razones" accept=".json,application/json" style="display:none">
+      </span>
+    </div>
+    <div class="fila-backup-zona">
+      <span class="zona-nombre">🖼 Imágenes</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-exportar-imagenes">Exportar</button>
+        <button class="boton-mini" id="btn-importar-imagenes">Importar</button>
+        <input type="file" id="input-importar-imagenes" accept=".json,application/json" style="display:none">
+      </span>
+    </div>
+    <div class="fila-backup-zona">
+      <span class="zona-nombre">📋 Listas</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-listas-exportar">Exportar</button>
+        <button class="boton-mini" id="btn-listas-importar">Importar</button>
+        <input type="file" id="input-listas-importar" accept="application/json" style="display:none;">
+      </span>
+    </div>
+
+    <button class="modal-cancelar" id="btn-sync-cerrar">Cerrar</button>
+  </div>
+</div>
+
+<!-- NUEVO: modal de listas guardadas -->
+<div class="modal-overlay" id="modal-listas">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>📋 Listas guardadas</h3>
+    <p class="modal-ayuda">Guardá selecciones de tarjetas para reutilizarlas sin volver a marcarlas.</p>
+    <div class="fila-acciones-listas">
+      <button class="boton-mini boton-mini-peligro" id="btn-listas-vaciar">Vaciar todas</button>
+    </div>
+    <details id="det-listas-vincular" style="display:none">
+      <summary id="suma-listas-vincular">Hay tarjetas de listas de otros evaluadores</summary>
+      <button class="boton-mini" id="btn-listas-vincular" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
+    </details>
+    <button class="boton-secundario boton-lista-fila" id="btn-lista-ninguna">Ninguna (selección manual)</button>
+    <div id="lista-listas-guardadas"></div>
+    <p class="galeria-vacia" id="listas-vacio" style="display:none;">Todavía no guardaste ninguna lista.</p>
+    <button class="modal-cancelar" id="btn-listas-cerrar">Cerrar</button>
+  </div>
+</div>
+
+<!-- NUEVO: modal para nombrar una lista nueva (desde el resumen) -->
+<div class="modal-overlay" id="modal-guardar-lista">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>📋 Guardar como lista</h3>
+    <p>Nombrá esta selección de tarjetas para poder reutilizarla después.</p>
+    <input type="text" class="input-buscador" id="input-guardar-lista-nombre" placeholder="Nombre de la lista" autocomplete="off">
+    <div class="vinc-aviso" id="guardar-lista-error" style="display:none;"></div>
+    <button class="boton-reiniciar" id="btn-guardar-lista-aceptar">Guardar</button>
+    <button class="modal-cancelar" id="btn-guardar-lista-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<!-- NUEVO: modal de aviso de Repaso Espaciado (listas SRS vencidas) -->
+<div class="modal-overlay" id="modal-srs-aviso">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>🧠 Repaso Espaciado</h3>
+    <p>Tenés tarjetas pendientes de 🧠 Repaso Espaciado:</p>
+    <ul id="srs-aviso-lista" style="text-align:left; padding-left: 22px; font-size: 13px; color: #444; margin: 0 0 8px;"></ul>
+    <button class="boton-reiniciar" id="btn-srs-repasar-ahora">🧠 Repasar ahora</button>
+    <button class="boton-secundario" id="btn-srs-omitir-hoy">⏭ Omitir por hoy</button>
+    <button class="boton-secundario" id="btn-srs-recordar-luego">⏰ Recordar más tarde</button>
+  </div>
+</div>
+
 <!-- NUEVO: modal de revinculación (recuperar datos de un evaluador renombrado) -->
 <div class="modal-overlay" id="modal-vincular">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3 id="vinc-titulo">Vincular a este evaluador</h3>
     <p id="vinc-descripcion"></p>
+    <div id="vinc-zonas" style="display:none;">
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="dificiles" checked> ☆ Difíciles</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="notas" checked> 💡 Notas</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="razones" checked> 🏷 Razones</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="imagenes" checked> 🖼 Imágenes</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="listas" checked> 📋 Listas</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="sesiones" checked> 🕐 Sesiones</label>
+    </div>
     <div id="vinc-campo-espacio" style="display:none;">
       <input type="text" class="input-buscador" id="vinc-espacio" list="vinc-espacios" placeholder="Nombre anterior del recordatorio (sin .txt)" autocomplete="off">
       <datalist id="vinc-espacios"></datalist>
@@ -2163,6 +2424,8 @@
   const modoAleatorio = true;
   const UMBRAL_CASI = 0.5;
   // NUEVO: economía de los consumibles de la tienda (se editan arriba, en el .py)
+  const PRECIO_COMODIN = 100;
+  const PRECIO_PISTA_GRATIS = 50;
   const PRECIO_ESCUDO_RACHA = 90;
   const PRECIO_SEGUNDA_OPORTUNIDAD = 70;
   const FACTOR_RECOMPENSA_REINTENTO = 0.5;
@@ -2292,6 +2555,9 @@
   let reintentoExitoso = new Set();        // subconjunto: el reintento salió bien (recompensa reducida)
   let segundaPendiente = false;            // hay un diálogo Sí/No abierto
   let modoZombie = false;   // NUEVO: si es true, se ignora POR COMPLETO la lógica de puntos/vidas/racha
+  // NUEVO: sesión de Repaso Espaciado en curso. null = sesión normal.
+  // { nombres: string[], hashesPorLista: { nombreLista: Set<hash> } }
+  let srsSesionActiva = null;
   let sonidosActivos = true;   // NUEVO: efímero (no se guarda en localStorage), como pide el prompt
 
   // ---------- MODIFICADO: estado persistente de tarjetas difíciles ----------
@@ -2330,12 +2596,114 @@
     }
   }
 
+  // NUEVO: Listas guardadas de tarjetas (selecciones reutilizables de "Elegir temas")
+  const CLAVE_LISTAS = 'listas_guardadas_v1';
+  let listas = cargarListas();
+  let listaActivaNombre = null;   // null = selección manual; string = nombre de la lista activa
+
+  function cargarListas() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_LISTAS);
+      if (!crudo) return [];
+      const arr = JSON.parse(crudo);
+      return Array.isArray(arr) ? arr.filter((l) => l && typeof l.nombre === 'string' && Array.isArray(l.hashes)) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function guardarListas() {
+    try {
+      localStorage.setItem(CLAVE_LISTAS, JSON.stringify(listas));
+    } catch (e) {
+      // Sin localStorage disponible: quedan solo en memoria de esta sesión
+    }
+  }
+
+  function buscarLista(nombre) {
+    const clave = nombre.toLowerCase();
+    return listas.find((l) => l.nombre.toLowerCase() === clave) || null;
+  }
+
+  // ============================================================
+  // NUEVO: Repaso Espaciado (SRS) — opera a nivel de LISTA completa.
+  // ============================================================
+  const SRS_DEFAULT = { activated: false, startDate: 0, currentLevel: 1, lastReviewDate: 0, graduated: false, snoozeUntil: 0 };
+  const SRS_INTERVALOS_DIAS = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30, 6: 60 };
+  const SRS_MS_DIA = 86400000;
+
+  function calcularIntervaloDias(level) {
+    return SRS_INTERVALOS_DIAS[level] || SRS_INTERVALOS_DIAS[6];
+  }
+
+  // Devuelve el objeto srs de una lista, completando con los valores por
+  // defecto los campos que falten (listas guardadas antes de este cambio, o
+  // importadas de forma incompleta). Muta 'lista.srs' para dejarlo completo.
+  function obtenerSrsLista(lista) {
+    lista.srs = Object.assign({}, SRS_DEFAULT, (lista.srs && typeof lista.srs === 'object') ? lista.srs : {});
+    return lista.srs;
+  }
+
+  // Solo el vencimiento por intervalo (sin mirar snoozeUntil); usado para el
+  // texto "Vencido" del modal de listas.
+  function srsIntervaloVencido(srs) {
+    if (!srs.activated || srs.graduated) return false;
+    return Date.now() >= (srs.lastReviewDate + calcularIntervaloDias(srs.currentLevel) * SRS_MS_DIA);
+  }
+
+  // §4.2: condición completa para que una lista dispare el aviso (intervalo
+  // vencido Y no silenciada Y con tarjetas).
+  function srsListaParaAviso(lista) {
+    const srs = obtenerSrsLista(lista);
+    if (!srs.activated || srs.graduated) return false;
+    if (!lista.hashes || lista.hashes.length === 0) return false;
+    if (Date.now() < (srs.lastReviewDate + calcularIntervaloDias(srs.currentLevel) * SRS_MS_DIA)) return false;
+    if (Date.now() < (srs.snoozeUntil || 0)) return false;
+    return true;
+  }
+
+  // Texto estático (no es un cronómetro en vivo) del "Próximo repaso".
+  function srsTextoProximoRepaso(srs) {
+    const objetivo = srs.lastReviewDate + calcularIntervaloDias(srs.currentLevel) * SRS_MS_DIA;
+    const diasRestantes = (objetivo - Date.now()) / SRS_MS_DIA;
+    if (diasRestantes < 0) return 'Vencido';
+    if (diasRestantes < 1) {
+      const horas = Math.max(1, Math.round(diasRestantes * 24));
+      return 'en ' + horas + ' hora' + (horas === 1 ? '' : 's');
+    }
+    const dias = Math.round(diasRestantes);
+    return 'en ' + dias + ' día' + (dias === 1 ? '' : 's');
+  }
+
+  function srsClaseBoton(srs) {
+    if (srs.graduated) return 'srs-graduado';
+    if (srs.activated) return 'srs-activo';
+    return '';
+  }
+
+  // Validación defensiva de un objeto 'srs' que llega de un import (individual
+  // o de un backup completo), para que datos corruptos no rompan nada.
+  function normalizarSrsImportado(srsRaw) {
+    if (!srsRaw || typeof srsRaw !== 'object') return Object.assign({}, SRS_DEFAULT);
+    const nivel = (typeof srsRaw.currentLevel === 'number' && srsRaw.currentLevel >= 1 && srsRaw.currentLevel <= 6) ? srsRaw.currentLevel : 1;
+    return {
+      activated: !!srsRaw.activated,
+      startDate: typeof srsRaw.startDate === 'number' ? srsRaw.startDate : 0,
+      currentLevel: nivel,
+      lastReviewDate: typeof srsRaw.lastReviewDate === 'number' ? srsRaw.lastReviewDate : 0,
+      graduated: !!srsRaw.graduated,
+      snoozeUntil: typeof srsRaw.snoozeUntil === 'number' ? srsRaw.snoozeUntil : 0,
+    };
+  }
+
+
   // NUEVO: identifica a ESTE evaluador (nombre de su recordatorio.txt). Se mezcla
   // en el hash para que dos evaluadores distintos con una tarjeta de texto
   // idéntico ("primero + segundo" igual) no compartan difíciles, notas ni razones.
   // Regenerar el HTML desde el MISMO recordatorio.txt mantiene este valor igual
   // (no invalida lo ya guardado); solo cambia si el archivo cambia de nombre.
   const ESPACIO_HASH = "2 - Terminologia de los Sistemas de Control";
+  document.getElementById('nombre-evaluador').textContent = ESPACIO_HASH;
 
   function hashTarjetaCon(espacio, t) {
     const base = espacio + '\u0001' + (t.primero || '') + '\u0000' + (t.segundo || '');
@@ -2365,11 +2733,13 @@
     const entrada = dificiles[h];
     if (entrada && entrada.activa) {
       entrada.activa = false;
+      entrada.t = Date.now();   // NUEVO: para saber si hay cambios sin respaldar (§8)
     } else if (entrada) {
       entrada.activa = true;
+      entrada.t = Date.now();   // NUEVO
       if (!modoObservador) reproducirSonido('dificil');  // NUEVO: solo al MARCAR (no al desmarcar), nunca en observador
     } else {
-      dificiles[h] = { p: t.primero || '', s: t.segundo || '', activa: true };
+      dificiles[h] = { p: t.primero || '', s: t.segundo || '', activa: true, t: Date.now() };
       if (!modoObservador) reproducirSonido('dificil');  // NUEVO
     }
     guardarDificiles();
@@ -2489,6 +2859,7 @@
   // NUEVO: Gamificación — elementos DOM
   const elBtnAbrirHistorial = document.getElementById('btn-abrir-historial');
   const elBtnAbrirTienda = document.getElementById('btn-abrir-tienda');
+  const elBtnAbrirListas = document.getElementById('btn-abrir-listas');
   const elPantallaTienda = document.getElementById('pantalla-tienda');
   const elPantallaHistorial = document.getElementById('pantalla-historial');
   const elSaldoTienda = document.getElementById('saldo-tienda');
@@ -2625,6 +2996,7 @@
       renderRevisarGuardadoPreview();  // NUEVO: también al volver por "Volver a temas" del observador
       renderRazonesPreview();    // NUEVO: corrige que no aparecieran al abrir el HTML por primera vez
       actualizarMarcasTemas();   // NUEVO: refresca ★/💡/🏷 sin resetear las casillas marcadas
+      evaluarAvisoSRS();         // NUEVO: §4 — avisa si hay listas de Repaso Espaciado vencidas
     }
     if (nombre !== 'estudio') {
       detenerCronometro();
@@ -2702,6 +3074,49 @@
       marcas.textContent = (esDificil(t) ? '★ ' : '') + (notaEfectivaDe(t) !== '' ? '💡 ' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
     });
   }
+
+  const elChipListaActiva = document.getElementById('chip-lista-activa');
+  const elChipListaNombre = document.getElementById('chip-lista-nombre');
+
+  function actualizarChipListaActiva() {
+    if (listaActivaNombre) {
+      elChipListaNombre.textContent = listaActivaNombre;
+      elChipListaActiva.style.display = 'flex';
+    } else {
+      elChipListaActiva.style.display = 'none';
+    }
+  }
+
+  // Marca en los checkboxes SOLO las tarjetas cuyo hash está en 'hashes'
+  function aplicarSeleccionPorHashes(hashes) {
+    const set = new Set(hashes);
+    elListaTemas.querySelectorAll('input[data-idx]').forEach((c) => {
+      const t = tarjetasCompletas[Number(c.dataset.idx)];
+      c.checked = !!t && set.has(hashTarjeta(t));
+    });
+    elListaTemas.querySelectorAll('.grupo-tema').forEach((det) => actualizarEstadoGrupo(det));
+    actualizarConteoSeleccion();
+  }
+
+  // Selecciona una lista guardada como selección activa de "Elegir temas"
+  function seleccionarListaActiva(nombre) {
+    const lista = buscarLista(nombre);
+    if (!lista) return;
+    listaActivaNombre = lista.nombre;
+    aplicarSeleccionPorHashes(lista.hashes);
+    actualizarChipListaActiva();
+  }
+
+  // "Ninguna": vuelve a la selección manual (todas marcadas, como al abrir el HTML)
+  function quitarListaActiva() {
+    listaActivaNombre = null;
+    elListaTemas.querySelectorAll('input[data-idx]').forEach((c) => { c.checked = true; });
+    elListaTemas.querySelectorAll('.grupo-tema').forEach((det) => actualizarEstadoGrupo(det));
+    actualizarConteoSeleccion();
+    actualizarChipListaActiva();
+  }
+
+  document.getElementById('btn-chip-lista-quitar').addEventListener('click', () => quitarListaActiva());
 
   function construirListaTemas() {
     elListaTemas.innerHTML = '';
@@ -3550,6 +3965,7 @@
   }
 
   function nombreModoJuego(modo) {
+    if (modo === 'srs') return '🧠 SRS';   // NUEVO
     if (modo === 'tryhard') return 'Tryhard';
     if (modo === 'normal') return 'Normal';
     return 'Light';
@@ -3665,11 +4081,18 @@
     const duracionMs = tiempos.reduce((a, b) => a + b, 0);
     gamificacion.historial.push({
       fecha: new Date().toISOString(),
-      modo: modoJuego,
+      modo: srsSesionActiva ? 'srs' : modoJuego,   // NUEVO: distingue las sesiones de Repaso Espaciado
       nota: Math.round(nota * 10) / 10,
       duracion_ms: duracionMs,
       puntos_ganados: modoJuego === 'light' ? 0 : puntosSesion,
       espacio: ESPACIO_HASH,   // NUEVO: de que evaluador es esta sesion
+      // NUEVO: hashes de las tarjetas de esta sesion (permite comparar con una lista
+      // guardada, incluso retroactivamente si la lista se crea después de jugar)
+      tarjetas: tarjetasSesion.map((t) => hashTarjeta(t)),
+      // NUEVO: nombre de la lista activa, o de la(s) lista(s) del Repaso Espaciado
+      listado: srsSesionActiva
+        ? (srsSesionActiva.nombres.length === 1 ? srsSesionActiva.nombres[0] : 'SRS Múltiple')
+        : (listaActivaNombre || ''),
     });
     if (modoJuego !== 'light') {
       gamificacion.puntosTotales += puntosSesion;
@@ -3698,8 +4121,8 @@
   // ---------- Tienda ----------
 
   const ITEMS_TIENDA = [
-    { id: 'comodines', icono: '🃏', nombre: 'Comodín', precio: 100, descripcion: 'Salta una tarjeta sin perder vida ni puntos.' },
-    { id: 'pistasGratis', icono: '💡', nombre: 'Pista Gratis', precio: 50, descripcion: 'Revela la pista manteniendo el puntaje máximo si aciertas.' },
+    { id: 'comodines', icono: '🃏', nombre: 'Comodín', precio: PRECIO_COMODIN, descripcion: 'Salta una tarjeta sin perder vida ni puntos.' },
+    { id: 'pistasGratis', icono: '💡', nombre: 'Pista Gratis', precio: PRECIO_PISTA_GRATIS, descripcion: 'Revela la pista manteniendo el puntaje máximo si aciertas.' },
     { id: 'segundasOportunidades', icono: '🔁', nombre: 'Segunda oportunidad', precio: PRECIO_SEGUNDA_OPORTUNIDAD,
       descripcion: 'Si fallás una respuesta escrita, te deja reintentar esa tarjeta una vez. Si acertás cobrás el ' + Math.round(FACTOR_RECOMPENSA_REINTENTO * 100) + ' % de los puntos.' },
     { id: 'escudosRacha', icono: '🛡', nombre: 'Escudo de racha', precio: PRECIO_ESCUDO_RACHA,
@@ -3774,6 +4197,623 @@
 
   // ---------- Historial ----------
 
+
+  // ============================================================
+  // NUEVO: modal "Listas guardadas"
+  // ============================================================
+  const elModalListas = document.getElementById('modal-listas');
+  const elListaListasGuardadas = document.getElementById('lista-listas-guardadas');
+  const elListasVacio = document.getElementById('listas-vacio');
+
+  function hashesVigentesActuales() {
+    return new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
+  }
+
+  // Hashes que HOY no corresponden a ninguna tarjeta actual, pero que SÍ
+  // corresponderían a alguna bajo el nombre viejo de un evaluador que
+  // aparece en el historial (candidato a "Vincular a este evaluador", §14).
+  // Existen para que la limpieza automática de abajo no los borre antes de
+  // que el usuario tenga chance de migrarlos.
+  function hashesRecuperablesDeOtroEspacio() {
+    const recuperables = new Set();
+    const candidatos = new Set();
+    gamificacion.historial.forEach((s) => {
+      const esp = espacioDeSesion(s);
+      if (esp && esp !== ESPACIO_HASH) candidatos.add(esp);
+    });
+    candidatos.forEach((esp) => {
+      tarjetasCompletas.forEach((t) => {
+        const h = hashTarjetaCon(esp, t);
+        if (h !== hashTarjeta(t)) recuperables.add(h);
+      });
+    });
+    return recuperables;
+  }
+
+  // 12.2: al entrar al modal se limpian automáticamente los hashes que ya no
+  // corresponden a ninguna tarjeta actual NI a una recuperable (ver arriba);
+  // si una lista queda vacía, se borra.
+  function limpiarListasContraTarjetasActuales() {
+    const vigentes = hashesVigentesActuales();
+    const recuperables = hashesRecuperablesDeOtroEspacio();
+    let cambio = false;
+    listas = listas.filter((lista) => {
+      const filtrados = lista.hashes.filter((h) => vigentes.has(h) || recuperables.has(h));
+      if (filtrados.length !== lista.hashes.length) {
+        cambio = true;
+        if (filtrados.length === 0) return false;   // lista vacía: se borra
+        lista.hashes = filtrados;
+        lista.modificada = Date.now();
+      }
+      return true;
+    });
+    if (cambio) guardarListas();
+  }
+
+  function formatearFechaLista(ms) {
+    try { return new Date(ms).toLocaleString(); } catch (e) { return String(ms); }
+  }
+
+  // Nombres de listas con el 👁 desplegado en este momento (solo en memoria;
+  // se pierde al recargar, como el resto del estado de UI del modal).
+  const listasVerTarjetasExpandido = new Set();
+
+  // 👁: arma la vista con scroll interno de las tarjetas de una lista. Las
+  // listas NO guardan el texto de la tarjeta, solo el hash — si una tarjeta
+  // ya no existe no hay forma de mostrar qué decía, solo que falta.
+  function construirVistaTarjetasLista(lista) {
+    const cont = document.createElement('div');
+    cont.className = 'lista-ver-tarjetas';
+    let faltantes = 0;
+    lista.hashes.forEach((h) => {
+      const t = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
+      const item = document.createElement('div');
+      item.className = 'lista-ver-tarjeta-item';
+      if (t) {
+        item.textContent = armarRenglon(t);
+      } else {
+        faltantes++;
+        item.classList.add('lista-ver-tarjeta-faltante');
+        const s = document.createElement('s');
+        s.textContent = '(tarjeta original ya no existe)';
+        item.appendChild(s);
+      }
+      cont.appendChild(item);
+    });
+    if (faltantes > 0) {
+      const nota = document.createElement('div');
+      nota.className = 'lista-ver-tarjeta-nota';
+      nota.textContent = '(' + faltantes + ' tarjeta' + (faltantes === 1 ? '' : 's') + ' originales ya no existen)';
+      cont.appendChild(nota);
+    }
+    return cont;
+  }
+
+  // Botón 🧠: blanco (inactivo) -> naranja (activo) -> [fallo] -> blanco;
+  // y azul (graduado) -> confirm -> naranja de nuevo en nivel 1.
+  function alternarSrsLista(nombre) {
+    const lista = buscarLista(nombre);
+    if (!lista) return;
+    const srs = obtenerSrsLista(lista);
+    if (srs.graduated) {
+      if (!window.confirm('¿Reiniciar el progreso SRS de esta lista?')) return;
+      srs.currentLevel = 1;
+      srs.lastReviewDate = Date.now();
+      srs.graduated = false;
+      srs.activated = true;
+      srs.snoozeUntil = 0;
+    } else if (srs.activated) {
+      // Activo -> inactivo: se borra todo el historial de progreso (vuelve a los valores por defecto)
+      lista.srs = Object.assign({}, SRS_DEFAULT);
+    } else {
+      // Inactivo -> activo
+      srs.activated = true;
+      srs.startDate = Date.now();
+      srs.currentLevel = 1;
+      srs.lastReviewDate = Date.now();
+      srs.graduated = false;
+      srs.snoozeUntil = 0;
+    }
+    lista.modificada = Date.now();
+    guardarListas();
+    renderListasGuardadas();
+  }
+
+  function renderListasGuardadas() {
+    // NUEVO (tarea 3): la cantidad "de otros evaluadores" se mide ANTES de la
+    // limpieza automática de huérfanas (§12.2 las descarta enseguida), para
+    // que el botón de vincular sea visible al menos en el render donde
+    // realmente aparecieron esas tarjetas ajenas.
+    const nOtrasListas = contarOtrasListas();
+    document.getElementById('det-listas-vincular').style.display = nOtrasListas > 0 ? 'block' : 'none';
+    document.getElementById('suma-listas-vincular').textContent = 'Hay tarjetas de listas de otros evaluadores (' + nOtrasListas + ')';
+
+    limpiarListasContraTarjetasActuales();
+    elListaListasGuardadas.innerHTML = '';
+    const ordenadas = listas.slice().sort((a, b) => b.creada - a.creada);   // más reciente primero
+
+    if (ordenadas.length === 0) {
+      elListasVacio.style.display = 'block';
+    } else {
+      elListasVacio.style.display = 'none';
+    }
+
+    ordenadas.forEach((lista) => {
+      const srs = obtenerSrsLista(lista);
+      const fila = document.createElement('div');
+      fila.className = 'fila-lista-guardada';
+
+      // ---- Cabecera: 🧠 + nombre + estado SRS + 👁 ----
+      const cabecera = document.createElement('div');
+      cabecera.className = 'lista-fila-cabecera';
+
+      const btnSrs = document.createElement('button');
+      btnSrs.type = 'button';
+      btnSrs.className = 'lista-srs-btn ' + srsClaseBoton(srs);
+      btnSrs.textContent = srs.graduated ? '🎓 Reiniciar SRS' : '🧠';
+      btnSrs.title = srs.graduated ? 'Reiniciar el progreso de Repaso Espaciado'
+        : (srs.activated ? 'Repaso Espaciado activo (tocar para desactivarlo)' : 'Activar Repaso Espaciado para esta lista');
+      btnSrs.addEventListener('click', () => alternarSrsLista(lista.nombre));
+      cabecera.appendChild(btnSrs);
+
+      const btnNombre = document.createElement('button');
+      btnNombre.type = 'button';
+      btnNombre.className = 'lista-nombre-btn';
+      btnNombre.textContent = lista.nombre + (listaActivaNombre === lista.nombre ? ' (activa)' : '');
+      btnNombre.addEventListener('click', () => {
+        seleccionarListaActiva(lista.nombre);
+        cerrarModalListas();
+      });
+      cabecera.appendChild(btnNombre);
+
+      if (srs.graduated) {
+        const estado = document.createElement('span');
+        estado.className = 'lista-srs-estado';
+        estado.textContent = '🎓 Experto';
+        cabecera.appendChild(estado);
+      } else if (srs.activated) {
+        const estado = document.createElement('span');
+        estado.className = 'lista-srs-estado';
+        estado.textContent = 'Nivel ' + srs.currentLevel + ' · Próximo: ' + srsTextoProximoRepaso(srs);
+        cabecera.appendChild(estado);
+      }
+
+      const btnOjo = document.createElement('button');
+      btnOjo.type = 'button';
+      btnOjo.className = 'lista-ojo-btn';
+      btnOjo.title = 'Ver tarjetas de esta lista';
+      btnOjo.textContent = '👁';
+      btnOjo.addEventListener('click', () => {
+        if (listasVerTarjetasExpandido.has(lista.nombre)) listasVerTarjetasExpandido.delete(lista.nombre);
+        else listasVerTarjetasExpandido.add(lista.nombre);
+        renderListasGuardadas();
+      });
+      cabecera.appendChild(btnOjo);
+
+      fila.appendChild(cabecera);
+
+      // ---- Acciones (Renombrar / Borrar), debajo del título ----
+      const acciones = document.createElement('div');
+      acciones.className = 'lista-acciones';
+      const btnRenombrar = document.createElement('button');
+      btnRenombrar.type = 'button';
+      btnRenombrar.textContent = '✏️ Renombrar';
+      btnRenombrar.addEventListener('click', () => renombrarLista(lista.nombre));
+      const btnBorrar = document.createElement('button');
+      btnBorrar.type = 'button';
+      btnBorrar.textContent = '🗑️ Borrar';
+      btnBorrar.addEventListener('click', () => borrarLista(lista.nombre));
+      acciones.appendChild(btnRenombrar);
+      acciones.appendChild(btnBorrar);
+      fila.appendChild(acciones);
+
+      // ---- Cantidad y fechas, debajo de las acciones ----
+      const detalle = document.createElement('div');
+      detalle.className = 'lista-detalle';
+      detalle.textContent = lista.hashes.length + ' tarjeta(s) · creada: ' + formatearFechaLista(lista.creada) +
+        ' · modificada: ' + formatearFechaLista(lista.modificada);
+      fila.appendChild(detalle);
+
+      // ---- 👁 Ver tarjetas (con scroll interno) ----
+      if (listasVerTarjetasExpandido.has(lista.nombre)) {
+        fila.appendChild(construirVistaTarjetasLista(lista));
+      }
+
+      elListaListasGuardadas.appendChild(fila);
+    });
+  }
+
+  function abrirModalListas() {
+    renderListasGuardadas();
+    elModalListas.classList.add('abierto');
+  }
+  function cerrarModalListas() {
+    elModalListas.classList.remove('abierto');
+  }
+  elBtnAbrirListas.addEventListener('click', () => abrirModalListas());
+  document.getElementById('btn-listas-cerrar').addEventListener('click', () => cerrarModalListas());
+  document.getElementById('btn-lista-ninguna').addEventListener('click', () => {
+    quitarListaActiva();
+    cerrarModalListas();
+  });
+
+  function renombrarLista(nombreActual) {
+    const lista = buscarLista(nombreActual);
+    if (!lista) return;
+    const nuevo = window.prompt('Nuevo nombre para la lista:', lista.nombre);
+    if (nuevo === null) return;
+    const limpio = nuevo.trim();
+    if (!limpio) { window.alert('El nombre no puede estar vacío.'); return; }
+    if (limpio.toLowerCase() !== lista.nombre.toLowerCase() && buscarLista(limpio)) {
+      window.alert('Ya existe una lista llamada «' + limpio + '».');
+      return;
+    }
+    if (listaActivaNombre === lista.nombre) listaActivaNombre = limpio;
+    lista.nombre = limpio;
+    lista.modificada = Date.now();
+    guardarListas();
+    renderListasGuardadas();
+    actualizarChipListaActiva();
+  }
+
+  function borrarLista(nombre) {
+    if (!window.confirm('¿Borrar la lista «' + nombre + '»? Las sesiones guardadas que la usaron se conservan (mostrarán el nombre tachado).')) return;
+    listas = listas.filter((l) => l.nombre !== nombre);
+    guardarListas();
+    if (listaActivaNombre === nombre) quitarListaActiva();
+    renderListasGuardadas();
+  }
+
+  document.getElementById('btn-listas-vaciar').addEventListener('click', () => {
+    if (listas.length === 0) return;
+    if (!window.confirm('¿Vaciar TODAS las listas guardadas (' + listas.length + ')? No se puede deshacer.')) return;
+    listas = [];
+    guardarListas();
+    if (listaActivaNombre) quitarListaActiva();
+    renderListasGuardadas();
+  });
+
+  // ---------- Exportar / Importar ----------
+  document.getElementById('btn-listas-exportar').addEventListener('click', () => {
+    const salida = { version: 1, listas: listas };
+    const blob = new Blob([JSON.stringify(salida, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'listas_guardadas.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  const elInputListasImportar = document.getElementById('input-listas-importar');
+  document.getElementById('btn-listas-importar').addEventListener('click', () => elInputListasImportar.click());
+  elInputListasImportar.addEventListener('change', () => {
+    const archivo = elInputListasImportar.files[0];
+    elInputListasImportar.value = '';
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+      let datos;
+      try { datos = JSON.parse(lector.result); } catch (e) { window.alert('El archivo no es un JSON válido.'); return; }
+      const entrantes = (datos && Array.isArray(datos.listas)) ? datos.listas : null;
+      if (!entrantes) { window.alert('El archivo no tiene el formato esperado ({ "listas": [...] }).'); return; }
+      const r = fusionarListasEntrantes(entrantes);
+      window.alert('Importación de listas: ' + r.nuevas + ' nueva(s), ' + r.actualizadas + ' actualizada(s), ' + r.conservadas + ' conservada(s).');
+    };
+    lector.readAsText(archivo);
+  });
+
+  // NUEVO: fusiona listas entrantes (individual o dentro de un backup completo).
+  // Mismo nombre (case-insensitive): gana la más reciente por 'modificada'. Nombre
+  // nuevo: se agrega.
+  function fusionarListasEntrantes(entrantes) {
+    let nuevas = 0, actualizadas = 0, conservadas = 0;
+    entrantes.forEach((imp) => {
+      if (!imp || typeof imp.nombre !== 'string' || !Array.isArray(imp.hashes)) return;
+      const existente = buscarLista(imp.nombre);
+      const impModificada = typeof imp.modificada === 'number' ? imp.modificada : 0;
+      if (!existente) {
+        listas.push({
+          nombre: imp.nombre,
+          hashes: imp.hashes.slice(),
+          creada: typeof imp.creada === 'number' ? imp.creada : Date.now(),
+          modificada: impModificada || Date.now(),
+          srs: normalizarSrsImportado(imp.srs),   // NUEVO: el progreso de Repaso Espaciado viaja con la lista
+        });
+        nuevas++;
+      } else if (impModificada > existente.modificada) {
+        existente.nombre = imp.nombre;
+        existente.hashes = imp.hashes.slice();
+        existente.creada = typeof imp.creada === 'number' ? imp.creada : existente.creada;
+        existente.modificada = impModificada;
+        existente.srs = normalizarSrsImportado(imp.srs);   // NUEVO
+        actualizadas++;
+      } else {
+        conservadas++;
+      }
+    });
+    guardarListas();
+    renderListasGuardadas();
+    actualizarChipListaActiva();
+    return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas };
+  }
+
+  // ---------- Guardar una lista nueva (desde el resumen) ----------
+  const elBtnResumenGuardarLista = document.getElementById('btn-resumen-guardar-lista');
+  const elModalGuardarLista = document.getElementById('modal-guardar-lista');
+  const elInputGuardarListaNombre = document.getElementById('input-guardar-lista-nombre');
+  const elGuardarListaError = document.getElementById('guardar-lista-error');
+
+  function mismoConjuntoHashes(a, b) {
+    if (a.length !== b.length) return false;
+    const set = new Set(a);
+    return b.every((h) => set.has(h));
+  }
+
+  function abrirModalGuardarLista() {
+    elInputGuardarListaNombre.value = '';
+    elGuardarListaError.style.display = 'none';
+    elModalGuardarLista.classList.add('abierto');
+    elInputGuardarListaNombre.focus();
+  }
+  function cerrarModalGuardarLista() {
+    elModalGuardarLista.classList.remove('abierto');
+  }
+  elBtnResumenGuardarLista.addEventListener('click', () => abrirModalGuardarLista());
+  document.getElementById('btn-guardar-lista-cancelar').addEventListener('click', () => cerrarModalGuardarLista());
+  elInputGuardarListaNombre.addEventListener('keydown', (e) => { if (e.key === 'Enter') aceptarGuardarLista(); });
+
+  // 8.3: asocia retroactivamente las sesiones "Sin listado" cuyo conjunto de
+  // tarjetas coincide 100% con la lista recién guardada (incluye, de paso, a
+  // la sesión que se acaba de guardar en el historial).
+  function asociarRetroactivamente(lista) {
+    let n = 0;
+    gamificacion.historial.forEach((s) => {
+      if (s.listado) return;   // ya tenía un listado asignado: no se toca
+      if (!Array.isArray(s.tarjetas)) return;   // sesiones viejas sin este dato: no se puede comparar
+      if (mismoConjuntoHashes(s.tarjetas, lista.hashes)) { s.listado = lista.nombre; n++; }
+    });
+    if (n > 0) guardarGamificacion();
+  }
+
+  function aceptarGuardarLista() {
+    const nombre = elInputGuardarListaNombre.value.trim();
+    if (!nombre) { elGuardarListaError.textContent = 'El nombre no puede estar vacío.'; elGuardarListaError.style.display = 'block'; return; }
+    if (buscarLista(nombre)) { elGuardarListaError.textContent = 'Ya existe una lista llamada «' + nombre + '».'; elGuardarListaError.style.display = 'block'; return; }
+    const hashes = tarjetasSesion.map((t) => hashTarjeta(t));
+    if (listas.some((l) => mismoConjuntoHashes(l.hashes, hashes))) {
+      elGuardarListaError.textContent = 'Ya existe una lista con exactamente estas mismas tarjetas.';
+      elGuardarListaError.style.display = 'block';
+      return;
+    }
+    const ahora = Date.now();
+    const lista = { nombre: nombre, hashes: hashes, creada: ahora, modificada: ahora, srs: Object.assign({}, SRS_DEFAULT) };
+    listas.push(lista);
+    guardarListas();
+    asociarRetroactivamente(lista);
+    cerrarModalGuardarLista();
+    elBtnResumenGuardarLista.style.display = 'none';
+    renderResumenListado();
+  }
+  document.getElementById('btn-guardar-lista-aceptar').addEventListener('click', () => aceptarGuardarLista());
+
+  // ---------- Estadísticas del listado en el resumen (§11) ----------
+  const elNotaListado = document.getElementById('nota-listado');
+
+  function renderResumenListado() {
+    const nombre = listaActivaNombre;
+    if (!nombre || !buscarLista(nombre)) { elNotaListado.style.display = 'none'; return; }
+    const sesiones = gamificacion.historial.filter((s) => esSesionLocal(s) && s.listado === nombre);
+    if (sesiones.length === 0) { elNotaListado.style.display = 'none'; return; }
+    const ordenadas = sesiones.slice().sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+    const mejor = Math.max(...ordenadas.map((s) => Number(s.nota) || 0));
+    let texto = '📋 Listado "' + nombre + '": mejor ' + mejor.toFixed(1);
+    if (ordenadas.length > 1) {
+      const anterior = Number(ordenadas[ordenadas.length - 2].nota) || 0;
+      texto += ' · anterior ' + anterior.toFixed(1);
+    }
+    elNotaListado.textContent = texto;
+    elNotaListado.style.display = 'block';
+  }
+
+
+  // ============================================================
+  // NUEVO: Backup / Sincronización unificado
+  // ============================================================
+
+  // §7: timestamp del último backup, uno por evaluador. Se guarda como el
+  // valor plano que pide el prompt (Date.now()); el snapshot de puntos e
+  // inventario para §8 vive en una clave aparte (ver nota en marcarUltimoBackup).
+  function claveUltimoBackup() { return 'ultimo_backup_' + ESPACIO_HASH; }
+  function claveSnapshotBackup() { return 'ultimo_backup_snapshot_' + ESPACIO_HASH; }
+
+  function obtenerUltimoBackup() {
+    try {
+      const v = localStorage.getItem(claveUltimoBackup());
+      return v ? Number(v) : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function obtenerSnapshotBackup() {
+    try {
+      const crudo = localStorage.getItem(claveSnapshotBackup());
+      return crudo ? JSON.parse(crudo) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Se llama al exportar o importar un BACKUP COMPLETO (nunca en los
+  // individuales, ver §7). Además del timestamp, guarda una foto de
+  // puntosTotales/inventario: es lo que permite saber si "los puntos
+  // cambiaron desde el último backup" (§8) sin agregar un campo 't' a algo
+  // que no lo tiene.
+  function marcarUltimoBackup() {
+    try {
+      localStorage.setItem(claveUltimoBackup(), String(Date.now()));
+      localStorage.setItem(claveSnapshotBackup(), JSON.stringify({
+        puntosTotales: gamificacion.puntosTotales,
+        inventario: Object.assign({}, gamificacion.inventario),
+      }));
+    } catch (e) {
+      // sin localStorage disponible: el indicador simplemente no podrá saberlo
+    }
+    actualizarIndicadorSync();
+  }
+
+  // §8: hay al menos una entrada con t (o equivalente) posterior al último backup.
+  function hayCambiosSinRespaldar() {
+    const ultimo = obtenerUltimoBackup();
+    if (Object.keys(dificiles).some((h) => (dificiles[h].t || 0) > ultimo)) return true;
+    if (Object.keys(notasLocales).some((h) => (notasLocales[h].t || 0) > ultimo)) return true;
+    if (Object.keys(razonesGuardadas).some((h) => (razonesGuardadas[h].t || 0) > ultimo)) return true;
+    if (Object.keys(datosImagenes).some((h) => (datosImagenes[h].t || 0) > ultimo)) return true;
+    if (listas.some((l) => (l.modificada || 0) > ultimo)) return true;
+    if (gamificacion.historial.some((s) => {
+      const f = Date.parse(s.fecha);
+      return !isNaN(f) && f > ultimo;
+    })) return true;
+    // Puntos/inventario: comparados contra la foto tomada en el último backup
+    // (comprar en la tienda, por ejemplo, no deja rastro en ninguna otra zona).
+    const foto = obtenerSnapshotBackup();
+    if (!foto) return ultimo > 0 ? false : (gamificacion.puntosTotales > 0);   // nunca hubo backup: solo avisa si ya hay algo que perder
+    if (gamificacion.puntosTotales !== foto.puntosTotales) return true;
+    const inv = gamificacion.inventario, invFoto = foto.inventario || {};
+    if (Object.keys(inv).some((k) => (inv[k] || 0) !== (invFoto[k] || 0))) return true;
+    return false;
+  }
+
+  function actualizarIndicadorSync() {
+    const ultimo = obtenerUltimoBackup();
+    document.getElementById('sync-fecha-backup').textContent = ultimo > 0
+      ? '📅 Último backup: ' + formatearFechaLista(ultimo)
+      : '📅 Sin backups realizados';
+    document.getElementById('sync-aviso-pendientes').style.display = hayCambiosSinRespaldar() ? 'block' : 'none';
+  }
+
+  // §4: arma el objeto completo de backup, reutilizando exactamente las
+  // mismas funciones que arman cada JSON individual.
+  function construirBackupCompleto() {
+    return {
+      version: 1,
+      evaluador: ESPACIO_HASH,
+      timestamp: Date.now(),
+      gamificacion: construirExportGamificacion(),
+      dificiles: construirExportDificiles(),
+      notas: construirExportNotas(),
+      razones: construirExportRazones(),
+      imagenes: construirExportImagenes(),
+      listas: { version: 1, listas: listas },
+    };
+  }
+
+  function exportarBackupCompleto() {
+    const salida = construirBackupCompleto();
+    const blob = new Blob([JSON.stringify(salida, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'backup_' + ESPACIO_HASH + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    marcarUltimoBackup();
+    document.getElementById('sync-backup-info').textContent = 'Backup exportado: ' + new Date().toLocaleString() + '.';
+  }
+
+  // §6: fusiona cada sección presente reutilizando las MISMAS reglas de
+  // fusión que ya usa cada JSON individual. Secciones ausentes se ignoran
+  // (§10: un backup viejo sin alguna sección no rompe nada).
+  function importarBackupCompleto(datos) {
+    if (!datos || typeof datos !== 'object') return { error: 'El archivo no es un JSON válido.' };
+    if (typeof datos.version !== 'number') return { error: 'El archivo no tiene el formato esperado (falta "version").' };
+    if (datos.version !== 1) return { error: 'Versión de backup desconocida (' + datos.version + ').' };
+
+    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas'];
+    const presentes = ZONAS.filter((z) => datos[z] !== undefined && datos[z] !== null);
+    if (presentes.length === 0) return { error: 'El archivo no tiene ninguna sección reconocida.' };
+
+    let zonasActualizadas = 0, zonasSinCambios = 0;
+    const contar = (huboCambios) => { huboCambios ? zonasActualizadas++ : zonasSinCambios++; };
+
+    if (datos.gamificacion) {
+      const antes = { puntos: gamificacion.puntosTotales, inv: JSON.stringify(gamificacion.inventario), n: gamificacion.historial.length };
+      fusionarGamificacionImportada(datos.gamificacion);
+      contar(gamificacion.puntosTotales !== antes.puntos || JSON.stringify(gamificacion.inventario) !== antes.inv || gamificacion.historial.length !== antes.n);
+    }
+    if (datos.dificiles) {
+      const lista = Array.isArray(datos.dificiles) ? datos.dificiles : (datos.dificiles.tarjetas || []);
+      const r = fusionarDificilesLista(lista);
+      contar(r.nuevas > 0);
+    }
+    if (datos.notas) {
+      const lista = Array.isArray(datos.notas) ? datos.notas : (datos.notas.notas || []);
+      const r = fusionarNotasLista(lista);
+      contar(r.nuevas > 0 || r.actualizadas > 0);
+    }
+    if (datos.razones) {
+      const lista = Array.isArray(datos.razones) ? datos.razones : (datos.razones.razones || []);
+      const r = fusionarRazonesLista(lista);
+      contar(r.nuevas > 0 || r.actualizadas > 0);
+    }
+    if (datos.imagenes) {
+      const lista = Array.isArray(datos.imagenes) ? datos.imagenes : (datos.imagenes.imagenes || []);
+      const r = fusionarImagenesLista(lista);
+      contar(r.nuevas > 0 || r.actualizadas > 0);
+    }
+    if (datos.listas) {
+      const entrantes = Array.isArray(datos.listas) ? datos.listas : (datos.listas.listas || []);
+      const r = fusionarListasEntrantes(entrantes);
+      contar(r.nuevas > 0 || r.actualizadas > 0);
+    }
+
+    marcarUltimoBackup();
+    return { ok: true, zonasActualizadas: zonasActualizadas, zonasSinCambios: zonasSinCambios };
+  }
+
+  const elModalSync = document.getElementById('modal-sync');
+  function abrirModalSync() {
+    actualizarIndicadorSync();
+    document.getElementById('sync-backup-info').textContent = '';
+    elModalSync.classList.add('abierto');
+  }
+  document.getElementById('btn-abrir-sync').addEventListener('click', () => abrirModalSync());
+  document.getElementById('btn-sync-cerrar').addEventListener('click', () => elModalSync.classList.remove('abierto'));
+
+  document.getElementById('btn-backup-exportar').addEventListener('click', () => exportarBackupCompleto());
+
+  const elInputBackupImportar = document.getElementById('input-backup-importar');
+  document.getElementById('btn-backup-importar').addEventListener('click', () => elInputBackupImportar.click());
+  elInputBackupImportar.addEventListener('change', () => {
+    const archivo = elInputBackupImportar.files[0];
+    elInputBackupImportar.value = '';
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+      const elInfo = document.getElementById('sync-backup-info');
+      let datos;
+      try {
+        datos = JSON.parse(lector.result);
+      } catch (e) {
+        elInfo.textContent = 'El archivo no es un JSON válido.';
+        return;
+      }
+      const r = importarBackupCompleto(datos);
+      if (r.error) {
+        elInfo.textContent = r.error;
+        return;
+      }
+      elInfo.textContent = 'Backup importado: ' + r.zonasActualizadas + ' zona(s) actualizada(s), ' + r.zonasSinCambios + ' zona(s) sin cambios.';
+      actualizarIndicadorSync();
+    };
+    lector.readAsText(archivo);
+  });
+
   function formatearFechaHistorial(iso) {
     try {
       const d = new Date(iso);
@@ -3802,14 +4842,22 @@
     if (historial.length === 0) {
       elListaHistorial.style.display = 'none';
       elHistorialVacio.style.display = 'block';
+      document.getElementById('historial-paginacion').style.display = 'none';   // NUEVO: oculta los controles si no hay nada que paginar
       return;
     }
     elListaHistorial.style.display = 'block';
     elHistorialVacio.style.display = 'none';
 
-    // Más reciente primero
-    for (let i = historial.length - 1; i >= 0; i--) {
-      const entrada = historial[i];
+    // NUEVO: paginación — 15 por página, más reciente primero. Clampea la
+    // página actual por si el total cambió (p. ej. tras borrar sesiones).
+    const masRecientePrimero = historial.slice().reverse();
+    const totalPaginas = Math.max(1, Math.ceil(masRecientePrimero.length / HISTORIAL_POR_PAGINA));
+    if (historialPaginaActual > totalPaginas) historialPaginaActual = totalPaginas;
+    if (historialPaginaActual < 1) historialPaginaActual = 1;
+    const inicioPagina = (historialPaginaActual - 1) * HISTORIAL_POR_PAGINA;
+    const pagina = masRecientePrimero.slice(inicioPagina, inicioPagina + HISTORIAL_POR_PAGINA);
+
+    pagina.forEach((entrada) => {
       const item = document.createElement('div');
       item.className = 'item-historial';
 
@@ -3836,10 +4884,55 @@
       detalle.appendChild(notaTxt);
       detalle.appendChild(duracionTxt);
       detalle.appendChild(puntosTxt);
+      // NUEVO: listado usado en la sesión (tachado si ya no existe, ver §9.2/§10)
+      if (entrada.listado) {
+        const listadoTxt = document.createElement('span');
+        if (buscarLista(entrada.listado)) {
+          listadoTxt.textContent = '📋 ' + entrada.listado;
+        } else {
+          listadoTxt.innerHTML = '';
+          const s = document.createElement('s');
+          s.textContent = '📋 ' + entrada.listado;
+          listadoTxt.appendChild(s);
+        }
+        detalle.appendChild(listadoTxt);
+      }
       item.appendChild(detalle);
 
       elListaHistorial.appendChild(item);
-    }
+    });
+
+    renderHistorialPaginacion(totalPaginas);
+  }
+
+  // NUEVO: controles "Anterior / Página X de Y / Siguiente". Solo re-renderiza
+  // la lista (sin scroll propio ni ajeno) para no afectar la posición de vista.
+  function renderHistorialPaginacion(totalPaginas) {
+    const el = document.getElementById('historial-paginacion');
+    el.innerHTML = '';
+    el.style.display = 'flex';
+
+    const btnAnterior = document.createElement('button');
+    btnAnterior.type = 'button';
+    btnAnterior.className = 'boton-mini';
+    btnAnterior.textContent = 'Anterior';
+    btnAnterior.disabled = historialPaginaActual <= 1;
+    btnAnterior.addEventListener('click', () => { historialPaginaActual--; renderHistorial(); });
+
+    const texto = document.createElement('span');
+    texto.className = 'historial-paginacion-texto';
+    texto.textContent = 'Página ' + historialPaginaActual + ' de ' + totalPaginas;
+
+    const btnSiguiente = document.createElement('button');
+    btnSiguiente.type = 'button';
+    btnSiguiente.className = 'boton-mini';
+    btnSiguiente.textContent = 'Siguiente';
+    btnSiguiente.disabled = historialPaginaActual >= totalPaginas;
+    btnSiguiente.addEventListener('click', () => { historialPaginaActual++; renderHistorial(); });
+
+    el.appendChild(btnAnterior);
+    el.appendChild(texto);
+    el.appendChild(btnSiguiente);
   }
 
   // NUEVO: "Sesiones de otros evaluadores" (solo lectura), agrupadas por espacio
@@ -3892,11 +4985,16 @@
   // MODIFICADO: se exporta el objeto COMPLETO de gamificación (puntosTotales +
   // inventario + historial) en la raíz, no solo el array de historial, para
   // poder recuperar todo al importar en otro dispositivo.
-  function exportarHistorial() {
+  // NUEVO: arma el objeto de gamificación (usado por el botón individual y por el backup completo)
+  function construirExportGamificacion() {
     // cada sesion sale con su "espacio" ('' = sin identificar)
-    const salida = Object.assign({}, gamificacion, {
+    return Object.assign({}, gamificacion, {
       historial: gamificacion.historial.map((s) => Object.assign({}, s, { espacio: espacioDeSesion(s) })),
     });
+  }
+
+  function exportarHistorial() {
+    const salida = construirExportGamificacion();
     const blob = new Blob([JSON.stringify(salida, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -4002,7 +5100,11 @@
     evento.target.value = '';   // permite volver a elegir el mismo archivo más adelante
   });
 
+  let historialPaginaActual = 1;   // NUEVO: página actual del historial (1-indexado)
+  const HISTORIAL_POR_PAGINA = 15;
+
   function abrirHistorial() {
+    historialPaginaActual = 1;
     mostrarPantalla('historial');
     renderHistorial();
   }
@@ -4060,8 +5162,16 @@
       return h !== hashImagen(e.ruta, e.indice);
     }).length;
   }
+  function contarOtrasListas() {
+    const vigentes = hashesVigentesActuales();
+    let n = 0;
+    listas.forEach((lista) => { lista.hashes.forEach((h) => { if (!vigentes.has(h)) n++; }); });
+    return n;
+  }
   function contarOtrasZona(zona) {
-    return zona === 'imagenes' ? contarOtrasImagenes() : contarOtrasTarjetas(ZONAS_VINCULO[zona].almacen());
+    if (zona === 'imagenes') return contarOtrasImagenes();
+    if (zona === 'listas') return contarOtrasListas();
+    return contarOtrasTarjetas(ZONAS_VINCULO[zona].almacen());
   }
 
   // Lista de {de, a}: solo tarjetas/imágenes ACTUALES cuyo hash viejo existe.
@@ -4121,10 +5231,51 @@
   }
 
   // Vista previa (sin modificar nada): cuánto se movería
+  // §14: listas — recomputa, por cada hash de cada lista, si corresponde al hash
+  // viejo de alguna tarjeta actual. Los que sí, se mueven; los que no corresponden
+  // a NINGUNA tarjeta actual (ni vieja ni nueva) se descartan igual que en §12.2.
+  function movimientosVinculoListas(viejo) {
+    const movs = [];
+    tarjetasCompletas.forEach((t) => {
+      const de = hashTarjetaCon(viejo, t);
+      const a = hashTarjeta(t);
+      if (de === a) return;
+      const usaEsteHash = listas.some((lista) => lista.hashes.indexOf(de) !== -1);
+      if (usaEsteHash) movs.push({ de: de, a: a });
+    });
+    return movs;
+  }
+  function ejecutarVinculoListas(viejo) {
+    const mapa = new Map(movimientosVinculoListas(viejo).map((m) => [m.de, m.a]));
+    const vigentes = hashesVigentesActuales();
+    let movidas = 0;
+    listas = listas.filter((lista) => {
+      const nuevos = [];
+      let cambio = false;
+      lista.hashes.forEach((h) => {
+        if (mapa.has(h)) { nuevos.push(mapa.get(h)); movidas++; cambio = true; }
+        else if (vigentes.has(h)) { nuevos.push(h); }
+        else { cambio = true; }   // huérfano: se descarta
+      });
+      if (cambio) { lista.hashes = nuevos; lista.modificada = Date.now(); }
+      return nuevos.length > 0;
+    });
+    guardarListas();
+    renderListasGuardadas();
+    return { movidas: movidas, sin: contarOtrasListas() };
+  }
+
   function resumenVinculo(zona, viejo) {
     if (zona === 'sesiones') {
       const n = gamificacion.historial.filter((s) => espacioDeSesion(s) === viejo).length;
       return { cantidad: n, texto: 'Se vincularían ' + n + ' sesión(es).' };
+    }
+    if (zona === 'listas') {
+      if (!viejo) return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
+      if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
+      const n = movimientosVinculoListas(viejo).length;
+      if (n === 0) return { cantidad: 0, texto: 'No se encontraron tarjetas de listas guardadas bajo «' + viejo + '».' };
+      return { cantidad: n, texto: 'Se actualizarían ' + n + ' tarjeta(s) dentro de las listas guardadas.' };
     }
     const z = ZONAS_VINCULO[zona];
     if (!viejo) {
@@ -4147,6 +5298,7 @@
 
   // Ejecuta el movimiento y devuelve { movidas, sin }
   function ejecutarVinculo(zona, viejo) {
+    if (zona === 'listas') return ejecutarVinculoListas(viejo);
     if (zona === 'sesiones') {
       let n = 0;
       gamificacion.historial.forEach((s) => {
@@ -4171,10 +5323,240 @@
     return { movidas: movs.length, sin: contarOtrasZona(zona) };
   }
 
+  // ---------- "Vincular todo a este evaluador" (varias zonas a la vez) ----------
+  const ICONOS_ZONA_VINCULO = { dificiles: '☆', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐' };
+  const ZONAS_HASH_PURGABLES = ['dificiles', 'notas', 'razones', 'imagenes'];   // las únicas donde puede quedar un residuo que valga la pena ofrecer borrar
+
+  function zonasSeleccionadasTodo() {
+    return Array.from(document.querySelectorAll('.vinc-zona-chk:checked')).map((c) => c.value);
+  }
+
+  function contarMovimientosZona(zona, viejo) {
+    if (zona === 'sesiones') return gamificacion.historial.filter((s) => espacioDeSesion(s) === viejo).length;
+    if (zona === 'listas') return movimientosVinculoListas(viejo).length;
+    return movimientosVinculo(zona, viejo).length;
+  }
+
+  // Solo espacios que efectivamente tienen algo para mover en AL MENOS una de
+  // las zonas marcadas. La única fuente de "nombres de espacios viejos" que
+  // tiene la app es el historial (igual que en el flujo de una sola zona).
+  function candidatosParaZonas(zonas) {
+    const candidatos = new Set();
+    gamificacion.historial.forEach((s) => {
+      const esp = espacioDeSesion(s);
+      if (esp && esp !== ESPACIO_HASH) candidatos.add(esp);
+    });
+    return Array.from(candidatos).filter((esp) => zonas.some((z) => contarMovimientosZona(z, esp) > 0));
+  }
+
+  function refrescarDropdownTodo() {
+    elVincEspacios.innerHTML = '';
+    candidatosParaZonas(zonasSeleccionadasTodo()).forEach((esp) => {
+      const op = document.createElement('option');
+      op.value = esp;
+      elVincEspacios.appendChild(op);
+    });
+  }
+
+  // Resumen compacto, ej: "Se moverían: 3 ☆, 2 💡, 0 🏷" — se listan TODAS las
+  // zonas marcadas, incluidas las que dan 0.
+  function resumenVinculoTodo(zonas, viejo) {
+    if (zonas.length === 0) return { cantidad: 0, texto: 'Marcá al menos una zona.' };
+    if (!viejo) return { cantidad: 0, texto: 'Escribí o elegí el nombre anterior del recordatorio para ver qué se movería.' };
+    if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
+    let total = 0;
+    const partes = zonas.map((z) => {
+      const n = contarMovimientosZona(z, viejo);
+      total += n;
+      return n + ' ' + ICONOS_ZONA_VINCULO[z];
+    });
+    return { cantidad: total, texto: 'Se moverían: ' + partes.join(', ') };
+  }
+
+  // Ejecución parcial: si una zona falla, se sigue con las demás.
+  function ejecutarVinculoTodo(zonas, viejo) {
+    const resultados = {};
+    const errores = [];
+    zonas.forEach((zona) => {
+      try {
+        resultados[zona] = ejecutarVinculo(zona, viejo);
+      } catch (e) {
+        errores.push(ICONOS_ZONA_VINCULO[zona] + ' ' + zona + ': ' + e.message);
+      }
+    });
+    // Residuos: solo tiene sentido contarlos/ofrecer borrarlos en las zonas por
+    // hash que NO se autolimpian al vincular (dificiles/notas/razones/imagenes;
+    // 'listas' ya descarta sus huérfanas sola, y 'sesiones' no es borrado acá:
+    // para eso ya están los botones dedicados de "Borrar historial").
+    const zonasResiduo = zonas.filter((z) => ZONAS_HASH_PURGABLES.indexOf(z) !== -1 && resultados[z]);
+    const residuos = zonasResiduo.reduce((acc, z) => acc + contarOtrasZona(z), 0);
+    return { resultados: resultados, errores: errores, residuos: residuos, zonasResiduo: zonasResiduo };
+  }
+
+  function esHuerfanoZona(zona, h) {
+    if (zona === 'imagenes') {
+      const e = datosImagenes[h] || {};
+      return h !== hashImagen(e.ruta, e.indice);
+    }
+    return !hashesVigentesActuales().has(h);
+  }
+
+  function borrarResiduosZonas(zonas) {
+    let borrados = 0;
+    zonas.forEach((zona) => {
+      const z = ZONAS_VINCULO[zona];
+      const almacen = z.almacen();
+      Object.keys(almacen).forEach((h) => { if (esHuerfanoZona(zona, h)) { delete almacen[h]; borrados++; } });
+      z.guardar();
+      z.repintar();
+    });
+    return borrados;
+  }
+
+  function aceptarVinculoTodo() {
+    const zonas = zonasSeleccionadasTodo();
+    const viejo = espacioViejoActual();
+    const { resultados, errores, residuos, zonasResiduo } = ejecutarVinculoTodo(zonas, viejo);
+    cerrarModalVincular();
+
+    const lineas = zonas.map((z) => resultados[z]
+      ? ICONOS_ZONA_VINCULO[z] + ' ' + z + ': movidas ' + resultados[z].movidas
+      : ICONOS_ZONA_VINCULO[z] + ' ' + z + ': ERROR');
+    let msg = 'Vinculación terminada.\n' + lineas.join('\n');
+    if (errores.length > 0) msg += '\n\nErrores:\n' + errores.join('\n');
+    window.alert(msg);
+
+    if (residuos > 0) {
+      const zonasTxt = zonasResiduo.map((z) => ICONOS_ZONA_VINCULO[z]).join(' ');
+      if (window.confirm('Quedaron ' + residuos + ' entrada(s) que no corresponden a ninguna tarjeta actual en las zonas vinculadas (' + zonasTxt + '). ¿Borrarlas?')) {
+        const n = borrarResiduosZonas(zonasResiduo);
+        window.alert('Se borraron ' + n + ' entrada(s).');
+      }
+    }
+  }
+
+
+  // ============================================================
+  // NUEVO: Borrado total de los datos de UN evaluador específico
+  // ============================================================
+
+  // Nombres de "espacio" con sesiones en el historial, sin contar este
+  // evaluador (no puede borrarse a sí mismo) ni las sesiones sin identificar.
+  function espaciosBorrables() {
+    const set = new Set();
+    gamificacion.historial.forEach((s) => {
+      const esp = espacioDeSesion(s);
+      if (esp && esp !== ESPACIO_HASH) set.add(esp);
+    });
+    return Array.from(set).sort();
+  }
+
+  function renderListaBorrarEvaluador() {
+    const el = document.getElementById('lista-borrar-evaluador');
+    const espacios = espaciosBorrables();
+    el.innerHTML = '';
+    if (espacios.length === 0) {
+      const p = document.createElement('p');
+      p.className = 'galeria-vacia';
+      p.textContent = 'No hay otros evaluadores con sesiones guardadas.';
+      el.appendChild(p);
+      return;
+    }
+    espacios.forEach((esp) => {
+      const fila = document.createElement('div');
+      fila.className = 'fila-borrar-evaluador';
+      const nombre = document.createElement('span');
+      nombre.className = 'nombre-evaluador-borrar';
+      nombre.textContent = esp;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'boton-mini boton-mini-peligro';
+      btn.textContent = 'Borrar';
+      btn.addEventListener('click', () => borrarEvaluadorCompleto(esp));
+      fila.appendChild(nombre);
+      fila.appendChild(btn);
+      el.appendChild(fila);
+    });
+  }
+
+  document.getElementById('btn-borrar-evaluador').addEventListener('click', () => {
+    const el = document.getElementById('lista-borrar-evaluador');
+    if (el.style.display === 'block') { el.style.display = 'none'; return; }
+    renderListaBorrarEvaluador();
+    el.style.display = 'block';
+  });
+
+  // Borra TODO lo asociado a 'espacio', salvo puntosTotales e inventario
+  // (son globales). Las entradas por tarjeta/imagen se identifican
+  // recomputando el hash que tendría cada elemento ACTUAL bajo ese espacio
+  // (misma técnica que la revinculación): una entrada de una tarjeta ya
+  // editada o borrada del recordatorio no se puede identificar con certeza
+  // y queda sin tocar, igual que en el resto del sistema de vinculación.
+  function borrarEvaluadorCompleto(espacio) {
+    if (!window.confirm('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes y listas)? ' +
+      'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.')) return;
+
+    // Sesiones
+    gamificacion.historial = gamificacion.historial.filter((s) => espacioDeSesion(s) !== espacio);
+    guardarGamificacion();
+
+    // Difíciles / notas / razones: mismo hash de tarjeta en las tres zonas
+    const hashesTarjetas = new Set(tarjetasCompletas.map((t) => hashTarjetaCon(espacio, t)));
+    hashesTarjetas.forEach((h) => {
+      delete dificiles[h];
+      delete notasLocales[h];
+      delete razonesGuardadas[h];
+    });
+    guardarDificiles();
+    guardarNotas();
+    guardarRazones();
+
+    // Imágenes
+    INDICE_IMAGENES.forEach((c) => {
+      delete datosImagenes[hashImagenCon(espacio, c.ruta, c.indice)];
+    });
+    guardarImagenesStorage();
+
+    // Listas: se quitan los hashes de ese espacio; si una lista queda vacía, se borra
+    listas = listas.filter((lista) => {
+      lista.hashes = lista.hashes.filter((h) => !hashesTarjetas.has(h));
+      return lista.hashes.length > 0;
+    });
+    guardarListas();
+
+    // Claves de backup (timestamp y snapshot) asociadas a ese espacio
+    try {
+      localStorage.removeItem('ultimo_backup_' + espacio);
+      localStorage.removeItem('ultimo_backup_snapshot_' + espacio);
+    } catch (e) {
+      // sin localStorage disponible: nada que limpiar ahí
+    }
+
+    document.getElementById('lista-borrar-evaluador').style.display = 'none';
+    renderHistorial();
+    renderDificilesPreview();
+    renderNotasPreview();
+    renderRazonesPreview();
+    renderImagenesPreview();
+    renderListasGuardadas();
+    actualizarIndicadorSync();
+    window.alert('Se borraron los datos de «' + espacio + '».');
+  }
+
+  document.getElementById('btn-vincular-todo').addEventListener('click', () => {
+    document.getElementById('modal-sync').classList.remove('abierto');
+    abrirModalVincular('todo');
+  });
+  document.querySelectorAll('.vinc-zona-chk').forEach((c) => c.addEventListener('change', () => {
+    refrescarDropdownTodo();
+    refrescarModalVincular();
+  }));
+
   // ---------- Modal ----------
   const elModalVincular = document.getElementById('modal-vincular');
   const elVincTitulo = document.getElementById('vinc-titulo');
   const elVincDescripcion = document.getElementById('vinc-descripcion');
+  const elVincZonas = document.getElementById('vinc-zonas');
   const elVincCampoEspacio = document.getElementById('vinc-campo-espacio');
   const elVincEspacio = document.getElementById('vinc-espacio');
   const elVincEspacios = document.getElementById('vinc-espacios');
@@ -4192,7 +5574,7 @@
   function refrescarModalVincular() {
     if (!vincZona) return;
     const viejo = espacioViejoActual();
-    const r = resumenVinculo(vincZona, viejo);
+    const r = vincZona === 'todo' ? resumenVinculoTodo(zonasSeleccionadasTodo(), viejo) : resumenVinculo(vincZona, viejo);
     elVincResumen.textContent = r.texto;
     const nombreViejo = viejo ? '«' + viejo + '»' : 'el nombre viejo';
     elVincAviso.textContent =
@@ -4206,8 +5588,14 @@
   function abrirModalVincular(zona, espacioFijo) {
     vincZona = zona;
     vincEspacioFijo = (typeof espacioFijo === 'string') ? espacioFijo : null;
-    const titulo = zona === 'sesiones' ? 'sesiones' : ZONAS_VINCULO[zona].titulo;
-    elVincTitulo.textContent = 'Vincular ' + titulo + ' a este evaluador';
+    elVincZonas.style.display = zona === 'todo' ? 'flex' : 'none';
+    if (zona === 'todo') {
+      elVincTitulo.textContent = 'Vincular todo a este evaluador';
+      document.querySelectorAll('.vinc-zona-chk').forEach((c) => { c.checked = true; });
+    } else {
+      const titulo = (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
+      elVincTitulo.textContent = 'Vincular ' + titulo + ' a este evaluador';
+    }
     if (vincEspacioFijo !== null) {
       elVincDescripcion.textContent = 'Grupo: ' + etiquetaEspacio(vincEspacioFijo) + '. Pasarán a ser de este evaluador («' + ESPACIO_HASH + '»).';
       elVincCampoEspacio.style.display = 'none';
@@ -4216,16 +5604,20 @@
       elVincCampoEspacio.style.display = 'block';
       elVincEspacio.value = '';
       // sugerencias: espacios de otros evaluadores que ya aparecen en el historial
-      elVincEspacios.innerHTML = '';
-      const vistos = new Set();
-      gamificacion.historial.forEach((s) => {
-        const esp = espacioDeSesion(s);
-        if (!esp || esp === ESPACIO_HASH || vistos.has(esp)) return;
-        vistos.add(esp);
-        const op = document.createElement('option');
-        op.value = esp;
-        elVincEspacios.appendChild(op);
-      });
+      if (zona === 'todo') {
+        refrescarDropdownTodo();
+      } else {
+        elVincEspacios.innerHTML = '';
+        const vistos = new Set();
+        gamificacion.historial.forEach((s) => {
+          const esp = espacioDeSesion(s);
+          if (!esp || esp === ESPACIO_HASH || vistos.has(esp)) return;
+          vistos.add(esp);
+          const op = document.createElement('option');
+          op.value = esp;
+          elVincEspacios.appendChild(op);
+        });
+      }
     }
     elVincConfirmar.value = '';
     refrescarModalVincular();
@@ -4241,6 +5633,7 @@
 
   function aceptarVinculo() {
     if (!vincZona || elBtnVincAceptar.disabled) return;
+    if (vincZona === 'todo') { aceptarVinculoTodo(); return; }
     const zona = vincZona;
     const viejo = espacioViejoActual();
     let r;
@@ -4265,6 +5658,7 @@
   ['dificiles', 'notas', 'razones', 'imagenes'].forEach((zona) => {
     document.getElementById('btn-vincular-' + zona).addEventListener('click', () => abrirModalVincular(zona));
   });
+  document.getElementById('btn-listas-vincular').addEventListener('click', () => abrirModalVincular('listas'));
 
   // Estado inicial de los stats (por si se entra a 'estudio' antes de iniciar)
   actualizarBarraGamificacion();
@@ -4579,6 +5973,42 @@
     elVaciar.style.display = hashes.length > 0 ? 'inline-block' : 'none';
   }
 
+  // NUEVO: fusiona una lista de imágenes importada (individual o dentro de un backup completo)
+  function fusionarImagenesLista(lista) {
+    let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+    lista.forEach((item) => {
+      if (!item || typeof item.h !== 'string' || !item.h ||
+          typeof item.ruta !== 'number' || typeof item.indice !== 'number') {
+        invalidas++;
+        return;
+      }
+      const entrada = {
+        ruta: item.ruta,
+        indice: item.indice,
+        nota: typeof item.nota === 'string' ? item.nota : '',
+        base: typeof item.base === 'string' ? item.base : '',
+        dificil: !!item.dificil,
+        t: typeof item.t === 'number' ? item.t : 0,
+      };
+      const local = datosImagenes[item.h];
+      if (!local) {
+        datosImagenes[item.h] = entrada;
+        nuevas++;
+      } else if ((local.nota || '') === entrada.nota && !!local.dificil === entrada.dificil &&
+                 (local.base || '') === entrada.base) {
+        iguales++;
+      } else if (entrada.t > (local.t || 0)) {
+        datosImagenes[item.h] = entrada;
+        actualizadas++;
+      } else {
+        conservadas++;
+      }
+    });
+    guardarImagenesStorage();
+    renderImagenesPreview();
+    return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
+  }
+
   document.getElementById('btn-vaciar-imagenes').addEventListener('click', () => {
     if (Object.keys(datosImagenes).length === 0) return;
     if (!confirm('¿Vaciar TODOS los datos de imágenes guardados? No se puede deshacer.')) return;
@@ -4587,7 +6017,8 @@
     renderImagenesPreview();
   });
 
-  document.getElementById('btn-exportar-imagenes').addEventListener('click', () => {
+  // NUEVO: arma el JSON de imágenes (usado por el botón individual y por el backup completo)
+  function construirExportImagenes() {
     const lista = Object.keys(datosImagenes).map((h) => ({
       h: h,
       ruta: datosImagenes[h].ruta,
@@ -4597,7 +6028,11 @@
       dificil: !!datosImagenes[h].dificil,
       t: datosImagenes[h].t || 0,
     }));
-    const contenido = JSON.stringify({ version: 1, imagenes: lista }, null, 2);
+    return { version: 1, imagenes: lista };
+  }
+
+  document.getElementById('btn-exportar-imagenes').addEventListener('click', () => {
+    const contenido = JSON.stringify(construirExportImagenes(), null, 2);
     const blob = new Blob([contenido], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -4626,39 +6061,9 @@
         const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.imagenes) ? obj.imagenes : null);
         if (!lista) throw new Error('formato');
 
-        let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
-        lista.forEach((item) => {
-          if (!item || typeof item.h !== 'string' || !item.h ||
-              typeof item.ruta !== 'number' || typeof item.indice !== 'number') {
-            invalidas++;
-            return;
-          }
-          const entrada = {
-            ruta: item.ruta,
-            indice: item.indice,
-            nota: typeof item.nota === 'string' ? item.nota : '',
-            base: typeof item.base === 'string' ? item.base : '',
-            dificil: !!item.dificil,
-            t: typeof item.t === 'number' ? item.t : 0,
-          };
-          const local = datosImagenes[item.h];
-          if (!local) {
-            datosImagenes[item.h] = entrada;
-            nuevas++;
-          } else if ((local.nota || '') === entrada.nota && !!local.dificil === entrada.dificil &&
-                     (local.base || '') === entrada.base) {
-            iguales++;
-          } else if (entrada.t > (local.t || 0)) {
-            datosImagenes[item.h] = entrada;
-            actualizadas++;
-          } else {
-            conservadas++;
-          }
-        });
-        guardarImagenesStorage();
-        renderImagenesPreview();
-        elInfo.textContent = 'Importación: ' + nuevas + ' nueva(s), ' + actualizadas +
-          ' actualizada(s) por ser más recientes, ' + conservadas + ' conservada(s) (la tuya era más reciente), ' +
+        const r = fusionarImagenesLista(lista);
+        elInfo.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
+          ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
           iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
       } catch (e) {
         elInfo.textContent = 'El archivo no es un JSON válido de imágenes.';
@@ -4716,6 +6121,7 @@
       } else {
         dificiles[h] = { p: p, s: s, activa: check.checked };
       }
+      dificiles[h].t = Date.now();   // NUEVO: para saber si hay cambios sin respaldar (§8)
       guardarDificiles();
       renderDificilesPreview();
     });
@@ -4804,7 +6210,8 @@
         (nDesm > 0 ? ', ' + nDesm + ' desmarcada(s)' : '');
   }
 
-  document.getElementById('btn-exportar-dificiles').addEventListener('click', () => {
+  // NUEVO: arma el JSON de difíciles (usado por el botón individual y por el backup completo)
+  function construirExportDificiles() {
     // Solo se exportan las activas (las desmarcadas son un estado local)
     const lista = Object.keys(dificiles)
       .filter((h) => dificiles[h].activa)
@@ -4812,8 +6219,13 @@
         h: h,
         p: dificiles[h].p || '',
         s: dificiles[h].s || '',
+        t: dificiles[h].t || 0,
       }));
-    const contenido = JSON.stringify({ version: 1, tarjetas: lista }, null, 2);
+    return { version: 1, tarjetas: lista };
+  }
+
+  document.getElementById('btn-exportar-dificiles').addEventListener('click', () => {
+    const contenido = JSON.stringify(construirExportDificiles(), null, 2);
     const blob = new Blob([contenido], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -4844,27 +6256,34 @@
           : (obj && Array.isArray(obj.tarjetas) ? obj.tarjetas : null);
         if (!lista) throw new Error('formato');
 
-        let nuevas = 0, repetidas = 0, invalidas = 0;
-        lista.forEach((item) => {
-          if (!item || typeof item.h !== 'string' || !item.h) { invalidas++; return; }
-          if (dificiles[item.h]) { repetidas++; return; }  // fusionar: no duplica
-          dificiles[item.h] = {
-            p: typeof item.p === 'string' ? item.p : '',
-            s: typeof item.s === 'string' ? item.s : '',
-            activa: true,
-          };
-          nuevas++;
-        });
-        guardarDificiles();
-        renderDificilesPreview();
-        elNota.textContent = 'Importación: ' + nuevas + ' nueva(s), ' + repetidas +
-          ' ya estaban' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+        const r = fusionarDificilesLista(lista);
+        elNota.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.repetidas +
+          ' ya estaban' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
       } catch (e) {
         elNota.textContent = 'El archivo no es un JSON válido de difíciles.';
       }
     };
     lector.readAsText(archivo);
   });
+
+  // NUEVO: fusiona una lista de difíciles importada (individual o dentro de un backup completo)
+  function fusionarDificilesLista(lista) {
+    let nuevas = 0, repetidas = 0, invalidas = 0;
+    lista.forEach((item) => {
+      if (!item || typeof item.h !== 'string' || !item.h) { invalidas++; return; }
+      if (dificiles[item.h]) { repetidas++; return; }  // fusionar: no duplica (regla ya existente)
+      dificiles[item.h] = {
+        p: typeof item.p === 'string' ? item.p : '',
+        s: typeof item.s === 'string' ? item.s : '',
+        activa: true,
+        t: typeof item.t === 'number' ? item.t : Date.now(),
+      };
+      nuevas++;
+    });
+    guardarDificiles();
+    renderDificilesPreview();
+    return { nuevas: nuevas, repetidas: repetidas, invalidas: invalidas };
+  }
 
   document.getElementById('btn-vaciar-desm').addEventListener('click', () => {
     const hashes = Object.keys(dificiles).filter((h) => !dificiles[h].activa);
@@ -5001,6 +6420,40 @@
   }
 
   // NUEVO: mismo patrón que "Vaciar todas" de razones
+  // NUEVO: fusiona una lista de notas importada (individual o dentro de un backup completo)
+  // Si la misma tarjeta tiene nota distinta, gana la más reciente (campo t)
+  function fusionarNotasLista(lista) {
+    let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+    lista.forEach((item) => {
+      if (!item || typeof item.h !== 'string' || !item.h || typeof item.nota !== 'string') {
+        invalidas++;
+        return;
+      }
+      const entrada = {
+        p: typeof item.p === 'string' ? item.p : '',
+        s: typeof item.s === 'string' ? item.s : '',
+        nota: item.nota,
+        base: typeof item.base === 'string' ? item.base : '',
+        t: typeof item.t === 'number' ? item.t : 0,
+      };
+      const local = notasLocales[item.h];
+      if (!local) {
+        notasLocales[item.h] = entrada;
+        nuevas++;
+      } else if ((local.nota || '') === entrada.nota) {
+        iguales++;
+      } else if (entrada.t > (local.t || 0)) {
+        notasLocales[item.h] = entrada;
+        actualizadas++;
+      } else {
+        conservadas++;
+      }
+    });
+    guardarNotas();
+    renderNotasPreview();
+    return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
+  }
+
   document.getElementById('btn-vaciar-notas').addEventListener('click', () => {
     if (Object.keys(notasLocales).length === 0) return;
     if (!confirm('¿Vaciar TODAS las notas guardadas? No se puede deshacer.')) return;
@@ -5009,7 +6462,8 @@
     renderNotasPreview();
   });
 
-  document.getElementById('btn-exportar-notas').addEventListener('click', () => {
+  // NUEVO: arma el JSON de notas (usado por el botón individual y por el backup completo)
+  function construirExportNotas() {
     const lista = Object.keys(notasLocales).map((h) => ({
       h: h,
       p: notasLocales[h].p || '',
@@ -5018,7 +6472,11 @@
       base: notasLocales[h].base || '',
       t: notasLocales[h].t || 0,
     }));
-    const contenido = JSON.stringify({ version: 1, notas: lista }, null, 2);
+    return { version: 1, notas: lista };
+  }
+
+  document.getElementById('btn-exportar-notas').addEventListener('click', () => {
+    const contenido = JSON.stringify(construirExportNotas(), null, 2);
     const blob = new Blob([contenido], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -5049,36 +6507,8 @@
           : (obj && Array.isArray(obj.notas) ? obj.notas : null);
         if (!lista) throw new Error('formato');
 
-        // Fusión: si la misma tarjeta tiene nota distinta, gana la más reciente (campo t)
-        let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
-        lista.forEach((item) => {
-          if (!item || typeof item.h !== 'string' || !item.h || typeof item.nota !== 'string') {
-            invalidas++;
-            return;
-          }
-          const entrada = {
-            p: typeof item.p === 'string' ? item.p : '',
-            s: typeof item.s === 'string' ? item.s : '',
-            nota: item.nota,
-            base: typeof item.base === 'string' ? item.base : '',
-            t: typeof item.t === 'number' ? item.t : 0,
-          };
-          const local = notasLocales[item.h];
-          if (!local) {
-            notasLocales[item.h] = entrada;
-            nuevas++;
-          } else if ((local.nota || '') === entrada.nota) {
-            iguales++;
-          } else if (entrada.t > (local.t || 0)) {
-            notasLocales[item.h] = entrada;
-            actualizadas++;
-          } else {
-            conservadas++;
-          }
-        });
-        guardarNotas();
-        renderNotasPreview();
-        elInfo.textContent = 'Importación: ' + nuevas + ' nueva(s), ' + actualizadas +
+        const r = fusionarNotasLista(lista);
+        elInfo.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
           ' actualizada(s) por ser más recientes, ' + conservadas + ' conservada(s) (la tuya era más reciente), ' +
           iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
       } catch (e) {
@@ -5208,6 +6638,41 @@
     elVaciar.style.display = total > 0 ? 'inline-block' : 'none';
   }
 
+  // NUEVO: fusiona una lista de razones importada (individual o dentro de un backup completo)
+  function fusionarRazonesLista(lista) {
+    let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+    lista.forEach((item) => {
+      if (!item || typeof item.h !== 'string' || !item.h || !Array.isArray(item.razones)) {
+        invalidas++;
+        return;
+      }
+      const codigosValidos = item.razones.filter((c) => MAPA_RAZONES.has(c));
+      const entrada = {
+        p: typeof item.p === 'string' ? item.p : '',
+        s: typeof item.s === 'string' ? item.s : '',
+        razones: codigosValidos,
+        estado: typeof item.estado === 'string' ? item.estado : null,
+        t: typeof item.t === 'number' ? item.t : 0,
+      };
+      const local = razonesGuardadas[item.h];
+      if (!local) {
+        razonesGuardadas[item.h] = entrada;
+        nuevas++;
+      } else if (JSON.stringify((local.razones || []).slice().sort()) === JSON.stringify(entrada.razones.slice().sort()) &&
+                 (local.estado || null) === entrada.estado) {
+        iguales++;
+      } else if (entrada.t > (local.t || 0)) {
+        razonesGuardadas[item.h] = entrada;
+        actualizadas++;
+      } else {
+        conservadas++;
+      }
+    });
+    guardarRazones();
+    renderRazonesPreview();
+    return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
+  }
+
   document.getElementById('btn-vaciar-razones').addEventListener('click', () => {
     if (Object.keys(razonesGuardadas).length === 0) return;
     if (!confirm('¿Vaciar TODAS las razones guardadas? No se puede deshacer.')) return;
@@ -5216,7 +6681,8 @@
     renderRazonesPreview();
   });
 
-  document.getElementById('btn-exportar-razones').addEventListener('click', () => {
+  // NUEVO: arma el JSON de razones (usado por el botón individual y por el backup completo)
+  function construirExportRazones() {
     const lista = Object.keys(razonesGuardadas).map((h) => ({
       h: h,
       p: razonesGuardadas[h].p || '',
@@ -5225,7 +6691,11 @@
       estado: razonesGuardadas[h].estado || null,
       t: razonesGuardadas[h].t || 0,
     }));
-    const contenido = JSON.stringify({ version: 1, razones: lista }, null, 2);
+    return { version: 1, razones: lista };
+  }
+
+  document.getElementById('btn-exportar-razones').addEventListener('click', () => {
+    const contenido = JSON.stringify(construirExportRazones(), null, 2);
     const blob = new Blob([contenido], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -5254,39 +6724,10 @@
         const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.razones) ? obj.razones : null);
         if (!lista) throw new Error('formato');
 
-        let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
-        lista.forEach((item) => {
-          if (!item || typeof item.h !== 'string' || !item.h || !Array.isArray(item.razones)) {
-            invalidas++;
-            return;
-          }
-          const codigosValidos = item.razones.filter((c) => MAPA_RAZONES.has(c));
-          const entrada = {
-            p: typeof item.p === 'string' ? item.p : '',
-            s: typeof item.s === 'string' ? item.s : '',
-            razones: codigosValidos,
-            estado: typeof item.estado === 'string' ? item.estado : null,
-            t: typeof item.t === 'number' ? item.t : 0,
-          };
-          const local = razonesGuardadas[item.h];
-          if (!local) {
-            razonesGuardadas[item.h] = entrada;
-            nuevas++;
-          } else if (JSON.stringify((local.razones || []).slice().sort()) === JSON.stringify(entrada.razones.slice().sort()) &&
-                     (local.estado || null) === entrada.estado) {
-            iguales++;
-          } else if (entrada.t > (local.t || 0)) {
-            razonesGuardadas[item.h] = entrada;
-            actualizadas++;
-          } else {
-            conservadas++;
-          }
-        });
-        guardarRazones();
-        renderRazonesPreview();
-        elInfo.textContent = 'Importación: ' + nuevas + ' nueva(s), ' + actualizadas +
-          ' actualizada(s) por ser más recientes, ' + conservadas + ' conservada(s) (la tuya era más reciente), ' +
-          iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+        const r = fusionarRazonesLista(lista);
+        elInfo.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
+          ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
+          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
       } catch (e) {
         elInfo.textContent = 'El archivo no es un JSON válido de razones.';
       }
@@ -5338,6 +6779,8 @@
     primerIntentoFallido = new Set();
     reintentoExitoso = new Set();
     segundaPendiente = false;
+    srsSesionActiva = null;   // NUEVO: toda sesión nueva arranca como sesión normal
+    actualizarBadgeSrs();     // NUEVO
     limpiarAviso();
     actualizarBarraGamificacion();
 
@@ -6826,6 +8269,15 @@
     renderResumenGamificacion(nota);
     guardarHistorialSesion(nota);
 
+    // NUEVO: fue (o no) una sesión de Repaso Espaciado — se captura ANTES de
+    // aplicar la progresión, porque esta limpia srsSesionActiva al terminar.
+    const fueSesionSRS = !!srsSesionActiva;
+    actualizarProgresionSRS();
+
+    // NUEVO: botón "guardar como lista" — solo si esta sesión NO venía de una lista guardada NI del SRS
+    elBtnResumenGuardarLista.style.display = (!modoObservador && !listaActivaNombre && !fueSesionSRS) ? 'block' : 'none';
+    renderResumenListado();
+
     mostrarPantalla('resumen');
   }
 
@@ -6893,6 +8345,116 @@
   document.getElementById('btn-modo-observador').addEventListener('click', () => entrarObservador());
   document.getElementById('btn-observador-salir').addEventListener('click', () => mostrarPantalla('temas'));
   document.getElementById('btn-observador-volver').addEventListener('click', () => salirObservador());
+
+
+  // ============================================================
+  // NUEVO: sesión y aviso de Repaso Espaciado (SRS)
+  // ============================================================
+  const elBadgeSrs = document.getElementById('badge-srs');
+  function actualizarBadgeSrs() {
+    elBadgeSrs.style.display = srsSesionActiva ? 'inline-block' : 'none';
+  }
+
+  // §5: arma una sesión TEMPORAL en RAM con las tarjetas de las listas
+  // vencidas (sin tocar los hashes de las listas originales) y la arranca
+  // como una sesión normal de estudio.
+  function iniciarSesionSRS(listasVencidas) {
+    const hashesPorLista = {};
+    const todosLosHashes = new Set();
+    listasVencidas.forEach((lista) => {
+      hashesPorLista[lista.nombre] = new Set(lista.hashes);
+      lista.hashes.forEach((h) => todosLosHashes.add(h));
+    });
+    let tarjetasSrs = tarjetasCompletas.filter((t) => todosLosHashes.has(hashTarjeta(t)));
+    if (listasVencidas.length > 1) tarjetasSrs = mezclar(tarjetasSrs);   // varias listas: se mezclan en una sola sesión
+
+    iniciarSesion(tarjetasSrs);   // esto resetea srsSesionActiva a null; se fija DESPUÉS
+    srsSesionActiva = { nombres: listasVencidas.map((l) => l.nombre), hashesPorLista: hashesPorLista };
+    actualizarBadgeSrs();
+  }
+
+  // §5.6: al terminar la sesión, por cada lista involucrada se calcula su
+  // propio % de aciertos (sobre SUS tarjetas dentro de esta sesión) y se
+  // aplica la tabla de progresión. Limpia srsSesionActiva al terminar, lo que
+  // además evita aplicar la progresión dos veces si mostrarResumen() se
+  // llamara más de una vez.
+  function actualizarProgresionSRS() {
+    if (!srsSesionActiva) return;
+    const hashesPorLista = srsSesionActiva.hashesPorLista;
+    srsSesionActiva.nombres.forEach((nombre) => {
+      const lista = buscarLista(nombre);
+      if (!lista) return;   // pudo haberse borrado durante la sesión; no hay nada que actualizar
+      const hashesLista = hashesPorLista[nombre];
+      let total = 0, exitos = 0;
+      tarjetasSesion.forEach((t, i) => {
+        if (!hashesLista.has(hashTarjeta(t))) return;
+        total++;
+        const r = resultados[i];
+        if (r === 'si' || r === 'casi') exitos++;   // 'no', 'saltar' y sin responder cuentan como fallo
+      });
+      if (total === 0) return;
+      const pct = exitos / total;
+      const srs = obtenerSrsLista(lista);
+      if (pct >= 0.8) srs.currentLevel += 1;
+      else if (pct >= 0.6) { /* se mantiene */ }
+      else if (pct >= 0.4) srs.currentLevel = Math.max(1, srs.currentLevel - 1);
+      else srs.currentLevel = 1;
+
+      if (srs.currentLevel > 6) {
+        srs.graduated = true;
+        srs.currentLevel = 6;
+      }
+      srs.lastReviewDate = Date.now();
+      srs.snoozeUntil = 0;
+      lista.modificada = Date.now();
+    });
+    guardarListas();
+    srsSesionActiva = null;
+    actualizarBadgeSrs();
+  }
+
+  // §4: al cargar el HTML (mostrarPantalla('temas') corre también en el
+  // arranque) y cada vez que se vuelve a "Elegir temas". NUNCA interrumpe una
+  // sesión en curso, porque solo se llama desde la rama 'temas' de
+  // mostrarPantalla.
+  let srsListasVencidasAviso = [];
+  function evaluarAvisoSRS() {
+    limpiarListasContraTarjetasActuales();
+    const vencidas = listas.filter((l) => srsListaParaAviso(l));
+    if (vencidas.length === 0) return;
+    srsListasVencidasAviso = vencidas;
+    const elLista = document.getElementById('srs-aviso-lista');
+    elLista.innerHTML = '';
+    vencidas.forEach((l) => {
+      const li = document.createElement('li');
+      li.textContent = l.nombre + ' (Nivel ' + l.srs.currentLevel + ' — ' + l.hashes.length + ' tarjeta' + (l.hashes.length === 1 ? '' : 's') + ')';
+      elLista.appendChild(li);
+    });
+    document.getElementById('modal-srs-aviso').classList.add('abierto');
+  }
+
+  document.getElementById('btn-srs-repasar-ahora').addEventListener('click', () => {
+    document.getElementById('modal-srs-aviso').classList.remove('abierto');
+    iniciarSesionSRS(srsListasVencidasAviso);
+  });
+  document.getElementById('btn-srs-omitir-hoy').addEventListener('click', () => {
+    const manana = new Date();
+    manana.setHours(24, 0, 0, 0);   // medianoche local del día siguiente
+    srsListasVencidasAviso.forEach((l) => {
+      obtenerSrsLista(l).snoozeUntil = manana.getTime();
+      l.modificada = Date.now();
+    });
+    guardarListas();
+    document.getElementById('modal-srs-aviso').classList.remove('abierto');
+  });
+  document.getElementById('btn-srs-recordar-luego').addEventListener('click', () => {
+    srsListasVencidasAviso.forEach((l) => {
+      obtenerSrsLista(l).snoozeUntil = Date.now() + 7200000;   // 2 horas
+      l.modificada = Date.now();
+    });
+    guardarListas();
+    document.getElementById('modal-srs-aviso').classList.remove('abierto');
+  });
 
   // ---------- Arranque ----------
   construirListaTemas();

@@ -1,527 +1,345 @@
-temaP GESTIÓN DEL DESEMPEÑO
+temaP GESTIÓN OPERACIONES
 
-temaS
+temaS 
 
-^subT DEFINICIÓN Y CONCEPTO
-imP Un sistema gestión del desempeño 
-imP monitorea 
-imP trabajo del personal
-imP en forma 
-imP consistente y 
-imP medible
+^subT INTRODUCCION
+imP la gestión operaciones
+imP garantiza
+imP que procesos funcionen a perfección
+imP dentro de empresas
 
-~*imP Se basa en una combinación 
+~cuR Imagina a tu empresa
+cuR como 1 aeropuerto
 
-+@imP tecnologías y 
+~cuR Cada equipo
+cuR es 1 avión que despega
+cuR hacia 1 destino dado
+*cuR con sus 
 
-+@imP metodologías
++@cuR proyectos e
 
-$imP para garantizar
-imP que toda organización 
-*imP esté alineada
++@cuR ideas 
 
-+imP con objetivos estratégicos del negocio y 
+$cuR a bordo
 
-+imP contribuya a ellos
+~cuR Como director operaciones,
+cuR eres controlador tránsito aéreo
+cuR que debe asegurarse
+cuR que todos y
+cuR todo 
+cuR funcione correctamente
 
-~cuR sistema es colaborativo,
-*cuR ya que 
+~imP de 1 modo similar,
+imP gestión operaciones
+imP es responsable supervisar 
+*imP estas siete funciones
 
-+@cuR gerentes y 
++imP Planificación operativa
 
-+@cuR personal 
++imP Finanzas
 
-$*cuR trabajan juntos
++imP Diseño productos
 
-+cuR para fijar expectativas,
++imP Control calidad
 
-+cuR identificar objetivos del empleado,
++imP Pronósticos
 
-+cuR definir medidas del desempeño,
++imP Estrategia
 
-+cuR compartir revisiones y evaluaciones,
++imP Gestión cadena suministro
 
-+cuR y brindar feedback
+~deF las operaciones 
+deF que están involucradas 
+deF en casi todos aspectos 
+deF una empresa
 
-~*imP Cuando se 
+~ejeM Por ejemplo,
+ejeM si 1 gerente proyectos 
+ejeM quiere contratar 
+ejeM a 1 nuevo miembro para equipo,
+ejeM equipo operaciones 
+ejeM deberá realizar primero
+ejeM 1 análisis costocuR beneficio o,
+ejeM si equipo producción 
+ejeM quiere desarrollar
+ejeM 1 producto nuevo,
+ejeM solicitud del cliente deberá
+ejeM ser evaluada primero
+ejeM por equipo operaciones
 
-+@imP define y 
+~imP el rol principal 
+imP gestión operaciones
+imP es mantener eficiencia operativa
 
-+@imP aplica 
+~imP Es importante estar siempre atento
+*imP a últimos avances
 
-$imP correctamente,
-imP un sistema gestión del desempeño 
-imP aumenta productividad general 
-imP de fuerza laboral,
-*imP el personal 
++imP para eliminar cuellos botella y
 
-+imP se involucra más en su trabajo,
++imP mejorar estrategia operativa
 
-+imP hay menos rotación,
 
-+imP y se maximizan ingresos
-imP por empleado
+^subT MATERIALES Y RECURSOS
+*imP se debe
 
++imP Asignar presupuestos y
 
-^subTTRES PROCESOS CLAVE Y ETAPAS DEL CICLO GESTIÓN DEL DESEMPEÑO
-*nuM 1 
++imP gestionar recursos
 
-+@imP Planificar y 
+~preG ¿Podemos determinar 
+preG costos abastecimiento 
+preG materias primas?
+caR Puedes mantener 
+caR bajos costos producción
+caR al encontrar proveedores
+caR que ofrezcan productos 
+caR gran calidad
+caR a precios competitivos
 
-+@imP actuar
-`
-$imP con gestión objetivos:
+~imP lo ideal
+imP es poder desarrollar 
+imP 1 producto primer nivel
+imP que se encuentre
+imP dentro del presupuesto tu cliente
 
--caR Alinear desempeño del personal
-caR con objetivos organización
+^subT INFORMACIÓN
+*deF se debe
 
--caR Asignar trabajo
-*caR que sea 
++deF Realizar una investigación mercado y
 
-+@caR significativo y 
++deF obtener resultados fáciles procesar
 
-+@caR satisfactorio
+~deF Compartir resultados
+deF con equipo diseño de productos
 
-$caR para aumentar 
-caR compromiso del personal
+~deF Crea 1 plan proyecto central
+deF para dar seguimiento
+*deF a acciones pendientes,
 
--imP Adaptar rápidamente objetivos 
-imP cuando cambian prioridades negocio
++deF a información y
 
-~nuM 2 
-imP Monitorear
-`imP con gestión del desempeño continua:
++deF comentarios relevantes
 
--caR Monitorear objetivos personales
-caR para garantizar
-caR que siempre estén alineados
-caR con corporativos
+~caR Luego,
+caR compártelo
+caR con todas partes interesadas 
+caR en una herramienta 
+caR gestión proyectos
+*caR para que todos puedan 
 
--*imP Brindar 
++caR acceder fácilmente y
 
-+@imP feedback y 
++caR ver cambios en tiempo real
 
-+@imP orientación
+~imP la capacidad interpretar datos
+imP es una habilidad clave 
+imP en gestión operativa
 
-$imP para mejorar desempeño
+~imP Como director operaciones,
+imP es importante
+imP que puedas convertir datos 
+imP en instrucciones concretas,
+imP ya que tu objetivo
+imP debe ser comunicar claramente
+imP cómo deseas
+imP que tu producto cumpla
+imP con estándares del mercado 
+imP o incluso 
+imP supere a productos desarrollados
+imP por competencia
 
--caR Reconocer buenos resultados 
-caR cuando estos ocurren
+~imP la toma decisiones 
+imP basada en datos 
+imP es una habilidad muy útil
+imP para muchas funciones 
+imP de gestión operaciones
 
-~*nuM 3 
+~deF la única forma 
+deF realizar pronósticos precisos 
+deF es basar tus predicciones
+deF en hechos
 
-+@imP Evaluar y 
+~cuR Te recomendamos empezar
+cuR por pronosticar 
+cuR demanda del producto
+cuR analizando tendencias pasadas
 
-+@imP reconocer 
-`
-$imP mediante evaluaciones desempeño:
+~cuR Luego,
+cuR comparte conclusiones
+cuR con directores cada departamento
+cuR para que puedan 
+cuR ajustar planes futuros 
+cuR en consecuencia
 
--*caR Evaluar desempeño manera 
 
-+caR consistente y 
+^subT PLANIFICACIÓN
+deF la planificación operativa
+deF es función más importante gestión operaciones
 
-+caR precisa
+~imP Tus responsabilidades en este rol
+*imP pueden incluir
 
--*caR se debe
++caR Supervisar producción diaria mercadería
 
-+@caR Reconocer y 
++caR Gestionar y
+caR controlar tu inventario
 
-+@caR recompensar
++caR Supervisar desempeño y
+caR bienestar miembros del equipo
 
-$caR a quienes tienen 
-caR 1 desempeño sólido
++caR Planificar producción
 
--imP Usar información estratégica 
-imP del sistema
-imP para cuantificar valor 
-imP su fuerza laboral
-imP para negocio
+~deF la planificación financiera consiste en
+deF determinar
+deF si tu empresa
+deF cuenta
+*deF con presupuesto
 
++deF para lograr objetivos y
 
-^subT EVOLUCIÓN HISTÓRICA
-deF Uno primeros modelos formalizados 
-*deF fue introducido durante 
++deF metas estratégicos
 
-+@deF Primera y 
+~imP Para asegurar éxito financiero del
+imP equipo directivo,
+imP deberás planificar
+imP con anticipación
 
-+@deF Segunda 
+~preG ¿Qué promociones y
+preG operaciones marketing debemos planificar
+preG para este producto?
 
-$deF Guerra Mundial,
-*deF para que ejércitos conocieran 
+~preG ¿Qué iniciativas venta debemos planificar
+preG para este producto?
 
-+@deF fortalezas y 
+~cuR la estrategia
+cuR es 1 campo muy amplio gestión operaciones
+*cuR que puede incluir varios aspectos
 
-+@deF capacidades 
-
-$deF cada miembro
-deF para fundamentar 
-deF estrategias militares
-
-~deF A mediados siglo XX,
-deF empresas usaban evaluaciones desempeño
-*deF para 
-
-+@deF calificar y 
-
-+@deF asignar 
-
-$deF recompensas al personal
-
-~deF En década 1960,
-deF foco comenzó trasladarse 
-deF hacia desarrollo del personal,
-deF y había charlas
-*deF entre 
-
-+@deF gerentes y 
-
-+@deF empleados
-
-$deF para evaluar desempeño y 
-deF si era necesario 
-deF definir capacitación
-deF para que avanzaran
-deF en sus carreras
-
-~cuR Algunos aspectos 
-cuR del software tradicional
-cuR para gestión del desempeño 
-cuR han evolucionado
-cuR con mejores tecnologías 
-*cuR tales como 
-
-+@cuR computación en nube,
-
-+@cuR mejoras en interfaces usuario,
-
-+@cuR inteligencia artificial (IA) y 
-
-+@cuR machine learning
-
-$cuR empresas están adoptando 
-cuR 1 enfoque más holístico,
-*cuR que brinda 
-
-+@cuR feedback y 
-
-+@cuR orientación 
-
-$cuR continuos
-cuR para ayudar a que personal 
-cuR logre sus objetivos
-
-
-^*subT ROLES Y USUARIOS
-
-+@imP Líder equipo o 
-
-+@imP gerente
-
-$imP con subordinados directos:
-imP son usuarios principales del sistema y 
-imP deben garantizar
-imP que todos empleados 
-imP participen activamente
-imP en proceso 
-
-~deF También tienen responsabilidad final 
-deF del desempeño su(s) equipo(s)
-deF personal trabaja
-deF con gerentes
-deF para definir sus objetivos 
-
-~deF Crean 
-deF evaluaciones desempeño individual 
-deF dentro del sistema,
-deF y participan
-deF en evaluaciones integrales 
-deF si modelo 
-deF está en uso
-*deF Profesionales RR HH definen 
-
-+@deF procesos y 
-
-+@deF sistemas
-
-$deF que dan soporte
-deF a gestión del desempeño 
-
-~*imP Trabajan con 
-
-+@imP gerentes y 
-
-+@imP empleados
-
-$imP para garantizar que procesos 
-imP sean justos y
-imP que cada etapa 
-imP se cumpla a tiempo
-
-
-^*subT IMPORTANCIA Y PROBLEMAS QUE RESUELVE
-
-+@imP Almacena y 
-
-+@imP cuantifica 
-
-$*imP datos interacciones entre 
-
-+@imP personal y 
-
-+@imP gerentes,
-
-$imP incluyendo aspiraciones profesionales,
-imP habilidades apropiadas y 
-imP aptitudes
-imP para planificación sucesión
-
-~*cuR Brinda una visión 
-
-+@cuR precisa y
-
-+@cuR en tiempo real 
-
-$cuR fuerza laboral
-*cuR que ayuda en su 
-
-+cuR planificación y 
-
-+cuR estrategia
-
-~`imP Problemas que resuelve:
-imP Pérdida del mejor talento
-*imP por falta 
-
-+imP reconocimiento y 
-
-+imP recompensas
-
--deF Pérdidas financieras debido
-deF a prácticas trabajo ineficientes 
-deF no alineadas
-deF con objetivos del negocio
-
--deF Falta una metodología estandarizada
-*deF para guiar remuneración,
-
-+deF ascensos y 
-
-+deF desvinculación
-
--deF Incapacidad
-deF para demostrar
-deF que estas decisiones 
-deF son justificadas
-deF en caso ser 
-deF cuestionadas legalmente
-
-
-^subT DEFINICIÓN
-*deF ejemplos evaluación del desempeño son 
-
-+@deF modelos,
-
-+@deF técnicas y 
-
-+@deF preguntas concretas
-
-$deF que RR HH usa
-deF para medir rendimiento plantilla 
-deF forma objetiva 
-
-~*imP Sirven
-
-+@imP para estructurar proceso,
-
-+@imP reducir sesgos y 
-
-+@imP convertir feedback
-
-$*imP en decisiones 
-
-+imP desarrollo,
-
-+imP compensación y 
-
-+imP promoción interna
-
-~imP Diseñar una evaluación del desempeño 
-imP desde cero,
-imP sin referencias ni estructura,
-imP garantiza que 
-imP cada manager evalúe
-imP con criterios distintos y
-imP que feedback 
-imP que recibe empleado 
-imP dependa más 
-imP quién le evalúa
-imP que cómo trabaja
-
-
-^subT TIPOS EVALUACIÓN SEGÚN QUIÉN EVALÚA
-`imP Evaluación del superior (90°):
-caR manager directo 
-caR evalúa al empleado
-*caR en función sus 
-
-+caR objetivos,
-
-+caR competencias y 
-
-+caR resultados 
-
--*imP Es modelo 
-
-+@imP más extendido y
-
-+@imP que mayor autoridad tiene
-
-$*imP en 
-
-+imP decisiones 
-
-+imP compensación y 
-
-+imP promoción 
-
--cuR Su principal limitación 
-cuR es que depende 
-cuR una sola perspectiva
-
-~`imP Autoevaluación:
-caR empleado valora 
-caR su propio desempeño
-caR con criterios predefinidos 
-
--caR Sirve para detectar discrepancias
-caR entre 
-caR percepción propia y 
-caR del manager,
-caR y abre diálogo
-caR en reunión feedback 
-
--cuR Funciona mejor como complemento 
-cuR otras evaluaciones,
-cuR no como sistema único
-
-~`imP Evaluación por pares:
-caR compañeros equipo 
-caR evalúan al empleado forma anónima 
-
--*imP Aporta información sobre 
-
-+@imP competencias relacionales y 
-
-+@imP colaboración
-
-$*imP que manager no puede observar directamente,
-
-+imP como fiabilidad en entregas o 
-
-+imP apoyo al equipo
-
-~`imP Assessment center:
-caR observadores externos especializados 
-caR evalúan competencias del empleado
-caR en situaciones simuladas 
-
--*imP Es método 
-
-+imP más objetivo y 
-
-+imP más costoso 
-
--cuR Se usa principalmente
-*cuR en procesos 
-
-+cuR selección interna o 
-
-+cuR evaluación perfiles directivos
-
-~`imP Evaluación equipo:
-caR se evalúa rendimiento colectivo 
-caR del equipo, no individual 
-
--*imP Útil para 
-
-+imP medir cohesión,
-
-+imP distribución carga trabajo y 
-
-+imP clima laboral 
-
--cuR No sustituye
-cuR a evaluación individual,
-cuR complementa
-
--imP Evaluación del cliente:
-*caR cliente 
-
-+@caR externo o 
-
-+@caR interno 
-caR valora desempeño del empleado
-caR con que interactúa 
-
--caR Aporta una perspectiva
-caR que ningún evaluador interno 
-caR puede replicar 
-
--deF Solo aplica en puestos
-*deF con contacto 
-
-+@deF directo y 
-
-+@deF frecuente
-
-$deF con clientes
-
-~`imP Evaluación 360°:
-caR recoge feedback 
-caR sobre desempeño 
-caR 1 empleado 
-*caR desde todas perspectivas posibles:
-
-+caR manager directo,
-
-+caR compañeros equipo,
-
-+caR subordinados y,
-
-+caR en algunos casos de clientes 
-
--*caR Ofrece una imagen completa 
-
-+@caR cómo trabaja y 
-
-+@caR se relaciona 
-
-$caR esa persona 
-caR dentro organización 
-
--imP Es modelo más adecuado
-*imP para evaluar competencias 
-
-+imP relacionales y 
-
-+imP liderazgo
-
-
-^subTMÉTODO FEEDBACK
-imP Método SBI (Situación Comportamiento Impacto):
-imP modelo estructurado
-*imP para transmitir feedback 
-
-+@imP claro y 
-
-+@imP objetivo,
-
-$*imP describiendo 
-
-+imP situación exacta,
-
-+imP comportamiento observado, 
-
-+imP impacto o 
-
-+imP consecuencia generada
++cuR como planificación operativa,
+
++cuR supervisión y
+
++cuR análisis
+
+~imP el objetivo gestión estratégica
+imP es garantizar
+imP que decisiones producción
+imP estén alineadas
+imP con objetivos comerciales empresa
+
+
+^subT PROCESOS
+deF la gestión operaciones
+deF garantiza que procesos 
+deF funcionen a perfección
+deF dentro de empresas
+
+~caR Si tienes creatividad,
+caR te resultará mucho más fácil
+caR mantener eficiencia 
+caR procesos comerciales
+
+~deF Sin embargo,
+deF función del director operaciones 
+deF se limita 
+deF a gestionar operaciones financieras
+deF relacionadas
+deF con proceso producción
+
+~cuR No todos productos 
+cuR alcanzarán mejor calidad 
+cuR en primera ronda 
+cuR del proceso producción
+
+~*cuR Puede tomar varias rondas 
+
++@cuR rediseños y
+
++@cuR modificaciones
+
+$cuR para crear 1 producto calidad
+cuR que cumpla
+cuR con estándares deseados
+
+~deF Una de las primeras acciones
+deF que debe tomar equipo 
+deF durante proceso control calidad
+deF es realizar 
+deF una investigación mercado
+deF para determinar qué estándares
+deF se aplican en sector
+
+~imP Mejorar sistema producción
+imP Aumentar productividad
+imP implementando 
+imP 1 proceso entrega producto
+imP más eficiente
+
+~cuR los miembros del equipo 
+cuR tu empresa 
+cuR pueden trabajar más rápido
+cuR cuando optimizas 
+cuR proceso producción
+
+
+^subT CADENA SUMINISTROS (SUPPLY CHAIN)
+deF Como director operaciones,
+deF seguramente dediques 
+deF más tiempo a gestionar 
+deF algunas funciones que otras
+
+~ejeM Por ejemplo,
+ejeM si tu empresa no provee
+ejeM 1 producto físico,
+ejeM es probable
+ejeM que no te centres demasiado
+ejeM en gestión cadena suministro
+
+~imP Sin embargo,
+imP comprender 
+imP cada función operativa 
+*imP una empresa 
+
++imP es mejor manera 
+imP desarrollar tus habilidades y
+
++imP prepararte 
+imP para trabajar en cualquier sector
+
+~deF Quizás te preguntes
+deF por qué gestión cadena suministro
+deF es una principales funciones 
+deF gestión operativa
+deF cuando se trata 
+deF 1 departamento independiente
+
+~deF Aunque posiblemente 
+deF haya 1 equipo responsable 
+deF cadena suministro,
+deF problemas cadena suministro 
+deF relacionados con producción interna 
+deF estarán 
+deF bajo tu responsabilidad
+
+~imP Sin embargo,
+imP es importante 
+imP poder mantener intacta 
+imP cadena suministro
+imP ya que si 
+imP se genera 1 cuello botella 
+imP en alguna etapas,
+imP puede causar grandes inconvenientes 
+imP en todo ciclo
+
+~deF Aunque estos dos procesos 
+deF suelen estar estrechamente relacionados,
+deF cada equipo 
+deF se centra en
+deF sus propias prioridades
+
+~cuR Tradicionalmente,
+cuR gestión operativa 
+cuR implica parte interna producción,
+cuR mientras que 
+cuR gestión cadena suministro
+cuR implica parte externa
