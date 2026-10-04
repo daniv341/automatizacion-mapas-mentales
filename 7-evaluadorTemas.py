@@ -2272,6 +2272,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   .historial-paginacion-texto { font-size: 13px; color: #666; font-weight: 600; }
 
+  /* NUEVO: resumen histórico consolidado (sesiones ya podadas) */
+  .resumen-historico {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f7f7fb;
+    border: 1px solid #ececf4;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+  }
+  .resumen-historico-titulo { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #999; margin-bottom: 4px; }
+
   .item-historial {
     border-bottom: 1px solid #eee;
     padding: 10px 4px;
@@ -2819,6 +2832,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
     <div class="lista-historial-scroll" id="lista-historial"></div>
     <div class="historial-paginacion" id="historial-paginacion" style="display:none;"></div>
+    <!-- NUEVO: estadísticas históricas consolidadas (sesiones ya podadas) de este evaluador -->
+    <div class="resumen-historico" id="resumen-historico" style="display:none;"></div>
     <p class="galeria-vacia" id="historial-vacio" style="display:none;">Aún no hay sesiones guardadas.</p>
     <!-- NUEVO: sesiones de otros evaluadores (solo lectura, agrupadas por espacio) -->
     <div class="lista-temas zona-dificiles" id="zona-historial-otros" style="display:none; margin-top:14px;">
@@ -3312,7 +3327,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const CLAVE_GAMIFICACION = 'gamificacion_v1';
 
   function valoresPorDefectoGamificacion() {
-    return { puntosTotales: 0, inventario: { comodines: 0, pistasGratis: 0, escudosRacha: 0, segundasOportunidades: 0 }, historial: [] };
+    return { puntosTotales: 0, inventario: { comodines: 0, pistasGratis: 0, escudosRacha: 0, segundasOportunidades: 0 }, historial: [], resumenPorEvaluador: {} };
   }
 
   function cargarGamificacion() {
@@ -3332,6 +3347,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           segundasOportunidades: (obj.inventario && typeof obj.inventario.segundasOportunidades === 'number') ? obj.inventario.segundasOportunidades : base.inventario.segundasOportunidades,
         },
         historial: Array.isArray(obj.historial) ? obj.historial : base.historial,
+        // NUEVO: estadísticas consolidadas de sesiones ya podadas, por evaluador
+        resumenPorEvaluador: (obj.resumenPorEvaluador && typeof obj.resumenPorEvaluador === 'object') ? obj.resumenPorEvaluador : base.resumenPorEvaluador,
       };
     } catch (e) {
       return valoresPorDefectoGamificacion();
@@ -4416,6 +4433,87 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('huerfanas-subtitulo').textContent =
     'Rutas de respuestas.txt que no están citadas por ninguna tarjeta (' + rutasHuerfanas.length + ')';
 
+  // ============================================================
+  // NUEVO: índices invertidos para el buscador global (§3 del pedido de
+  // optimización). Filtran candidatos antes de aplicar la MISMA comprobación
+  // exacta de siempre, así que no cambia ningún resultado de búsqueda.
+  // ============================================================
+
+  // Separa en palabras normalizadas de 3+ caracteres, sin palabras vacías
+  // (mismo STOPWORDS que ya usa el resaltado de evaluación).
+  function tokenizarParaIndice(texto) {
+    return normalizarPalabra(texto || '')
+      .split(/[^a-z0-9áéíóúñ]+/)
+      .filter((tok) => tok.length >= 3 && !STOPWORDS.has(tok));
+  }
+
+  // items: lista de ids a indexar. extraerTexto(id) -> texto completo de ese id.
+  function construirIndiceInvertido(items, extraerTexto) {
+    const indice = new Map();   // token -> Set<id>
+    items.forEach((id) => {
+      const tokens = tokenizarParaIndice(extraerTexto(id));
+      tokens.forEach((tok) => {
+        if (!indice.has(tok)) indice.set(tok, new Set());
+        indice.get(tok).add(id);
+      });
+    });
+    return indice;
+  }
+
+  // Candidatos cuyo texto PODRÍA contener 'consultaNorm': para cada palabra
+  // de la consulta busca, entre las CLAVES del índice, las que la contienen
+  // como subcadena (cubre coincidencias parciales de palabra, igual que la
+  // búsqueda de siempre) y une sus ids; intersecta entre palabras de la
+  // consulta (deben aparecer todas, en cualquier lugar del texto indexado).
+  // Si una palabra de la consulta es muy corta/vacía y no aporta ningún
+  // token, esa palabra no filtra (nunca se pierden resultados verdaderos).
+  // Devuelve null si no se pudo acotar nada: en ese caso se recorre todo,
+  // igual que antes del índice (fallback seguro).
+  function candidatosPorIndice(indice, consultaNorm) {
+    const palabras = consultaNorm.split(/\\s+/).filter(Boolean);
+    if (palabras.length === 0) return null;
+    let resultado = null;
+    for (let i = 0; i < palabras.length; i++) {
+      const palabra = palabras[i];
+      let idsPalabra = null;
+      for (const [token, ids] of indice) {
+        if (token.indexOf(palabra) !== -1) {
+          if (idsPalabra === null) idsPalabra = new Set();
+          ids.forEach((id) => idsPalabra.add(id));
+        }
+      }
+      if (idsPalabra === null) continue;   // esta palabra no acota: se ignora, no se pierde nada
+      resultado = (resultado === null) ? idsPalabra : new Set(Array.from(resultado).filter((id) => idsPalabra.has(id)));
+    }
+    return resultado;
+  }
+
+  // ---- Índice de tarjetas: primero + segundo + texto de sus rutas ----
+  const indiceTarjetas = construirIndiceInvertido(
+    tarjetasCompletas.map((_, i) => i),
+    (i) => {
+      const t = tarjetasCompletas[i];
+      return (t.primero || '') + ' ' + (t.segundo || '') + ' ' + textoRutasDeTarjeta(t);
+    }
+  );
+
+  // ---- Índice de rutas huérfanas: "ruta N" + su contenido de texto ----
+  const indiceHuerfanas = construirIndiceInvertido(
+    rutasHuerfanas,
+    (numeroRuta) => 'ruta ' + numeroRuta + ' ' + (textoHuerfanaPlano(numeroRuta) || '')
+  );
+
+  // ---- Índice de imágenes: "ruta N" + descripción, por posición en INDICE_IMAGENES ----
+  const indiceImagenes = construirIndiceInvertido(
+    INDICE_IMAGENES.map((_, i) => i),
+    (posImg) => {
+      const e = INDICE_IMAGENES[posImg];
+      return 'ruta ' + e.ruta + ' ' + (descripcionDeImagen(e.ruta, e.indice) || '');
+    }
+  );
+
+
+
   // "Revisar" de rutas huérfanas: EFÍMERO en memoria (igual política que
   // revisarEnMemoria de tarjetas). Objeto paralelo e independiente: nunca se
   // mezcla con revisarEnMemoria ni aparece en "🚩 Para revisar guardadas".
@@ -4536,7 +4634,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function buscarHuerfanasGlobal(consultaNorm) {
     const resultados = [];
-    rutasHuerfanas.forEach((numeroRuta) => {
+    const candidatosH = candidatosPorIndice(indiceHuerfanas, consultaNorm);
+    const listaRutas = candidatosH ? rutasHuerfanas.filter((n) => candidatosH.has(n)) : rutasHuerfanas;
+    listaRutas.forEach((numeroRuta) => {
       let texto = null;
       if (normalizarPalabra('ruta ' + numeroRuta).indexOf(consultaNorm) !== -1) {
         texto = 'Ruta ' + numeroRuta;
@@ -4730,14 +4830,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     // NUEVO: Escudo de racha (pasivo). Solo actúa ante un fallo ('no') y si hay racha
     // que proteger; con racha 0 NO se consume. La penitencia (vida, sonido) se cobra
     // completa igual: el escudo únicamente conserva racha y multiplicador.
+    // CORREGIDO: racha, multiplicador y consumibles son solo de Normal/Tryhard; en
+    // Light no se consume el escudo ni se actualiza la racha (queda siempre en 0).
     let escudoUsado = false;
-    if (resultado === 'no' && rachaActual > 0 && (gamificacion.inventario.escudosRacha || 0) > 0) {
-      gamificacion.inventario.escudosRacha--;
-      guardarGamificacion();
-      escudoUsado = true;
+    if (modoJuego !== 'light') {
+      if (resultado === 'no' && rachaActual > 0 && (gamificacion.inventario.escudosRacha || 0) > 0) {
+        gamificacion.inventario.escudosRacha--;
+        guardarGamificacion();
+        escudoUsado = true;
+      }
+      actualizarRachaTrasResultado(resultado, !!opciones.comodinUsado, escudoUsado);
     }
-
-    actualizarRachaTrasResultado(resultado, !!opciones.comodinUsado, escudoUsado);
 
     if (resultado === 'si') {
       reproducirSonido('bien');
@@ -4797,13 +4900,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elStatPuntos.style.display = modoJuego === 'light' ? 'none' : 'inline';
     elStatPuntos.textContent = '⭐ ' + puntosSesion;
 
+    // CORREGIDO: racha y estos consumibles son solo de Normal/Tryhard; en Light
+    // se ocultan (igual que ya pasa con puntos y vidas), para no mostrar algo
+    // que no se puede usar en ese modo.
+    const esLight = modoJuego === 'light';
+    elStatRacha.style.display = esLight ? 'none' : 'inline';
     elStatRacha.textContent = '🔥 ' + rachaActual + (multiplicadorActual > 1 ? (' x' + multiplicadorActual) : '');
 
     // NUEVO: contadores de consumibles (icono + cantidad); atenuados en 0
     const nEscudos = gamificacion.inventario.escudosRacha || 0;
     const nSegundas = gamificacion.inventario.segundasOportunidades || 0;
+    elStatEscudo.style.display = esLight ? 'none' : 'inline';
     elStatEscudo.textContent = '🛡 ' + nEscudos;
     elStatEscudo.style.opacity = nEscudos > 0 ? '1' : '0.4';
+    elStatSegunda.style.display = esLight ? 'none' : 'inline';
     elStatSegunda.textContent = '🔁 ' + nSegundas;
     elStatSegunda.style.opacity = nSegundas > 0 ? '1' : '0.4';
 
@@ -4817,14 +4927,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elStatVidas.textContent = corazones;
     }
 
-    // Badges de inventario en los botones de la tarjeta
-    if (gamificacion.inventario.pistasGratis > 0) {
+    // Badges de inventario en los botones de la tarjeta (ocultos en Light: ahí no se consumen)
+    if (!esLight && gamificacion.inventario.pistasGratis > 0) {
       elBadgePistaGratis.textContent = 'x' + gamificacion.inventario.pistasGratis;
       elBadgePistaGratis.style.display = 'block';
     } else {
       elBadgePistaGratis.style.display = 'none';
     }
-    if (gamificacion.inventario.comodines > 0) {
+    if (!esLight && gamificacion.inventario.comodines > 0) {
       elBadgeComodines.textContent = 'x' + gamificacion.inventario.comodines;
       elBadgeComodines.style.display = 'block';
     } else {
@@ -4891,6 +5001,58 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // ---------- Historial de sesiones (guardado desde mostrarResumen) ----------
 
+
+  // ============================================================
+  // NUEVO: poda automática del historial (100 sesiones por evaluador)
+  // ============================================================
+  const LIMITE_HISTORIAL_POR_EVALUADOR = 100;
+
+  // Suma 'sesionesPodadas' (ya extraídas del historial) al resumen consolidado
+  // de 'espacio'. Si ya existía un resumen previo, se SUMAN los totales y la
+  // mejor nota se actualiza solo si la nueva es superior (nunca baja).
+  function consolidarResumenEvaluador(espacio, sesionesPodadas) {
+    if (sesionesPodadas.length === 0) return;
+    if (!gamificacion.resumenPorEvaluador) gamificacion.resumenPorEvaluador = {};
+    const previo = gamificacion.resumenPorEvaluador[espacio];
+    const acc = previo ? Object.assign({}, previo) : {
+      sesionesPodadas: 0, mejorNota: 0, sumaNotas: 0, tiempoTotalMs: 0, puntosTotales: 0, ultimaFecha: '',
+    };
+    sesionesPodadas.forEach((s) => {
+      const nota = Number(s.nota) || 0;
+      acc.sesionesPodadas++;
+      if (nota > acc.mejorNota) acc.mejorNota = nota;
+      acc.sumaNotas += nota;
+      acc.tiempoTotalMs += Number(s.duracion_ms) || 0;
+      acc.puntosTotales += Number(s.puntos_ganados) || 0;
+      if (!acc.ultimaFecha || String(s.fecha) > String(acc.ultimaFecha)) acc.ultimaFecha = s.fecha;
+    });
+    gamificacion.resumenPorEvaluador[espacio] = acc;
+  }
+
+  // Agrupa el historial por 'espacio'; en cada grupo que supere el límite,
+  // extrae las sesiones MÁS ANTIGUAS que exceden (no las primeras N) y las
+  // consolida en el resumen de ese evaluador antes de descartarlas.
+  function podarHistorialPorEvaluador() {
+    const porEspacio = {};
+    gamificacion.historial.forEach((s) => {
+      const esp = espacioDeSesion(s);
+      (porEspacio[esp] = porEspacio[esp] || []).push(s);
+    });
+    const aQuitar = new Set();
+    Object.keys(porEspacio).forEach((esp) => {
+      const sesiones = porEspacio[esp];
+      if (sesiones.length <= LIMITE_HISTORIAL_POR_EVALUADOR) return;
+      const ordenadas = sesiones.slice().sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+      const exceso = sesiones.length - LIMITE_HISTORIAL_POR_EVALUADOR;
+      const aExtraer = ordenadas.slice(0, exceso);   // las más antiguas, justo las que exceden el límite
+      consolidarResumenEvaluador(esp, aExtraer);
+      aExtraer.forEach((s) => aQuitar.add(s));
+    });
+    if (aQuitar.size > 0) {
+      gamificacion.historial = gamificacion.historial.filter((s) => !aQuitar.has(s));
+    }
+  }
+
   function guardarHistorialSesion(nota) {
     if (modoObservador) return;
     if (historialGuardadoEstaSesion) return;   // evita duplicar si mostrarResumen() se llama 2 veces
@@ -4912,6 +5074,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         ? (srsSesionActiva.nombres.length === 1 ? srsSesionActiva.nombres[0] : 'SRS Múltiple')
         : (listaActivaNombre || ''),
     });
+    podarHistorialPorEvaluador();   // NUEVO: justo después de agregar la entrada, antes de persistir
     if (modoJuego !== 'light') {
       gamificacion.puntosTotales += puntosSesion;
     }
@@ -5648,14 +5811,107 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function esSesionLocal(s) { return espacioDeSesion(s) === ESPACIO_HASH; }
   function etiquetaEspacio(esp) { return esp ? esp : 'Sin identificar'; }
 
+  // NUEVO: muestra las estadísticas consolidadas (sesiones ya podadas) de ESTE
+  // evaluador, debajo de las sesiones recientes paginadas. Oculto si todavía
+  // no se podó nada para este evaluador.
+  function renderResumenHistorico() {
+    const el = document.getElementById('resumen-historico');
+    const r = gamificacion.resumenPorEvaluador && gamificacion.resumenPorEvaluador[ESPACIO_HASH];
+    if (!r || !r.sesionesPodadas) { el.style.display = 'none'; return; }
+    const promedio = r.sesionesPodadas > 0 ? (r.sumaNotas / r.sesionesPodadas) : 0;
+    el.innerHTML = '';
+    const titulo = document.createElement('div');
+    titulo.className = 'resumen-historico-titulo';
+    titulo.textContent = 'Histórico (sesiones ya podadas)';
+    el.appendChild(titulo);
+    const texto = document.createElement('div');
+    texto.textContent = r.sesionesPodadas + ' sesión(es) · mejor ' + r.mejorNota.toFixed(1) +
+      ' · promedio ' + promedio.toFixed(1) + ' · ' + formatearTiempo(r.tiempoTotalMs) +
+      ' · ⭐ ' + r.puntosTotales + ' · última: ' + (r.ultimaFecha ? formatearFechaHistorial(r.ultimaFecha) : '—');
+    el.appendChild(texto);
+    el.style.display = 'block';
+  }
+
+  // NUEVO: cache de nodos ya construidos por sesión (clave = 'fecha', única
+  // por sesión). Las sesiones son inmutables una vez guardadas, así que
+  // reutilizar el mismo nodo al volver a mostrar una página ya vista es
+  // seguro: nunca hace falta reconstruirlo, solo reordenar/reinsertar.
+  const nodosHistorial = new Map();   // fecha -> nodo item-historial
+
+  function construirItemHistorial(entrada) {
+    const item = document.createElement('div');
+    item.className = 'item-historial';
+
+    const fecha = document.createElement('div');
+    fecha.className = 'item-historial-fecha';
+    fecha.textContent = formatearFechaHistorial(entrada.fecha);
+    const chip = document.createElement('span');
+    chip.className = 'chip-espacio';
+    chip.textContent = etiquetaEspacio(espacioDeSesion(entrada));
+    fecha.appendChild(chip);
+    item.appendChild(fecha);
+
+    const detalle = document.createElement('div');
+    detalle.className = 'item-historial-detalle';
+    const modoTxt = document.createElement('span');
+    modoTxt.textContent = '🎮 ' + nombreModoJuego(entrada.modo);
+    const notaTxt = document.createElement('span');
+    notaTxt.textContent = '🎓 ' + Number(entrada.nota).toFixed(1) + ' / 10';
+    const duracionTxt = document.createElement('span');
+    duracionTxt.textContent = '⏱ ' + formatearTiempo(entrada.duracion_ms || 0);
+    const puntosTxt = document.createElement('span');
+    puntosTxt.textContent = '⭐ ' + (entrada.puntos_ganados || 0);
+    detalle.appendChild(modoTxt);
+    detalle.appendChild(notaTxt);
+    detalle.appendChild(duracionTxt);
+    detalle.appendChild(puntosTxt);
+    item.appendChild(detalle);
+    actualizarListadoEnItem(item, entrada);   // NUEVO: arma/actualiza el "listado" (ver más abajo)
+    return item;
+  }
+
+  // NUEVO: arma o refresca SOLO el fragmento "listado" (tachado si la lista ya
+  // no existe, §9.2/§10) dentro de un nodo ya construido. Se llama siempre que
+  // se reutiliza un nodo cacheado, porque a diferencia del resto de los datos
+  // de la sesión (inmutables), si una lista se borra o renombra DESPUÉS este
+  // estado puede cambiar sin que la sesión en sí haya cambiado.
+  function actualizarListadoEnItem(item, entrada) {
+    let listadoTxt = item.querySelector('.item-historial-listado');
+    if (!entrada.listado) {
+      if (listadoTxt) listadoTxt.remove();
+      return;
+    }
+    if (!listadoTxt) {
+      listadoTxt = document.createElement('span');
+      listadoTxt.className = 'item-historial-listado';
+      item.querySelector('.item-historial-detalle').appendChild(listadoTxt);
+    }
+    listadoTxt.innerHTML = '';
+    if (buscarLista(entrada.listado)) {
+      listadoTxt.textContent = '📋 ' + entrada.listado;
+    } else {
+      const s = document.createElement('s');
+      s.textContent = '📋 ' + entrada.listado;
+      listadoTxt.appendChild(s);
+    }
+  }
+
   function renderHistorial() {
     const todas = gamificacion.historial;
     const historial = todas.filter(esSesionLocal);   // la lista principal es solo de ESTE evaluador
     elListaHistorial.innerHTML = '';
 
+    // NUEVO: poda del cache de nodos: las sesiones que ya no existen (podadas
+    // o borradas) no deben seguir ocupando memoria.
+    if (nodosHistorial.size > 0) {
+      const fechasVigentes = new Set(historial.map((s) => s.fecha));
+      Array.from(nodosHistorial.keys()).forEach((f) => { if (!fechasVigentes.has(f)) nodosHistorial.delete(f); });
+    }
+
     elBtnHistorialBorrarEste.disabled = historial.length === 0;
     elBtnHistorialBorrarGlobal.disabled = todas.length === 0;
     renderHistorialOtros(todas.filter((s) => !esSesionLocal(s)));
+    renderResumenHistorico();
 
     if (historial.length === 0) {
       elListaHistorial.style.display = 'none';
@@ -5675,48 +5931,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const inicioPagina = (historialPaginaActual - 1) * HISTORIAL_POR_PAGINA;
     const pagina = masRecientePrimero.slice(inicioPagina, inicioPagina + HISTORIAL_POR_PAGINA);
 
+    // NUEVO: reutiliza el nodo ya construido para esta sesión si existe
+    // (p. ej. al volver a una página ya vista); solo arma nodos nuevos para
+    // las entradas que todavía no se habían mostrado.
     pagina.forEach((entrada) => {
-      const item = document.createElement('div');
-      item.className = 'item-historial';
-
-      const fecha = document.createElement('div');
-      fecha.className = 'item-historial-fecha';
-      fecha.textContent = formatearFechaHistorial(entrada.fecha);
-      const chip = document.createElement('span');
-      chip.className = 'chip-espacio';
-      chip.textContent = etiquetaEspacio(espacioDeSesion(entrada));
-      fecha.appendChild(chip);
-      item.appendChild(fecha);
-
-      const detalle = document.createElement('div');
-      detalle.className = 'item-historial-detalle';
-      const modoTxt = document.createElement('span');
-      modoTxt.textContent = '🎮 ' + nombreModoJuego(entrada.modo);
-      const notaTxt = document.createElement('span');
-      notaTxt.textContent = '🎓 ' + Number(entrada.nota).toFixed(1) + ' / 10';
-      const duracionTxt = document.createElement('span');
-      duracionTxt.textContent = '⏱ ' + formatearTiempo(entrada.duracion_ms || 0);
-      const puntosTxt = document.createElement('span');
-      puntosTxt.textContent = '⭐ ' + (entrada.puntos_ganados || 0);
-      detalle.appendChild(modoTxt);
-      detalle.appendChild(notaTxt);
-      detalle.appendChild(duracionTxt);
-      detalle.appendChild(puntosTxt);
-      // NUEVO: listado usado en la sesión (tachado si ya no existe, ver §9.2/§10)
-      if (entrada.listado) {
-        const listadoTxt = document.createElement('span');
-        if (buscarLista(entrada.listado)) {
-          listadoTxt.textContent = '📋 ' + entrada.listado;
-        } else {
-          listadoTxt.innerHTML = '';
-          const s = document.createElement('s');
-          s.textContent = '📋 ' + entrada.listado;
-          listadoTxt.appendChild(s);
-        }
-        detalle.appendChild(listadoTxt);
+      let item = nodosHistorial.get(entrada.fecha);
+      if (!item) {
+        item = construirItemHistorial(entrada);
+        nodosHistorial.set(entrada.fecha, item);
+      } else {
+        actualizarListadoEnItem(item, entrada);   // CORREGIDO: refresca lo único que puede cambiar con el tiempo
       }
-      item.appendChild(detalle);
-
       elListaHistorial.appendChild(item);
     });
 
@@ -5883,6 +6108,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       fechasLocales.add(f);
     });
 
+    // NUEVO: fusiona los resúmenes consolidados (sesiones ya podadas) por evaluador
+    const impResumen = (importado.resumenPorEvaluador && typeof importado.resumenPorEvaluador === 'object') ? importado.resumenPorEvaluador : {};
+    if (!gamificacion.resumenPorEvaluador) gamificacion.resumenPorEvaluador = {};
+    Object.keys(impResumen).forEach((esp) => {
+      const r = impResumen[esp] || {};
+      const previo = gamificacion.resumenPorEvaluador[esp];
+      if (!previo) {
+        gamificacion.resumenPorEvaluador[esp] = {
+          sesionesPodadas: Number(r.sesionesPodadas) || 0,
+          mejorNota: Number(r.mejorNota) || 0,
+          sumaNotas: Number(r.sumaNotas) || 0,
+          tiempoTotalMs: Number(r.tiempoTotalMs) || 0,
+          puntosTotales: Number(r.puntosTotales) || 0,
+          ultimaFecha: typeof r.ultimaFecha === 'string' ? r.ultimaFecha : '',
+        };
+      } else {
+        previo.sesionesPodadas += Number(r.sesionesPodadas) || 0;
+        previo.mejorNota = Math.max(previo.mejorNota, Number(r.mejorNota) || 0);
+        previo.sumaNotas += Number(r.sumaNotas) || 0;
+        previo.tiempoTotalMs += Number(r.tiempoTotalMs) || 0;
+        previo.puntosTotales += Number(r.puntosTotales) || 0;
+        if (typeof r.ultimaFecha === 'string' && r.ultimaFecha > (previo.ultimaFecha || '')) previo.ultimaFecha = r.ultimaFecha;
+      }
+    });
+
+    podarHistorialPorEvaluador();   // por si el historial importado supera el límite por evaluador
     guardarGamificacion();
     renderHistorial();
     actualizarBarraGamificacion();
@@ -6538,7 +6789,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // (prioridad: primero > segundo > rutas).
   function buscarTarjetasGlobal(consultaNorm) {
     const resultados = [];
-    tarjetasCompletas.forEach((t, i) => {
+    const candidatos = candidatosPorIndice(indiceTarjetas, consultaNorm);
+    const indices = candidatos ? Array.from(candidatos).sort((a, b) => a - b) : tarjetasCompletas.map((_, i) => i);
+    indices.forEach((i) => {
+      const t = tarjetasCompletas[i];
       let campoTexto = null;
       if (normalizarPalabra(t.primero || '').indexOf(consultaNorm) !== -1) {
         campoTexto = t.primero;
@@ -6662,8 +6916,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     // 2) Coincidencias por descripción de CADA imagen individual: apuntan
     //    exactamente a esa imagen (no siempre a la primera de la ruta), para
     //    que en rutas con 2+ imágenes se navegue a la que realmente coincide.
-    INDICE_IMAGENES.forEach((entrada, posImg) => {
+    const candidatosI = candidatosPorIndice(indiceImagenes, consultaNorm);
+    const posicionesACheck = candidatosI ? Array.from(candidatosI).sort((a, b) => a - b) : INDICE_IMAGENES.map((_, i) => i);
+    posicionesACheck.forEach((posImg) => {
       if (posicionesUsadas.has(posImg)) return;
+      const entrada = INDICE_IMAGENES[posImg];
       const desc = descripcionDeImagen(entrada.ruta, entrada.indice);
       if (desc && normalizarPalabra(desc).indexOf(consultaNorm) !== -1) {
         resultados.push({ ruta: entrada.ruta, indice: entrada.indice, texto: desc, posImg: posImg });
@@ -6755,6 +7012,39 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // ---------- Preview en el modo observador: "🖼 Datos de imágenes guardados" ----------
 
+  // NUEVO: renderizado incremental de imágenes (mismo patrón que difíciles,
+  // más simple: un solo grupo/lista, sin "de otros evaluadores").
+  const nodosImagenes = new Map();   // hash -> fila
+
+  function actualizarContadoresImagenes() {
+    const elDet = document.getElementById('det-imagenes');
+    const elSuma = document.getElementById('suma-imagenes');
+    const elInfo = document.getElementById('nota-imagenes');
+    const elVaciar = document.getElementById('btn-vaciar-imagenes');
+    const n = Object.keys(datosImagenes).length;
+    elDet.style.display = n > 0 ? 'block' : 'none';
+    elSuma.textContent = 'Con nota o marcadas difícil (' + n + ')';
+    document.getElementById('btn-vincular-imagenes').style.display = contarOtrasImagenes() > 0 ? 'inline-block' : 'none';
+    elInfo.textContent = n === 0
+      ? 'Todavía no marcaste ni anotaste ninguna imagen (galería del modo observador).'
+      : 'Guardadas en este navegador: ' + n;
+    elVaciar.style.display = n > 0 ? 'inline-block' : 'none';
+  }
+
+  function actualizarFilaImagenIndividual(h) {
+    const filaVieja = nodosImagenes.get(h);
+    if (!datosImagenes[h]) {
+      if (filaVieja) { filaVieja.remove(); nodosImagenes.delete(h); }
+      actualizarContadoresImagenes();
+      return;
+    }
+    if (filaVieja) filaVieja.remove();
+    const fila = filaImagenGuardada(h, datosImagenes[h]);
+    document.getElementById('lista-imagenes-guardadas').appendChild(fila);
+    nodosImagenes.set(h, fila);
+    actualizarContadoresImagenes();
+  }
+
   function filaImagenGuardada(hash, entrada) {
     const div = document.createElement('div');
     div.className = 'item-nota-otra';
@@ -6791,7 +7081,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (!confirm('¿Borrar la nota y la marca de difícil de esta imagen?')) return;
       delete datosImagenes[hash];
       guardarImagenesStorage();
-      renderImagenesPreview();
+      actualizarFilaImagenIndividual(hash);   // CORREGIDO: solo esta fila, no todo el listado
     }));
     div.appendChild(acc);
     return div;
@@ -6804,9 +7094,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const elInfo = document.getElementById('nota-imagenes');
     const elVaciar = document.getElementById('btn-vaciar-imagenes');
     elLista.innerHTML = '';
+    nodosImagenes.clear();   // NUEVO: reconstrucción total = reconstruye también el mapa de nodos
 
     const hashes = Object.keys(datosImagenes);
-    hashes.forEach((h) => elLista.appendChild(filaImagenGuardada(h, datosImagenes[h])));
+    hashes.forEach((h) => {
+      const fila = filaImagenGuardada(h, datosImagenes[h]);
+      elLista.appendChild(fila);
+      nodosImagenes.set(h, fila);
+    });
     elDet.style.display = hashes.length > 0 ? 'block' : 'none';
     elSuma.textContent = 'Con nota o marcadas difícil (' + hashes.length + ')';
     document.getElementById('btn-vincular-imagenes').style.display = contarOtrasImagenes() > 0 ? 'inline-block' : 'none';
@@ -6951,6 +7246,82 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // Las desmarcadas NO se borran: pasan a la sección 'Desmarcadas' y pueden
   // re-activarse desde ahí (o desde el botón ☆ durante el estudio).
 
+  // NUEVO: renderizado incremental — mapea cada hash a su fila (nodo DOM) y a
+  // qué grupo pertenece actualmente, para no reconstruir TODO el listado
+  // cuando cambia una sola entrada (p. ej. tildar/destildar el checkbox).
+  const nodosDificiles = new Map();   // hash -> { fila, grupo: 'propia'|'otros'|'desm' }
+
+  function grupoActualDificil(h) {
+    const v = dificiles[h];
+    if (!v) return null;   // ya no existe
+    if (!v.activa) return 'desm';
+    return tarjetasCompletas.some((t) => hashTarjeta(t) === h) ? 'propia' : 'otros';
+  }
+
+  function contenedorDeGrupoDificil(grupo) {
+    if (grupo === 'propia') return document.getElementById('lista-dificiles');
+    if (grupo === 'otros') return document.getElementById('lista-dificiles-otros');
+    return document.getElementById('lista-dificiles-desm');
+  }
+
+  // Recalcula SOLO los contadores y textos auxiliares (barato: son conteos
+  // sobre el objeto 'dificiles', no tocan el DOM de las filas).
+  function actualizarContadoresDificiles() {
+    const elDetOtros = document.getElementById('det-dificiles-otros');
+    const elSumaOtros = document.getElementById('suma-dificiles-otros');
+    const elDetDesm = document.getElementById('det-dificiles-desm');
+    const elSumaDesm = document.getElementById('suma-dificiles-desm');
+    const elNota = document.getElementById('nota-dificiles');
+    const btnD = document.getElementById('btn-modo-dificiles');
+    let nAqui = 0, nOtros = 0, nDesm = 0;
+    Object.keys(dificiles).forEach((h) => {
+      const g = grupoActualDificil(h);
+      if (g === 'propia') nAqui++;
+      else if (g === 'otros') nOtros++;
+      else if (g === 'desm') nDesm++;
+    });
+    elDetOtros.style.display = nOtros > 0 ? 'block' : 'none';
+    elSumaOtros.textContent = 'De otros evaluadores (' + nOtros + ')';
+    elDetDesm.style.display = nDesm > 0 ? 'block' : 'none';
+    elSumaDesm.textContent = 'Desmarcadas (' + nDesm + ')';
+    btnD.textContent = 'Repasar difíciles (' + nAqui + ')';
+    btnD.disabled = nAqui === 0;
+    const total = Object.keys(dificiles).length;
+    elNota.textContent = total === 0
+      ? 'Todavía no marcaste ninguna tarjeta como difícil (botón ☆ Difícil durante el estudio).'
+      : 'Guardadas: ' + (total - nDesm) + ' activa(s)' + (nDesm > 0 ? ', ' + nDesm + ' desmarcada(s)' : '');
+  }
+
+  // Actualización QUIRÚRGICA de una sola entrada: si el grupo no cambió, solo
+  // actualiza el checkbox de su fila ya existente; si cambió de grupo, mueve
+  // esa UNA fila al contenedor correcto. Nunca reconstruye el resto de la
+  // lista. Se usa para cambios de un solo elemento; las operaciones masivas
+  // (importar, vincular, vaciar) siguen llamando a renderDificilesPreview().
+  function actualizarFilaDificilIndividual(h) {
+    const cache = nodosDificiles.get(h);
+    const nuevoGrupo = grupoActualDificil(h);
+    if (!nuevoGrupo) {
+      if (cache) { cache.fila.remove(); nodosDificiles.delete(h); }
+      actualizarContadoresDificiles();
+      return;
+    }
+    if (cache && cache.grupo === nuevoGrupo) {
+      const check = cache.fila.querySelector('input[type="checkbox"]');
+      if (check) check.checked = nuevoGrupo !== 'desm';
+      actualizarContadoresDificiles();
+      return;
+    }
+    if (cache) cache.fila.remove();
+    const v = dificiles[h];
+    const enTarjetas = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
+    const p = enTarjetas ? (enTarjetas.primero || '') : (v.p || '');
+    const s = enTarjetas ? (enTarjetas.segundo || '') : (v.s || '');
+    const fila = filaDificil(h, p, s, nuevoGrupo !== 'desm');
+    contenedorDeGrupoDificil(nuevoGrupo).appendChild(fila);
+    nodosDificiles.set(h, { fila: fila, grupo: nuevoGrupo });
+    actualizarContadoresDificiles();
+  }
+
   function filaDificil(h, p, s, activa) {
     const label = document.createElement('label');
     label.className = 'item-tema-check';
@@ -6966,7 +7337,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
       dificiles[h].t = Date.now();   // NUEVO: para saber si hay cambios sin respaldar (§8)
       guardarDificiles();
-      renderDificilesPreview();
+      // CORREGIDO: actualización quirúrgica de ESTA fila, no todo el listado
+      actualizarFilaDificilIndividual(h);
     });
 
     const texto = document.createElement('span');
@@ -6997,6 +7369,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elLista.innerHTML = '';
     elOtros.innerHTML = '';
     elDesm.innerHTML = '';
+    nodosDificiles.clear();   // NUEVO: reconstrucción total = reconstruye también el mapa de nodos
 
     // 1) Difíciles activas de este evaluador
     const hashesVistos = new Set();
@@ -7007,7 +7380,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (!e || !e.activa) return;
       hashesVistos.add(h);
       nAqui++;
-      elLista.appendChild(filaDificil(h, t.primero || '', t.segundo || '', true));
+      const fila = filaDificil(h, t.primero || '', t.segundo || '', true);
+      elLista.appendChild(fila);
+      nodosDificiles.set(h, { fila: fila, grupo: 'propia' });
     });
 
     // 2) Activas de otros evaluadores (nunca se borran solas)
@@ -7018,7 +7393,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (!v.activa) return;
       hashesVistos.add(h);
       nOtros++;
-      elOtros.appendChild(filaDificil(h, v.p || '', v.s || '', true));
+      const fila = filaDificil(h, v.p || '', v.s || '', true);
+      elOtros.appendChild(fila);
+      nodosDificiles.set(h, { fila: fila, grupo: 'otros' });
     });
 
     // 3) Desmarcadas: siguen guardadas y se pueden re-activar desde acá
@@ -7033,7 +7410,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         p = enEste.primero || '';
         s = enEste.segundo || '';
       }
-      elDesm.appendChild(filaDificil(h, p, s, false));
+      const fila = filaDificil(h, p, s, false);
+      elDesm.appendChild(fila);
+      nodosDificiles.set(h, { fila: fila, grupo: 'desm' });
     });
 
     elDetOtros.style.display = nOtros > 0 ? 'block' : 'none';
@@ -7158,6 +7537,72 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return b;
   }
 
+  // NUEVO: renderizado incremental de notas (mismo patrón que difíciles).
+  // Dos grupos posibles: 'dif' (distinta a la del txt, de ESTE evaluador) y
+  // 'otras' (de otro evaluador, o cuyo hash ya no corresponde a ninguna
+  // tarjeta actual). El contenido de una fila 'dif' puede cambiar sin
+  // cambiar de grupo (p. ej. conflicto -> pendiente), así que ante CUALQUIER
+  // cambio se reconstruye esa única fila — sigue siendo una actualización
+  // quirúrgica (una fila), nunca el listado completo.
+  const nodosNotas = new Map();   // hash -> { fila, grupo: 'dif'|'otras' }
+
+  function tarjetaPorHash(h) {
+    return tarjetasCompletas.find((t) => hashTarjeta(t) === h);
+  }
+
+  function grupoActualNota(h) {
+    const t = tarjetaPorHash(h);
+    if (t) return estadoNotaDe(t) === 'igual' ? null : 'dif';
+    return notasLocales[h] ? 'otras' : null;
+  }
+
+  function contenedorDeGrupoNota(grupo) {
+    return grupo === 'dif' ? document.getElementById('lista-notas-dif') : document.getElementById('lista-notas-otras');
+  }
+
+  function actualizarContadoresNotas() {
+    const elDetDif = document.getElementById('det-notas-dif');
+    const elSumaDif = document.getElementById('suma-notas-dif');
+    const elDetOtras = document.getElementById('det-notas-otras');
+    const elSumaOtras = document.getElementById('suma-notas-otras');
+    const elInfo = document.getElementById('nota-notas');
+    const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
+    let nDif = 0, nConflicto = 0, nOtras = 0;
+    tarjetasCompletas.forEach((t) => {
+      const est = estadoNotaDe(t);
+      if (est === 'igual') return;
+      nDif++;
+      if (est === 'conflicto') nConflicto++;
+    });
+    Object.keys(notasLocales).forEach((h) => { if (!hashesAqui.has(h)) nOtras++; });
+    elDetDif.style.display = nDif > 0 ? 'block' : 'none';
+    elSumaDif.textContent = 'Distintas a las del txt (' + nDif + ')' + (nConflicto > 0 ? ' — ' + nConflicto + ' con conflicto' : '');
+    elDetOtras.style.display = nOtras > 0 ? 'block' : 'none';
+    elSumaOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
+    const total = Object.keys(notasLocales).length;
+    elInfo.textContent = total === 0
+      ? 'Todavía no editaste ninguna nota (botón 💡 durante el estudio).'
+      : 'Guardadas en este navegador: ' + total;
+    document.getElementById('btn-vaciar-notas').style.display = total > 0 ? 'inline-block' : 'none';
+  }
+
+  function actualizarFilaNotaIndividual(h) {
+    const cache = nodosNotas.get(h);
+    const nuevoGrupo = grupoActualNota(h);
+    if (!nuevoGrupo) {
+      if (cache) { cache.fila.remove(); nodosNotas.delete(h); }
+      actualizarContadoresNotas();
+      return;
+    }
+    if (cache) cache.fila.remove();
+    const fila = nuevoGrupo === 'dif'
+      ? filaNotaDif(tarjetaPorHash(h), estadoNotaDe(tarjetaPorHash(h)))
+      : filaNotaOtra(h, notasLocales[h] || {});
+    contenedorDeGrupoNota(nuevoGrupo).appendChild(fila);
+    nodosNotas.set(h, { fila: fila, grupo: nuevoGrupo });
+    actualizarContadoresNotas();
+  }
+
   function filaNotaDif(t, est) {
     const det = document.createElement('details');
     det.className = 'item-nota-dif';
@@ -7183,13 +7628,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (est === 'conflicto') {
       acc.appendChild(botonMini('Quedarme con la mía', () => {
         conservarMiNota(t);
-        renderNotasPreview();
+        actualizarFilaNotaIndividual(hashTarjeta(t));   // CORREGIDO: solo esta fila, no todo el listado
       }));
     }
     acc.appendChild(botonMini('Usar la del txt', () => {
       if (!confirm('Se descarta tu versión y se usa la del txt. ¿Continuar?')) return;
       descartarNotaLocal(t);
-      renderNotasPreview();
+      actualizarFilaNotaIndividual(hashTarjeta(t));   // CORREGIDO: solo esta fila, no todo el listado
     }));
     det.appendChild(acc);
     return det;
@@ -7209,7 +7654,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (!confirm('¿Borrar esta nota guardada? No se puede deshacer.')) return;
       delete notasLocales[h];
       guardarNotas();
-      renderNotasPreview();
+      actualizarFilaNotaIndividual(h);   // CORREGIDO: solo esta fila, no todo el listado
     }));
     div.appendChild(acc);
     return div;
@@ -7225,6 +7670,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const elInfo = document.getElementById('nota-notas');
     elDif.innerHTML = '';
     elOtras.innerHTML = '';
+    nodosNotas.clear();   // NUEVO: reconstrucción total = reconstruye también el mapa de nodos
 
     // 1) Tarjetas de ESTE evaluador cuya nota local difiere de la del txt
     const hashesAqui = new Set();
@@ -7237,7 +7683,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (est === 'igual') return;
       nDif++;
       if (est === 'conflicto') nConflicto++;
-      elDif.appendChild(filaNotaDif(t, est));
+      const fila = filaNotaDif(t, est);
+      elDif.appendChild(fila);
+      nodosNotas.set(h, { fila: fila, grupo: 'dif' });
     });
 
     // 2) Notas guardadas que no corresponden a ninguna tarjeta de este txt
@@ -7246,7 +7694,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     Object.keys(notasLocales).forEach((h) => {
       if (hashesAqui.has(h)) return;
       nOtras++;
-      elOtras.appendChild(filaNotaOtra(h, notasLocales[h] || {}));
+      const fila = filaNotaOtra(h, notasLocales[h] || {});
+      elOtras.appendChild(fila);
+      nodosNotas.set(h, { fila: fila, grupo: 'otras' });
     });
 
     elDetDif.style.display = nDif > 0 ? 'block' : 'none';
@@ -7401,6 +7851,54 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // ---------- NUEVO: razones guardadas en "Elegir temas" ----------
 
+  // NUEVO: renderizado incremental de razones (mismo patrón que difíciles).
+  const nodosRazones = new Map();   // hash -> { fila, grupo: 'aqui'|'otras' }
+
+  function grupoActualRazon(h) {
+    if (!razonesGuardadas[h]) return null;
+    return tarjetasCompletas.some((t) => hashTarjeta(t) === h) ? 'aqui' : 'otras';
+  }
+
+  function contenedorDeGrupoRazon(grupo) {
+    return grupo === 'aqui' ? document.getElementById('lista-razones-aqui') : document.getElementById('lista-razones-otras');
+  }
+
+  function actualizarContadoresRazones() {
+    const elDetAqui = document.getElementById('det-razones-aqui');
+    const elSumaAqui = document.getElementById('suma-razones-aqui');
+    const elDetOtras = document.getElementById('det-razones-otras');
+    const elSumaOtras = document.getElementById('suma-razones-otras');
+    const elInfo = document.getElementById('nota-razones');
+    const elVaciar = document.getElementById('btn-vaciar-razones');
+    const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
+    let nAqui = 0, nOtras = 0;
+    Object.keys(razonesGuardadas).forEach((h) => { hashesAqui.has(h) ? nAqui++ : nOtras++; });
+    elDetAqui.style.display = nAqui > 0 ? 'block' : 'none';
+    elSumaAqui.textContent = 'De este evaluador (' + nAqui + ')';
+    elDetOtras.style.display = nOtras > 0 ? 'block' : 'none';
+    elSumaOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
+    const total = nAqui + nOtras;
+    elInfo.textContent = total === 0
+      ? 'Todavía no guardaste razones (botón 🏷 durante el estudio).'
+      : 'Guardadas en este navegador: ' + total;
+    elVaciar.style.display = total > 0 ? 'inline-block' : 'none';
+  }
+
+  function actualizarFilaRazonIndividual(h) {
+    const cache = nodosRazones.get(h);
+    const nuevoGrupo = grupoActualRazon(h);
+    if (!nuevoGrupo) {
+      if (cache) { cache.fila.remove(); nodosRazones.delete(h); }
+      actualizarContadoresRazones();
+      return;
+    }
+    if (cache) cache.fila.remove();
+    const fila = filaRazonGuardada(h, razonesGuardadas[h]);
+    contenedorDeGrupoRazon(nuevoGrupo).appendChild(fila);
+    nodosRazones.set(h, { fila: fila, grupo: nuevoGrupo });
+    actualizarContadoresRazones();
+  }
+
   function filaRazonGuardada(hash, entrada) {
     const div = document.createElement('div');
     div.className = 'item-nota-otra';
@@ -7446,7 +7944,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (!confirm('¿Borrar por completo este registro de razones?')) return;
       delete razonesGuardadas[hash];
       guardarRazones();
-      renderRazonesPreview();
+      actualizarFilaRazonIndividual(hash);   // CORREGIDO: solo esta fila, no todo el listado
     }));
     div.appendChild(acc);
     return div;
@@ -7463,12 +7961,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const elVaciar = document.getElementById('btn-vaciar-razones');
     elAqui.innerHTML = '';
     elOtras.innerHTML = '';
+    nodosRazones.clear();   // NUEVO: reconstrucción total = reconstruye también el mapa de nodos
 
     const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
     let nAqui = 0, nOtras = 0;
     Object.keys(razonesGuardadas).forEach((h) => {
-      if (hashesAqui.has(h)) { nAqui++; elAqui.appendChild(filaRazonGuardada(h, razonesGuardadas[h])); }
-      else { nOtras++; elOtras.appendChild(filaRazonGuardada(h, razonesGuardadas[h])); }
+      const grupo = hashesAqui.has(h) ? 'aqui' : 'otras';
+      if (grupo === 'aqui') nAqui++; else nOtras++;
+      const fila = filaRazonGuardada(h, razonesGuardadas[h]);
+      contenedorDeGrupoRazon(grupo).appendChild(fila);
+      nodosRazones.set(h, { fila: fila, grupo: grupo });
     });
     elDetAqui.style.display = nAqui > 0 ? 'block' : 'none';
     elSumaAqui.textContent = 'De este evaluador (' + nAqui + ')';
@@ -8096,6 +8598,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // esto corre en modo observador ni zombie (no se aplica nada, no se consume nada).
   function puedeSegundaOportunidad(idx) {
     if (modoObservador || modoZombie || segundaPendiente) return false;
+    if (modoJuego === 'light') return false;   // CORREGIDO: consumible de Normal/Tryhard, no de Light
     if ((gamificacion.inventario.segundasOportunidades || 0) <= 0) return false;
     return !reintentadasSesion.has(tarjetasSesion[idx]);
   }
@@ -8309,7 +8812,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     // consume del inventario PERSISTENTE (no de la sesión) y esta tarjeta
     // no penaliza puntos ni vidas.
     let comodinUsado = false;
-    if (!modoObservador && !modoZombie && resultado === 'saltar' && gamificacion.inventario.comodines > 0) {
+    if (!modoObservador && !modoZombie && modoJuego !== 'light' && resultado === 'saltar' && gamificacion.inventario.comodines > 0) {
       gamificacion.inventario.comodines--;
       comodinUsado = true;
       guardarGamificacion();
@@ -8789,7 +9292,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnPista.addEventListener('click', () => {
     revelado[indiceActual] = true;
     pistaMostrada[indiceActual] = true;
-    if (!modoObservador && !modoZombie && gamificacion.inventario.pistasGratis > 0) {
+    if (!modoObservador && !modoZombie && modoJuego !== 'light' && gamificacion.inventario.pistasGratis > 0) {
       gamificacion.inventario.pistasGratis--;
       pistaGratisUsadaPorTarjeta[indiceActual] = true;
       guardarGamificacion();
