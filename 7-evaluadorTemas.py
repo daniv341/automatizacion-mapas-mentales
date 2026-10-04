@@ -819,6 +819,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   :root {
     --fill-color: __FILL_COLOR__;
     --stroke-color: __STROKE_COLOR__;
+    /* NUEVO: color propio de la interfaz (botones, inputs, títulos, etc.).
+       Ya no depende de la paleta de colores elegida al generar el evaluador:
+       --stroke-color queda reservado SOLO para el look de las tarjetas
+       (.tema, .tarjeta, .primero, .segundo, .badge-rutas, .palabra-clave...). */
+    --color-boton: #4F46E5;
   }
 
   * { box-sizing: border-box; }
@@ -840,7 +845,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--stroke-color);
+    color: var(--color-boton);
     opacity: 0.75;
     margin-bottom: 2px;
   }
@@ -891,14 +896,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .item-tema-check input {
     width: 18px;
     height: 18px;
-    accent-color: var(--stroke-color);
+    accent-color: var(--color-boton);
     cursor: pointer;
   }
 
   .boton-principal {
     padding: 14px 30px;
     border-radius: 26px;
-    background: var(--stroke-color);
+    background: var(--color-boton);
     color: #fff;
     border: none;
     font-size: 15px;
@@ -926,8 +931,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     padding: 12px 22px;
     border-radius: 24px;
     background: #ffffff;
-    color: var(--stroke-color);
-    border: 2px solid var(--stroke-color);
+    color: var(--color-boton);
+    border: 2px solid var(--color-boton);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -972,8 +977,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .boton-mini:hover {
-    color: var(--stroke-color);
-    border-color: var(--stroke-color);
+    color: var(--color-boton);
+    border-color: var(--color-boton);
   }
 
   .extra-dificil {
@@ -1053,7 +1058,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .barra-progreso-relleno {
     height: 100%;
-    background: var(--stroke-color);
+    background: var(--color-boton);
     width: 0%;
     transition: width 0.35s ease;
   }
@@ -1143,9 +1148,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     position: relative;
     padding: clamp(8px, 2.5vw, 10px) clamp(15px, 5vw, 22px);
     border-radius: 20px;
-    border: 2px solid var(--stroke-color);
+    border: 2px solid var(--color-boton);
     background: rgba(255,255,255,0.5);
-    color: var(--stroke-color);
+    color: var(--color-boton);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -1155,8 +1160,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .boton-respuesta {
     padding: clamp(8px, 2.5vw, 10px) clamp(15px, 5vw, 22px);
     border-radius: 20px;
-    border: 2px solid var(--stroke-color);
-    background: var(--stroke-color);
+    border: 2px solid var(--color-boton);
+    background: var(--color-boton);
     color: #fff;
     font-size: 14px;
     font-weight: 600;
@@ -1173,7 +1178,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     width: clamp(34px, 9vw, 40px);
     height: clamp(34px, 9vw, 40px);
     border-radius: 50%;
-    border: 2px solid var(--stroke-color);
+    border: 2px solid var(--color-boton);
     background: rgba(255,255,255,0.5);
     font-size: 18px;
     line-height: 1;
@@ -1255,9 +1260,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .panel-nota-versiones { display: flex; gap: 6px; }
 
   .boton-mini.activo {
-    background: var(--stroke-color);
+    background: var(--color-boton);
     color: #fff;
-    border-color: var(--stroke-color);
+    border-color: var(--color-boton);
   }
 
   .panel-nota-texto.vacio { color: #a99a5c; font-style: italic; }
@@ -1365,13 +1370,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .zona-eval textarea {
     width: 100%; min-height: 74px; resize: vertical;
-    border: 2px solid var(--stroke-color); border-radius: 10px;
+    border: 2px solid var(--color-boton); border-radius: 10px;
     padding: 10px 12px; font-family: inherit; font-size: 14px; color: #333;
     background: #fff;
   }
 
   .zona-eval textarea:focus {
-    outline: 2px solid var(--stroke-color); outline-offset: 1px;
+    outline: 2px solid var(--color-boton); outline-offset: 1px;
   }
 
   .zona-eval .fila-eval { display: flex; justify-content: center; margin-top: 8px; }
@@ -1419,7 +1424,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     align-items: center;
     justify-content: space-between;
     background: #fafafa;
-    color: var(--stroke-color);
+    color: var(--color-boton);
   }
 
   .ruta-acordeon summary::-webkit-details-marker { display: none; }
@@ -1617,8 +1622,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     padding: 10px 18px;
     border-radius: 20px;
     background: #ffffff;
-    color: var(--stroke-color);
-    border: 2px solid var(--stroke-color);
+    color: var(--color-boton);
+    border: 2px solid var(--color-boton);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -1696,14 +1701,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .boton-reiniciar {
-    background: var(--stroke-color);
+    background: var(--color-boton);
     color: #fff;
   }
 
   .boton-secundario {
     background: #ffffff;
-    color: var(--stroke-color);
-    border: 2px solid var(--stroke-color);
+    color: var(--color-boton);
+    border: 2px solid var(--color-boton);
   }
 
   .listas-resumen {
@@ -1762,7 +1767,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: block;
     font-size: 12px;
     font-weight: 600;
-    color: var(--stroke-color);
+    color: var(--color-boton);
     margin-bottom: 3px;
   }
 
@@ -1815,7 +1820,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .check-grupo {
     width: 18px;
     height: 18px;
-    accent-color: var(--stroke-color);
+    accent-color: var(--color-boton);
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -1838,7 +1843,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     width: 17px;
     height: 17px;
     margin-top: 2px;
-    accent-color: var(--stroke-color);
+    accent-color: var(--color-boton);
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -1895,7 +1900,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     list-style: none;
     font-size: 13px;
     font-weight: 700;
-    color: var(--stroke-color);
+    color: var(--color-boton);
   }
 
   .sub-desplegable > summary::-webkit-details-marker { display: none; }
@@ -1930,7 +1935,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cursor: pointer;
   }
 
-  .boton-pausa:hover { border-color: var(--stroke-color); color: var(--stroke-color); }
+  .boton-pausa:hover { border-color: var(--color-boton); color: var(--color-boton); }
 
   .overlay-pausa {
     display: none;
@@ -1947,7 +1952,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .overlay-pausa.abierto { display: flex; }
-  .titulo-pausa { font-size: 26px; font-weight: 700; color: var(--stroke-color); }
+  .titulo-pausa { font-size: 26px; font-weight: 700; color: var(--color-boton); }
   .texto-pausa { font-size: 14px; color: #777; max-width: 340px; }
 
   /* NUEVO: botón "Revisar" (esquina superior izquierda, pasado el corte del clip-path) */
@@ -1957,9 +1962,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     left: calc(14% + 8px);
     font-size: 12px;
     font-weight: 700;
-    color: var(--stroke-color);
+    color: var(--color-boton);
     background: rgba(255,255,255,0.65);
-    border: 1.5px solid var(--stroke-color);
+    border: 1.5px solid var(--color-boton);
     border-radius: 12px;
     padding: 2px 10px;
     font-family: inherit;
@@ -2004,7 +2009,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     text-align: center;
   }
 
-  .modal-caja h3 { font-size: 18px; color: var(--stroke-color); margin-bottom: 2px; }
+  .modal-caja h3 { font-size: 18px; color: var(--color-boton); margin-bottom: 2px; }
   .modal-caja p { font-size: 14px; color: #666; margin-bottom: 6px; }
   .modal-ayuda { font-size: 12px; color: #999; margin-bottom: 8px; }
 
@@ -2039,7 +2044,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     text-align: left;
   }
 
-  .opcion-modo.seleccionada { border-color: var(--stroke-color); background: #fff3ea; }
+  .opcion-modo.seleccionada { border-color: var(--color-boton); background: #fff3ea; }
   .opcion-modo-icono { font-size: 22px; }
   .opcion-modo-nombre { font-weight: 700; color: #333; margin-right: auto; }
   .opcion-modo-detalle { font-size: 12px; color: #888; }
@@ -2127,7 +2132,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cursor: pointer;
   }
 
-  .item-check-razon input { width: 17px; height: 17px; cursor: pointer; accent-color: var(--stroke-color); }
+  .item-check-razon input { width: 17px; height: 17px; cursor: pointer; accent-color: var(--color-boton); }
   .dot-razon { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
   .panel-razones-acciones { display: flex; gap: 8px; margin-top: 12px; }
 
@@ -2150,7 +2155,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     max-width: 100%;
     max-height: 55vh;
     border-radius: 10px;
-    border: 2px solid var(--stroke-color);
+    border: 2px solid var(--color-boton);
     background: #fff;
     cursor: zoom-in;
   }
@@ -2183,9 +2188,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     flex-shrink: 0;
     font-size: 11px;
     font-weight: 700;
-    color: var(--stroke-color);
+    color: var(--color-boton);
     background: rgba(255,255,255,0.65);
-    border: 1.5px solid var(--stroke-color);
+    border: 1.5px solid var(--color-boton);
     border-radius: 12px;
     padding: 2px 8px;
     font-family: inherit;
@@ -2198,7 +2203,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .saldo-tienda {
     font-size: 16px;
     font-weight: 700;
-    color: var(--stroke-color);
+    color: var(--color-boton);
     margin-bottom: 14px;
     text-align: center;
   }
@@ -2229,8 +2234,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-top: 6px;
     padding: 8px 14px;
     border-radius: 18px;
-    border: 2px solid var(--stroke-color);
-    background: var(--stroke-color);
+    border: 2px solid var(--color-boton);
+    background: var(--color-boton);
     color: #fff;
     font-weight: 700;
     font-size: 13px;
@@ -2245,7 +2250,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cursor: not-allowed;
   }
 
-  .item-tienda-inventario { font-size: 12px; color: var(--stroke-color); font-weight: 700; }
+  .item-tienda-inventario { font-size: 12px; color: var(--color-boton); font-weight: 700; }
 
   /* NUEVO: Gamificación — Historial */
   .fila-acciones-historial {
@@ -2521,7 +2526,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-family: inherit;
     padding: 0;
   }
-  .boton-icono-circular:hover { border-color: var(--stroke-color); }
+  .boton-icono-circular:hover { border-color: var(--color-boton); }
 
   /* ===== NUEVO: Buscador Global (Elegir Temas / Observador / Galería) ===== */
   .zona-buscador {
@@ -2543,7 +2548,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     transition: border-color 0.15s;
   }
 
-  .input-buscador:focus { border-color: var(--stroke-color); }
+  .input-buscador:focus { border-color: var(--color-boton); }
 
   /* Galería: la barra debe quedar fija mientras se navega entre imágenes */
   .zona-buscador.sticky-buscador {
@@ -2591,7 +2596,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .item-dropdown-buscador:last-child { border-bottom: none; }
   .item-dropdown-buscador:hover { background: #f7f7fb; }
-  .item-dropdown-buscador strong { color: var(--stroke-color); }
+  .item-dropdown-buscador strong { color: var(--color-boton); }
 
   .tag-tema-buscador {
     color: #999;
@@ -3416,13 +3421,52 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  function guardarDificiles() {
+  // ---------- OPTIMIZACIÓN: debounce de los guardados en localStorage ----------
+  // Cada cambio (marcar difícil, editar nota, guardar razón, etc.) dispara un
+  // guardado; si el usuario hace varios cambios seguidos (p. ej. marcar 10
+  // tarjetas), antes se serializaba el objeto completo 10 veces. Con
+  // crearGuardadoDebounced() se agrupan en UNA sola escritura 200-300ms
+  // después del último cambio. _guardadosPendientes guarda el flush() de cada
+  // guardado debounced registrado, para poder forzarlos todos en beforeunload
+  // (si el usuario cierra la pestaña antes de que dispare el timer).
+  const _guardadosPendientes = [];
+
+  function crearGuardadoDebounced(fnGuardarYa, ms) {
+    let temporizador = null;
+    let pendiente = false;
+    const disparar = () => {
+      temporizador = null;
+      pendiente = false;
+      fnGuardarYa();
+    };
+    const debounced = function () {
+      pendiente = true;
+      clearTimeout(temporizador);
+      temporizador = setTimeout(disparar, ms);
+    };
+    debounced.flush = function () {
+      if (!pendiente) return;
+      clearTimeout(temporizador);
+      disparar();
+    };
+    _guardadosPendientes.push(debounced);
+    return debounced;
+  }
+
+  // Si el usuario cierra/recarga la pestaña con guardados pendientes (dentro
+  // de la ventana del debounce), se fuerza a que se escriban ya mismo.
+  window.addEventListener('beforeunload', () => {
+    _guardadosPendientes.forEach((d) => d.flush());
+  });
+
+  function guardarDificilesYa() {
     try {
       localStorage.setItem(CLAVE_DIFICILES, JSON.stringify(dificiles));
     } catch (e) {
       // Sin localStorage disponible: solo quedan en memoria de esta sesión
     }
   }
+  const guardarDificiles = crearGuardadoDebounced(guardarDificilesYa, 250);
 
   // NUEVO: Listas guardadas de tarjetas (selecciones reutilizables de "Elegir temas")
   const CLAVE_LISTAS = 'listas_guardadas_v1';
@@ -3440,13 +3484,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  function guardarListas() {
+  function guardarListasYa() {
     try {
       localStorage.setItem(CLAVE_LISTAS, JSON.stringify(listas));
     } catch (e) {
       // Sin localStorage disponible: quedan solo en memoria de esta sesión
     }
   }
+  const guardarListas = crearGuardadoDebounced(guardarListasYa, 250);
 
   function buscarLista(nombre) {
     const clave = nombre.toLowerCase();
@@ -3547,7 +3592,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // NUEVO: hash de ESTE evaluador (el de siempre). hashTarjetaCon permite
   // recomputar el hash que tendria una tarjeta bajo OTRO espacio (revinculacion).
-  function hashTarjeta(t) { return hashTarjetaCon(ESPACIO_HASH, t); }
+  // OPTIMIZACIÓN: hashTarjeta() se llama decenas de veces por render con el
+  // MISMO objeto 't' (viene siempre del mismo array de tarjetas parseadas),
+  // así que se cachea por identidad de objeto en un WeakMap: si 't' no cambia,
+  // no se vuelve a normalizar ni recalcular el djb2. hashTarjetaCon() (usada
+  // para revincular con OTRO espacio) no se toca: no es el camino caliente.
+  const _cacheHashTarjeta = new WeakMap();
+  function hashTarjeta(t) {
+    const previo = _cacheHashTarjeta.get(t);
+    if (previo !== undefined) return previo;
+    const h = hashTarjetaCon(ESPACIO_HASH, t);
+    _cacheHashTarjeta.set(t, h);
+    return h;
+  }
 
   function esDificil(t) {
     const e = dificiles[hashTarjeta(t)];
@@ -3597,13 +3654,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  function guardarNotas() {
+  function guardarNotasYa() {
     try {
       localStorage.setItem(CLAVE_NOTAS, JSON.stringify(notasLocales));
     } catch (e) {
       // Sin localStorage: quedan solo en memoria de esta sesión
     }
   }
+  const guardarNotas = crearGuardadoDebounced(guardarNotasYa, 250);
 
   function notaTxtDe(t) { return (t.nota || '').trim(); }
 
@@ -3700,6 +3758,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elZonaHistorialOtros = document.getElementById('zona-historial-otros');
   const elSumaHistorialOtros = document.getElementById('suma-historial-otros');
   const elListaHistorialOtros = document.getElementById('lista-historial-otros');
+  const elDetHistorialOtros = document.getElementById('det-historial-otros');
   const elModalModo = document.getElementById('modal-modo');
   const elModalGameOver = document.getElementById('modal-gameover');
   const elFilaGamificacion = document.getElementById('fila-gamificacion');
@@ -3866,20 +3925,43 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return cont;
   }
 
-  // Sincroniza el check del subT (marcado / parcial) y su contador n/m
-  function actualizarEstadoGrupo(det) {
-    const tarjetas = det.querySelectorAll('input[data-idx]');
-    let marcadas = 0;
-    tarjetas.forEach((c) => { if (c.checked) marcadas++; });
-    const cg = det.querySelector('input.check-grupo');
-    cg.checked = tarjetas.length > 0 && marcadas === tarjetas.length;
-    cg.indeterminate = marcadas > 0 && marcadas < tarjetas.length;
-    det.querySelector('.cuenta-grupo').textContent = marcadas + '/' + tarjetas.length;
+  // OPTIMIZACIÓN (lazy rendering): con construcción perezosa, el cuerpo de un
+  // subT colapsado puede no existir todavía en el DOM, así que la selección
+  // ya NO se puede leer de los checkboxes (algunos ni están creados). Se
+  // guarda aparte, por ÍNDICE de tarjeta: por defecto todo está seleccionado
+  // (como siempre al abrir el HTML), así que solo se registran las
+  // EXCLUSIONES explícitas del usuario. Esto permite que "Comenzar estudio"
+  // y los contadores de cada subT sean correctos aunque ese subT nunca se
+  // haya abierto (y por lo tanto nunca haya construido sus checkboxes).
+  const seleccionTemasExcluidos = new Set();
+  function estaSeleccionado(i) { return !seleccionTemasExcluidos.has(i); }
+  function fijarSeleccionado(i, val) {
+    if (val) seleccionTemasExcluidos.delete(i);
+    else seleccionTemasExcluidos.add(i);
+  }
+
+  // nombre del subT -> { det, lazyCtrl, checkGrupo, cuenta, indices, cuerpoEl (null hasta abrirse) }
+  const gruposTemaInfo = new Map();
+  // índice de tarjeta -> nombre de su subT (para ubicarla aunque su grupo
+  // esté colapsado/sin construir, p. ej. desde el buscador global)
+  const indiceAGrupoTema = new Map();
+
+  // Sincroniza el check del subT (marcado / parcial) y su contador n/m a
+  // partir del ESTADO (seleccionTemasExcluidos), no del DOM: así es correcto
+  // incluso si el cuerpo de ese subT todavía no se construyó.
+  function actualizarResumenGrupo(nombreGrupo) {
+    const info = gruposTemaInfo.get(nombreGrupo);
+    if (!info) return;
+    const total = info.indices.length;
+    const marcadas = info.indices.filter(estaSeleccionado).length;
+    info.checkGrupo.checked = total > 0 && marcadas === total;
+    info.checkGrupo.indeterminate = marcadas > 0 && marcadas < total;
+    info.cuenta.textContent = marcadas + '/' + total;
   }
 
   function indicesSeleccionados() {
     const set = new Set();
-    elListaTemas.querySelectorAll('input[data-idx]:checked').forEach((c) => set.add(Number(c.dataset.idx)));
+    tarjetasCompletas.forEach((_, i) => { if (estaSeleccionado(i)) set.add(i); });
     return set;
   }
 
@@ -3915,14 +3997,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  // Marca en los checkboxes SOLO las tarjetas cuyo hash está en 'hashes'
+  // Marca SOLO las tarjetas cuyo hash está en 'hashes'. Actualiza el ESTADO
+  // (sirve aunque haya subT colapsados sin construir) y, de paso, sincroniza
+  // los checkboxes de los subT que SÍ están abiertos/construidos.
   function aplicarSeleccionPorHashes(hashes) {
     const set = new Set(hashes);
+    tarjetasCompletas.forEach((t, i) => fijarSeleccionado(i, set.has(hashTarjeta(t))));
     elListaTemas.querySelectorAll('input[data-idx]').forEach((c) => {
-      const t = tarjetasCompletas[Number(c.dataset.idx)];
-      c.checked = !!t && set.has(hashTarjeta(t));
+      c.checked = estaSeleccionado(Number(c.dataset.idx));
     });
-    elListaTemas.querySelectorAll('.grupo-tema').forEach((det) => actualizarEstadoGrupo(det));
+    gruposTemaInfo.forEach((_, nombreGrupo) => actualizarResumenGrupo(nombreGrupo));
     actualizarConteoSeleccion();
   }
 
@@ -3938,16 +4022,64 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // "Ninguna": vuelve a la selección manual (todas marcadas, como al abrir el HTML)
   function quitarListaActiva() {
     listaActivaNombre = null;
+    seleccionTemasExcluidos.clear();
     elListaTemas.querySelectorAll('input[data-idx]').forEach((c) => { c.checked = true; });
-    elListaTemas.querySelectorAll('.grupo-tema').forEach((det) => actualizarEstadoGrupo(det));
+    gruposTemaInfo.forEach((_, nombreGrupo) => actualizarResumenGrupo(nombreGrupo));
     actualizarConteoSeleccion();
     actualizarChipListaActiva();
   }
 
   document.getElementById('btn-chip-lista-quitar').addEventListener('click', () => quitarListaActiva());
 
+  // ---------- OPTIMIZACIÓN: construcción perezosa de <details> colapsados ----------
+  // Al entrar a una pantalla se armaban TODOS los nodos DOM de TODAS sus
+  // secciones, incluidas las que el usuario nunca abre (p. ej. "Desmarcadas",
+  // o cada subT de "Elegir temas"). Con prepararDetallesLazy(det, construir)
+  // el <summary> (título + contador) se arma de entrada como siempre, pero
+  // 'construir' (el cuerpo pesado) recién corre la PRIMERA vez que ese
+  // <details> se abre, y queda cacheado: cerrar/reabrir no lo reconstruye.
+  // Invalidación: _detallesConstruidos.delete(det) antes de volver a abrir
+  // fuerza una reconstrucción (se usa tras operaciones masivas que cambian
+  // el contenido de una sección ya construida).
+  const _detallesConstruidos = new WeakSet();
+  function prepararDetallesLazy(det, construir) {
+    const intentar = () => {
+      if (_detallesConstruidos.has(det)) return;
+      if (!det.open) return;
+      construir();
+      _detallesConstruidos.add(det);
+    };
+    det.addEventListener('toggle', intentar);
+    if (det.open) intentar();   // ya estaba abierto al prepararlo (p. ej. estado recordado)
+    return {
+      // Abre (si hace falta) y garantiza que el contenido ya esté construido;
+      // usado cuando hay que "saltar" directo a una fila dentro de la sección.
+      abrirYConstruir() {
+        if (!det.open) det.open = true;   // dispara 'toggle' -> intentar(), sincrónico
+        intentar();                       // red de seguridad por si el navegador no lo disparó ya
+      },
+      invalidar() { _detallesConstruidos.delete(det); },
+      // Invalida y, si la sección ya estaba abierta, la reconstruye YA (para
+      // secciones cuyo contenido depende de datos que cambian entre
+      // renders, p. ej. al reabrir la pantalla "Elegir temas"). 'construir'
+      // debe ser idempotente (limpiar su contenedor antes de rearmarlo).
+      refrescar() {
+        _detallesConstruidos.delete(det);
+        intentar();
+      },
+    };
+  }
+
+  // OPTIMIZACIÓN (lazy rendering): el <summary> (checkbox del grupo + nombre
+  // + contador n/m) se arma siempre, pero el .cuerpo-grupo (un checkbox por
+  // tarjeta del subT) recién se construye la PRIMERA vez que ese subT se
+  // abre, vía prepararDetallesLazy. La selección en sí vive en
+  // seleccionTemasExcluidos (independiente del DOM), así que "Comenzar
+  // estudio" y los contadores son correctos aunque el subT nunca se haya
+  // abierto.
   function construirListaTemas() {
     elListaTemas.innerHTML = '';
+    gruposTemaInfo.clear();
     agruparPorTema().forEach((g) => {
       const det = document.createElement('details');
       det.className = 'grupo-tema';
@@ -3968,39 +4100,52 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       sum.appendChild(cuenta);
       det.appendChild(sum);
 
-      const cuerpo = document.createElement('div');
-      cuerpo.className = 'cuerpo-grupo';
-      g.indices.forEach((i) => {
-        const fila = document.createElement('label');
-        fila.className = 'item-tarjeta-check';
-        const c = document.createElement('input');
-        c.type = 'checkbox';
-        c.checked = true;
-        c.dataset.idx = String(i);
-        c.addEventListener('change', () => {
-          actualizarEstadoGrupo(det);
-          actualizarConteoSeleccion();
-        });
-        fila.appendChild(c);
-        fila.appendChild(crearTextosTarjeta(tarjetasCompletas[i]));
-        // NUEVO: indicadores visuales (solo informativos, no clickeables)
-        const marcas = document.createElement('span');
-        marcas.className = 'tc-marcas';
-        marcas.textContent = (esDificil(tarjetasCompletas[i]) ? '★ ' : '') + (notaEfectivaDe(tarjetasCompletas[i]) !== '' ? '💡 ' : '') + (razonesDeTarjeta(tarjetasCompletas[i]).length > 0 ? ' 🏷' : '');
-        fila.appendChild(marcas);
-        cuerpo.appendChild(fila);
-      });
-      det.appendChild(cuerpo);
+      const info = { det: det, lazyCtrl: null, checkGrupo: checkGrupo, cuenta: cuenta, indices: g.indices, cuerpoEl: null };
+      gruposTemaInfo.set(g.nombre, info);
+      g.indices.forEach((i) => indiceAGrupoTema.set(i, g.nombre));
 
-      // Marcar/desmarcar el subT marca/desmarca todas sus tarjetas
+      // Marcar/desmarcar el subT marca/desmarca todas sus tarjetas (funciona
+      // aunque el cuerpo todavía no esté construido: actualiza el ESTADO y,
+      // si el cuerpo ya existe, también sus checkboxes).
       checkGrupo.addEventListener('change', () => {
-        cuerpo.querySelectorAll('input[data-idx]').forEach((c) => { c.checked = checkGrupo.checked; });
-        actualizarEstadoGrupo(det);
+        g.indices.forEach((i) => fijarSeleccionado(i, checkGrupo.checked));
+        if (info.cuerpoEl) {
+          info.cuerpoEl.querySelectorAll('input[data-idx]').forEach((c) => { c.checked = checkGrupo.checked; });
+        }
+        actualizarResumenGrupo(g.nombre);
         actualizarConteoSeleccion();
       });
 
+      info.lazyCtrl = prepararDetallesLazy(det, () => {
+        const cuerpo = document.createElement('div');
+        cuerpo.className = 'cuerpo-grupo';
+        g.indices.forEach((i) => {
+          const fila = document.createElement('label');
+          fila.className = 'item-tarjeta-check';
+          const c = document.createElement('input');
+          c.type = 'checkbox';
+          c.checked = estaSeleccionado(i);
+          c.dataset.idx = String(i);
+          c.addEventListener('change', () => {
+            fijarSeleccionado(i, c.checked);
+            actualizarResumenGrupo(g.nombre);
+            actualizarConteoSeleccion();
+          });
+          fila.appendChild(c);
+          fila.appendChild(crearTextosTarjeta(tarjetasCompletas[i]));
+          // NUEVO: indicadores visuales (solo informativos, no clickeables)
+          const marcas = document.createElement('span');
+          marcas.className = 'tc-marcas';
+          marcas.textContent = (esDificil(tarjetasCompletas[i]) ? '★ ' : '') + (notaEfectivaDe(tarjetasCompletas[i]) !== '' ? '💡 ' : '') + (razonesDeTarjeta(tarjetasCompletas[i]).length > 0 ? ' 🏷' : '');
+          fila.appendChild(marcas);
+          cuerpo.appendChild(fila);
+        });
+        det.appendChild(cuerpo);
+        info.cuerpoEl = cuerpo;
+      });
+
       elListaTemas.appendChild(det);
-      actualizarEstadoGrupo(det);
+      actualizarResumenGrupo(g.nombre);
     });
     actualizarConteoSeleccion();
   }
@@ -4022,8 +4167,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // sin Entendí / No entendí, sin Finalizar. Sí se pueden ver pista y rutas,
   // editar notas y marcar ☆ Difícil. Reutiliza la vista de tarjeta del evaluador.
 
+  // nombre del subT -> { lazyCtrl, cuerpoEl (null hasta abrirse) }; e índice
+  // de tarjeta -> nombre de su subT, para poder ubicarla y forzar su
+  // construcción aunque el grupo esté colapsado (ver salirObservador).
+  const gruposObservadorInfo = new Map();
+  const indiceAGrupoObservador = new Map();
+
+  // OPTIMIZACIÓN (lazy rendering): construirListaObservador() se llama cada
+  // vez que se entra o se vuelve del observador (para refrescar ★/💡), así
+  // que antes se reconstruían TODOS los botones de TODAS las tarjetas de
+  // TODOS los subT en cada vuelta, abiertos o no. Ahora el cuerpo de un subT
+  // colapsado recién se arma la primera vez que se abre (o, si ya estaba
+  // abierto —viene de 'observadorAbiertos'—, se arma de una, como antes).
   function construirListaObservador() {
     elListaObservador.innerHTML = '';
+    gruposObservadorInfo.clear();
     agruparPorTema().forEach((g) => {
       const det = document.createElement('details');
       det.className = 'grupo-tema';
@@ -4043,24 +4201,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       sum.appendChild(cuenta);
       det.appendChild(sum);
 
-      const cuerpo = document.createElement('div');
-      cuerpo.className = 'cuerpo-grupo';
-      cuerpo.style.paddingLeft = '0';
-      g.indices.forEach((i) => {
-        const t = tarjetasCompletas[i];
-        const fila = document.createElement('button');
-        fila.type = 'button';
-        fila.className = 'fila-observador';
-        fila.dataset.idx = String(i);
-        fila.appendChild(crearTextosTarjeta(t));
-        const marcas = document.createElement('span');
-        marcas.className = 'tc-marcas';
-        marcas.textContent = (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
-        fila.appendChild(marcas);
-        fila.addEventListener('click', () => abrirTarjetaObservador(i));
-        cuerpo.appendChild(fila);
+      const info = { lazyCtrl: null, cuerpoEl: null };
+      gruposObservadorInfo.set(g.nombre, info);
+      g.indices.forEach((i) => indiceAGrupoObservador.set(i, g.nombre));
+
+      info.lazyCtrl = prepararDetallesLazy(det, () => {
+        const cuerpo = document.createElement('div');
+        cuerpo.className = 'cuerpo-grupo';
+        cuerpo.style.paddingLeft = '0';
+        g.indices.forEach((i) => {
+          const t = tarjetasCompletas[i];
+          const fila = document.createElement('button');
+          fila.type = 'button';
+          fila.className = 'fila-observador';
+          fila.dataset.idx = String(i);
+          fila.appendChild(crearTextosTarjeta(t));
+          const marcas = document.createElement('span');
+          marcas.className = 'tc-marcas';
+          marcas.textContent = (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
+          fila.appendChild(marcas);
+          fila.addEventListener('click', () => abrirTarjetaObservador(i));
+          cuerpo.appendChild(fila);
+        });
+        det.appendChild(cuerpo);
+        info.cuerpoEl = cuerpo;
       });
-      det.appendChild(cuerpo);
+
       elListaObservador.appendChild(det);
     });
   }
@@ -4101,7 +4267,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elAreaTarjeta.classList.remove('observador');
     construirListaObservador();   // refresca ★ y 💡
     mostrarPantalla('observador');
-    // Volver al lugar donde se estaba: abrir su subT y mostrar la fila
+    // Volver al lugar donde se estaba: forzar la construcción (lazy) de su
+    // subT si hiciera falta, abrirlo y mostrar la fila.
+    const nombreGrupo = indiceAGrupoObservador.get(ultimo);
+    const info = nombreGrupo ? gruposObservadorInfo.get(nombreGrupo) : null;
+    if (info && info.lazyCtrl) info.lazyCtrl.abrirYConstruir();
     const fila = elListaObservador.querySelector('[data-idx="' + ultimo + '"]');
     if (fila) {
       const grupo = fila.closest('details');
@@ -4134,13 +4304,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  function guardarImagenesStorage() {
+  function guardarImagenesStorageYa() {
     try {
       localStorage.setItem(CLAVE_IMAGENES, JSON.stringify(datosImagenes));
     } catch (e) {
       // sin localStorage: quedan solo en memoria de esta sesión
     }
   }
+  const guardarImagenesStorage = crearGuardadoDebounced(guardarImagenesStorageYa, 250);
 
   // Hash liviano: espacio del evaluador + número de ruta + índice de la imagen
   // DENTRO de esa ruta (solo contando líneas 'IMG:'). Sin base64, sin subT.
@@ -4153,7 +4324,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return 'i' + h.toString(36);   // prefijo 'i' (imagen) para no confundir con 'h' de tarjeta
   }
 
-  function hashImagen(ruta, indice) { return hashImagenCon(ESPACIO_HASH, ruta, indice); }
+  // OPTIMIZACIÓN: igual que hashTarjeta(), hashImagen() se llama muchas veces
+  // por render con el mismo (ruta, índice). Como son primitivos (no un objeto
+  // para usar WeakMap), se cachea en un Map normal con clave compuesta.
+  // hashImagenCon() (revinculación con OTRO espacio) no se toca.
+  const _cacheHashImagen = new Map();
+  function hashImagen(ruta, indice) {
+    const clave = ruta + '\u0000' + indice;
+    const previo = _cacheHashImagen.get(clave);
+    if (previo !== undefined) return previo;
+    const h = hashImagenCon(ESPACIO_HASH, ruta, indice);
+    _cacheHashImagen.set(clave, h);
+    return h;
+  }
 
   // Recorre rutasDisp en orden numérico de ruta y arma la lista de coordenadas
   // {ruta, indice} de TODAS las imágenes, en el mismo orden en que aparecen en
@@ -4470,7 +4653,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // Devuelve null si no se pudo acotar nada: en ese caso se recorre todo,
   // igual que antes del índice (fallback seguro).
   function candidatosPorIndice(indice, consultaNorm) {
-    const palabras = consultaNorm.split(/\\s+/).filter(Boolean);
+    const palabras = consultaNorm.split(/\s+/).filter(Boolean);
     if (palabras.length === 0) return null;
     let resultado = null;
     for (let i = 0; i < palabras.length; i++) {
@@ -4579,22 +4762,29 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       fila.appendChild(btnRevisar);
       sum.appendChild(fila);
 
-      const contenido = document.createElement('div');
-      contenido.className = 'ruta-contenido';
-      (bloque.lineas || []).forEach((linea) => {
-        if (esImagen(linea)) {
-          const img = document.createElement('img');
-          img.className = 'ruta-img-thumb';
-          img.src = linea.substring(4);  // quitar el prefijo 'IMG:'
-          img.alt = 'Imagen de la ruta ' + numeroRuta;
-          contenido.appendChild(img);
-        } else {
-          agregarLineaPlana(contenido, linea);
-        }
+      det.appendChild(sum);
+
+      // OPTIMIZACIÓN (lazy rendering): el contenido (líneas + imágenes) de
+      // cada ruta recién se arma la primera vez que esa ruta se abre; con
+      // muchas rutas huérfanas (e imágenes pesadas) evita construir TODAS
+      // las miniaturas de entrada, aunque el usuario nunca las abra.
+      prepararDetallesLazy(det, () => {
+        const contenido = document.createElement('div');
+        contenido.className = 'ruta-contenido';
+        (bloque.lineas || []).forEach((linea) => {
+          if (esImagen(linea)) {
+            const img = document.createElement('img');
+            img.className = 'ruta-img-thumb';
+            img.src = linea.substring(4);  // quitar el prefijo 'IMG:'
+            img.alt = 'Imagen de la ruta ' + numeroRuta;
+            contenido.appendChild(img);
+          } else {
+            agregarLineaPlana(contenido, linea);
+          }
+        });
+        det.appendChild(contenido);
       });
 
-      det.appendChild(sum);
-      det.appendChild(contenido);
       elListaHuerfanas.appendChild(det);
     });
   }
@@ -5359,15 +5549,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         cabecera.appendChild(estado);
       }
 
+      // OPTIMIZACIÓN: antes, tocar el 👁 llamaba a renderListasGuardadas()
+      // y reconstruía TODO el modal (todas las filas) desde cero. Ahora solo
+      // crea/inserta (o quita) el div.lista-ver-tarjetas DENTRO de esta fila
+      // puntual, sin tocar el resto de la lista.
       const btnOjo = document.createElement('button');
       btnOjo.type = 'button';
       btnOjo.className = 'lista-ojo-btn';
       btnOjo.title = 'Ver tarjetas de esta lista';
       btnOjo.textContent = '👁';
       btnOjo.addEventListener('click', () => {
-        if (listasVerTarjetasExpandido.has(lista.nombre)) listasVerTarjetasExpandido.delete(lista.nombre);
-        else listasVerTarjetasExpandido.add(lista.nombre);
-        renderListasGuardadas();
+        if (listasVerTarjetasExpandido.has(lista.nombre)) {
+          listasVerTarjetasExpandido.delete(lista.nombre);
+          const visor = fila.querySelector('.lista-ver-tarjetas');
+          if (visor) visor.remove();
+        } else {
+          listasVerTarjetasExpandido.add(lista.nombre);
+          fila.appendChild(construirVistaTarjetasLista(lista));
+        }
       });
       cabecera.appendChild(btnOjo);
 
@@ -5979,12 +6178,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   // NUEVO: "Sesiones de otros evaluadores" (solo lectura), agrupadas por espacio
-  function renderHistorialOtros(otras) {
+  // OPTIMIZACIÓN (lazy rendering): las filas (una por espacio de otro
+  // evaluador) recién se arman cuando se abre "Sesiones de otros
+  // evaluadores"; mientras tanto solo se actualiza el contador del
+  // <summary>. '_otrasSesionesPendientes' guarda el último dato recibido
+  // para que el constructor perezoso siempre arme con lo último.
+  let _otrasSesionesPendientes = [];
+
+  function construirHistorialOtrosLazy() {
+    const otras = _otrasSesionesPendientes;
     elListaHistorialOtros.innerHTML = '';
-    if (otras.length === 0) {
-      elZonaHistorialOtros.style.display = 'none';
-      return;
-    }
+    if (otras.length === 0) return;
     const mapa = new Map();
     otras.forEach((s) => {
       const esp = espacioDeSesion(s);
@@ -6021,8 +6225,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       fila.appendChild(btn);
       elListaHistorialOtros.appendChild(fila);
     });
+  }
+  const lazyHistorialOtros = prepararDetallesLazy(elDetHistorialOtros, construirHistorialOtrosLazy);
+
+  function renderHistorialOtros(otras) {
+    _otrasSesionesPendientes = otras;
+    if (otras.length === 0) {
+      elZonaHistorialOtros.style.display = 'none';
+      elListaHistorialOtros.innerHTML = '';
+      return;
+    }
     elSumaHistorialOtros.textContent = 'Sesiones de otros evaluadores (' + otras.length + ')';
     elZonaHistorialOtros.style.display = 'block';
+    lazyHistorialOtros.refrescar();
   }
 
   // MODIFICADO: se exporta el objeto COMPLETO de gamificación (puntosTotales +
@@ -6839,12 +7054,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // ---------- Elegir Temas ----------
 
   function seleccionarResultadoBuscadorTemas(idx) {
-    const input = elListaTemas.querySelector('input[data-idx="' + idx + '"]');
-    if (input) {
-      input.checked = true;
-      input.dispatchEvent(new Event('change'));  // reutiliza actualizarEstadoGrupo/actualizarConteoSeleccion
-      const det = input.closest('details.grupo-tema');
-      if (det) det.open = true;  // auto-expandir: feedback visual de que se marcó
+    // OPTIMIZACIÓN: con el subT colapsado puede que su checkbox todavía no
+    // exista (construcción perezosa). Se abre/construye el subT de 'idx'
+    // ANTES de buscar el input (abrirYConstruir dispara 'toggle' sincrónico).
+    const nombreGrupo = indiceAGrupoTema.get(idx);
+    const info = nombreGrupo ? gruposTemaInfo.get(nombreGrupo) : null;
+    if (info) {
+      if (info.lazyCtrl) info.lazyCtrl.abrirYConstruir();
+      const input = info.cuerpoEl ? info.cuerpoEl.querySelector('input[data-idx="' + idx + '"]') : null;
+      if (input) {
+        input.checked = true;
+        input.dispatchEvent(new Event('change'));  // reutiliza actualizarResumenGrupo/actualizarConteoSeleccion
+      }
     }
     cerrarDropdownBuscador(elDropdownBuscadorTemas);
     elInputBuscadorTemas.value = '';
@@ -7016,19 +7237,34 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // más simple: un solo grupo/lista, sin "de otros evaluadores").
   const nodosImagenes = new Map();   // hash -> fila
 
+  // OPTIMIZACIÓN (lazy rendering): refs fijas + el único <details> se prepara
+  // UNA sola vez; su contenido se arma recién al abrirlo (o de una si ya
+  // estaba abierto).
+  const elListaImagenesGuardadas = document.getElementById('lista-imagenes-guardadas');
+  const elDetImagenes = document.getElementById('det-imagenes');
+  const elSumaImagenes = document.getElementById('suma-imagenes');
+  const elInfoImagenes = document.getElementById('nota-imagenes');
+  const elVaciarImagenes = document.getElementById('btn-vaciar-imagenes');
+
+  function construirImagenesLazy() {
+    Object.keys(datosImagenes).forEach((h) => {
+      if (nodosImagenes.has(h)) return;   // ya está (incremental previo)
+      const fila = filaImagenGuardada(h, datosImagenes[h]);
+      elListaImagenesGuardadas.appendChild(fila);
+      nodosImagenes.set(h, fila);
+    });
+  }
+  const lazyImagenes = prepararDetallesLazy(elDetImagenes, construirImagenesLazy);
+
   function actualizarContadoresImagenes() {
-    const elDet = document.getElementById('det-imagenes');
-    const elSuma = document.getElementById('suma-imagenes');
-    const elInfo = document.getElementById('nota-imagenes');
-    const elVaciar = document.getElementById('btn-vaciar-imagenes');
     const n = Object.keys(datosImagenes).length;
-    elDet.style.display = n > 0 ? 'block' : 'none';
-    elSuma.textContent = 'Con nota o marcadas difícil (' + n + ')';
+    elDetImagenes.style.display = n > 0 ? 'block' : 'none';
+    elSumaImagenes.textContent = 'Con nota o marcadas difícil (' + n + ')';
     document.getElementById('btn-vincular-imagenes').style.display = contarOtrasImagenes() > 0 ? 'inline-block' : 'none';
-    elInfo.textContent = n === 0
+    elInfoImagenes.textContent = n === 0
       ? 'Todavía no marcaste ni anotaste ninguna imagen (galería del modo observador).'
       : 'Guardadas en este navegador: ' + n;
-    elVaciar.style.display = n > 0 ? 'inline-block' : 'none';
+    elVaciarImagenes.style.display = n > 0 ? 'inline-block' : 'none';
   }
 
   function actualizarFilaImagenIndividual(h) {
@@ -7040,7 +7276,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     if (filaVieja) filaVieja.remove();
     const fila = filaImagenGuardada(h, datosImagenes[h]);
-    document.getElementById('lista-imagenes-guardadas').appendChild(fila);
+    elListaImagenesGuardadas.appendChild(fila);
     nodosImagenes.set(h, fila);
     actualizarContadoresImagenes();
   }
@@ -7087,28 +7323,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return div;
   }
 
+  // OPTIMIZACIÓN (lazy rendering): ya no reconstruye las filas directamente;
+  // invalida el grupo y lo refresca YA si ya estaba abierto, o deja la
+  // reconstrucción pendiente para cuando se abra.
   function renderImagenesPreview() {
-    const elLista = document.getElementById('lista-imagenes-guardadas');
-    const elDet = document.getElementById('det-imagenes');
-    const elSuma = document.getElementById('suma-imagenes');
-    const elInfo = document.getElementById('nota-imagenes');
-    const elVaciar = document.getElementById('btn-vaciar-imagenes');
-    elLista.innerHTML = '';
-    nodosImagenes.clear();   // NUEVO: reconstrucción total = reconstruye también el mapa de nodos
-
-    const hashes = Object.keys(datosImagenes);
-    hashes.forEach((h) => {
-      const fila = filaImagenGuardada(h, datosImagenes[h]);
-      elLista.appendChild(fila);
-      nodosImagenes.set(h, fila);
-    });
-    elDet.style.display = hashes.length > 0 ? 'block' : 'none';
-    elSuma.textContent = 'Con nota o marcadas difícil (' + hashes.length + ')';
-    document.getElementById('btn-vincular-imagenes').style.display = contarOtrasImagenes() > 0 ? 'inline-block' : 'none';
-    elInfo.textContent = hashes.length === 0
-      ? 'Todavía no marcaste ni anotaste ninguna imagen (galería del modo observador).'
-      : 'Guardadas en este navegador: ' + hashes.length;
-    elVaciar.style.display = hashes.length > 0 ? 'inline-block' : 'none';
+    nodosImagenes.clear();
+    elListaImagenesGuardadas.innerHTML = '';
+    actualizarContadoresImagenes();
+    lazyImagenes.refrescar();
   }
 
   // NUEVO: fusiona una lista de imágenes importada (individual o dentro de un backup completo)
@@ -7251,6 +7473,47 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // cuando cambia una sola entrada (p. ej. tildar/destildar el checkbox).
   const nodosDificiles = new Map();   // hash -> { fila, grupo: 'propia'|'otros'|'desm' }
 
+  // OPTIMIZACIÓN (lazy rendering): refs fijas (la pantalla "temas" nunca se
+  // destruye, solo se oculta/muestra) + los dos <details> colapsados
+  // ("De otros evaluadores" y "Desmarcadas") se preparan UNA sola vez con
+  // prepararDetallesLazy; su contenido se arma recién al abrirlos. Como los
+  // datos pueden cambiar entre visitas a la pantalla, renderDificilesPreview()
+  // no reconstruye sus filas directamente: solo recalcula contadores y pide
+  // un refrescar() (que reconstruye YA si ya estaban abiertas, o lo deja
+  // pendiente para la próxima vez que se abran).
+  const elListaDificiles = document.getElementById('lista-dificiles');
+  const elListaDificilesOtros = document.getElementById('lista-dificiles-otros');
+  const elDetDificilesOtros = document.getElementById('det-dificiles-otros');
+  const elSumaDificilesOtros = document.getElementById('suma-dificiles-otros');
+  const elListaDificilesDesm = document.getElementById('lista-dificiles-desm');
+  const elDetDificilesDesm = document.getElementById('det-dificiles-desm');
+  const elSumaDificilesDesm = document.getElementById('suma-dificiles-desm');
+  const elNotaDificiles = document.getElementById('nota-dificiles');
+
+  // Arma (o completa) las filas de un grupo colapsado a partir de 'dificiles'
+  // actual. Idempotente: si una fila para ese hash y grupo YA existe en
+  // nodosDificiles (p. ej. se agregó individualmente antes de abrir la
+  // sección), no la duplica.
+  function construirGrupoDificilesLazy(grupo) {
+    const elLista = grupo === 'otros' ? elListaDificilesOtros : elListaDificilesDesm;
+    Object.keys(dificiles).forEach((h) => {
+      const g = grupoActualDificil(h);
+      if (g !== grupo) return;
+      const cache = nodosDificiles.get(h);
+      if (cache && cache.grupo === grupo) return;   // ya está (incremental previo)
+      const v = dificiles[h] || {};
+      let p = v.p || '', s = v.s || '';
+      const enEste = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
+      if (enEste) { p = enEste.primero || ''; s = enEste.segundo || ''; }
+      const fila = filaDificil(h, p, s, grupo !== 'desm');
+      elLista.appendChild(fila);
+      nodosDificiles.set(h, { fila: fila, grupo: grupo });
+    });
+  }
+
+  const lazyDificilesOtros = prepararDetallesLazy(elDetDificilesOtros, () => construirGrupoDificilesLazy('otros'));
+  const lazyDificilesDesm = prepararDetallesLazy(elDetDificilesDesm, () => construirGrupoDificilesLazy('desm'));
+
   function grupoActualDificil(h) {
     const v = dificiles[h];
     if (!v) return null;   // ya no existe
@@ -7267,11 +7530,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // Recalcula SOLO los contadores y textos auxiliares (barato: son conteos
   // sobre el objeto 'dificiles', no tocan el DOM de las filas).
   function actualizarContadoresDificiles() {
-    const elDetOtros = document.getElementById('det-dificiles-otros');
-    const elSumaOtros = document.getElementById('suma-dificiles-otros');
-    const elDetDesm = document.getElementById('det-dificiles-desm');
-    const elSumaDesm = document.getElementById('suma-dificiles-desm');
-    const elNota = document.getElementById('nota-dificiles');
     const btnD = document.getElementById('btn-modo-dificiles');
     let nAqui = 0, nOtros = 0, nDesm = 0;
     Object.keys(dificiles).forEach((h) => {
@@ -7280,14 +7538,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       else if (g === 'otros') nOtros++;
       else if (g === 'desm') nDesm++;
     });
-    elDetOtros.style.display = nOtros > 0 ? 'block' : 'none';
-    elSumaOtros.textContent = 'De otros evaluadores (' + nOtros + ')';
-    elDetDesm.style.display = nDesm > 0 ? 'block' : 'none';
-    elSumaDesm.textContent = 'Desmarcadas (' + nDesm + ')';
+    elDetDificilesOtros.style.display = nOtros > 0 ? 'block' : 'none';
+    elSumaDificilesOtros.textContent = 'De otros evaluadores (' + nOtros + ')';
+    elDetDificilesDesm.style.display = nDesm > 0 ? 'block' : 'none';
+    elSumaDificilesDesm.textContent = 'Desmarcadas (' + nDesm + ')';
     btnD.textContent = 'Repasar difíciles (' + nAqui + ')';
     btnD.disabled = nAqui === 0;
     const total = Object.keys(dificiles).length;
-    elNota.textContent = total === 0
+    elNotaDificiles.textContent = total === 0
       ? 'Todavía no marcaste ninguna tarjeta como difícil (botón ☆ Difícil durante el estudio).'
       : 'Guardadas: ' + (total - nDesm) + ' activa(s)' + (nDesm > 0 ? ', ' + nDesm + ' desmarcada(s)' : '');
   }
@@ -7357,79 +7615,37 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return label;
   }
 
+  // OPTIMIZACIÓN (lazy rendering): esta función se llama cada vez que se
+  // entra a "Elegir temas". El grupo "propia" (siempre visible, sin
+  // colapsar) se sigue armando entero, como antes. "De otros evaluadores" y
+  // "Desmarcadas" ya NO se reconstruyen acá: solo se invalida su cache y,
+  // si ya estaban abiertas, se refrescan de una (refrescar()); si están
+  // cerradas, quedan pendientes para armarse recién cuando se abran.
   function renderDificilesPreview() {
-    const elLista = document.getElementById('lista-dificiles');
-    const elOtros = document.getElementById('lista-dificiles-otros');
-    const elDetOtros = document.getElementById('det-dificiles-otros');
-    const elSumaOtros = document.getElementById('suma-dificiles-otros');
-    const elDesm = document.getElementById('lista-dificiles-desm');
-    const elDetDesm = document.getElementById('det-dificiles-desm');
-    const elSumaDesm = document.getElementById('suma-dificiles-desm');
-    const elNota = document.getElementById('nota-dificiles');
-    elLista.innerHTML = '';
-    elOtros.innerHTML = '';
-    elDesm.innerHTML = '';
-    nodosDificiles.clear();   // NUEVO: reconstrucción total = reconstruye también el mapa de nodos
+    elListaDificiles.innerHTML = '';
+    // Se limpian también los nodos de 'otros'/'desm' (van a reconstruirse,
+    // ya sea ahora mismo si están abiertas o más tarde al abrirlas).
+    Array.from(nodosDificiles.entries()).forEach(([h, info]) => {
+      if (info.grupo !== 'propia') nodosDificiles.delete(h);
+    });
+    elListaDificilesOtros.innerHTML = '';
+    elListaDificilesDesm.innerHTML = '';
 
     // 1) Difíciles activas de este evaluador
-    const hashesVistos = new Set();
     let nAqui = 0;
     tarjetasCompletas.forEach((t) => {
       const h = hashTarjeta(t);
       const e = dificiles[h];
       if (!e || !e.activa) return;
-      hashesVistos.add(h);
       nAqui++;
       const fila = filaDificil(h, t.primero || '', t.segundo || '', true);
-      elLista.appendChild(fila);
+      elListaDificiles.appendChild(fila);
       nodosDificiles.set(h, { fila: fila, grupo: 'propia' });
     });
 
-    // 2) Activas de otros evaluadores (nunca se borran solas)
-    let nOtros = 0;
-    Object.keys(dificiles).forEach((h) => {
-      if (hashesVistos.has(h)) return;
-      const v = dificiles[h] || {};
-      if (!v.activa) return;
-      hashesVistos.add(h);
-      nOtros++;
-      const fila = filaDificil(h, v.p || '', v.s || '', true);
-      elOtros.appendChild(fila);
-      nodosDificiles.set(h, { fila: fila, grupo: 'otros' });
-    });
-
-    // 3) Desmarcadas: siguen guardadas y se pueden re-activar desde acá
-    let nDesm = 0;
-    Object.keys(dificiles).forEach((h) => {
-      const v = dificiles[h] || {};
-      if (v.activa) return;
-      nDesm++;
-      let p = v.p || '', s = v.s || '';
-      const enEste = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
-      if (enEste) {
-        p = enEste.primero || '';
-        s = enEste.segundo || '';
-      }
-      const fila = filaDificil(h, p, s, false);
-      elDesm.appendChild(fila);
-      nodosDificiles.set(h, { fila: fila, grupo: 'desm' });
-    });
-
-    elDetOtros.style.display = nOtros > 0 ? 'block' : 'none';
-    elSumaOtros.textContent = 'De otros evaluadores (' + nOtros + ')';
-    elDetDesm.style.display = nDesm > 0 ? 'block' : 'none';
-    elSumaDesm.textContent = 'Desmarcadas (' + nDesm + ')';
-
-    // Contador del modo Repasar difíciles
-    const btnD = document.getElementById('btn-modo-dificiles');
-    btnD.textContent = 'Repasar difíciles (' + nAqui + ')';
-    btnD.disabled = nAqui === 0;
-
-    const total = Object.keys(dificiles).length;
-    elNota.textContent = total === 0
-      ? 'Todavía no marcaste ninguna tarjeta como difícil (botón ☆ Difícil durante el estudio).'
-      : 'Guardadas: ' + (total - nDesm) + ' activa(s)' +
-        (nDesm > 0 ? ', ' + nDesm + ' desmarcada(s)' : '');
+    actualizarContadoresDificiles();
+    lazyDificilesOtros.refrescar();
+    lazyDificilesDesm.refrescar();
   }
 
   // NUEVO: arma el JSON de difíciles (usado por el botón individual y por el backup completo)
@@ -7557,15 +7773,51 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function contenedorDeGrupoNota(grupo) {
-    return grupo === 'dif' ? document.getElementById('lista-notas-dif') : document.getElementById('lista-notas-otras');
+    return grupo === 'dif' ? elListaNotasDif : elListaNotasOtras;
   }
 
+  // OPTIMIZACIÓN (lazy rendering): refs fijas + los dos <details> ("Distintas
+  // a las del txt" y "De otros evaluadores") se preparan UNA sola vez; su
+  // contenido se arma recién al abrirlos (o de una si ya estaban abiertos).
+  const elListaNotasDif = document.getElementById('lista-notas-dif');
+  const elDetNotasDif = document.getElementById('det-notas-dif');
+  const elSumaNotasDif = document.getElementById('suma-notas-dif');
+  const elListaNotasOtras = document.getElementById('lista-notas-otras');
+  const elDetNotasOtras = document.getElementById('det-notas-otras');
+  const elSumaNotasOtras = document.getElementById('suma-notas-otras');
+  const elInfoNotas = document.getElementById('nota-notas');
+
+  function construirGrupoNotasLazy(grupo) {
+    const elLista = contenedorDeGrupoNota(grupo);
+    if (grupo === 'dif') {
+      const vistos = new Set();
+      tarjetasCompletas.forEach((t) => {
+        const h = hashTarjeta(t);
+        if (vistos.has(h)) return;
+        vistos.add(h);
+        if (grupoActualNota(h) !== 'dif') return;
+        const cache = nodosNotas.get(h);
+        if (cache && cache.grupo === 'dif') return;   // ya está (incremental previo)
+        const fila = filaNotaDif(t, estadoNotaDe(t));
+        elLista.appendChild(fila);
+        nodosNotas.set(h, { fila: fila, grupo: 'dif' });
+      });
+    } else {
+      Object.keys(notasLocales).forEach((h) => {
+        if (grupoActualNota(h) !== 'otras') return;
+        const cache = nodosNotas.get(h);
+        if (cache && cache.grupo === 'otras') return;
+        const fila = filaNotaOtra(h, notasLocales[h] || {});
+        elLista.appendChild(fila);
+        nodosNotas.set(h, { fila: fila, grupo: 'otras' });
+      });
+    }
+  }
+
+  const lazyNotasDif = prepararDetallesLazy(elDetNotasDif, () => construirGrupoNotasLazy('dif'));
+  const lazyNotasOtras = prepararDetallesLazy(elDetNotasOtras, () => construirGrupoNotasLazy('otras'));
+
   function actualizarContadoresNotas() {
-    const elDetDif = document.getElementById('det-notas-dif');
-    const elSumaDif = document.getElementById('suma-notas-dif');
-    const elDetOtras = document.getElementById('det-notas-otras');
-    const elSumaOtras = document.getElementById('suma-notas-otras');
-    const elInfo = document.getElementById('nota-notas');
     const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
     let nDif = 0, nConflicto = 0, nOtras = 0;
     tarjetasCompletas.forEach((t) => {
@@ -7575,12 +7827,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (est === 'conflicto') nConflicto++;
     });
     Object.keys(notasLocales).forEach((h) => { if (!hashesAqui.has(h)) nOtras++; });
-    elDetDif.style.display = nDif > 0 ? 'block' : 'none';
-    elSumaDif.textContent = 'Distintas a las del txt (' + nDif + ')' + (nConflicto > 0 ? ' — ' + nConflicto + ' con conflicto' : '');
-    elDetOtras.style.display = nOtras > 0 ? 'block' : 'none';
-    elSumaOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
+    elDetNotasDif.style.display = nDif > 0 ? 'block' : 'none';
+    elSumaNotasDif.textContent = 'Distintas a las del txt (' + nDif + ')' + (nConflicto > 0 ? ' — ' + nConflicto + ' con conflicto' : '');
+    elDetNotasOtras.style.display = nOtras > 0 ? 'block' : 'none';
+    elSumaNotasOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
     const total = Object.keys(notasLocales).length;
-    elInfo.textContent = total === 0
+    elInfoNotas.textContent = total === 0
       ? 'Todavía no editaste ninguna nota (botón 💡 durante el estudio).'
       : 'Guardadas en este navegador: ' + total;
     document.getElementById('btn-vaciar-notas').style.display = total > 0 ? 'inline-block' : 'none';
@@ -7660,56 +7912,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return div;
   }
 
+  // OPTIMIZACIÓN (lazy rendering): ya no reconstruye las filas directamente;
+  // invalida ambos grupos y los refresca YA si ya estaban abiertos, o deja
+  // la reconstrucción pendiente para cuando se abran.
   function renderNotasPreview() {
-    const elDif = document.getElementById('lista-notas-dif');
-    const elDetDif = document.getElementById('det-notas-dif');
-    const elSumaDif = document.getElementById('suma-notas-dif');
-    const elOtras = document.getElementById('lista-notas-otras');
-    const elDetOtras = document.getElementById('det-notas-otras');
-    const elSumaOtras = document.getElementById('suma-notas-otras');
-    const elInfo = document.getElementById('nota-notas');
-    elDif.innerHTML = '';
-    elOtras.innerHTML = '';
-    nodosNotas.clear();   // NUEVO: reconstrucción total = reconstruye también el mapa de nodos
-
-    // 1) Tarjetas de ESTE evaluador cuya nota local difiere de la del txt
-    const hashesAqui = new Set();
-    let nDif = 0, nConflicto = 0;
-    tarjetasCompletas.forEach((t) => {
-      const h = hashTarjeta(t);
-      if (hashesAqui.has(h)) return;
-      hashesAqui.add(h);
-      const est = estadoNotaDe(t);
-      if (est === 'igual') return;
-      nDif++;
-      if (est === 'conflicto') nConflicto++;
-      const fila = filaNotaDif(t, est);
-      elDif.appendChild(fila);
-      nodosNotas.set(h, { fila: fila, grupo: 'dif' });
-    });
-
-    // 2) Notas guardadas que no corresponden a ninguna tarjeta de este txt
-    //    (otro evaluador, o el primero/segundo cambió y el hash ya no coincide)
-    let nOtras = 0;
-    Object.keys(notasLocales).forEach((h) => {
-      if (hashesAqui.has(h)) return;
-      nOtras++;
-      const fila = filaNotaOtra(h, notasLocales[h] || {});
-      elOtras.appendChild(fila);
-      nodosNotas.set(h, { fila: fila, grupo: 'otras' });
-    });
-
-    elDetDif.style.display = nDif > 0 ? 'block' : 'none';
-    elSumaDif.textContent = 'Distintas a las del txt (' + nDif + ')' +
-      (nConflicto > 0 ? ' — ' + nConflicto + ' con conflicto' : '');
-    elDetOtras.style.display = nOtras > 0 ? 'block' : 'none';
-    elSumaOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
-
-    const total = Object.keys(notasLocales).length;
-    elInfo.textContent = total === 0
-      ? 'Todavía no editaste ninguna nota (botón 💡 durante el estudio).'
-      : 'Guardadas en este navegador: ' + total;
-    document.getElementById('btn-vaciar-notas').style.display = total > 0 ? 'inline-block' : 'none';
+    nodosNotas.clear();
+    elListaNotasDif.innerHTML = '';
+    elListaNotasOtras.innerHTML = '';
+    actualizarContadoresNotas();
+    lazyNotasDif.refrescar();
+    lazyNotasOtras.refrescar();
   }
 
   // NUEVO: mismo patrón que "Vaciar todas" de razones
@@ -7860,28 +8072,49 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function contenedorDeGrupoRazon(grupo) {
-    return grupo === 'aqui' ? document.getElementById('lista-razones-aqui') : document.getElementById('lista-razones-otras');
+    return grupo === 'aqui' ? elListaRazonesAqui : elListaRazonesOtras;
   }
 
+  // OPTIMIZACIÓN (lazy rendering): refs fijas + los dos <details> se preparan
+  // UNA sola vez; su contenido se arma recién al abrirlos (o de una si ya
+  // estaban abiertos).
+  const elListaRazonesAqui = document.getElementById('lista-razones-aqui');
+  const elDetRazonesAqui = document.getElementById('det-razones-aqui');
+  const elSumaRazonesAqui = document.getElementById('suma-razones-aqui');
+  const elListaRazonesOtras = document.getElementById('lista-razones-otras');
+  const elDetRazonesOtras = document.getElementById('det-razones-otras');
+  const elSumaRazonesOtras = document.getElementById('suma-razones-otras');
+  const elInfoRazones = document.getElementById('nota-razones');
+  const elVaciarRazones = document.getElementById('btn-vaciar-razones');
+
+  function construirGrupoRazonesLazy(grupo) {
+    const elLista = contenedorDeGrupoRazon(grupo);
+    Object.keys(razonesGuardadas).forEach((h) => {
+      if (grupoActualRazon(h) !== grupo) return;
+      const cache = nodosRazones.get(h);
+      if (cache && cache.grupo === grupo) return;   // ya está (incremental previo)
+      const fila = filaRazonGuardada(h, razonesGuardadas[h]);
+      elLista.appendChild(fila);
+      nodosRazones.set(h, { fila: fila, grupo: grupo });
+    });
+  }
+
+  const lazyRazonesAqui = prepararDetallesLazy(elDetRazonesAqui, () => construirGrupoRazonesLazy('aqui'));
+  const lazyRazonesOtras = prepararDetallesLazy(elDetRazonesOtras, () => construirGrupoRazonesLazy('otras'));
+
   function actualizarContadoresRazones() {
-    const elDetAqui = document.getElementById('det-razones-aqui');
-    const elSumaAqui = document.getElementById('suma-razones-aqui');
-    const elDetOtras = document.getElementById('det-razones-otras');
-    const elSumaOtras = document.getElementById('suma-razones-otras');
-    const elInfo = document.getElementById('nota-razones');
-    const elVaciar = document.getElementById('btn-vaciar-razones');
     const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
     let nAqui = 0, nOtras = 0;
     Object.keys(razonesGuardadas).forEach((h) => { hashesAqui.has(h) ? nAqui++ : nOtras++; });
-    elDetAqui.style.display = nAqui > 0 ? 'block' : 'none';
-    elSumaAqui.textContent = 'De este evaluador (' + nAqui + ')';
-    elDetOtras.style.display = nOtras > 0 ? 'block' : 'none';
-    elSumaOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
+    elDetRazonesAqui.style.display = nAqui > 0 ? 'block' : 'none';
+    elSumaRazonesAqui.textContent = 'De este evaluador (' + nAqui + ')';
+    elDetRazonesOtras.style.display = nOtras > 0 ? 'block' : 'none';
+    elSumaRazonesOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
     const total = nAqui + nOtras;
-    elInfo.textContent = total === 0
+    elInfoRazones.textContent = total === 0
       ? 'Todavía no guardaste razones (botón 🏷 durante el estudio).'
       : 'Guardadas en este navegador: ' + total;
-    elVaciar.style.display = total > 0 ? 'inline-block' : 'none';
+    elVaciarRazones.style.display = total > 0 ? 'inline-block' : 'none';
   }
 
   function actualizarFilaRazonIndividual(h) {
@@ -7950,37 +8183,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return div;
   }
 
+  // OPTIMIZACIÓN (lazy rendering): ya no reconstruye las filas directamente;
+  // invalida ambos grupos y los refresca YA si ya estaban abiertos, o deja
+  // la reconstrucción pendiente para cuando se abran.
   function renderRazonesPreview() {
-    const elAqui = document.getElementById('lista-razones-aqui');
-    const elDetAqui = document.getElementById('det-razones-aqui');
-    const elSumaAqui = document.getElementById('suma-razones-aqui');
-    const elOtras = document.getElementById('lista-razones-otras');
-    const elDetOtras = document.getElementById('det-razones-otras');
-    const elSumaOtras = document.getElementById('suma-razones-otras');
-    const elInfo = document.getElementById('nota-razones');
-    const elVaciar = document.getElementById('btn-vaciar-razones');
-    elAqui.innerHTML = '';
-    elOtras.innerHTML = '';
-    nodosRazones.clear();   // NUEVO: reconstrucción total = reconstruye también el mapa de nodos
-
-    const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
-    let nAqui = 0, nOtras = 0;
-    Object.keys(razonesGuardadas).forEach((h) => {
-      const grupo = hashesAqui.has(h) ? 'aqui' : 'otras';
-      if (grupo === 'aqui') nAqui++; else nOtras++;
-      const fila = filaRazonGuardada(h, razonesGuardadas[h]);
-      contenedorDeGrupoRazon(grupo).appendChild(fila);
-      nodosRazones.set(h, { fila: fila, grupo: grupo });
-    });
-    elDetAqui.style.display = nAqui > 0 ? 'block' : 'none';
-    elSumaAqui.textContent = 'De este evaluador (' + nAqui + ')';
-    elDetOtras.style.display = nOtras > 0 ? 'block' : 'none';
-    elSumaOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
-    const total = nAqui + nOtras;
-    elInfo.textContent = total === 0
-      ? 'Todavía no guardaste razones (botón 🏷 durante el estudio).'
-      : 'Guardadas en este navegador: ' + total;
-    elVaciar.style.display = total > 0 ? 'inline-block' : 'none';
+    nodosRazones.clear();
+    elListaRazonesAqui.innerHTML = '';
+    elListaRazonesOtras.innerHTML = '';
+    actualizarContadoresRazones();
+    lazyRazonesAqui.refrescar();
+    lazyRazonesOtras.refrescar();
   }
 
   // NUEVO: fusiona una lista de razones importada (individual o dentro de un backup completo)
@@ -9166,13 +9378,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  function guardarRazones() {
+  function guardarRazonesYa() {
     try {
       localStorage.setItem(CLAVE_RAZONES, JSON.stringify(razonesGuardadas));
     } catch (e) {
       // sin localStorage: quedan solo en memoria de esta sesión
     }
   }
+  const guardarRazones = crearGuardadoDebounced(guardarRazonesYa, 250);
 
   function razonesDeTarjeta(t) {
     const e = razonesGuardadas[hashTarjeta(t)];
@@ -9513,11 +9726,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return item;
   }
 
-  // MODIFICADO: recibe índices y los agrupa en desplegables por subT.
-  // Orden: subT en el orden del txt; dentro de cada subT, tarjetas en el orden del txt.
-  // mostrarRazones=false se usa para la sección "Revisar" (sin chips de razones).
-  function llenarLista(idContenedor, indices, mostrarRazones) {
-    if (mostrarRazones === undefined) mostrarRazones = true;
+  // OPTIMIZACIÓN (lazy rendering), DOS NIVELES:
+  //  1) El <details class="lista-desplegable"> externo (Entendidas, Casi,
+  //     No entendidas, Pasadas sin marcar, Revisar): su contenido (los
+  //     subT agrupados) recién se arma al abrirlo.
+  //  2) Cada <details class="sub-desplegable"> (un subT dentro de esa
+  //     categoría): sus ítems (crearItemResultado, uno por tarjeta) recién
+  //     se arman al abrir ESE subT puntual.
+  // '_resumenListaDatos' guarda los índices/razones más recientes por
+  // contenedor (mostrarResumen() puede llamarse de nuevo tras "continuar con
+  // las no respondidas"); '_resumenListaCtrl' cachea el lazyCtrl del
+  // <details> externo para no registrar el listener 'toggle' más de una vez.
+  const _resumenListaDatos = new Map();   // idContenedor -> { indices, mostrarRazones }
+  const _resumenListaCtrl = new Map();    // idContenedor -> lazyCtrl
+
+  function construirListaResumenLazy(idContenedor) {
+    const datos = _resumenListaDatos.get(idContenedor) || { indices: [], mostrarRazones: true };
+    const indices = datos.indices, mostrarRazones = datos.mostrarRazones;
     const el = document.getElementById(idContenedor);
     el.innerHTML = '';
 
@@ -9547,9 +9772,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const sum = document.createElement('summary');
       sum.textContent = nombre + ' (' + lista.length + ')';
       det.appendChild(sum);
-      lista.forEach((i) => det.appendChild(crearItemResultado(i, false, mostrarRazones)));
+      // Segundo nivel: los ítems de ESTE subT recién se arman al abrirlo.
+      prepararDetallesLazy(det, () => {
+        lista.forEach((i) => det.appendChild(crearItemResultado(i, false, mostrarRazones)));
+      });
       el.appendChild(det);
     });
+  }
+
+  // MODIFICADO: recibe índices y los agrupa en desplegables por subT.
+  // Orden: subT en el orden del txt; dentro de cada subT, tarjetas en el orden del txt.
+  // mostrarRazones=false se usa para la sección "Revisar" (sin chips de razones).
+  function llenarLista(idContenedor, indices, mostrarRazones) {
+    if (mostrarRazones === undefined) mostrarRazones = true;
+    _resumenListaDatos.set(idContenedor, { indices: indices, mostrarRazones: mostrarRazones });
+    let ctrl = _resumenListaCtrl.get(idContenedor);
+    if (!ctrl) {
+      const detExterno = document.getElementById(idContenedor).closest('details');
+      ctrl = prepararDetallesLazy(detExterno, () => construirListaResumenLazy(idContenedor));
+      _resumenListaCtrl.set(idContenedor, ctrl);
+    }
+    ctrl.refrescar();
   }
 
   function mostrarResumen() {

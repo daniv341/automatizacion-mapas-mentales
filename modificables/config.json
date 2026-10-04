@@ -4,8 +4,8 @@
       "recordatorio": "../guardados/recordatorios/recordatorio Gestion de Operaciones.txt",
       "respuestas": "../guardados/rutas/Gestion de Operaciones_rutas.txt",
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Operaciones.drawio",
-      "resaltar": true,
-      "colores": "verdeAgua"
+      "resaltar": false,
+      "colores": "rojo"
     }
   ]
 }
