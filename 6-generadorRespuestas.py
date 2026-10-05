@@ -1761,7 +1761,7 @@ def main() -> None:
     output_dir = OUTPUT_DIR if OUTPUT_DIR is not None else Path(__file__).parent.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    txt_path = output_dir / f"{input_path.stem}_rutas.txt"
+    txt_path = output_dir / f"{input_path.stem}.txt"
     #json_path = output_dir / f"{input_path.stem}.json"
 
     vertices, styles, edges, graph, diagram_name, diagram_id, orphan_ids = parse_first_page(input_path)

@@ -822,7 +822,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     /* NUEVO: color propio de la interfaz (botones, inputs, títulos, etc.).
        Ya no depende de la paleta de colores elegida al generar el evaluador:
        --stroke-color queda reservado SOLO para el look de las tarjetas
-       (.tema, .tarjeta, .primero, .segundo, .badge-rutas, .palabra-clave...). */
+       (.tema, .tarjeta, .primero, .segundo, .palabra-clave...). */
     --color-boton: #4F46E5;
   }
 
@@ -1113,9 +1113,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     right: 14px;
     font-size: 12px;
     font-weight: 700;
-    color: var(--stroke-color);
+    color: var(--color-boton);
     background: rgba(255,255,255,0.65);
-    border: 1.5px solid var(--stroke-color);
+    border: 1.5px solid var(--color-boton);
     border-radius: 12px;
     padding: 2px 10px;
     pointer-events: none;
@@ -3874,16 +3874,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elPantallaHistorial.style.display = nombre === 'historial' ? 'block' : 'none';  // NUEVO
 
     if (nombre === 'observador') {
-      renderImagenesPreview();   // NUEVO: refresca también al entrar por primera vez (mismo motivo que "temas")
+      // OPTIMIZACIÓN: se deja pintar primero el cambio de pantalla (el
+      // display:block de arriba) y recién en el siguiente frame se hace el
+      // trabajo pesado; evita que todo el reflow caiga en el mismo frame
+      // sincrónico del click (se nota sobre todo en PC).
+      requestAnimationFrame(() => {
+        renderImagenesPreview();   // NUEVO: refresca también al entrar por primera vez (mismo motivo que "temas")
+      });
     }
 
     if (nombre === 'temas') {
-      renderDificilesPreview();  // MODIFICADO: actualizar la vista de difíciles
-      renderNotasPreview();      // NUEVO: notas distintas a las del txt
-      renderRevisarGuardadoPreview();  // NUEVO: también al volver por "Volver a temas" del observador
-      renderRazonesPreview();    // NUEVO: corrige que no aparecieran al abrir el HTML por primera vez
-      actualizarMarcasTemas();   // NUEVO: refresca ★/💡/🏷 sin resetear las casillas marcadas
-      evaluarAvisoSRS();         // NUEVO: §4 — avisa si hay listas de Repaso Espaciado vencidas
+      // OPTIMIZACIÓN: mismo motivo que arriba — se agrupan las 6 funciones
+      // de render en un solo requestAnimationFrame para que no se ejecuten
+      // todas sincrónicamente pegadas al cambio de pantalla.
+      requestAnimationFrame(() => {
+        renderDificilesPreview();  // MODIFICADO: actualizar la vista de difíciles
+        renderNotasPreview();      // NUEVO: notas distintas a las del txt
+        renderRevisarGuardadoPreview();  // NUEVO: también al volver por "Volver a temas" del observador
+        renderRazonesPreview();    // NUEVO: corrige que no aparecieran al abrir el HTML por primera vez
+        actualizarMarcasTemas();   // NUEVO: refresca ★/💡/🏷 sin resetear las casillas marcadas
+        evaluarAvisoSRS();         // NUEVO: §4 — avisa si hay listas de Repaso Espaciado vencidas
+      });
     }
     if (nombre !== 'estudio') {
       detenerCronometro();
@@ -4233,8 +4244,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function entrarObservador() {
     if (tarjetasCompletas.length === 0) return;
-    construirListaObservador();
     mostrarPantalla('observador');
+    // OPTIMIZACIÓN: se deja pintar la pantalla (vacía) primero, y recién en
+    // el siguiente frame se arma la lista — evita apilar el reflow del
+    // cambio de pantalla con el de construir la lista en el mismo frame.
+    requestAnimationFrame(() => {
+      construirListaObservador();
+    });
   }
 
   function abrirTarjetaObservador(idx) {
@@ -4265,19 +4281,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     resetPanelesUI();
     modoObservador = false;
     elAreaTarjeta.classList.remove('observador');
-    construirListaObservador();   // refresca ★ y 💡
     mostrarPantalla('observador');
-    // Volver al lugar donde se estaba: forzar la construcción (lazy) de su
-    // subT si hiciera falta, abrirlo y mostrar la fila.
-    const nombreGrupo = indiceAGrupoObservador.get(ultimo);
-    const info = nombreGrupo ? gruposObservadorInfo.get(nombreGrupo) : null;
-    if (info && info.lazyCtrl) info.lazyCtrl.abrirYConstruir();
-    const fila = elListaObservador.querySelector('[data-idx="' + ultimo + '"]');
-    if (fila) {
-      const grupo = fila.closest('details');
-      if (grupo) grupo.open = true;
-      if (fila.scrollIntoView) fila.scrollIntoView({ block: 'center' });
-    }
+    // OPTIMIZACIÓN: igual que entrarObservador() — el reflow de
+    // construirListaObservador() (+ la apertura/scroll a la última tarjeta
+    // vista, que depende de que la lista ya esté armada) se corre en el
+    // siguiente frame, no pegado al cambio de pantalla.
+    requestAnimationFrame(() => {
+      construirListaObservador();   // refresca ★ y 💡
+      // Volver al lugar donde se estaba: forzar la construcción (lazy) de su
+      // subT si hiciera falta, abrirlo y mostrar la fila.
+      const nombreGrupo = indiceAGrupoObservador.get(ultimo);
+      const info = nombreGrupo ? gruposObservadorInfo.get(nombreGrupo) : null;
+      if (info && info.lazyCtrl) info.lazyCtrl.abrirYConstruir();
+      const fila = elListaObservador.querySelector('[data-idx="' + ultimo + '"]');
+      if (fila) {
+        const grupo = fila.closest('details');
+        if (grupo) grupo.open = true;
+        if (fila.scrollIntoView) fila.scrollIntoView({ block: 'center' });
+      }
+    });
   }
 
   // ============================================================
@@ -4581,7 +4603,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     galeriaPos = 0;
     resetGaleriaNotaUI();
     mostrarPantalla('galeria');
-    renderGaleria();
+    // OPTIMIZACIÓN: se deja pintar el cambio de pantalla primero; recién en
+    // el siguiente frame se arma/decodifica la imagen de la galería.
+    requestAnimationFrame(() => {
+      renderGaleria();
+    });
   }
 
   function volverListaDesdeGaleria() {
@@ -5604,8 +5630,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function abrirModalListas() {
-    renderListasGuardadas();
     elModalListas.classList.add('abierto');
+    // OPTIMIZACIÓN: se deja pintar el modal (vacío) primero; recién en el
+    // siguiente frame se arma el contenido (todas las filas/listas).
+    requestAnimationFrame(() => {
+      renderListasGuardadas();
+    });
   }
   function cerrarModalListas() {
     elModalListas.classList.remove('abierto');
@@ -10128,27 +10158,27 @@ PALETA_COLORES = {
     "celeste": ["#00CCCC", "#5C5C5C"],
     "rojo": ["#FF0000", "#5C5C5C"],
     "verde": ["#66CC00", "#5C5C5C"],
-    "morado": ["#7F00FF", "#5C5C5C"],
-    "rosado": ["#FF66FF", "#5C5C5C"],
-    "azul": ["#0000FF", "#5C5C5C"],
-    "bordo": ["#FF0080", "#5C5C5C"],
-    "naranja": ["#FF8000", "#5C5C5C"],
-    "verdeAgua": ["#0BD0AF", "#5C5C5C"],
-    "gris": ["#999999", "#5C5C5C"],
-    "marron": ["#89552A", "#5C5C5C"],
-    "fucsia": ["#DC7BFF", "#5C5C5C"],
-    "azulGrisaceo": ["#3399FF", "#5C5C5C"],
-    "verdeOscuro": ["#14B866", "#5C5C5C"],
-    "naranjaOscuro": ["#FF5A36", "#5C5C5C"],
-    "rojoOscuro": ["#8B0000", "#5C5C5C"],
-    "amarilloOscuro": ["#556B2F", "#5C5C5C"],
-    "verdeClaro": ["#98FF98", "#5C5C5C"],
-    "grisClaro": ["#E6E6FA", "#5C5C5C"],
-    "rosadoClaro": ["#FFB6C1", "#5C5C5C"],
-    "azulClaro": ["#B3BDFF", "#5C5C5C"],
-    "moradoClaro": ["#696ADC", "#5C5C5C"],
-    "rojoClaro": ["#FF6347", "#5C5C5C"],
-    "marronClaro": ["#CD853F", "#5C5C5C"],
+    "morado": ["#7F00FF", "#D0D0D0"],
+    "rosado": ["#FF66FF", "#5C5C5C"],     
+    "azul": ["#0000FF", "#D0D0D0"],     
+    "bordo": ["#FF0080", "#5C5C5C"],     
+    "naranja": ["#FF8000", "#5C5C5C"],     
+    "verdeAgua": ["#0BD0AF", "#5C5C5C"],     
+    "gris": ["#999999", "#5C5C5C"],     
+    "marron": ["#89552A", "#D0D0D0"],     
+    "fucsia": ["#DC7BFF", "#5C5C5C"],     
+    "azulGrisaceo": ["#3399FF", "#5C5C5C"],     
+    "verdeOscuro": ["#14B866", "#5C5C5C"],     
+    "naranjaOscuro": ["#FF5A36", "#5C5C5C"],     
+    "rojoOscuro": ["#8B0000", "#D0D0D0"],     
+    "amarilloOscuro": ["#556B2F", "#D0D0D0"],     
+    "verdeClaro": ["#98FF98", "#5C5C5C"],     
+    "grisClaro": ["#E6E6FA", "#5C5C5C"],     
+    "rosadoClaro": ["#FFB6C1", "#5C5C5C"],     
+    "azulClaro": ["#B3BDFF", "#5C5C5C"],     
+    "moradoClaro": ["#696ADC", "#5C5C5C"],     
+    "rojoClaro": ["#FF6347", "#5C5C5C"],     
+    "marronClaro": ["#CD853F", "#5C5C5C"],     
     "amarilloClaro": ["#FFFF80", "#5C5C5C"],
 }
 
