@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Evaluadores</title>
+<style>
+  :root {
+    --color-boton: #4F46E5;
+    --fondo: linear-gradient(135deg, #f5f3fa 0%, #eef1f7 100%);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: var(--fondo);
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #333;
+    padding: clamp(12px, 4vw, 24px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .contenedor {
+    width: 100%;
+    max-width: 560px;
+    background: #fff;
+    border-radius: 16px;
+    padding: clamp(20px, 7vw, 40px) clamp(16px, 5.5vw, 30px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+
+  h1 {
+    font-size: clamp(18px, 5vw, 22px);
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 4px;
+  }
+
+  .subtitulo {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: clamp(14px, 4vw, 20px);
+  }
+
+  .input-buscador {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 24px;
+    border: 2px solid #E2E4EC;
+    font-size: 14px;
+    font-family: inherit;
+    color: #333;
+    outline: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: border-color 0.15s;
+    margin-bottom: 16px;
+  }
+  .input-buscador:focus { border-color: var(--color-boton); }
+
+  .lista { list-style: none; }
+
+  .item {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f1f1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background 0.15s;
+    border-radius: 10px;
+  }
+  .item:hover { background: #f7f7fb; }
+  .item:last-child { border-bottom: none; }
+
+  .item a {
+    color: var(--color-boton);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+  .item a:hover { text-decoration: underline; }
+
+  .item .fecha {
+    color: #999;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .vacio, .cargando, .error {
+    text-align: center;
+    padding: 40px 0;
+    font-size: 14px;
+  }
+  .cargando { color: var(--color-boton); }
+  .error { color: #c0392b; }
+  .error a { color: var(--color-boton); }
+
+  .footer {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 12px;
+    color: #aaa;
+  }
+
+  .btn-externo {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 18px;
+    border-radius: 20px;
+    background: #fff;
+    color: var(--color-boton);
+    border: 2px solid var(--color-boton);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    font-family: inherit;
+  }
+  .btn-externo:hover { background: var(--color-boton); color: #fff; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+  <h1>📚 Mis Evaluadores</h1>
+  <p class="subtitulo">Listado automático desde el repositorio</p>
+
+  <input
+    type="text"
+    class="input-buscador"
+    id="buscador"
+    placeholder="Buscar evaluador..."
+    autocomplete="off"
+  >
+
+  <div id="contenido"><p class="cargando">Cargando evaluadores...</p></div>
+
+  <div class="footer" id="footer"></div>
+</div>
+
+<script>
+  const USUARIO = 'daniv341';
+  const REPO = 'automatizaci%C3%B3n-mapas-mentales';
+  const CARPETA = 'guardados/evaluadores';
+
+  const API_URL = `https://api.github.com/repos/${USUARIO}/${REPO}/contents/${CARPETA}`;
+
+  const elContenido = document.getElementById('contenido');
+  const elFooter = document.getElementById('footer');
+  const elBuscador = document.getElementById('buscador');
+  let evaluadores = [];
+
+  function limpiarNombre(nombre) {
+    return nombre
+      .replace(/^evaluador_/i, '')
+      .replace(/\.html$/i, '')
+      .replace(/_/g, ' ');
+  }
+
+  function formatearFecha(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString('es-AR', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+    } catch { return ''; }
+  }
+
+  async function cargar() {
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      evaluadores = data
+        .filter(f => f.name.toLowerCase().endsWith('.html') && f.name.toLowerCase().startsWith('evaluador_'))
+        .map(f => ({
+          nombre: limpiarNombre(f.name),
+          archivo: f.name,
+          url: `guardados/evaluadores/${f.name}`,
+          fecha: f.commit?.commit?.committer?.date || '',
+        }))
+        .sort((a, b) => b.nombre.localeCompare(a.nombre));
+
+      render(evaluadores);
+      elFooter.textContent = `${evaluadores.length} evaluador(es) · actualizado al cargar la página`;
+    } catch (err) {
+      elContenido.innerHTML = `
+        <div class="error">
+          No se pudo cargar el listado.<br>
+          <small>${err.message}</small><br><br>
+          <a class="btn-externo" href="https://github.com/${USUARIO}/${REPO}/tree/main/${CARPETA}" target="_blank">
+            Ver carpeta en GitHub →
+          </a>
+        </div>`;
+    }
+  }
+
+  function render(lista) {
+    if (lista.length === 0) {
+      elContenido.innerHTML = '<p class="vacio">No hay evaluadores que coincidan.</p>';
+      return;
+    }
+    const ul = document.createElement('ul');
+    ul.className = 'lista';
+    lista.forEach(ev => {
+      const li = document.createElement('li');
+      li.className = 'item';
+      li.innerHTML = `
+        <a href="${ev.url}">${ev.nombre}</a>
+        ${ev.fecha ? `<span class="fecha">${formatearFecha(ev.fecha)}</span>` : ''}
+      `;
+      ul.appendChild(li);
+    });
+    elContenido.innerHTML = '';
+    elContenido.appendChild(ul);
+  }
+
+  elBuscador.addEventListener('input', () => {
+    const q = elBuscador.value.toLowerCase().trim();
+    if (!q) { render(evaluadores); return; }
+    render(evaluadores.filter(ev => ev.nombre.toLowerCase().includes(q)));
+  });
+
+  cargar();
+</script>
+</body>
+</html>
