@@ -11,7 +11,7 @@
     /* NUEVO: color propio de la interfaz (botones, inputs, títulos, etc.).
        Ya no depende de la paleta de colores elegida al generar el evaluador:
        --stroke-color queda reservado SOLO para el look de las tarjetas
-       (.tema, .tarjeta, .primero, .segundo=, .palabra-clave...). */
+       (.tema, .tarjeta, .primero, .segundo, .palabra-clave...). */
     --color-boton: #4F46E5;
   }
 
@@ -1613,6 +1613,33 @@
   }
   .analisis-resumen-linea { font-size: 13px; color: #333; margin: 2px 0; }
 
+  /* NUEVO: dictado por voz (botón 🎙 sobre los textareas) */
+  .wrap-dictado { position: relative; }
+  .boton-dictado {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
+    z-index: 2;
+  }
+  .boton-dictado.activo {
+    background: #e0574c;
+    color: #fff;
+    border-color: #e0574c;
+    animation: pulsar 1s infinite;
+  }
+  .boton-dictado:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  @keyframes pulsar {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+
   .nota-listado { font-size: 12px; color: #888; margin-top: -4px; margin-bottom: 8px; }
 
   .modal-caja-ancha { width: min(92vw, 520px); text-align: left; max-height: 82vh; overflow-y: auto; }
@@ -2013,7 +2040,11 @@
         </div>
       </div>
       <div class="panel-nota-texto" id="galeria-nota-texto"></div>
-      <textarea class="panel-nota-editor" id="galeria-nota-editor" style="display:none;" placeholder="Escribí una nota para esta imagen"></textarea>
+      <!-- NUEVO: dictado por voz -->
+      <div class="wrap-dictado">
+        <textarea class="panel-nota-editor" id="galeria-nota-editor" style="display:none;" placeholder="Escribí una nota para esta imagen"></textarea>
+        <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-galeria-nota-editor" data-dictado-target="galeria-nota-editor" style="display:none;" title="Dictado por voz">🎙</button>
+      </div>
       <div class="panel-nota-acciones">
         <button class="boton-mini" id="btn-galeria-nota-editar">✎ Editar</button>
         <button class="boton-mini" id="btn-galeria-nota-guardar" style="display:none;">Guardar</button>
@@ -2139,7 +2170,11 @@
         </div>
       </div>
       <div class="panel-nota-texto" id="panel-nota-texto"></div>
-      <textarea class="panel-nota-editor" id="nota-editor" style="display:none;" placeholder="Escribí tu nota (Ctrl+Enter para guardar)"></textarea>
+      <!-- NUEVO: dictado por voz -->
+      <div class="wrap-dictado">
+        <textarea class="panel-nota-editor" id="nota-editor" style="display:none;" placeholder="Escribí tu nota (Ctrl+Enter para guardar)"></textarea>
+        <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-nota-editor" data-dictado-target="nota-editor" style="display:none;" title="Dictado por voz">🎙</button>
+      </div>
       <div class="panel-nota-acciones">
         <button class="boton-mini" id="btn-nota-editar">✎ Editar</button>
         <button class="boton-mini" id="btn-nota-guardar" style="display:none;">Guardar</button>
@@ -2162,7 +2197,11 @@
     </div>
 
     <div class="zona-eval" id="zona-eval">
-      <textarea id="texto-eval" placeholder="Escribí la respuesta con tus palabras (opcional). Enter para evaluar"></textarea>
+      <!-- NUEVO: dictado por voz -->
+      <div class="wrap-dictado">
+        <textarea id="texto-eval" placeholder="Escribí la respuesta con tus palabras (opcional). Enter para evaluar"></textarea>
+        <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-texto-eval" data-dictado-target="texto-eval" title="Dictado por voz">🎙</button>
+      </div>
       <!-- MODIFICADO: id agregado para poder ocultar el botón tras evaluar -->
       <div class="fila-eval" id="fila-eval">
         <button class="boton-pista" id="btn-evaluar">Evaluar respuesta</button>
@@ -3709,6 +3748,7 @@
 
   function guardarEdicionGaleriaNota() {
     if (!galeriaEditando || INDICE_IMAGENES.length === 0) return;
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elGaleriaNotaEditor);
     const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
     const anterior = notaActualImagen();
     const nueva = elGaleriaNotaEditor.value.trim();
@@ -3725,6 +3765,7 @@
 
   function cancelarEdicionGaleriaNota() {
     if (!confirmarDescartarGaleria()) return;
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elGaleriaNotaEditor);
     galeriaEditando = false;
     if (notaActualImagen() === '' && notaBaseImagen() === '') {
       resetGaleriaNotaUI();
@@ -3804,12 +3845,14 @@
     if (galeriaEditando) {
       elGaleriaNotaTexto.style.display = 'none';
       elGaleriaNotaEditor.style.display = 'block';
+      document.getElementById('btn-dictado-galeria-nota-editor').style.display = 'flex';   // NUEVO: dictado por voz
       document.getElementById('btn-galeria-nota-editar').style.display = 'none';
       document.getElementById('btn-galeria-nota-guardar').style.display = 'inline-block';
       document.getElementById('btn-galeria-nota-cancelar').style.display = 'inline-block';
       document.getElementById('btn-galeria-nota-revertir').style.display = 'none';
     } else {
       elGaleriaNotaEditor.style.display = 'none';
+      document.getElementById('btn-dictado-galeria-nota-editor').style.display = 'none';   // NUEVO: dictado por voz
       elGaleriaNotaTexto.style.display = 'block';
       let texto, vacio;
       if (galeriaVerAnterior) {
@@ -5044,38 +5087,49 @@
     const saltadas = indices.filter((i) => resultados[i] === 'saltar');
 
     const nEval = evaluadas.length;
+    const nPista = evaluadas.filter((i) => pistaMostrada[i]).length;
+    const nResp = evaluadas.filter((i) => respuestaMostrada[i]).length;
     const pctAciertos = (aciertos.length / nEval) * 100;
     const pctFallos = (fallos.length / nEval) * 100;
     const pctCasi = (casi.length / nEval) * 100;
-    const pctPista = (evaluadas.filter((i) => pistaMostrada[i]).length / nEval) * 100;
-    const pctResp = (evaluadas.filter((i) => respuestaMostrada[i]).length / nEval) * 100;
+    const pctPista = (nPista / nEval) * 100;
+    const pctResp = (nResp / nEval) * 100;
     const promedioMs = (lista) => lista.length ? lista.reduce((a, i) => a + (tiempos[i] || 0), 0) / lista.length : 0;
     const tiempoProFallas = promedioMs(fallos);
     const tiempoProEvaluadas = promedioMs(evaluadas);
 
+    // NUEVO: cada comentario lleva entre paréntesis el dato concreto que lo
+    // justifica (p. ej. "Dependencia de pistas (3 de 5)"), para que no quede
+    // como una etiqueta sin contexto.
+    const pctFallosR = Math.round(pctFallos);
+    const pctCasiR = Math.round(pctCasi);
+    const pctAciertosR = Math.round(pctAciertos);
+    const segFallas = Math.round(tiempoProFallas / 1000);
+    const segEvaluadas = Math.round(tiempoProEvaluadas / 1000);
+
     const comentarios = [];   // { texto, color }
 
     // 🔴 Rojo
-    if (pctFallos >= 70) comentarios.push({ texto: 'Revisión urgente', color: 'rojo' });
-    if (aciertos.length === 0 && nEval >= 2) comentarios.push({ texto: 'No acertaste ninguna', color: 'rojo' });
-    if (pctPista > 50) comentarios.push({ texto: 'Dependencia de pistas', color: 'rojo' });
-    if (pctResp > 50) comentarios.push({ texto: 'Revisa el contenido antes de evaluar', color: 'rojo' });
-    if (fallos.length > 0 && tiempoProFallas > 30000) comentarios.push({ texto: '¿Te trabaste en este tema?', color: 'rojo' });
+    if (pctFallos >= 70) comentarios.push({ texto: 'Revisión urgente (' + pctFallosR + '% fallos)', color: 'rojo' });
+    if (aciertos.length === 0 && nEval >= 2) comentarios.push({ texto: 'No acertaste ninguna (0 de ' + nEval + ')', color: 'rojo' });
+    if (pctPista > 50) comentarios.push({ texto: 'Dependencia de pistas (' + nPista + ' de ' + nEval + ')', color: 'rojo' });
+    if (pctResp > 50) comentarios.push({ texto: 'Revisa el contenido antes de evaluar (' + nResp + ' de ' + nEval + ')', color: 'rojo' });
+    if (fallos.length > 0 && tiempoProFallas > 30000) comentarios.push({ texto: '¿Te trabaste en este tema? (prom. ' + segFallas + 's en falladas)', color: 'rojo' });
 
     // 🟠 Naranja
-    if (pctFallos >= 50 && pctFallos < 70) comentarios.push({ texto: 'En proceso', color: 'naranja' });
-    if (pctPista >= 20 && pctPista <= 50) comentarios.push({ texto: 'Depende un poco de pistas', color: 'naranja' });
-    if (pctCasi >= 60) comentarios.push({ texto: 'Estás cerca, repasa los detalles', color: 'naranja' });
+    if (pctFallos >= 50 && pctFallos < 70) comentarios.push({ texto: 'En proceso (' + pctFallosR + '% fallos)', color: 'naranja' });
+    if (pctPista >= 20 && pctPista <= 50) comentarios.push({ texto: 'Depende un poco de pistas (' + nPista + ' de ' + nEval + ')', color: 'naranja' });
+    if (pctCasi >= 60) comentarios.push({ texto: 'Estás cerca, repasa los detalles (' + pctCasiR + '% "Casi")', color: 'naranja' });
 
     // 🟢 Verde
     if (pctAciertos >= 80) {
-      comentarios.push({ texto: 'Dominado', color: 'verde' });
+      comentarios.push({ texto: 'Dominado (' + pctAciertosR + '% aciertos)', color: 'verde' });
     } else if (pctAciertos >= 60) {
-      comentarios.push({ texto: 'Bien encaminado', color: 'verde' });
+      comentarios.push({ texto: 'Bien encaminado (' + pctAciertosR + '% aciertos)', color: 'verde' });
     }
-    if (tiempoProEvaluadas >= 10000 && tiempoProEvaluadas <= 20000) comentarios.push({ texto: 'Ritmo adecuado', color: 'verde' });
-    if (pctPista === 0 && pctResp === 0) comentarios.push({ texto: 'Autónomo', color: 'verde' });
-    if (saltadas.length === 0) comentarios.push({ texto: 'Completo', color: 'verde' });
+    if (tiempoProEvaluadas >= 10000 && tiempoProEvaluadas <= 20000) comentarios.push({ texto: 'Ritmo adecuado (prom. ' + segEvaluadas + 's)', color: 'verde' });
+    if (pctPista === 0 && pctResp === 0) comentarios.push({ texto: 'Autónomo (0 ayudas usadas)', color: 'verde' });
+    if (saltadas.length === 0) comentarios.push({ texto: 'Completo (0 saltadas)', color: 'verde' });
 
     // Color predominante del badge: el peor color presente entre los
     // comentarios que se dispararon; si ninguno se disparó, se usa el
@@ -6700,6 +6754,7 @@
     if (elModalSync.classList.contains('abierto')) { elModalSync.classList.remove('abierto'); return; }
     if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
     if (elModalGuardarLista.classList.contains('abierto')) { cerrarModalGuardarLista(); return; }
+    if (elModalAnalisisSesion.classList.contains('abierto')) { cerrarModalAnalisisSesion(); return; }
     if (elModalModo.classList.contains('abierto')) { cancelarModalModo(); return; }
     if (elModalVincular.classList.contains('abierto')) { cerrarModalVincular(); return; }
 
@@ -8736,12 +8791,14 @@
     if (editandoNota) {
       elPanelNotaTexto.style.display = 'none';
       elNotaEditor.style.display = 'block';
+      document.getElementById('btn-dictado-nota-editor').style.display = 'flex';   // NUEVO: dictado por voz
       elBtnNotaEditar.style.display = 'none';
       elBtnNotaGuardar.style.display = 'inline-block';
       elBtnNotaCancelar.style.display = 'inline-block';
       elBtnNotaBorrar.style.display = hayNota ? 'inline-block' : 'none';
     } else {
       elNotaEditor.style.display = 'none';
+      document.getElementById('btn-dictado-nota-editor').style.display = 'none';   // NUEVO: dictado por voz
       elPanelNotaTexto.style.display = 'block';
       let texto, vacio;
       if (versionNota === 'txt') {
@@ -8811,6 +8868,7 @@
   function guardarEdicionNota() {
     const actual = tarjetasSesion[indiceActual];
     if (!actual || !editandoNota) return;
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elNotaEditor);
     guardarNotaLocal(actual, elNotaEditor.value);
     editandoNota = false;
     versionNota = 'local';
@@ -8825,6 +8883,7 @@
   function cancelarEdicionNota() {
     const actual = tarjetasSesion[indiceActual];
     if (!confirmarDescartarBorrador()) return;
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elNotaEditor);
     editandoNota = false;
     if (actual && notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual') {
       cerrarNota();
@@ -9529,6 +9588,137 @@
     guardarListas();
     document.getElementById('modal-srs-aviso').classList.remove('abierto');
   });
+
+  // ---------- NUEVO: Dictado por voz (🎙) en los textareas ----------
+  // Una sola instancia de SpeechRecognition, reutilizada por los 3 botones
+  // (#texto-eval, #nota-editor, #galeria-nota-editor), vía su atributo
+  // data-dictado-target.
+  (function () {
+    const RecognitionCtor = window.webkitSpeechRecognition || window.SpeechRecognition;
+    const soportado = !!RecognitionCtor;
+    const botonesDictado = Array.from(document.querySelectorAll('.boton-dictado'));
+    const TITULO_DEFAULT = 'Dictado por voz';
+
+    if (!soportado) {
+      botonesDictado.forEach((b) => {
+        b.disabled = true;
+        b.title = 'Dictado por voz no disponible en este navegador';
+      });
+      return;
+    }
+
+    let reconocimiento = null;
+    let textareaDictadoActivo = null;   // <textarea> recibiendo dictado ahora (null si ninguno)
+    let botonActivo = null;             // su botón 🎙 correspondiente
+    let targetPendiente = null;         // { boton, textarea } a iniciar apenas termine el anterior
+
+    function detenerVisualDictado() {
+      if (botonActivo) {
+        botonActivo.classList.remove('activo');
+        botonActivo.textContent = '🎙';
+      }
+      textareaDictadoActivo = null;
+      botonActivo = null;
+    }
+
+    function arrancarAhora(boton, textarea) {
+      textareaDictadoActivo = textarea;
+      botonActivo = boton;
+      boton.classList.add('activo');
+      boton.textContent = '🔴';
+      boton.title = TITULO_DEFAULT;
+      try {
+        reconocimiento.start();
+      } catch (e) {
+        // ya estaba iniciado, o el micrófono no arrancó: vuelve al estado normal
+        detenerVisualDictado();
+      }
+    }
+
+    function crearReconocimiento() {
+      const r = new RecognitionCtor();
+      r.lang = 'es-AR';
+      r.continuous = true;
+      r.interimResults = false;
+
+      // Concatena SOLO los resultados finales nuevos desde el último evento
+      // (con interimResults=false, respeta mayúsculas/puntuación del motor).
+      r.onresult = (evento) => {
+        if (!textareaDictadoActivo) return;
+        let textoNuevo = '';
+        for (let i = evento.resultIndex; i < evento.results.length; i++) {
+          if (evento.results[i].isFinal) textoNuevo += evento.results[i][0].transcript;
+        }
+        textoNuevo = textoNuevo.trim();
+        if (textoNuevo === '') return;
+        const actual = textareaDictadoActivo.value;
+        textareaDictadoActivo.value = (actual && !/\s$/.test(actual)) ? actual + ' ' + textoNuevo : actual + textoNuevo;
+        // avisa a otros listeners (contadores, autosave, etc.) del cambio
+        textareaDictadoActivo.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+
+      r.onerror = (evento) => {
+        if (evento.error === 'no-speech') {
+          // silencio prolongado: no interrumpe con un alert, el propio
+          // 'onend' resetea el botón en un instante
+          if (botonActivo) botonActivo.title = 'No se detectó voz';
+          return;
+        }
+        const mensajes = {
+          'audio-capture': 'No se encontró micrófono.',
+          'not-allowed': 'Permiso de micrófono denegado.',
+        };
+        alert(mensajes[evento.error] || ('Error de dictado: ' + evento.error));
+      };
+
+      // Se dispara tanto al detener manualmente como al cortarse solo
+      // (silencio prolongado): en ambos casos, vuelve al estado visual normal.
+      r.onend = () => {
+        detenerVisualDictado();
+        if (targetPendiente) {
+          const pend = targetPendiente;
+          targetPendiente = null;
+          arrancarAhora(pend.boton, pend.textarea);
+        }
+      };
+
+      return r;
+    }
+
+    function detenerDictado() {
+      if (reconocimiento && textareaDictadoActivo) {
+        try { reconocimiento.stop(); } catch (e) { /* noop */ }
+      } else {
+        detenerVisualDictado();
+      }
+    }
+
+    function iniciarDictado(boton, textarea) {
+      if (!reconocimiento) reconocimiento = crearReconocimiento();
+      if (textareaDictadoActivo && textareaDictadoActivo !== textarea) {
+        // hay otro textarea dictando: lo corta y arranca este cuando termine
+        targetPendiente = { boton: boton, textarea: textarea };
+        try { reconocimiento.stop(); } catch (e) { /* noop */ }
+        return;
+      }
+      arrancarAhora(boton, textarea);
+    }
+
+    botonesDictado.forEach((boton) => {
+      const textarea = document.getElementById(boton.dataset.dictadoTarget);
+      if (!textarea) return;
+      boton.addEventListener('click', () => {
+        if (textareaDictadoActivo === textarea) detenerDictado();
+        else iniciarDictado(boton, textarea);
+      });
+    });
+
+    // Para cortar el dictado desde otras partes del código (p. ej. al
+    // cancelar/guardar una nota mientras se está dictando en ese textarea).
+    window.__detenerDictadoSiActivoEn = function (textarea) {
+      if (textareaDictadoActivo === textarea) detenerDictado();
+    };
+  })();
 
   // ---------- Arranque ----------
   construirListaTemas();
