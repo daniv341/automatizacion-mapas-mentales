@@ -11,7 +11,7 @@
     /* NUEVO: color propio de la interfaz (botones, inputs, títulos, etc.).
        Ya no depende de la paleta de colores elegida al generar el evaluador:
        --stroke-color queda reservado SOLO para el look de las tarjetas
-       (.tema, .tarjeta, .primero, .segundo, .palabra-clave...). */
+       (.tema, .tarjeta, .primero, .segundo=, .palabra-clave...). */
     --color-boton: #4F46E5;
   }
 
@@ -1573,6 +1573,46 @@
   }
   .pantalla-resumen { position: relative; }
 
+  /* NUEVO: botón "Análisis de la sesión" — esquina opuesta al de guardar lista */
+  .boton-analisis-sesion {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+  }
+  .analisis-fila { padding: 10px 0; border-bottom: 1px solid #eee; }
+  .analisis-fila:last-child { border-bottom: none; }
+  .analisis-nombre { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .analisis-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+  .analisis-badge-rojo { background: #fdecea; color: #c0392b; }
+  .analisis-badge-naranja { background: #fdf3e3; color: #b36b00; }
+  .analisis-badge-verde { background: #e6f6ee; color: #3aa76d; }
+  .analisis-comentarios { margin: 4px 0 0; padding-left: 18px; font-size: 13px; color: #444; }
+  .analisis-comentarios li { margin-bottom: 2px; }
+  /* NUEVO: Resumen Ejecutivo, al principio del modal de análisis */
+  .analisis-resumen-ejecutivo {
+    background: #f7f8fc;
+    border: 1px solid #e2e4ec;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .analisis-resumen-titulo {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #999;
+    margin-bottom: 6px;
+  }
+  .analisis-resumen-linea { font-size: 13px; color: #333; margin: 2px 0; }
+
   .nota-listado { font-size: 12px; color: #888; margin-top: -4px; margin-bottom: 8px; }
 
   .modal-caja-ancha { width: min(92vw, 520px); text-align: left; max-height: 82vh; overflow-y: auto; }
@@ -2164,6 +2204,8 @@
   <div class="pantalla-resumen" id="pantalla-resumen">
     <!-- NUEVO: guardar la selección de esta sesión como lista (solo si no venía de una lista) -->
     <button class="boton-icono-circular boton-guardar-lista" id="btn-resumen-guardar-lista" title="Guardar esta selección como lista" style="display:none;">📋</button>
+    <!-- NUEVO: análisis de la sesión por subtema -->
+    <button class="boton-icono-circular boton-analisis-sesion" id="btn-analisis-sesion" title="Análisis de la sesión" style="display:none;">📊</button>
     <h2>Resumen de la sesión</h2>
     <div class="nota-sesion" id="nota-sesion">🎓 Nota de la sesión: 0.0 / 10</div>
     <div class="nota-listado" id="nota-listado" style="display:none;"></div>
@@ -2344,6 +2386,15 @@
     <div id="lista-listas-guardadas"></div>
     <p class="galeria-vacia" id="listas-vacio" style="display:none;">Todavía no guardaste ninguna lista.</p>
     <button class="modal-cancelar" id="btn-listas-cerrar">Cerrar</button>
+  </div>
+</div>
+
+<!-- NUEVO: modal "Análisis de la sesión" (desde el resumen) -->
+<div class="modal-overlay" id="modal-analisis-sesion">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>📊 Análisis de la sesión</h3>
+    <div id="analisis-sesion-contenido"></div>
+    <button class="modal-cancelar" id="btn-analisis-sesion-cerrar">Cerrar</button>
   </div>
 </div>
 
@@ -4963,6 +5014,217 @@
   elBtnResumenGuardarLista.addEventListener('click', () => abrirModalGuardarLista());
   document.getElementById('btn-guardar-lista-cancelar').addEventListener('click', () => cerrarModalGuardarLista());
   elInputGuardarListaNombre.addEventListener('keydown', (e) => { if (e.key === 'Enter') aceptarGuardarLista(); });
+
+  // ---------- NUEVO: "Análisis de la sesión" (por subtema, desde el resumen) ----------
+  const elBtnAnalisisSesion = document.getElementById('btn-analisis-sesion');
+  const elModalAnalisisSesion = document.getElementById('modal-analisis-sesion');
+  const elAnalisisSesionContenido = document.getElementById('analisis-sesion-contenido');
+
+  // Agrupa los índices (de tarjetasSesion) de la sesión actual por subT.
+  function agruparSesionPorTema() {
+    const grupos = new Map();   // nombre -> indices[]
+    tarjetasSesion.forEach((t, i) => {
+      const nombre = nombreTema(t);
+      if (!grupos.has(nombre)) grupos.set(nombre, []);
+      grupos.get(nombre).push(i);
+    });
+    return grupos;
+  }
+
+  // Calcula indicadores + comentarios para UN subtema. Devuelve null si no
+  // llega al mínimo de 3 evaluadas (no se incluye en el análisis).
+  function analizarSubtemaSesion(indices) {
+    const esEvaluada = (i) => resultados[i] === 'si' || resultados[i] === 'no' || resultados[i] === 'casi';
+    const evaluadas = indices.filter(esEvaluada);
+    if (evaluadas.length < 3) return null;
+
+    const aciertos = evaluadas.filter((i) => resultados[i] === 'si');
+    const fallos = evaluadas.filter((i) => resultados[i] === 'no' || resultados[i] === 'casi');
+    const casi = evaluadas.filter((i) => resultados[i] === 'casi');
+    const saltadas = indices.filter((i) => resultados[i] === 'saltar');
+
+    const nEval = evaluadas.length;
+    const pctAciertos = (aciertos.length / nEval) * 100;
+    const pctFallos = (fallos.length / nEval) * 100;
+    const pctCasi = (casi.length / nEval) * 100;
+    const pctPista = (evaluadas.filter((i) => pistaMostrada[i]).length / nEval) * 100;
+    const pctResp = (evaluadas.filter((i) => respuestaMostrada[i]).length / nEval) * 100;
+    const promedioMs = (lista) => lista.length ? lista.reduce((a, i) => a + (tiempos[i] || 0), 0) / lista.length : 0;
+    const tiempoProFallas = promedioMs(fallos);
+    const tiempoProEvaluadas = promedioMs(evaluadas);
+
+    const comentarios = [];   // { texto, color }
+
+    // 🔴 Rojo
+    if (pctFallos >= 70) comentarios.push({ texto: 'Revisión urgente', color: 'rojo' });
+    if (aciertos.length === 0 && nEval >= 2) comentarios.push({ texto: 'No acertaste ninguna', color: 'rojo' });
+    if (pctPista > 50) comentarios.push({ texto: 'Dependencia de pistas', color: 'rojo' });
+    if (pctResp > 50) comentarios.push({ texto: 'Revisa el contenido antes de evaluar', color: 'rojo' });
+    if (fallos.length > 0 && tiempoProFallas > 30000) comentarios.push({ texto: '¿Te trabaste en este tema?', color: 'rojo' });
+
+    // 🟠 Naranja
+    if (pctFallos >= 50 && pctFallos < 70) comentarios.push({ texto: 'En proceso', color: 'naranja' });
+    if (pctPista >= 20 && pctPista <= 50) comentarios.push({ texto: 'Depende un poco de pistas', color: 'naranja' });
+    if (pctCasi >= 60) comentarios.push({ texto: 'Estás cerca, repasa los detalles', color: 'naranja' });
+
+    // 🟢 Verde
+    if (pctAciertos >= 80) {
+      comentarios.push({ texto: 'Dominado', color: 'verde' });
+    } else if (pctAciertos >= 60) {
+      comentarios.push({ texto: 'Bien encaminado', color: 'verde' });
+    }
+    if (tiempoProEvaluadas >= 10000 && tiempoProEvaluadas <= 20000) comentarios.push({ texto: 'Ritmo adecuado', color: 'verde' });
+    if (pctPista === 0 && pctResp === 0) comentarios.push({ texto: 'Autónomo', color: 'verde' });
+    if (saltadas.length === 0) comentarios.push({ texto: 'Completo', color: 'verde' });
+
+    // Color predominante del badge: el peor color presente entre los
+    // comentarios que se dispararon; si ninguno se disparó, se usa el
+    // porcentaje de aciertos como respaldo.
+    let color = 'naranja';
+    if (comentarios.some((c) => c.color === 'rojo')) color = 'rojo';
+    else if (comentarios.some((c) => c.color === 'naranja')) color = 'naranja';
+    else if (comentarios.some((c) => c.color === 'verde')) color = 'verde';
+    else color = pctAciertos >= 60 ? 'verde' : (pctAciertos <= 30 ? 'rojo' : 'naranja');
+
+    return {
+      pctAciertos: pctAciertos,
+      nAciertos: aciertos.length,
+      nEvaluadas: nEval,
+      comentarios: comentarios,
+      color: color,
+    };
+  }
+
+  // OPTIMIZACIÓN: el cálculo y el armado del DOM del modal son relativamente
+  // livianos (acotados por la cantidad de subT de la sesión, no por la
+  // cantidad de tarjetas), pero igual se calculan solo al ABRIR el modal —
+  // no en mostrarAnalisisSesion() (que solo decide si el botón se muestra) —
+  // para no sumarle trabajo extra a mostrarResumen() si el usuario nunca
+  // llega a abrirlo.
+  // NUEVO: "Resumen Ejecutivo", al principio del modal. Se basa SOLO en los
+  // subtemas que ya pasaron el mínimo de 3 evaluadas (el mismo array 'filas'
+  // que arma el detalle). Null si hay menos de 2 subtemas (no hay nada que
+  // comparar).
+  function construirResumenEjecutivo(filas) {
+    if (filas.length < 2) return null;
+
+    const div = document.createElement('div');
+    div.className = 'analisis-resumen-ejecutivo';
+    const titulo = document.createElement('div');
+    titulo.className = 'analisis-resumen-titulo';
+    titulo.textContent = 'Resumen ejecutivo';
+    div.appendChild(titulo);
+
+    const agregarLinea = (texto) => {
+      const p = document.createElement('p');
+      p.className = 'analisis-resumen-linea';
+      p.textContent = texto;
+      div.appendChild(p);
+    };
+
+    const todosAlto = filas.every((f) => f.info.pctAciertos >= 80);
+    const ningunoSupera50 = filas.every((f) => f.info.pctAciertos <= 50);
+
+    if (todosAlto) {
+      agregarLinea('✅ Sesión sólida — todos los subT ≥80%');
+      return div;
+    }
+    if (ningunoSupera50) {
+      agregarLinea('⚠️ Sesión para repetir — ningún subT superó el 50%');
+      return div;
+    }
+
+    // Desempate: mayor % aciertos; en empate, más evaluadas; si persiste,
+    // orden alfabético. Se ordena de mejor a peor y se toman las puntas.
+    const ordenados = [...filas].sort((a, b) => {
+      if (b.info.pctAciertos !== a.info.pctAciertos) return b.info.pctAciertos - a.info.pctAciertos;
+      if (b.info.nEvaluadas !== a.info.nEvaluadas) return b.info.nEvaluadas - a.info.nEvaluadas;
+      return a.nombre.localeCompare(b.nombre);
+    });
+    const mejor = ordenados[0];
+    const peor = ordenados[ordenados.length - 1];
+    // El comentario más grave que aplica al peor subT: 'comentarios' ya está
+    // armado en orden de gravedad (rojo, luego naranja, luego verde), así
+    // que el primero es el más grave. Si no tiene ninguno (caso raro, sin
+    // comentarios aplicables), se usa un texto genérico.
+    const prioridadTexto = peor.info.comentarios.length > 0
+      ? peor.info.comentarios[0].texto
+      : 'Repasar este subtema';
+
+    agregarLinea('✅ Fuerte: ' + mejor.nombre + ' — ' + Math.round(mejor.info.pctAciertos) + '% aciertos');
+    agregarLinea('⚠️ Débil: ' + peor.nombre + ' — ' + Math.round(peor.info.pctAciertos) + '% aciertos');
+    agregarLinea('🎯 Prioridad: ' + peor.nombre + ' — ' + prioridadTexto);
+    return div;
+  }
+
+  function construirAnalisisSesion() {
+    elAnalisisSesionContenido.innerHTML = '';
+    const grupos = agruparSesionPorTema();
+    const filas = [];
+    grupos.forEach((indices, nombre) => {
+      const info = analizarSubtemaSesion(indices);
+      if (info) filas.push({ nombre: nombre, info: info });
+    });
+
+    if (filas.length === 0) {
+      elAnalisisSesionContenido.innerHTML = '<p class="galeria-vacia">No hay comentarios</p>';
+      return;
+    }
+
+    filas.sort((a, b) => a.info.pctAciertos - b.info.pctAciertos);   // peor a mejor
+
+    const frag = document.createDocumentFragment();
+
+    const elResumenEjecutivo = construirResumenEjecutivo(filas);
+    if (elResumenEjecutivo) frag.appendChild(elResumenEjecutivo);
+
+    filas.forEach(({ nombre, info }) => {
+      const div = document.createElement('div');
+      div.className = 'analisis-fila';
+
+      const titulo = document.createElement('div');
+      titulo.className = 'analisis-nombre';
+      titulo.textContent = nombre;
+      div.appendChild(titulo);
+
+      const badge = document.createElement('span');
+      badge.className = 'analisis-badge analisis-badge-' + info.color;
+      badge.textContent = Math.round(info.pctAciertos) + '% de aciertos (' + info.nAciertos + ' de ' + info.nEvaluadas + ')';
+      div.appendChild(badge);
+
+      if (info.comentarios.length > 0) {
+        const ul = document.createElement('ul');
+        ul.className = 'analisis-comentarios';
+        info.comentarios.forEach((c) => {
+          const li = document.createElement('li');
+          li.textContent = c.texto;
+          ul.appendChild(li);
+        });
+        div.appendChild(ul);
+      }
+
+      frag.appendChild(div);
+    });
+    elAnalisisSesionContenido.appendChild(frag);
+  }
+
+  // Llamada al final de mostrarResumen(): SOLO decide si el botón se
+  // muestra (barato: un .some() sobre 'resultados'). El cálculo pesado del
+  // análisis queda en construirAnalisisSesion(), disparado al abrir el modal.
+  function mostrarAnalisisSesion() {
+    const huboEvaluadas = resultados.some((r) => r === 'si' || r === 'no' || r === 'casi');
+    elBtnAnalisisSesion.style.display = huboEvaluadas ? 'block' : 'none';
+  }
+
+  function abrirModalAnalisisSesion() {
+    construirAnalisisSesion();
+    elModalAnalisisSesion.classList.add('abierto');
+  }
+  function cerrarModalAnalisisSesion() {
+    elModalAnalisisSesion.classList.remove('abierto');
+  }
+  elBtnAnalisisSesion.addEventListener('click', () => abrirModalAnalisisSesion());
+  document.getElementById('btn-analisis-sesion-cerrar').addEventListener('click', () => cerrarModalAnalisisSesion());
 
   // 8.3: asocia retroactivamente las sesiones "Sin listado" cuyo conjunto de
   // tarjetas coincide 100% con la lista recién guardada (incluye, de paso, a
@@ -9085,6 +9347,10 @@
     // NUEVO: botón "guardar como lista" — solo si esta sesión NO venía de una lista guardada NI del SRS
     elBtnResumenGuardarLista.style.display = (!modoObservador && !listaActivaNombre && !fueSesionSRS) ? 'block' : 'none';
     renderResumenListado();
+
+    // NUEVO: botón "📊 Análisis de la sesión" (visibilidad; el contenido se
+    // arma recién al abrir el modal, ver construirAnalisisSesion()).
+    mostrarAnalisisSesion();
 
     mostrarPantalla('resumen');
   }
