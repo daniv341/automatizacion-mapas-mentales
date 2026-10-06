@@ -2451,6 +2451,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     100% { transform: scale(1); }
   }
 
+  /* NUEVO: coincidencias entre la respuesta del usuario y las rutas/claves */
+  .coincidencia-usuario {
+    text-decoration: underline;
+    text-decoration-color: #2563EB;
+    text-underline-offset: 2px;
+  }
+  /* NUEVO: respuesta del usuario, de solo lectura, con sus propias palabras
+     subrayadas según coincidan con las claves o con el contenido de la ruta */
+  .respuesta-usuario-resaltada {
+    width: 100%; min-height: 74px;
+    border: 2px solid var(--color-boton); border-radius: 10px;
+    padding: 10px 12px; font-family: inherit; font-size: 14px; color: #333;
+    background: #fff; white-space: pre-wrap; box-sizing: border-box;
+  }
+  .coincidencia-clave {
+    text-decoration: underline;
+    text-decoration-color: #2563EB;
+    text-underline-offset: 2px;
+    font-weight: 700;
+  }
+  .coincidencia-contenido {
+    text-decoration: underline;
+    text-decoration-color: #059669;
+    text-underline-offset: 2px;
+  }
+
   .nota-listado { font-size: 12px; color: #888; margin-top: -4px; margin-bottom: 8px; }
 
   .modal-caja-ancha { width: min(92vw, 520px); text-align: left; max-height: 82vh; overflow-y: auto; }
@@ -3013,6 +3039,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <textarea id="texto-eval" placeholder="Escribí la respuesta con tus palabras (opcional). Enter para evaluar"></textarea>
         <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-texto-eval" data-dictado-target="texto-eval" title="Dictado por voz">🎙</button>
       </div>
+      <!-- NUEVO: igual que el textarea pero de solo lectura, con las palabras
+           que coinciden con las claves/contenido de la respuesta subrayadas.
+           Se muestra en vez del textarea una vez evaluada la tarjeta. -->
+      <div class="respuesta-usuario-resaltada" id="respuesta-usuario-resaltada" style="display:none;"></div>
       <!-- MODIFICADO: id agregado para poder ocultar el botón tras evaluar -->
       <div class="fila-eval" id="fila-eval">
         <button class="boton-pista" id="btn-evaluar">Evaluar respuesta</button>
@@ -3884,6 +3914,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   const elZonaEval = document.getElementById('zona-eval');
   const elTextoEval = document.getElementById('texto-eval');
+  const elRespuestaUsuarioResaltada = document.getElementById('respuesta-usuario-resaltada');   // NUEVO
+  const elBtnDictadoTextoEval = document.getElementById('btn-dictado-texto-eval');   // NUEVO
   const elBtnEvaluar = document.getElementById('btn-evaluar');
   // NUEVO: nota
   const elBtnNota = document.getElementById('btn-nota');
@@ -8803,8 +8835,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elZonaEval.style.display = mostrarZona ? 'block' : 'none';
     elFilaEval.style.display = puedeEvaluar ? 'flex' : 'none';
     if (mostrarZona) {
-      elTextoEval.value = textoGuardado;
-      elTextoEval.readOnly = !puedeEvaluar;
+      // NUEVO: una vez evaluada, se reemplaza el textarea por una vista de
+      // solo lectura con las palabras del usuario subrayadas (clave/
+      // contenido). Mientras se puede seguir editando (sin evaluar
+      // todavía), se usa el textarea de siempre.
+      const evActualParaResaltado = evaluaciones[indiceActual];
+      if (evActualParaResaltado) {
+        elTextoEval.style.display = 'none';
+        elBtnDictadoTextoEval.style.display = 'none';
+        elRespuestaUsuarioResaltada.style.display = 'block';
+        elRespuestaUsuarioResaltada.innerHTML = '';
+        elRespuestaUsuarioResaltada.appendChild(renderRespuestaUsuarioConCoincidencias(
+          textoGuardado, clavesEvalDe(actual), textoReferenciaDe(actual)
+        ));
+      } else {
+        elRespuestaUsuarioResaltada.style.display = 'none';
+        elTextoEval.style.display = 'block';
+        elBtnDictadoTextoEval.style.display = 'flex';
+        elTextoEval.value = textoGuardado;
+        elTextoEval.readOnly = !puedeEvaluar;
+      }
+    } else {
+      elRespuestaUsuarioResaltada.style.display = 'none';
     }
     if (puedeEvaluar) {
       elBtnEvaluar.disabled = (textoGuardado.trim() === '');
@@ -8848,7 +8900,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   // Agrega una línea al acordeón resaltando (negrita + color) las palabras
   // que coinciden con las claves de la tarjeta actual. Construye nodos DOM,
   // así el texto nunca se interpreta como código.
-  function agregarLineaResaltada(contenedor, linea, claves) {
+  // NUEVO 'raicesUsuario' (opcional): Set de RAÍCES (no palabras exactas) de
+  // la respuesta del usuario. Toda palabra de la ruta que comparta raíz con
+  // algo que escribiste se subraya (p. ej. escribiste "sistemas" y la ruta
+  // dice "sistema": ambas comparten raíz, así que acá se subraya "sistema"),
+  // sea o no clave de la tarjeta — mismo criterio (clave/contenido) que ya
+  // usa renderRespuestaUsuarioConCoincidencias() del lado de tu respuesta:
+  //  - clave + coincide con vos: negrita + subrayado azul (palabra-clave +
+  //    coincidencia-usuario).
+  //  - NO es clave pero coincide con vos: subrayado verde, sin negrita
+  //    (coincidencia-contenido), igual que del lado de tu respuesta.
+  function agregarLineaResaltada(contenedor, linea, claves, raicesUsuario) {
     const div = document.createElement('div');
     div.className = 'ruta-linea';
 
@@ -8858,11 +8920,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (m.index > ultimo) {
         div.appendChild(document.createTextNode(linea.slice(ultimo, m.index)));
       }
-      if (claves.has(normalizarPalabra(m[0]))) {
+      const norm = normalizarPalabra(m[0]);
+      const esClave = claves.has(norm);
+      const coincideUsuario = !!raicesUsuario && variantesRaiz(m[0]).some((r) => raicesUsuario.has(r));
+      if (esClave) {
         const fuerte = document.createElement('strong');
         fuerte.className = 'palabra-clave';
+        if (coincideUsuario) fuerte.classList.add('coincidencia-usuario');
         fuerte.textContent = m[0];
         div.appendChild(fuerte);
+      } else if (coincideUsuario) {
+        const span = document.createElement('span');
+        span.className = 'coincidencia-contenido';
+        span.textContent = m[0];
+        div.appendChild(span);
       } else {
         div.appendChild(document.createTextNode(m[0]));
       }
@@ -8895,6 +8966,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     // según qué tarjeta la invocó.
     const claves = new Set(tarjeta.claves || []);
 
+    // NUEVO: si la tarjeta ya fue evaluada, también se resaltan (subrayado)
+    // las palabras de la respuesta del usuario que comparten raíz con las
+    // claves (p. ej. escribiste "sistemas" y la ruta dice "sistema": se
+    // subraya "sistema" acá).
+    const evActual = evaluaciones[indiceActual];
+    const raicesUsuario = evActual ? extraerPalabrasUsuario(escritos[indiceActual] || '') : null;
+
     validas.forEach((id) => {
       const bloque = rutasDisp[id];
 
@@ -8903,24 +8981,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
       const sum = document.createElement('summary');
       sum.textContent = 'Ruta ' + id;
+      det.appendChild(sum);
 
-      const contenido = document.createElement('div');
-      contenido.className = 'ruta-contenido';
-
-      (bloque.lineas || []).forEach((linea) => {
-        if (esImagen(linea)) {
-          const img = document.createElement('img');
-          img.className = 'ruta-img-thumb';
-          img.src = linea.substring(4);  // quitar el prefijo 'IMG:'
-          img.alt = 'Imagen de la ruta ' + id;
-          contenido.appendChild(img);
-        } else {
-          agregarLineaResaltada(contenido, linea, claves);
-        }
+      // OPTIMIZACIÓN (lazy rendering): el contenido (líneas resaltadas +
+      // imágenes) de cada ruta recién se arma la primera vez que el usuario
+      // la despliega (abre el acordeón), no apenas toca "Mostrar respuesta".
+      prepararDetallesLazy(det, () => {
+        const contenido = document.createElement('div');
+        contenido.className = 'ruta-contenido';
+        (bloque.lineas || []).forEach((linea) => {
+          if (esImagen(linea)) {
+            const img = document.createElement('img');
+            img.className = 'ruta-img-thumb';
+            img.src = linea.substring(4);  // quitar el prefijo 'IMG:'
+            img.alt = 'Imagen de la ruta ' + id;
+            contenido.appendChild(img);
+          } else {
+            agregarLineaResaltada(contenido, linea, claves, raicesUsuario);
+          }
+        });
+        det.appendChild(contenido);
       });
 
-      det.appendChild(sum);
-      det.appendChild(contenido);
       elRutasContenedor.appendChild(det);
     });
   }
@@ -9016,6 +9098,53 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return a.v.some((x) => b.v.indexOf(x) !== -1);
   }
 
+  // NUEVO: Set de RAÍCES (no palabras exactas, sin stopwords) de la
+  // respuesta del usuario, para comparar por raíz compartida en
+  // agregarLineaResaltada (un solo .has() por palabra de la ruta, ya con
+  // las raíces precalculadas de este lado). Reutiliza analizarTexto(), que
+  // ya tokeniza, filtra stopwords y calcula las variantes de raíz (.v) de
+  // cada palabra.
+  function extraerPalabrasUsuario(texto) {
+    const raices = new Set();
+    analizarTexto(texto || '').forEach((e) => { e.v.forEach((r) => raices.add(r)); });
+    return raices;
+  }
+
+  // NUEVO: arma un DocumentFragment con el texto del usuario, donde las
+  // palabras que comparten raíz con 'claves' quedan en <span
+  // class="coincidencia-clave">, las que comparten raíz con el contenido de
+  // la ruta (y no eran ya clave) en <span class="coincidencia-contenido">,
+  // y el resto como texto plano. Nunca usa innerHTML: todo nodo de texto
+  // viene de textContent, así que no hay riesgo de inyectar HTML.
+  function renderRespuestaUsuarioConCoincidencias(texto, claves, contenidoReferencia) {
+    const frag = document.createDocumentFragment();
+    // Se tokeniza UNA vez cada lado (claves y contenido de referencia); el
+    // texto del usuario se recorre con un solo matchAll.
+    const entradasClaves = (claves || []).map((c) => crearEntrada(normalizarPalabra(c), c));
+    const entradasContenido = analizarTexto(contenidoReferencia || '');
+
+    const regexPalabra = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g;
+    let ultimo = 0;
+    for (const m of (texto || '').matchAll(regexPalabra)) {
+      if (m.index > ultimo) frag.appendChild(document.createTextNode(texto.slice(ultimo, m.index)));
+      const entradaUsuario = crearEntrada(normalizarPalabra(m[0]), m[0]);
+      const esClave = entradasClaves.some((e) => compartenRaiz(entradaUsuario, e));
+      // Prioridad: si coincide con clave Y con contenido, se marca como clave.
+      const esContenido = !esClave && entradasContenido.some((e) => compartenRaiz(entradaUsuario, e));
+      if (esClave || esContenido) {
+        const span = document.createElement('span');
+        span.className = esClave ? 'coincidencia-clave' : 'coincidencia-contenido';
+        span.textContent = m[0];
+        frag.appendChild(span);
+      } else {
+        frag.appendChild(document.createTextNode(m[0]));
+      }
+      ultimo = m.index + m[0].length;
+    }
+    if (texto && ultimo < texto.length) frag.appendChild(document.createTextNode(texto.slice(ultimo)));
+    return frag;
+  }
+
   // Tolerancia de tipeo: 1 letra de diferencia en palabras (o raíces) de 5+ letras
   function seParecen(a, b) {
     if (a.w.length >= 5 && b.w.length >= 5 && distanciaMax1(a.w, b.w)) return true;
@@ -9108,7 +9237,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     // 3) coincidencia con el contenido
     const linea2 = document.createElement('div');
     linea2.textContent = 'coincidencia con el contenido: ' + Math.round(ev.sim * 100) + '%' +
-      ' (tu respuesta: ' + ev.totalEscritas + ' distintas, contenido: ' + ev.totalReferencia + ')' +
+      ' (tu respuesta: ' + ev.totalEscritas + ' palabras, contenido: ' + ev.totalReferencia + ')' +
       (ev.conPista && ev.clavesTotal > 0
         ? ' — usaste la pista: para "Bien" se exige más de ' + Math.round(SIM_CON_PISTA * 100) + '%' : '');
     elResultadoEval.appendChild(linea2);
@@ -9220,6 +9349,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function evaluarRespuesta() {
     if (pausaManual || segundaPendiente) return;
     if (resultados[indiceActual] !== null) return;
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elTextoEval);
     const texto = elTextoEval.value;
     if (texto.trim() === '') return;
 
