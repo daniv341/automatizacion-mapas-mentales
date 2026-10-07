@@ -6,27 +6,8 @@
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Operaciones.drawio",
       "resaltar": false,
       "colores": "amarilloOscuro"
-    },
-    {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U7.txt",
-      "respuestas": "../guardados/rutas/7 - Lugar de las Raices.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\7 - Lugar de las Raices.drawio",
-      "resaltar": false,
-      "colores": "rojo"
-    },
-    {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U6.txt",
-      "respuestas": "../guardados/rutas/6 - Estabilidad.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\6 - Estabilidad.drawio",
-      "resaltar": false,
-      "colores": "verde"
-    },
-    {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U2.txt",
-      "respuestas": "../guardados/rutas/2 - Terminologia de los Sistemas de Control.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\2 - Terminologia de los Sistemas de Control.drawio",
-      "resaltar": false,
-      "colores": "morado"
     }
   ]
 }
+
+

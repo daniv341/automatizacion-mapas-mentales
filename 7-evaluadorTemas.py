@@ -35,6 +35,10 @@ PRECIO_SEGUNDA_OPORTUNIDAD = 70
 # Fracción de los puntos que se cobra al acertar el reintento de la segunda oportunidad
 FACTOR_RECOMPENSA_REINTENTO = 0.5
 
+# ---------------- CONFIG POMODORO ----------------
+DURACION_LECTURA_SEG = 25 * 60      # 25 minutos
+DURACION_DESCANSO_SEG = 5 * 60      # 5 minutos
+
 # Palabras vacías que se ignoran al evaluar (claves, respuesta escrita y texto
 # de referencia de las rutas). Solo afecta la evaluación: el texto de las rutas
 # se muestra completo. Van sin acentos (mismo formato que normalizar_palabra).
@@ -60,22 +64,92 @@ def normalizar_palabra(palabra):
     return ''.join(c for c in forma if unicodedata.combining(c) == 0)
 
 
+# NUEVO: letras griegas y símbolos matemáticos/lógicos/de conjuntos que el
+# usuario no puede tipear desde un teclado común → su nombre en español
+# (sin acentos, mismo formato que normalizar_palabra). Si la tarjeta dice
+# "ε" y el usuario escribe "epsilon" (o viceversa), cuenta como acierto.
+SIMBOLOS_ESPECIALES = {
+    # Letras griegas minúsculas
+    "α": "alfa", "β": "beta", "γ": "gamma", "δ": "delta", "ε": "epsilon",
+    "ζ": "zeta", "η": "eta", "θ": "theta", "ι": "iota", "κ": "kappa",
+    "λ": "lambda", "μ": "mu", "ν": "nu", "ξ": "xi", "ο": "omicron",
+    "π": "pi", "ρ": "rho", "σ": "sigma", "τ": "tau", "υ": "upsilon",
+    "φ": "fi", "χ": "chi", "ψ": "psi", "ω": "omega",
+    # Letras griegas mayúsculas
+    "Α": "alfa", "Β": "beta", "Γ": "gamma", "Δ": "delta", "Ε": "epsilon",
+    "Ζ": "zeta", "Η": "eta", "Θ": "theta", "Ι": "iota", "Κ": "kappa",
+    "Λ": "lambda", "Μ": "mu", "Ν": "nu", "Ξ": "xi", "Ο": "omicron",
+    "Π": "pi", "Ρ": "rho", "Σ": "sigma", "Τ": "tau", "Υ": "upsilon",
+    "Φ": "fi", "Χ": "chi", "Ψ": "psi", "Ω": "omega",
+    # Operadores matemáticos básicos
+    "±": "mas menos", "∓": "menos mas", "×": "por", "÷": "dividido",
+    "·": "por", "⋅": "por", "∗": "por",
+    # Relaciones
+    "=": "igual", "≠": "distinto", "≈": "aproximado", "≡": "identico",
+    "≃": "aproximadamente igual", "≅": "isomorfo", "∼": "similar",
+    "<": "menor", ">": "mayor", "≤": "menor igual", "≥": "mayor igual",
+    "≪": "mucho menor", "≫": "mucho mayor",
+    # Conjuntos y pertenencia
+    "∈": "pertenece", "∉": "no pertenece", "∋": "contiene",
+    "⊂": "subconjunto", "⊃": "superconjunto",
+    "⊆": "subconjunto igual", "⊇": "superconjunto igual",
+    "∪": "union", "∩": "interseccion", "∅": "vacio",
+    "∖": "menos", "∁": "complemento",
+    # Lógica
+    "∧": "y logico", "∨": "o logico", "¬": "negacion", "⊕": "o exclusivo",
+    "⇒": "implica", "⇐": "implicado por", "⇔": "si y solo si",
+    "→": "flecha", "←": "flecha izquierda", "↔": "flecha doble",
+    "↑": "flecha arriba", "↓": "flecha abajo", "↦": "mapea",
+    "∀": "para todo", "∃": "existe", "∄": "no existe",
+    "∴": "por lo tanto", "∵": "porque",
+    # Cálculo y análisis
+    "∞": "infinito", "∑": "sumatoria", "∏": "productoria", "∫": "integral",
+    "∬": "integral doble", "∭": "integral triple", "∮": "integral cerrada",
+    "√": "raiz", "∛": "raiz cubica", "∜": "raiz cuarta",
+    "∂": "derivada parcial", "∇": "gradiente",
+    "Δ": "delta", "δ": "delta",
+    "ℝ": "reales", "ℂ": "complejos", "ℕ": "naturales", "ℤ": "enteros", "ℚ": "racionales",
+    # Geometría y unidades
+    "°": "grados", "′": "minutos", "″": "segundos",
+    "℃": "grados celsius", "℉": "grados fahrenheit", "ₖ": "kelvin",
+    "Å": "angstrom", "Ω": "ohmio", "℧": "mho",
+    "‰": "por mil", "‱": "por diez mil",
+}
+# Inverso (nombre → símbolo). Si dos símbolos comparten nombre (p. ej. Δ/δ,
+# ambas "delta"), el último del diccionario de arriba gana acá, pero no
+# importa: la comparación siempre es por NOMBRE normalizado, no por este
+# inverso en sí (se arma solo por si algo del lado JS lo necesita).
+NOMBRES_A_SIMBOLOS = {v: k for k, v in SIMBOLOS_ESPECIALES.items()}
+
+# NUEVO: igual que el PATRON_PALABRA del drawio (más abajo), pero incluyendo
+# letras griegas, para que "λ" o "Σ" tokenicen como palabra completa.
+PATRON_PALABRA_CON_SIMBOLOS = re.compile(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+')
+
+
 def extraer_claves(segundo):
     """
     Extrae palabras clave del campo 'segundo' de la tarjeta.
-    Tokeniza solo letras: los números solos ('1', '2') se descartan solos.
-    Devuelve claves normalizadas (minúsculas, sin acentos), sin duplicados y
-    sin palabras vacías (STOPWORDS_ES).
+    Tokeniza letras (incluidas griegas): los números solos ('1', '2') se
+    descartan solos. Devuelve claves normalizadas (minúsculas, sin acentos),
+    sin duplicados y sin palabras vacías (STOPWORDS_ES).
+    NUEVO: además, cada símbolo especial (ε, ∑, ∞, etc.) presente en el
+    texto agrega el NOMBRE del símbolo como clave adicional, para que
+    tipear "epsilon" cuente como acierto si la tarjeta dice "ε".
     """
     if not segundo:
         return []
     claves = []
-    for token in re.findall(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+', segundo):
+    for token in PATRON_PALABRA_CON_SIMBOLOS.findall(segundo):
         normalizada = normalizar_palabra(token)
         if normalizada in STOPWORDS_ES:
             continue
         if normalizada not in claves:
             claves.append(normalizada)
+    for caracter in segundo:
+        if caracter in SIMBOLOS_ESPECIALES:
+            nombre = normalizar_palabra(SIMBOLOS_ESPECIALES[caracter])
+            if nombre not in claves:
+                claves.append(nombre)
     return claves
 
 
@@ -297,7 +371,7 @@ PALETA_RESALTADO = [
 # para considerar que el marcador se distingue del cuadro.
 CONTRASTE_FONDO_MIN = 1.3
 
-PATRON_PALABRA = re.compile(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+')
+PATRON_PALABRA = re.compile(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+')
 # Limpieza: quita exactamente los tags <font style="background-color:...">...</font>
 # que este script inserta (cualquier color, así las re-ejecuciones siguen seguras)
 PATRON_LIMPIEZA = re.compile(r'<font style="background-color:[^"]*">([^<]*)</font>')
@@ -793,10 +867,15 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     html = html.replace("__PRECIO_ESCUDO_RACHA__", str(PRECIO_ESCUDO_RACHA))
     html = html.replace("__PRECIO_SEGUNDA_OPORTUNIDAD__", str(PRECIO_SEGUNDA_OPORTUNIDAD))
     html = html.replace("__FACTOR_RECOMPENSA_REINTENTO__", str(FACTOR_RECOMPENSA_REINTENTO))
+    html = html.replace("__DURACION_LECTURA_SEG__", str(DURACION_LECTURA_SEG))
+    html = html.replace("__DURACION_DESCANSO_SEG__", str(DURACION_DESCANSO_SEG))
     html = html.replace("__SIM_ALTA__", str(SIM_ALTA))
     html = html.replace("__SIM_SIN_PISTA__", str(SIM_SIN_PISTA))
     html = html.replace("__SIM_CON_PISTA__", str(SIM_CON_PISTA))
     html = html.replace("__STOPWORDS__", json.dumps(sorted(STOPWORDS_ES)))
+    # NUEVO: símbolos especiales (letras griegas, operadores, etc.) → nombre
+    # en español, para que el lado JS (analizarTexto) también los reconozca.
+    html = html.replace("__SIMBOLOS_ESPECIALES__", json.dumps(SIMBOLOS_ESPECIALES, ensure_ascii=False))
     # NUEVO: identidad de este evaluador (para que difíciles/notas/razones no se
     # mezclen entre dos evaluadores con tarjetas de texto idéntico). Ver hashTarjeta().
     html = html.replace("__ESPACIO__", json.dumps(espacio_hash))
@@ -1070,7 +1149,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-bottom: clamp(10px, 3vw, 18px);
     font-weight: 600;
     font-size: 15px;
-    color: var(--stroke-color);
+    color: #222;   /* MODIFICADO: fijo, var(--stroke-color) a veces no contrastaba con el fondo */
     letter-spacing: 0.3px;
   }
 
@@ -1084,26 +1163,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .tarjeta {
+    /* MODIFICADO: look "comic/pop" — sin clip-path, sombra dura offset,
+       esquinas redondeadas y leve rotación (ver pedido del usuario). */
     position: relative;
     background: var(--fill-color);
     border: 3px solid var(--stroke-color);
-    clip-path: polygon(14% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 14%);
+    border-radius: 12px;
+    box-shadow: 6px 6px 0 var(--stroke-color);
     min-height: clamp(170px, 32vw, 220px);
-    border-radius: 6px;
     padding: clamp(24px, 7vw, 40px) clamp(18px, 5.5vw, 30px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: clamp(12px, 4vw, 20px);
-    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(8px) rotate(-0.5deg);
     animation: aparecer 0.35s ease forwards;
   }
 
   @keyframes aparecer {
-    to { opacity: 1; transform: translateY(0); }
+    to { opacity: 1; transform: translateY(0) rotate(-0.5deg); }
   }
 
   /* MODIFICADO: badge con la cantidad de rutas asociadas (esquina sup. derecha) */
@@ -1955,16 +2035,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .titulo-pausa { font-size: 26px; font-weight: 700; color: var(--color-boton); }
   .texto-pausa { font-size: 14px; color: #777; max-width: 340px; }
 
-  /* NUEVO: botón "Revisar" (esquina superior izquierda, pasado el corte del clip-path) */
+  /* NUEVO: botón "Revisar" (esquina superior izquierda). MODIFICADO: ya no
+     hay clip-path que esquivar, y se le dio el mismo aire comic que
+     .badge-rutas (borde var(--stroke-color), fondo blanco semitransparente) */
   .boton-revisar {
     position: absolute;
     top: 10px;
-    left: calc(14% + 8px);
+    left: 10px;
     font-size: 12px;
     font-weight: 700;
-    color: var(--color-boton);
+    color: var(--stroke-color);
     background: rgba(255,255,255,0.65);
-    border: 1.5px solid var(--color-boton);
+    border: 1.5px solid var(--stroke-color);
     border-radius: 12px;
     padding: 2px 10px;
     font-family: inherit;
@@ -2621,6 +2703,35 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   .boton-icono-circular:hover { border-color: var(--color-boton); }
 
+  /* ===== NUEVO: Pomodoro (modo observador) ===== */
+  .pomodoro-badge-slot { margin-bottom: 10px; }
+  .pomodoro-badge-slot-sticky:not(:empty) {
+    position: sticky;
+    top: 0;
+    z-index: 499;
+    background: #eef1f7;
+    padding: 8px 0 4px;
+  }
+  .pomodoro-badge {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-radius: 24px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .pomodoro-badge.fase-lectura { background: #d4edda; color: #155724; }
+  .pomodoro-badge.fase-retencion { background: #fff3cd; color: #856404; }
+  .pomodoro-badge.fase-descanso { background: #d1ecf1; color: #0c5460; }
+  .pomodoro-badge-info { flex: 1 1 auto; }
+  .pomodoro-badge-info.ultimo-minuto { color: #e0574c; animation: parpadeoPomodoro 1s infinite; }
+  @keyframes parpadeoPomodoro { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .pomodoro-badge-botones { display: flex; gap: 6px; flex-wrap: wrap; }
+  .boton-secundario:disabled { opacity: 0.45; cursor: not-allowed; }
+
   /* ===== NUEVO: Buscador Global (Elegir Temas / Observador / Galería) ===== */
   .zona-buscador {
     position: relative;
@@ -2817,6 +2928,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div id="pantalla-observador" style="display:none;">
     <p class="subtitulo">Modo observador: tocá una tarjeta para verla (sin evaluarte)</p>
 
+    <!-- NUEVO: Pomodoro (botón para iniciarlo, o el badge mientras corre) -->
+    <div class="fila-iconos-gamificacion" id="fila-pomodoro-boton">
+      <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
+    </div>
+    <div class="pomodoro-badge-slot" id="pomodoro-badge-slot-observador">
+      <!-- NUEVO: badge del Pomodoro. Un solo nodo, se reubica (appendChild)
+           en el slot de la pantalla donde esté el usuario (observador,
+           huérfanas o galería) cada vez que cambia de pantalla. -->
+      <div class="pomodoro-badge" id="pomodoro-badge" style="display:none;">
+        <span class="pomodoro-badge-info" id="pomodoro-badge-info"></span>
+        <span class="pomodoro-badge-botones">
+          <button class="boton-mini" id="btn-pomodoro-cancelar">Cancelar</button>
+          <button class="boton-mini" id="btn-pomodoro-pausar">⏸ Pausar</button>
+          <button class="boton-mini" id="btn-pomodoro-retencion">🧠 Retención</button>
+        </span>
+      </div>
+    </div>
+
     <!-- NUEVO: Buscador Global -->
     <div class="zona-buscador" id="zona-buscador-observador">
       <input type="text" class="input-buscador" id="input-buscador-observador" placeholder="Buscar tarjetas o rutas..." autocomplete="off">
@@ -2848,6 +2977,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   <!-- NUEVO: galería de imágenes de las rutas, vista secuencial e independiente -->
   <div id="pantalla-galeria" style="display:none;">
+    <!-- NUEVO: Pomodoro (sticky arriba, igual que el buscador, si está activo) -->
+    <div class="pomodoro-badge-slot pomodoro-badge-slot-sticky" id="pomodoro-badge-slot-galeria"></div>
     <!-- NUEVO: Buscador Global (fijo/sticky para poder buscar mientras se navega) -->
     <div class="zona-buscador sticky-buscador" id="zona-buscador-galeria">
       <input type="text" class="input-buscador" id="input-buscador-galeria" placeholder="Buscar por ruta o descripción..." autocomplete="off">
@@ -2900,6 +3031,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <!-- NUEVO: rutas de respuestas.txt no citadas por ninguna tarjeta -->
   <div id="pantalla-huerfanas" style="display:none;">
     <p class="subtitulo" id="huerfanas-subtitulo">Rutas de respuestas.txt que no están citadas por ninguna tarjeta</p>
+
+    <!-- NUEVO: Pomodoro (sticky arriba, igual que el buscador, si está activo) -->
+    <div class="pomodoro-badge-slot pomodoro-badge-slot-sticky" id="pomodoro-badge-slot-huerfanas"></div>
 
     <div class="zona-buscador sticky-buscador" id="zona-buscador-huerfanas">
       <input type="text" class="input-buscador" id="input-buscador-huerfanas" placeholder="Buscar por ruta o contenido..." autocomplete="off">
@@ -3149,9 +3283,38 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 <!-- NUEVO: overlay de pausa manual -->
 <div class="overlay-pausa" id="overlay-pausa">
-  <div class="titulo-pausa">⏸ En pausa</div>
-  <div class="texto-pausa">El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.</div>
+  <div class="titulo-pausa" id="titulo-pausa">⏸ En pausa</div>
+  <div class="texto-pausa" id="texto-pausa">El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.</div>
   <button class="boton-reiniciar" id="btn-reanudar">▶ Reanudar</button>
+</div>
+
+<!-- NUEVO: Pomodoro (modo observador) -->
+<div class="modal-overlay" id="modal-pomodoro-iniciar">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>¿Empezar a estudiar?</h3>
+    <button class="boton-reiniciar" id="btn-pomodoro-iniciar-si">Sí, empezar</button>
+    <button class="modal-cancelar" id="btn-pomodoro-iniciar-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-pomodoro-abandonar">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>¿Abandonar el Pomodoro?</h3>
+    <p>Se perderá el progreso de esta sesión.</p>
+    <button class="boton-reiniciar" id="btn-pomodoro-abandonar-si">Sí, abandonar</button>
+    <button class="modal-cancelar" id="btn-pomodoro-abandonar-no">No, seguir</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-pomodoro-resumen">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>📊 Resumen del Pomodoro</h3>
+    <p>⏱ Tiempo en lectura: <strong id="pomodoro-resumen-lectura"></strong></p>
+    <p>🧠 Tiempo en retención: <strong id="pomodoro-resumen-retencion"></strong></p>
+    <p>⏱ Tiempo total: <strong id="pomodoro-resumen-total"></strong></p>
+    <p>⏲️ Ciclos completados: <strong id="pomodoro-resumen-ciclos"></strong></p>
+    <button class="modal-cancelar" id="btn-pomodoro-resumen-cerrar">Cerrar</button>
+  </div>
 </div>
 
 <!-- NUEVO: modal (no usa window.confirm) para continuar con las no respondidas -->
@@ -3380,10 +3543,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const PRECIO_ESCUDO_RACHA = __PRECIO_ESCUDO_RACHA__;
   const PRECIO_SEGUNDA_OPORTUNIDAD = __PRECIO_SEGUNDA_OPORTUNIDAD__;
   const FACTOR_RECOMPENSA_REINTENTO = __FACTOR_RECOMPENSA_REINTENTO__;
+  const DURACION_LECTURA_SEG = __DURACION_LECTURA_SEG__;
+  const DURACION_DESCANSO_SEG = __DURACION_DESCANSO_SEG__;
   const SIM_ALTA = __SIM_ALTA__;
   const SIM_SIN_PISTA = __SIM_SIN_PISTA__;   // NUEVO: todas las claves, sin pista
   const SIM_CON_PISTA = __SIM_CON_PISTA__;   // NUEVO: todas las claves, con pista (debe ser MAYOR)
   const STOPWORDS = new Set(__STOPWORDS__);  // NUEVO: palabras vacías (solo para evaluar)
+
+  // NUEVO: letras griegas y símbolos especiales (ver extraer_claves() del
+  // lado Python) → su nombre en español, y el inverso. Permiten que "ε" y
+  // "epsilon" cuenten como lo mismo al evaluar.
+  const SIMBOLOS_ESPECIALES = __SIMBOLOS_ESPECIALES__;
+  const NOMBRES_A_SIMBOLOS = {};
+  Object.keys(SIMBOLOS_ESPECIALES).forEach((simbolo) => {
+    NOMBRES_A_SIMBOLOS[SIMBOLOS_ESPECIALES[simbolo]] = simbolo;
+  });
+  // Mismo patrón que tokeniza palabras latinas/griegas, más cada símbolo
+  // especial como un token de un solo carácter (p. ej. "∑", "ε", "=").
+  // Escapa \\, ], ^ y - (los únicos problemáticos dentro de una clase [...]).
+  const PATRON_PALABRA_CON_SIMBOLOS = new RegExp(
+    '[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+|[' +
+    Object.keys(SIMBOLOS_ESPECIALES).map((s) => s.replace(/[\\\]^-]/g, '\\$&')).join('') +
+    ']',
+    'g'
+  );
 
   // ---------- Estado de la ronda actual ----------
   let tarjetasSesion = [];
@@ -4021,6 +4204,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (nombre !== 'estudio') {
       detenerCronometro();
     }
+
+    // NUEVO: Pomodoro — el badge "sigue" al usuario entre observador,
+    // huérfanas y galería (se reubica en el slot de la pantalla actual).
+    reubicarBadgePomodoro(nombre);
   }
 
   // ---------- Pantalla de selección de temas ----------
@@ -5081,6 +5268,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         tono(ctx, 320, 0, 0.25, 'sawtooth', 0.2);
         tono(ctx, 240, 0.2, 0.25, 'sawtooth', 0.2);
         tono(ctx, 160, 0.4, 0.45, 'sawtooth', 0.22);
+      } else if (nombre === 'pomodoro_lectura_a_descanso') {
+        // Lectura -> Descanso: campanada suave, un solo tono
+        tono(ctx, 700, 0, 0.5, 'sine', 0.18);
+      } else if (nombre === 'pomodoro_retencion_a_descanso') {
+        // Retención -> Descanso: más enérgica, dos tonos
+        tono(ctx, 700, 0, 0.18, 'sine', 0.2);
+        tono(ctx, 900, 0.16, 0.35, 'sine', 0.2);
+      } else if (nombre === 'pomodoro_nuevo_ciclo') {
+        // Descanso -> Lectura (nuevo ciclo): "despertar", tres tonos ascendentes
+        tono(ctx, 523, 0, 0.14, 'triangle', 0.2);
+        tono(ctx, 659, 0.13, 0.14, 'triangle', 0.2);
+        tono(ctx, 784, 0.26, 0.3, 'triangle', 0.22);
       }
     } catch (e) {
       // Si el navegador bloquea audio (por política de autoplay), se ignora en silencio.
@@ -5560,16 +5759,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const vigentes = hashesVigentesActuales();
     const recuperables = hashesRecuperablesDeOtroEspacio();
     let cambio = false;
+
     listas = listas.filter((lista) => {
+      // Las listas de otros evaluadores se conservan intactas.
+      if (lista.espacio && lista.espacio !== ESPACIO_HASH) return true;
+
       const filtrados = lista.hashes.filter((h) => vigentes.has(h) || recuperables.has(h));
+
       if (filtrados.length !== lista.hashes.length) {
         cambio = true;
-        if (filtrados.length === 0) return false;   // lista vacía: se borra
+        if (filtrados.length === 0) return false;
         lista.hashes = filtrados;
         lista.modificada = Date.now();
       }
       return true;
     });
+
     if (cambio) guardarListas();
   }
 
@@ -6147,7 +6352,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return;
     }
     const ahora = Date.now();
-    const lista = { nombre: nombre, hashes: hashes, creada: ahora, modificada: ahora, srs: Object.assign({}, SRS_DEFAULT) };
+    const lista = { nombre: nombre, hashes: hashes, espacio: ESPACIO_HASH, creada: ahora, modificada: ahora, srs: Object.assign({}, SRS_DEFAULT) };
     listas.push(lista);
     guardarListas();
     asociarRetroactivamente(lista);
@@ -7600,12 +7805,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (elModalAnalisisSesion.classList.contains('abierto')) { cerrarModalAnalisisSesion(); return; }
     if (elModalModo.classList.contains('abierto')) { cancelarModalModo(); return; }
     if (elModalVincular.classList.contains('abierto')) { cerrarModalVincular(); return; }
+    // NUEVO: modales del Pomodoro
+    if (elModalPomodoroIniciar.classList.contains('abierto')) { cerrarModalPomodoroIniciar(); return; }
+    if (elModalPomodoroAbandonar.classList.contains('abierto')) { cerrarModalPomodoroAbandonar(); return; }
+    if (elModalPomodoroResumen.classList.contains('abierto')) { cerrarModalPomodoroResumen(); return; }
 
     // 2) Pantallas: volver atrás (la tarjeta abierta del observador, antes que su lista)
     if (elAreaTarjeta.style.display !== 'none' && elAreaTarjeta.classList.contains('observador')) { salirObservador(); return; }
     if (elPantallaHistorial.style.display !== 'none') { mostrarPantalla('temas'); return; }
     if (elPantallaTienda.style.display !== 'none') { mostrarPantalla('temas'); return; }
-    if (elPantallaObservador.style.display !== 'none') { mostrarPantalla('temas'); return; }
+    // NUEVO: con el Pomodoro activo, ESC no debe sacar del observador
+    if (elPantallaObservador.style.display !== 'none') { if (!pomodoroActivo) mostrarPantalla('temas'); return; }
     if (elPantallaGaleria.style.display !== 'none') { volverListaDesdeGaleria(); return; }
     if (elPantallaHuerfanas.style.display !== 'none') { volverDesdeHuerfanas(); return; }
   });
@@ -9011,8 +9221,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // ---------- Evaluación: palabras vacías, raíces y tolerancia a tipeos ----------
 
-  const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','sion','adoras','adores','adora','ador',
-    'ivas','ivos','iva','ivo','ables','ibles','able','ible','anza','ante','ente','ados','idos','ado','ido','ando','iendo'];
+const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','ersion','sion','ucion','adoras','adores','adora',
+  'ador','ivas','ivos','iva','ivo','ables','ibles','able','ible','idad','anza','ante','ente','ados','idos','ado','ido',
+  'ando','iendo','ismo','ista','ero','aje'];
 
   // Raíz simplificada para comparar singular/plural, género y algunas derivaciones.
   // Recibe cualquier palabra (se normaliza antes: minúsculas y sin tildes).
@@ -9028,17 +9239,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else if (p.endsWith('s') && !p.endsWith('es')) {
       p = p.slice(0, -1);
     }
+    if (p.endsWith('mente') && p.length > 7) p = p.slice(0, -5);
+    // ARREGLADO: -acion/-sion (SUFIJOS_RAIZ) se prueba ANTES que el patrón
+    // aumentativo -on/-ona de más abajo. Antes, "interpretacion" terminaba
+    // matcheando el aumentativo "-on" (pensado para "raton"->"rat") y
+    // devolvía "interpretaci", en vez de "-acion" (pensado para esto) que
+    // hubiera dado "interpret" — la misma raíz que "interpretar". Al mover
+    // este bloque primero, las palabras en "-ción"/"-sión" quedan resueltas
+    // por el sufijo correcto antes de que el aumentativo las intercepte.
+    for (const suf of SUFIJOS_RAIZ) {
+      if (p.endsWith(suf) && p.length - suf.length >= 4) { p = p.slice(0, -suf.length); return terminarRaiz(p); }
+    }
     const dim = p.match(/^(.+?)(itos|itas|ito|ita|illos|illas|illo|illa|icos|icas|ico|ica)$/);
     if (dim && dim[1].length >= 3) return dim[1];
     const aum = p.match(/^(.+?)(otes|otas|ote|ota|ones|onas|on|ona)$/);
     if (aum && aum[1].length >= 3) return aum[1];
-    if (p.endsWith('mente') && p.length > 7) p = p.slice(0, -5);
-    for (const suf of SUFIJOS_RAIZ) {
-      if (p.endsWith(suf) && p.length - suf.length >= 4) { p = p.slice(0, -suf.length); break; }
-    }
     for (const suf of ['ar', 'er', 'ir']) {
       if (p.endsWith(suf) && p.length - suf.length >= 3) { p = p.slice(0, -suf.length); break; }
     }
+    return terminarRaiz(p);
+  }
+
+  // Últimos retoques compartidos por las dos salidas posibles de raiz():
+  // la que ya pasó por SUFIJOS_RAIZ (-acion/-sion/etc.) y la que pasó por
+  // la terminación verbal -ar/-er/-ir.
+  function terminarRaiz(p) {
     if (p.length >= 5 && (p.endsWith('a') || p.endsWith('o'))) p = p.slice(0, -1);
     if (p.endsWith('c')) p = p.slice(0, -1) + 'z';
     return p;
@@ -9074,16 +9299,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return b.slice(i + 1) === a.slice(i);
   }
 
+  // NUEVO: si 'orig' es un símbolo especial (ε, ∑, ∞...) o 'w' es el NOMBRE
+  // normalizado de uno, se agrega la contraparte a las variantes de raíz —
+  // así compartenRaiz() (que solo compara .v sin saber nada de símbolos)
+  // considera "ε" y "epsilon" como la misma raíz, sin tocar su lógica.
   function crearEntrada(w, orig) {
-    return { w: w, orig: orig, v: variantesRaiz(w) };
+    const v = variantesRaiz(w);
+    const nombreSimbolo = SIMBOLOS_ESPECIALES[orig];   // se busca por 'orig': los símbolos distinguen mayús/minús (Ω ≠ ω)
+    if (nombreSimbolo) {
+      const nombreNorm = normalizarPalabra(nombreSimbolo);
+      if (v.indexOf(nombreNorm) === -1) v.push(nombreNorm);
+    } else if (NOMBRES_A_SIMBOLOS[w]) {
+      const simbolo = NOMBRES_A_SIMBOLOS[w];
+      if (v.indexOf(simbolo) === -1) v.push(simbolo);
+    }
+    return { w: w, orig: orig, v: v };
   }
 
-  // Palabras de un texto, sin palabras vacías y sin repetir raíz.
-  // Solo se usa para EVALUAR: el texto de las rutas se muestra completo.
+  // Palabras (y símbolos especiales) de un texto, sin palabras vacías y sin
+  // repetir raíz. Solo se usa para EVALUAR: el texto de las rutas se
+  // muestra completo y no pasa por acá (ver nota sobre el drawio).
   function analizarTexto(texto) {
     const vistos = new Set();
     const salida = [];
-    for (const m of texto.matchAll(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g)) {
+    for (const m of texto.matchAll(PATRON_PALABRA_CON_SIMBOLOS)) {
       const w = normalizarPalabra(m[0]);
       if (STOPWORDS.has(w)) continue;
       const e = crearEntrada(w, m[0]);
@@ -9123,9 +9362,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const entradasClaves = (claves || []).map((c) => crearEntrada(normalizarPalabra(c), c));
     const entradasContenido = analizarTexto(contenidoReferencia || '');
 
-    const regexPalabra = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g;
     let ultimo = 0;
-    for (const m of (texto || '').matchAll(regexPalabra)) {
+    for (const m of (texto || '').matchAll(PATRON_PALABRA_CON_SIMBOLOS)) {
       if (m.index > ultimo) frag.appendChild(document.createTextNode(texto.slice(ultimo, m.index)));
       const entradaUsuario = crearEntrada(normalizarPalabra(m[0]), m[0]);
       const esClave = entradasClaves.some((e) => compartenRaiz(entradaUsuario, e));
@@ -9237,7 +9475,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     // 3) coincidencia con el contenido
     const linea2 = document.createElement('div');
     linea2.textContent = 'coincidencia con el contenido: ' + Math.round(ev.sim * 100) + '%' +
-      ' (tu respuesta: ' + ev.totalEscritas + ' palabras, contenido: ' + ev.totalReferencia + ')' +
+      ' (tu respuesta: ' + ev.totalEscritas + ' distintas, contenido: ' + ev.totalReferencia + ')' +
       (ev.conPista && ev.clavesTotal > 0
         ? ' — usaste la pista: para "Bien" se exige más de ' + Math.round(SIM_CON_PISTA * 100) + '%' : '');
     elResultadoEval.appendChild(linea2);
@@ -10035,7 +10273,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     else marcar('si');
   });
   elBtnPausa.addEventListener('click', () => pausarManual());
-  elBtnReanudar.addEventListener('click', () => reanudarManual());
+  elBtnReanudar.addEventListener('click', () => {
+    if (pomodoroPausado) { reanudarPomodoro(); return; }   // NUEVO: overlay reutilizado por el Pomodoro
+    reanudarManual();
+  });
   elBtnRevisar.addEventListener('click', () => toggleRevisarActual());
   elBtnNo.addEventListener('click', () => marcar('no'));
   elBtnSaltar.addEventListener('click', () => marcar('saltar'));
@@ -10417,7 +10658,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // NUEVO: listeners del modo observador
   document.getElementById('btn-modo-observador').addEventListener('click', () => entrarObservador());
-  document.getElementById('btn-observador-salir').addEventListener('click', () => mostrarPantalla('temas'));
+  document.getElementById('btn-observador-salir').addEventListener('click', () => {
+    if (pomodoroActivo) return;   // NUEVO: bloqueado mientras el Pomodoro corre (también deshabilitado visualmente)
+    mostrarPantalla('temas');
+  });
   document.getElementById('btn-observador-volver').addEventListener('click', () => salirObservador());
 
 
@@ -10660,6 +10904,206 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (textareaDictadoActivo === textarea) detenerDictado();
     };
   })();
+
+  // ============================================================
+  // NUEVO: Pomodoro (modo observador). 100% efímero (no usa localStorage);
+  // no toca evaluación, gamificación, notas/difíciles/razones, buscador ni
+  // el resaltado del drawio. Reutiliza overlay-pausa (pausa) y
+  // reproducirSonido() (sonidos, respeta sonidosActivos).
+  // ============================================================
+  const elBtnPomodoro = document.getElementById('btn-pomodoro');
+  const elFilaPomodoroBoton = document.getElementById('fila-pomodoro-boton');
+  const elPomodoroBadge = document.getElementById('pomodoro-badge');
+  const elPomodoroBadgeInfo = document.getElementById('pomodoro-badge-info');
+  const elBtnPomodoroCancelar = document.getElementById('btn-pomodoro-cancelar');
+  const elBtnPomodoroPausar = document.getElementById('btn-pomodoro-pausar');
+  const elBtnPomodoroRetencion = document.getElementById('btn-pomodoro-retencion');
+  const elSlotPomodoroObservador = document.getElementById('pomodoro-badge-slot-observador');
+  const elSlotPomodoroGaleria = document.getElementById('pomodoro-badge-slot-galeria');
+  const elSlotPomodoroHuerfanas = document.getElementById('pomodoro-badge-slot-huerfanas');
+  const elBtnObservadorSalir = document.getElementById('btn-observador-salir');
+  const elModalPomodoroIniciar = document.getElementById('modal-pomodoro-iniciar');
+  const elModalPomodoroAbandonar = document.getElementById('modal-pomodoro-abandonar');
+  const elModalPomodoroResumen = document.getElementById('modal-pomodoro-resumen');
+  const elTituloPausa = document.getElementById('titulo-pausa');
+  const elTextoPausa = document.getElementById('texto-pausa');
+
+  let pomodoroActivo = false;
+  let pomodoroFase = null;              // 'lectura' | 'retencion' | 'descanso'
+  let pomodoroCiclo = 1;
+  let pomodoroSegundosRestantes = 0;
+  let pomodoroIntervalo = null;
+  let pomodoroPausado = false;
+  let pomodoroHoraInicio = 0;           // Date.now() al empezar (para el tiempo total del resumen)
+  let pomodoroAcumulado = { lectura: 0, retencion: 0 };   // segundos transcurridos, para el resumen
+
+  function formatoMMSS(segundos) {
+    const s = Math.max(0, Math.round(segundos));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+  }
+
+  // Reubica el badge (un solo nodo) en el slot de la pantalla actual. Si el
+  // Pomodoro no está activo, no hace falta: el badge sigue oculto donde esté.
+  function reubicarBadgePomodoro(nombrePantalla) {
+    if (!pomodoroActivo) return;
+    const slot = nombrePantalla === 'observador' ? elSlotPomodoroObservador
+      : nombrePantalla === 'galeria' ? elSlotPomodoroGaleria
+      : nombrePantalla === 'huerfanas' ? elSlotPomodoroHuerfanas
+      : null;
+    if (slot && elPomodoroBadge.parentElement !== slot) slot.appendChild(elPomodoroBadge);
+  }
+
+  function actualizarBadgePomodoro() {
+    const etiquetas = {
+      lectura: '📖 Lectura',
+      retencion: '🧠 Retención activa',
+      descanso: '☕ Descanso',
+    };
+    elPomodoroBadge.className = 'pomodoro-badge fase-' + pomodoroFase;
+    elPomodoroBadgeInfo.textContent = etiquetas[pomodoroFase] + ' · ⏲️ Ciclo ' + pomodoroCiclo + ' · ' + formatoMMSS(pomodoroSegundosRestantes);
+    // §10: aviso visual (sin sonido) en el último minuto de CUALQUIER fase
+    elPomodoroBadgeInfo.classList.toggle('ultimo-minuto', pomodoroSegundosRestantes <= 60);
+    // §4.3: "Retención" solo visible durante Lectura
+    elBtnPomodoroRetencion.style.display = pomodoroFase === 'lectura' ? 'inline-block' : 'none';
+    // §7: no se puede pausar durante el Descanso
+    elBtnPomodoroPausar.style.display = pomodoroFase === 'descanso' ? 'none' : 'inline-block';
+  }
+
+  function tickPomodoro() {
+    pomodoroSegundosRestantes--;
+    if (pomodoroFase === 'lectura') pomodoroAcumulado.lectura++;
+    else if (pomodoroFase === 'retencion') pomodoroAcumulado.retencion++;
+    if (pomodoroSegundosRestantes <= 0) {
+      avanzarFasePomodoro();
+    } else {
+      actualizarBadgePomodoro();
+    }
+  }
+
+  function avanzarFasePomodoro() {
+    if (pomodoroFase === 'lectura' || pomodoroFase === 'retencion') {
+      const veniaDeRetencion = pomodoroFase === 'retencion';
+      pomodoroFase = 'descanso';
+      pomodoroSegundosRestantes = DURACION_DESCANSO_SEG;
+      reproducirSonido(veniaDeRetencion ? 'pomodoro_retencion_a_descanso' : 'pomodoro_lectura_a_descanso');
+    } else {
+      // Termina el Descanso: nuevo ciclo (§4.2 — se incrementa ACÁ, antes de arrancar la Lectura)
+      pomodoroCiclo++;
+      pomodoroFase = 'lectura';
+      pomodoroSegundosRestantes = DURACION_LECTURA_SEG;
+      reproducirSonido('pomodoro_nuevo_ciclo');
+    }
+    actualizarBadgePomodoro();
+  }
+
+  function iniciarIntervaloPomodoro() {
+    clearInterval(pomodoroIntervalo);
+    pomodoroIntervalo = setInterval(tickPomodoro, 1000);
+  }
+
+  // ---- Abrir/cerrar modal de confirmación inicial ----
+  function abrirModalPomodoroIniciar() {
+    elModalPomodoroIniciar.classList.add('abierto');
+  }
+  function cerrarModalPomodoroIniciar() {
+    elModalPomodoroIniciar.classList.remove('abierto');
+  }
+  elBtnPomodoro.addEventListener('click', () => abrirModalPomodoroIniciar());
+
+  function iniciarPomodoro() {
+    cerrarModalPomodoroIniciar();
+    pomodoroActivo = true;
+    pomodoroFase = 'lectura';
+    pomodoroCiclo = 1;
+    pomodoroSegundosRestantes = DURACION_LECTURA_SEG;
+    pomodoroPausado = false;
+    pomodoroHoraInicio = Date.now();
+    pomodoroAcumulado = { lectura: 0, retencion: 0 };
+
+    obtenerContextoAudio();   // desbloquea audio en este gesto del usuario
+
+    elFilaPomodoroBoton.style.display = 'none';
+    elPomodoroBadge.style.display = 'flex';
+    elBtnObservadorSalir.disabled = true;   // §6: bloqueo de navegación
+
+    actualizarBadgePomodoro();
+    iniciarIntervaloPomodoro();
+  }
+
+  document.getElementById('btn-pomodoro-iniciar-si').addEventListener('click', () => iniciarPomodoro());
+  document.getElementById('btn-pomodoro-iniciar-cancelar').addEventListener('click', () => cerrarModalPomodoroIniciar());
+
+  // ---- Retención activa ----
+  elBtnPomodoroRetencion.addEventListener('click', () => {
+    if (pomodoroFase !== 'lectura') return;
+    pomodoroFase = 'retencion';   // el contador NO se reinicia
+    actualizarBadgePomodoro();
+  });
+
+  // ---- Pausa (reutiliza el overlay-pausa existente, con su propio texto) ----
+  function pausarPomodoro() {
+    if (!pomodoroActivo || pomodoroPausado || pomodoroFase === 'descanso') return;
+    pomodoroPausado = true;
+    clearInterval(pomodoroIntervalo);
+    elTituloPausa.textContent = '⏸ En pausa';
+    elTextoPausa.textContent = 'Pomodoro en pausa · Quedan ' + formatoMMSS(pomodoroSegundosRestantes) + ' de la fase actual';
+    elOverlayPausa.classList.add('abierto');
+    elBtnReanudar.focus();
+  }
+  function reanudarPomodoro() {
+    if (!pomodoroPausado) return;
+    pomodoroPausado = false;
+    elOverlayPausa.classList.remove('abierto');
+    elTituloPausa.textContent = '⏸ En pausa';
+    elTextoPausa.textContent = 'El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.';
+    iniciarIntervaloPomodoro();
+  }
+  elBtnPomodoroPausar.addEventListener('click', () => pausarPomodoro());
+
+  // ---- Cancelar / abandonar ----
+  function abrirModalPomodoroAbandonar() {
+    elModalPomodoroAbandonar.classList.add('abierto');
+  }
+  function cerrarModalPomodoroAbandonar() {
+    elModalPomodoroAbandonar.classList.remove('abierto');
+  }
+  elBtnPomodoroCancelar.addEventListener('click', () => abrirModalPomodoroAbandonar());
+  document.getElementById('btn-pomodoro-abandonar-no').addEventListener('click', () => cerrarModalPomodoroAbandonar());
+  document.getElementById('btn-pomodoro-abandonar-si').addEventListener('click', () => {
+    cerrarModalPomodoroAbandonar();
+    abandonarPomodoro();
+  });
+
+  function abandonarPomodoro() {
+    clearInterval(pomodoroIntervalo);
+    if (pomodoroPausado) {
+      pomodoroPausado = false;
+      elOverlayPausa.classList.remove('abierto');
+      elTituloPausa.textContent = '⏸ En pausa';
+      elTextoPausa.textContent = 'El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.';
+    }
+    const totalSeg = Math.round((Date.now() - pomodoroHoraInicio) / 1000);
+    document.getElementById('pomodoro-resumen-lectura').textContent = formatoMMSS(pomodoroAcumulado.lectura);
+    document.getElementById('pomodoro-resumen-retencion').textContent = formatoMMSS(pomodoroAcumulado.retencion);
+    document.getElementById('pomodoro-resumen-total').textContent = formatoMMSS(totalSeg);
+    document.getElementById('pomodoro-resumen-ciclos').textContent = String(pomodoroCiclo - 1 >= 0 ? pomodoroCiclo - 1 : 0);
+
+    pomodoroActivo = false;
+    elPomodoroBadge.style.display = 'none';
+    elBtnObservadorSalir.disabled = false;
+    // El badge vuelve a su slot "hogar" (observador) para la próxima vez.
+    if (elPomodoroBadge.parentElement !== elSlotPomodoroObservador) elSlotPomodoroObservador.appendChild(elPomodoroBadge);
+
+    elModalPomodoroResumen.classList.add('abierto');
+  }
+
+  function cerrarModalPomodoroResumen() {
+    elModalPomodoroResumen.classList.remove('abierto');
+    elFilaPomodoroBoton.style.display = 'flex';   // vuelve el botón ⏲️
+  }
+  document.getElementById('btn-pomodoro-resumen-cerrar').addEventListener('click', () => cerrarModalPomodoroResumen());
 
   // ---------- Arranque ----------
   construirListaTemas();
