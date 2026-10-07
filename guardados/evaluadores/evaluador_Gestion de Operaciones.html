@@ -11,7 +11,7 @@
     /* NUEVO: color propio de la interfaz (botones, inputs, títulos, etc.).
        Ya no depende de la paleta de colores elegida al generar el evaluador:
        --stroke-color queda reservado SOLO para el look de las tarjetas
-       (.tema, .tarjeta, .primero, .segundo, .palabra-clave...). */
+       (.tema, .tarjeta, .primero, .segundo, .badge-rutas, .palabra-clave...). */
     --color-boton: #4F46E5;
   }
 
@@ -303,9 +303,9 @@
     right: 14px;
     font-size: 12px;
     font-weight: 700;
-    color: var(--color-boton);
+    color: var(--stroke-color);
     background: rgba(255,255,255,0.65);
-    border: 1.5px solid var(--color-boton);
+    border: 1.5px solid var(--stroke-color);
     border-radius: 12px;
     padding: 2px 10px;
     pointer-events: none;
@@ -1154,9 +1154,9 @@
     left: 10px;
     font-size: 12px;
     font-weight: 700;
-    color: var(--stroke-color);
+    color: var(--color-boton);
     background: rgba(255,255,255,0.65);
-    border: 1.5px solid var(--stroke-color);
+    border: 1.5px solid var(--color-boton);
     border-radius: 12px;
     padding: 2px 10px;
     font-family: inherit;
@@ -1812,6 +1812,35 @@
     padding: 0;
   }
   .boton-icono-circular:hover { border-color: var(--color-boton); }
+  /* NUEVO: botón del mapa (🗺️) sin imagen seleccionada: deshabilitado pero
+     visible, para que la fila no cambie de aspecto (ver §imagen del mapa). */
+  .boton-icono-circular:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    color: #999;
+  }
+  .boton-icono-circular:disabled:hover { border-color: #e2e4ec; }
+
+  /* NUEVO: fila entre el subtítulo del observador y el buscador: mapa a la
+     izquierda, botón/badge del Pomodoro a la derecha. */
+  .fila-mapa-observador {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .columna-pomodoro-observador { flex: 1 1 auto; min-width: 0; }
+
+  /* NUEVO: imagen del mapa (pantalla a pantalla completa desde observador) */
+  .mapa-img {
+    max-width: 95vw;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 10px;
+    border: 2px solid var(--color-boton);
+    background: #fff;
+    display: block;
+  }
 
   /* ===== NUEVO: Pomodoro (modo observador) ===== */
   .pomodoro-badge-slot { margin-bottom: 10px; }
@@ -2038,21 +2067,31 @@
   <div id="pantalla-observador" style="display:none;">
     <p class="subtitulo">Modo observador: tocá una tarjeta para verla (sin evaluarte)</p>
 
-    <!-- NUEVO: Pomodoro (botón para iniciarlo, o el badge mientras corre) -->
-    <div class="fila-iconos-gamificacion" id="fila-pomodoro-boton">
-      <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
-    </div>
-    <div class="pomodoro-badge-slot" id="pomodoro-badge-slot-observador">
-      <!-- NUEVO: badge del Pomodoro. Un solo nodo, se reubica (appendChild)
-           en el slot de la pantalla donde esté el usuario (observador,
-           huérfanas o galería) cada vez que cambia de pantalla. -->
-      <div class="pomodoro-badge" id="pomodoro-badge" style="display:none;">
-        <span class="pomodoro-badge-info" id="pomodoro-badge-info"></span>
-        <span class="pomodoro-badge-botones">
-          <button class="boton-mini" id="btn-pomodoro-cancelar">Cancelar</button>
-          <button class="boton-mini" id="btn-pomodoro-pausar">⏸ Pausar</button>
-          <button class="boton-mini" id="btn-pomodoro-retencion">🧠 Retención</button>
-        </span>
+    <!-- NUEVO: fila mapa + Pomodoro, entre el subtítulo y el buscador. El
+         botón 🗺️ queda SIEMPRE visible (no se mete dentro de
+         fila-pomodoro-boton, que se oculta cuando el Pomodoro está activo). -->
+    <div class="fila-mapa-observador">
+      <button class="boton-icono-circular" id="btn-observador-mapa" title="Ver mapa"
+              data-mapa-src="data:;base64,"
+              data-mapa-nombre="">🗺️</button>
+      <div class="columna-pomodoro-observador">
+        <!-- NUEVO: Pomodoro (botón para iniciarlo, o el badge mientras corre) -->
+        <div class="fila-iconos-gamificacion" id="fila-pomodoro-boton">
+          <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
+        </div>
+        <div class="pomodoro-badge-slot" id="pomodoro-badge-slot-observador">
+          <!-- NUEVO: badge del Pomodoro. Un solo nodo, se reubica (appendChild)
+               en el slot de la pantalla donde esté el usuario (observador,
+               huérfanas, galería o mapa) cada vez que cambia de pantalla. -->
+          <div class="pomodoro-badge" id="pomodoro-badge" style="display:none;">
+            <span class="pomodoro-badge-info" id="pomodoro-badge-info"></span>
+            <span class="pomodoro-badge-botones">
+              <button class="boton-mini" id="btn-pomodoro-cancelar">Cancelar</button>
+              <button class="boton-mini" id="btn-pomodoro-pausar">⏸ Pausar</button>
+              <button class="boton-mini" id="btn-pomodoro-retencion">🧠 Retención</button>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2155,6 +2194,21 @@
 
     <div style="display:flex; justify-content:center; margin-top:20px;">
       <button class="boton-secundario" id="btn-huerfanas-volver">☰ Volver a la lista</button>
+    </div>
+  </div>
+
+  <!-- NUEVO: pantalla del mapa (botón 🗺️ del modo observador). El <img> NO
+       vive acá: se crea al entrar (lazy rendering) y se destruye al salir
+       (ver abrirMapa/cerrarPantallaMapa). -->
+  <div id="pantalla-mapa" style="display:none;">
+    <!-- Pomodoro (sticky arriba, igual que en Huérfanas/Galería, si está activo) -->
+    <div class="pomodoro-badge-slot pomodoro-badge-slot-sticky" id="pomodoro-badge-slot-mapa"></div>
+
+    <div class="galeria-imagen-wrap" id="mapa-imagen-wrap"></div>
+
+    <div class="navegacion" style="margin-top:20px;">
+      <button class="boton-secundario" id="btn-mapa-descargar">⬇ Descargar</button>
+      <button class="boton-secundario" id="btn-mapa-volver">☰ Volver a observador</button>
     </div>
   </div>
 
@@ -2538,6 +2592,11 @@
     <button class="boton-secundario boton-lista-fila" id="btn-lista-ninguna">Ninguna (selección manual)</button>
     <div id="lista-listas-guardadas"></div>
     <p class="galeria-vacia" id="listas-vacio" style="display:none;">Todavía no guardaste ninguna lista.</p>
+    <!-- NUEVO: listas de otros evaluadores (se conservan, no se borran solas; ver §listas-espacio) -->
+    <details id="det-listas-otras" style="display:none">
+      <summary id="suma-listas-otras">De otros evaluadores</summary>
+      <div id="lista-listas-otras"></div>
+    </details>
     <button class="modal-cancelar" id="btn-listas-cerrar">Cerrar</button>
   </div>
 </div>
@@ -3142,6 +3201,10 @@
   const elGaleriaNotaVersiones = document.getElementById('galeria-nota-versiones');
   const elBtnGaleriaAnterior = document.getElementById('btn-galeria-anterior');
   const elBtnGaleriaSiguiente = document.getElementById('btn-galeria-siguiente');
+  // NUEVO: imagen del mapa (botón 🗺️ del modo observador)
+  const elPantallaMapa = document.getElementById('pantalla-mapa');
+  const elBtnObservadorMapa = document.getElementById('btn-observador-mapa');
+  const elMapaImagenWrap = document.getElementById('mapa-imagen-wrap');
   // NUEVO: Buscador Global
   const elInputBuscadorTemas = document.getElementById('input-buscador-temas');
   const elDropdownBuscadorTemas = document.getElementById('dropdown-buscador-temas');
@@ -3285,6 +3348,7 @@
     elPantallaObservador.style.display = nombre === 'observador' ? 'block' : 'none';
     elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  // NUEVO
     elPantallaHuerfanas.style.display = nombre === 'huerfanas' ? 'block' : 'none';  // NUEVO
+    elPantallaMapa.style.display = nombre === 'mapa' ? 'block' : 'none';  // NUEVO
     elPantallaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';  // NUEVO
     elPantallaHistorial.style.display = nombre === 'historial' ? 'block' : 'none';  // NUEVO
 
@@ -4264,6 +4328,44 @@
     mostrarPantalla('observador');
   }
 
+  // ---------- NUEVO: imagen del mapa (botón 🗺️ del modo observador) ----------
+  // El Pomodoro sigue corriendo mientras se ve el mapa: no se toca para nada
+  // (ni se pausa, ni se cancela); solo se reubica el badge (reubicarBadgePomodoro).
+  function abrirMapa() {
+    if (elBtnObservadorMapa.disabled) return;   // sin imagen: no hace nada (no debería dispararse igual)
+    mostrarPantalla('mapa');
+    // Lazy rendering: recién acá se crea el <img> y se le asigna el 'src'
+    // (data: URI en base64), que es el único momento en que el navegador
+    // decodifica/renderiza la imagen — evita el jank al cargar el HTML.
+    elMapaImagenWrap.innerHTML = '';
+    const img = document.createElement('img');
+    img.id = 'mapa-img';
+    img.className = 'mapa-img';
+    img.alt = 'Imagen del mapa';
+    img.src = elBtnObservadorMapa.dataset.mapaSrc;
+    // Zoom nativo del navegador (Ctrl + rueda) funciona "gratis" sobre un <img>.
+    elMapaImagenWrap.appendChild(img);
+  }
+
+  function cerrarPantallaMapa() {
+    // Se destruye el <img> al salir para liberar la memoria de la imagen
+    // decodificada; la próxima vez que se abra se vuelve a crear (lazy).
+    elMapaImagenWrap.innerHTML = '';
+    mostrarPantalla('observador');
+  }
+
+  function descargarImagenMapa() {
+    const src = elBtnObservadorMapa.dataset.mapaSrc;
+    if (!src) return;
+    const nombre = elBtnObservadorMapa.dataset.mapaNombre || 'mapa';
+    const a = document.createElement('a');
+    a.href = src;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
   // ---------- Buscador de Rutas Huérfanas (número de ruta + contenido) ----------
 
   function textoHuerfanaPlano(numeroRuta) {
@@ -4836,6 +4938,10 @@
   const elModalListas = document.getElementById('modal-listas');
   const elListaListasGuardadas = document.getElementById('lista-listas-guardadas');
   const elListasVacio = document.getElementById('listas-vacio');
+  // NUEVO: listas de otros evaluadores (solo lectura, debajo de las propias)
+  const elDetListasOtras = document.getElementById('det-listas-otras');
+  const elSumaListasOtras = document.getElementById('suma-listas-otras');
+  const elListaListasOtras = document.getElementById('lista-listas-otras');
 
   function hashesVigentesActuales() {
     return new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
@@ -4869,22 +4975,23 @@
     const vigentes = hashesVigentesActuales();
     const recuperables = hashesRecuperablesDeOtroEspacio();
     let cambio = false;
-
     listas = listas.filter((lista) => {
-      // Las listas de otros evaluadores se conservan intactas.
+      // NUEVO: una lista con 'espacio' propio distinto al actual es de OTRO
+      // evaluador (ver aceptarGuardarLista): se conserva tal cual, igual que
+      // difíciles/notas/razones/imágenes se conservan "De otros evaluadores".
+      // Antes, al no existir este campo, sus hashes (calculados con el
+      // espacio de origen) nunca coincidían con los de ESTE evaluador y la
+      // lista quedaba en 0 hashes -> se borraba sola.
       if (lista.espacio && lista.espacio !== ESPACIO_HASH) return true;
-
       const filtrados = lista.hashes.filter((h) => vigentes.has(h) || recuperables.has(h));
-
       if (filtrados.length !== lista.hashes.length) {
         cambio = true;
-        if (filtrados.length === 0) return false;
+        if (filtrados.length === 0) return false;   // lista vacía: se borra
         lista.hashes = filtrados;
         lista.modificada = Date.now();
       }
       return true;
     });
-
     if (cambio) guardarListas();
   }
 
@@ -4968,7 +5075,13 @@
 
     limpiarListasContraTarjetasActuales();
     elListaListasGuardadas.innerHTML = '';
-    const ordenadas = listas.slice().sort((a, b) => b.creada - a.creada);   // más reciente primero
+    // NUEVO: separar las listas de ESTE evaluador de las de otros (campo
+    // 'espacio' tageado en aceptarGuardarLista). Las listas viejas, guardadas
+    // antes de este fix, no tienen 'espacio' y se siguen tratando como
+    // propias (comportamiento de siempre, sin regresiones).
+    const listasPropias = listas.filter((l) => !l.espacio || l.espacio === ESPACIO_HASH);
+    const listasDeOtros = listas.filter((l) => l.espacio && l.espacio !== ESPACIO_HASH);
+    const ordenadas = listasPropias.slice().sort((a, b) => b.creada - a.creada);   // más reciente primero
 
     if (ordenadas.length === 0) {
       elListasVacio.style.display = 'block';
@@ -5067,6 +5180,46 @@
       }
 
       elListaListasGuardadas.appendChild(fila);
+    });
+
+    // ---- NUEVO: listas de otros evaluadores, debajo de las propias ----
+    // Solo lectura (igual criterio que difíciles/notas/razones/imágenes):
+    // se muestran para que no "desaparezcan" sin explicación, pero no se
+    // pueden activar ni editar desde acá (sus hashes no corresponden a
+    // ninguna tarjeta de este evaluador). Se puede borrar una puntual si
+    // ya no se la quiere conservar.
+    elListaListasOtras.innerHTML = '';
+    const otrasOrdenadas = listasDeOtros.slice().sort((a, b) => b.creada - a.creada);
+    elDetListasOtras.style.display = otrasOrdenadas.length > 0 ? 'block' : 'none';
+    elSumaListasOtras.textContent = 'De otros evaluadores (' + otrasOrdenadas.length + ')';
+    otrasOrdenadas.forEach((lista) => {
+      const fila = document.createElement('div');
+      fila.className = 'fila-lista-guardada';
+
+      const cabecera = document.createElement('div');
+      cabecera.className = 'lista-fila-cabecera';
+      const nombre = document.createElement('span');
+      nombre.className = 'lista-nombre-btn';
+      nombre.textContent = lista.nombre + ' (' + etiquetaEspacio(lista.espacio) + ')';
+      cabecera.appendChild(nombre);
+      fila.appendChild(cabecera);
+
+      const acciones = document.createElement('div');
+      acciones.className = 'lista-acciones';
+      const btnBorrar = document.createElement('button');
+      btnBorrar.type = 'button';
+      btnBorrar.textContent = '🗑️ Borrar';
+      btnBorrar.addEventListener('click', () => borrarLista(lista.nombre));
+      acciones.appendChild(btnBorrar);
+      fila.appendChild(acciones);
+
+      const detalle = document.createElement('div');
+      detalle.className = 'lista-detalle';
+      detalle.textContent = lista.hashes.length + ' tarjeta(s) · creada: ' + formatearFechaLista(lista.creada) +
+        ' · modificada: ' + formatearFechaLista(lista.modificada);
+      fila.appendChild(detalle);
+
+      elListaListasOtras.appendChild(fila);
     });
   }
 
@@ -5172,6 +5325,10 @@
           creada: typeof imp.creada === 'number' ? imp.creada : Date.now(),
           modificada: impModificada || Date.now(),
           srs: normalizarSrsImportado(imp.srs),   // NUEVO: el progreso de Repaso Espaciado viaja con la lista
+          // NUEVO: si el JSON importado ya traía 'espacio' (export de otro
+          // evaluador), se conserva; si no, se asume que es de ESTE
+          // evaluador (comportamiento de siempre con backups viejos).
+          espacio: typeof imp.espacio === 'string' && imp.espacio ? imp.espacio : ESPACIO_HASH,
         });
         nuevas++;
       } else if (impModificada > existente.modificada) {
@@ -5180,6 +5337,7 @@
         existente.creada = typeof imp.creada === 'number' ? imp.creada : existente.creada;
         existente.modificada = impModificada;
         existente.srs = normalizarSrsImportado(imp.srs);   // NUEVO
+        existente.espacio = typeof imp.espacio === 'string' && imp.espacio ? imp.espacio : existente.espacio;
         actualizadas++;
       } else {
         conservadas++;
@@ -5462,7 +5620,12 @@
       return;
     }
     const ahora = Date.now();
-    const lista = { nombre: nombre, hashes: hashes, espacio: ESPACIO_HASH, creada: ahora, modificada: ahora, srs: Object.assign({}, SRS_DEFAULT) };
+    // NUEVO: se guarda de qué evaluador es esta lista (ESPACIO_HASH al
+    // momento de crearla). Sin esto, limpiarListasContraTarjetasActuales()
+    // no tenía forma de distinguir "lista de otro evaluador" de "lista con
+    // tarjetas borradas", y terminaba vaciando (y borrando) listas enteras
+    // apenas se abría el modal desde un evaluador distinto.
+    const lista = { nombre: nombre, hashes: hashes, creada: ahora, modificada: ahora, srs: Object.assign({}, SRS_DEFAULT), espacio: ESPACIO_HASH };
     listas.push(lista);
     guardarListas();
     asociarRetroactivamente(lista);
@@ -6928,6 +7091,10 @@
     if (elPantallaObservador.style.display !== 'none') { if (!pomodoroActivo) mostrarPantalla('temas'); return; }
     if (elPantallaGaleria.style.display !== 'none') { volverListaDesdeGaleria(); return; }
     if (elPantallaHuerfanas.style.display !== 'none') { volverDesdeHuerfanas(); return; }
+    // NUEVO: la pantalla del mapa SIEMPRE se puede cerrar con ESC, incluso
+    // con el Pomodoro activo (es la salida natural de esa pantalla, igual
+    // que el botón "Volver a observador").
+    if (elPantallaMapa.style.display !== 'none') { cerrarPantallaMapa(); return; }
   });
 
   // ---------- Preview en el modo observador: "🖼 Datos de imágenes guardados" ----------
@@ -7136,6 +7303,22 @@
   document.getElementById('btn-galeria-volver').addEventListener('click', () => volverListaDesdeGaleria());
   document.getElementById('btn-ver-huerfanas').addEventListener('click', () => abrirHuerfanas());
   document.getElementById('btn-huerfanas-volver').addEventListener('click', () => volverDesdeHuerfanas());
+
+  // ---------- NUEVO: botón del mapa (🗺️) ----------
+  // Sin imagen seleccionada al generar el evaluador, data-mapa-src queda en
+  // "data:;base64," (sin payload): el botón se deshabilita, pero SIN
+  // ocultarse, para que la fila no cambie de aspecto (ver §imagen del mapa).
+  (function inicializarBotonMapa() {
+    const src = elBtnObservadorMapa.dataset.mapaSrc || '';
+    const payload = src.split(',')[1] || '';
+    if (!payload) {
+      elBtnObservadorMapa.disabled = true;
+      elBtnObservadorMapa.title = 'No se seleccionó imagen del mapa';
+    }
+  })();
+  elBtnObservadorMapa.addEventListener('click', () => abrirMapa());
+  document.getElementById('btn-mapa-volver').addEventListener('click', () => cerrarPantallaMapa());
+  document.getElementById('btn-mapa-descargar').addEventListener('click', () => descargarImagenMapa());
   document.getElementById('btn-galeria-anterior').addEventListener('click', () => navegarGaleria(-1));
   document.getElementById('btn-galeria-siguiente').addEventListener('click', () => navegarGaleria(1));
   elBtnGaleriaDificil.addEventListener('click', () => toggleDificilImagenActual());
@@ -8331,9 +8514,9 @@
 
   // ---------- Evaluación: palabras vacías, raíces y tolerancia a tipeos ----------
 
-const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','ersion','sion','ucion','adoras','adores','adora',
-  'ador','ivas','ivos','iva','ivo','ables','ibles','able','ible','idad','anza','ante','ente','ados','idos','ado','ido',
-  'ando','iendo','ismo','ista','ero','aje'];
+  const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','ersion','sion','iciones','ucion','adoras','adores','adora','ador',
+    'ivas','ivos','iva','ivo','ables','ibles','able','ible','idad','anza','ante','ente','ados','idos','ado','ido','ando','iendo'
+    ,'ismo','ista','ero','aje'];
 
   // Raíz simplificada para comparar singular/plural, género y algunas derivaciones.
   // Recibe cualquier palabra (se normaliza antes: minúsculas y sin tildes).
@@ -10031,6 +10214,7 @@ const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','ersion','
   const elSlotPomodoroObservador = document.getElementById('pomodoro-badge-slot-observador');
   const elSlotPomodoroGaleria = document.getElementById('pomodoro-badge-slot-galeria');
   const elSlotPomodoroHuerfanas = document.getElementById('pomodoro-badge-slot-huerfanas');
+  const elSlotPomodoroMapa = document.getElementById('pomodoro-badge-slot-mapa');  // NUEVO
   const elBtnObservadorSalir = document.getElementById('btn-observador-salir');
   const elModalPomodoroIniciar = document.getElementById('modal-pomodoro-iniciar');
   const elModalPomodoroAbandonar = document.getElementById('modal-pomodoro-abandonar');
@@ -10061,6 +10245,7 @@ const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','ersion','
     const slot = nombrePantalla === 'observador' ? elSlotPomodoroObservador
       : nombrePantalla === 'galeria' ? elSlotPomodoroGaleria
       : nombrePantalla === 'huerfanas' ? elSlotPomodoroHuerfanas
+      : nombrePantalla === 'mapa' ? elSlotPomodoroMapa   // NUEVO
       : null;
     if (slot && elPomodoroBadge.parentElement !== slot) slot.appendChild(elPomodoroBadge);
   }

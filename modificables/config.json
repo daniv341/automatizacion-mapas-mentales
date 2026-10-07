@@ -6,6 +6,14 @@
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Operaciones.drawio",
       "resaltar": false,
       "colores": "amarilloOscuro"
+    },
+    {
+      "recordatorio": "../guardados/recordatorios/recordatorio-U1.txt",
+      "respuestas": "../guardados/rutas/1 - Sistemas de Control.txt",
+      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\1 - Sistemas de Control.drawio",
+      "resaltar": false,
+      "colores": "verde",
+      "imagen_mapa": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\1 - Sistemas de Control-Página-1.jpg"
     }
   ]
 }

@@ -62,3 +62,50 @@ Actúa como un extractor de texto y estructurador de datos visuales. Analiza la 
    - Deja DOS saltos de línea dobles (dos líneas en blanco) al cambiar de una rama secundaria principal a la siguiente.
    - Dentro de un mismo bloque final (hojas agrupadas), coloca cada elemento en una nueva línea sin saltos en blanco intermedios.
 5 Por ultimo al inicio de cada renglon con contenido le agregas "comP ", no elimines ningun salto de linea
+
+
+
+PALETA_COLORES = {
+    "amarillo": ["#DEDE00", "#5C5C5C"],
+    "celeste": ["#00CCCC", "#5C5C5C"],
+    "rojo": ["#FF0000", "#5C5C5C"],
+    "verde": ["#66CC00", "#5C5C5C"],
+    "morado": ["#7F00FF", "#D0D0D0"],
+    "rosado": ["#FF66FF", "#5C5C5C"],     
+    "azul": ["#0000FF", "#D0D0D0"],     
+    "bordo": ["#FF0080", "#5C5C5C"],     
+    "naranja": ["#FF8000", "#5C5C5C"],     
+    "verdeAgua": ["#0BD0AF", "#5C5C5C"],     
+    "gris": ["#999999", "#5C5C5C"],     
+    "marron": ["#89552A", "#D0D0D0"],     
+    "fucsia": ["#DC7BFF", "#5C5C5C"],     
+    "azulGrisaceo": ["#3399FF", "#5C5C5C"],     
+    "verdeOscuro": ["#14B866", "#5C5C5C"],     
+    "naranjaOscuro": ["#FF5A36", "#5C5C5C"],     
+    "rojoOscuro": ["#8B0000", "#D0D0D0"],     
+    "amarilloOscuro": ["#556B2F", "#D0D0D0"],     
+    "verdeClaro": ["#98FF98", "#5C5C5C"],     
+    "grisClaro": ["#E6E6FA", "#5C5C5C"],     
+    "rosadoClaro": ["#FFB6C1", "#5C5C5C"],     
+    "azulClaro": ["#B3BDFF", "#5C5C5C"],     
+    "moradoClaro": ["#696ADC", "#5C5C5C"],     
+    "rojoClaro": ["#FF6347", "#5C5C5C"],     
+    "marronClaro": ["#CD853F", "#5C5C5C"],     
+    "amarilloClaro": ["#FFFF80", "#5C5C5C"],
+}
+
+--color-boton
+
+  const SUFIJOS_RAIZ = [
+    'imientos','imiento',
+    'aciones','acion',
+    'siones','ersion','sion','ucion',
+    'adoras','adores','adora','ador',
+    'ivas','ivos','iva','ivo',
+    'ables','ibles','able','ible',
+    'idad',
+    'anza','ante','ente',
+    'ados','idos','ado','ido',
+    'ando','iendo',
+    'ismo','ista','ero','aje'
+  ];

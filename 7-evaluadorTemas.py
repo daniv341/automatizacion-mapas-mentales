@@ -1,4 +1,5 @@
 import argparse
+import base64
 import json
 import os
 import re
@@ -848,10 +849,72 @@ def extraer_descripciones_drawio(ruta_drawio):
 
 
 # ============================================================
+# NUEVO: imagen del mapa (botón 🗺️ del modo observador)
+# ============================================================
+
+# Extensión -> firma de archivo esperada (para detectar "corrupto": un
+# archivo con extensión válida pero que no es realmente una imagen de ese
+# tipo). No reemplaza una validación completa de imagen (no hay Pillow
+# disponible), pero alcanza para el caso pedido: avisar y seguir sin imagen.
+_FIRMAS_IMAGEN_MAPA = {
+    ".png": b"\x89PNG\r\n\x1a\n",
+    ".jpg": b"\xff\xd8\xff",
+    ".jpeg": b"\xff\xd8\xff",
+}
+
+
+def _tipo_mime_imagen_mapa(ruta):
+    ext = Path(ruta).suffix.lower()
+    if ext == ".png":
+        return "image/png"
+    if ext in (".jpg", ".jpeg"):
+        return "image/jpeg"
+    return None
+
+
+def cargar_imagen_mapa_base64(ruta):
+    """
+    Lee 'ruta' y la convierte a base64 para inyectarla en el HTML. Devuelve
+    (base64_str, tipo_mime, nombre_original_sin_extension) si todo salió
+    bien, o None si hay que continuar SIN imagen (avisando en consola):
+    extensión no soportada, archivo corrupto (firma inválida) o error de
+    lectura. No hay límite de tamaño: se convierte sin importar el peso.
+    """
+    ruta = Path(ruta)
+    mime = _tipo_mime_imagen_mapa(ruta)
+    if mime is None:
+        print(f"AVISO: '{ruta}' no es una imagen PNG ni JPG; se continúa sin imagen del mapa.")
+        return None
+    try:
+        datos = ruta.read_bytes()
+    except OSError as error:
+        print(f"AVISO: no se pudo leer la imagen del mapa ({ruta}): {error}. Se continúa sin imagen.")
+        return None
+    firma = _FIRMAS_IMAGEN_MAPA[ruta.suffix.lower()]
+    if not datos.startswith(firma):
+        print(f"AVISO: la imagen del mapa ({ruta}) parece estar corrupta (firma de archivo inválida). "
+              "Se continúa sin imagen.")
+        return None
+    codificado = base64.b64encode(datos).decode("ascii")
+    return codificado, mime, ruta.stem
+
+
+def _escapar_atributo_html(texto):
+    """Escapa texto para insertarlo dentro de un atributo HTML con comillas dobles."""
+    return (
+        str(texto)
+        .replace("&", "&amp;")
+        .replace('"', "&quot;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+# ============================================================
 # GENERACIÓN DEL HTML
 # ============================================================
 
-def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash, descripciones_rutas=None):
+def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash, descripciones_rutas=None, imagen_mapa=None):
     datos = {"tarjetas": tarjetas, "rutas": rutas, "descripciones_rutas": descripciones_rutas or {}}
     datos_json = json.dumps(datos, ensure_ascii=False)
     nombre_base = Path(txt_respuestas).stem
@@ -880,6 +943,16 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     # mezclen entre dos evaluadores con tarjetas de texto idéntico). Ver hashTarjeta().
     html = html.replace("__ESPACIO__", json.dumps(espacio_hash))
 
+    # NUEVO: imagen del mapa (botón 🗺️ del modo observador). Sin imagen,
+    # los placeholders quedan vacíos: el botón se ve deshabilitado (ver JS).
+    if imagen_mapa:
+        base64_mapa, tipo_mapa, nombre_mapa = imagen_mapa
+    else:
+        base64_mapa, tipo_mapa, nombre_mapa = "", "", ""
+    html = html.replace("__IMAGEN_MAPA_BASE64__", base64_mapa)
+    html = html.replace("__TIPO_IMAGEN_MAPA__", tipo_mapa)
+    html = html.replace("__NOMBRE_IMAGEN_MAPA__", _escapar_atributo_html(nombre_mapa))
+
     with open(f"guardados/evaluadores/evaluador_{nombre_base}.html", "w", encoding="utf-8") as archivo:
         archivo.write(html)
 
@@ -901,7 +974,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     /* NUEVO: color propio de la interfaz (botones, inputs, títulos, etc.).
        Ya no depende de la paleta de colores elegida al generar el evaluador:
        --stroke-color queda reservado SOLO para el look de las tarjetas
-       (.tema, .tarjeta, .primero, .segundo, .palabra-clave...). */
+       (.tema, .tarjeta, .primero, .segundo, .badge-rutas, .palabra-clave...). */
     --color-boton: #4F46E5;
   }
 
@@ -1193,9 +1266,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     right: 14px;
     font-size: 12px;
     font-weight: 700;
-    color: var(--color-boton);
+    color: var(--stroke-color);
     background: rgba(255,255,255,0.65);
-    border: 1.5px solid var(--color-boton);
+    border: 1.5px solid var(--stroke-color);
     border-radius: 12px;
     padding: 2px 10px;
     pointer-events: none;
@@ -2044,9 +2117,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     left: 10px;
     font-size: 12px;
     font-weight: 700;
-    color: var(--stroke-color);
+    color: var(--color-boton);
     background: rgba(255,255,255,0.65);
-    border: 1.5px solid var(--stroke-color);
+    border: 1.5px solid var(--color-boton);
     border-radius: 12px;
     padding: 2px 10px;
     font-family: inherit;
@@ -2702,6 +2775,35 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     padding: 0;
   }
   .boton-icono-circular:hover { border-color: var(--color-boton); }
+  /* NUEVO: botón del mapa (🗺️) sin imagen seleccionada: deshabilitado pero
+     visible, para que la fila no cambie de aspecto (ver §imagen del mapa). */
+  .boton-icono-circular:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    color: #999;
+  }
+  .boton-icono-circular:disabled:hover { border-color: #e2e4ec; }
+
+  /* NUEVO: fila entre el subtítulo del observador y el buscador: mapa a la
+     izquierda, botón/badge del Pomodoro a la derecha. */
+  .fila-mapa-observador {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .columna-pomodoro-observador { flex: 1 1 auto; min-width: 0; }
+
+  /* NUEVO: imagen del mapa (pantalla a pantalla completa desde observador) */
+  .mapa-img {
+    max-width: 95vw;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 10px;
+    border: 2px solid var(--color-boton);
+    background: #fff;
+    display: block;
+  }
 
   /* ===== NUEVO: Pomodoro (modo observador) ===== */
   .pomodoro-badge-slot { margin-bottom: 10px; }
@@ -2928,21 +3030,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div id="pantalla-observador" style="display:none;">
     <p class="subtitulo">Modo observador: tocá una tarjeta para verla (sin evaluarte)</p>
 
-    <!-- NUEVO: Pomodoro (botón para iniciarlo, o el badge mientras corre) -->
-    <div class="fila-iconos-gamificacion" id="fila-pomodoro-boton">
-      <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
-    </div>
-    <div class="pomodoro-badge-slot" id="pomodoro-badge-slot-observador">
-      <!-- NUEVO: badge del Pomodoro. Un solo nodo, se reubica (appendChild)
-           en el slot de la pantalla donde esté el usuario (observador,
-           huérfanas o galería) cada vez que cambia de pantalla. -->
-      <div class="pomodoro-badge" id="pomodoro-badge" style="display:none;">
-        <span class="pomodoro-badge-info" id="pomodoro-badge-info"></span>
-        <span class="pomodoro-badge-botones">
-          <button class="boton-mini" id="btn-pomodoro-cancelar">Cancelar</button>
-          <button class="boton-mini" id="btn-pomodoro-pausar">⏸ Pausar</button>
-          <button class="boton-mini" id="btn-pomodoro-retencion">🧠 Retención</button>
-        </span>
+    <!-- NUEVO: fila mapa + Pomodoro, entre el subtítulo y el buscador. El
+         botón 🗺️ queda SIEMPRE visible (no se mete dentro de
+         fila-pomodoro-boton, que se oculta cuando el Pomodoro está activo). -->
+    <div class="fila-mapa-observador">
+      <button class="boton-icono-circular" id="btn-observador-mapa" title="Ver mapa"
+              data-mapa-src="data:__TIPO_IMAGEN_MAPA__;base64,__IMAGEN_MAPA_BASE64__"
+              data-mapa-nombre="__NOMBRE_IMAGEN_MAPA__">🗺️</button>
+      <div class="columna-pomodoro-observador">
+        <!-- NUEVO: Pomodoro (botón para iniciarlo, o el badge mientras corre) -->
+        <div class="fila-iconos-gamificacion" id="fila-pomodoro-boton">
+          <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
+        </div>
+        <div class="pomodoro-badge-slot" id="pomodoro-badge-slot-observador">
+          <!-- NUEVO: badge del Pomodoro. Un solo nodo, se reubica (appendChild)
+               en el slot de la pantalla donde esté el usuario (observador,
+               huérfanas, galería o mapa) cada vez que cambia de pantalla. -->
+          <div class="pomodoro-badge" id="pomodoro-badge" style="display:none;">
+            <span class="pomodoro-badge-info" id="pomodoro-badge-info"></span>
+            <span class="pomodoro-badge-botones">
+              <button class="boton-mini" id="btn-pomodoro-cancelar">Cancelar</button>
+              <button class="boton-mini" id="btn-pomodoro-pausar">⏸ Pausar</button>
+              <button class="boton-mini" id="btn-pomodoro-retencion">🧠 Retención</button>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3045,6 +3157,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <div style="display:flex; justify-content:center; margin-top:20px;">
       <button class="boton-secundario" id="btn-huerfanas-volver">☰ Volver a la lista</button>
+    </div>
+  </div>
+
+  <!-- NUEVO: pantalla del mapa (botón 🗺️ del modo observador). El <img> NO
+       vive acá: se crea al entrar (lazy rendering) y se destruye al salir
+       (ver abrirMapa/cerrarPantallaMapa). -->
+  <div id="pantalla-mapa" style="display:none;">
+    <!-- Pomodoro (sticky arriba, igual que en Huérfanas/Galería, si está activo) -->
+    <div class="pomodoro-badge-slot pomodoro-badge-slot-sticky" id="pomodoro-badge-slot-mapa"></div>
+
+    <div class="galeria-imagen-wrap" id="mapa-imagen-wrap"></div>
+
+    <div class="navegacion" style="margin-top:20px;">
+      <button class="boton-secundario" id="btn-mapa-descargar">⬇ Descargar</button>
+      <button class="boton-secundario" id="btn-mapa-volver">☰ Volver a observador</button>
     </div>
   </div>
 
@@ -3428,6 +3555,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <button class="boton-secundario boton-lista-fila" id="btn-lista-ninguna">Ninguna (selección manual)</button>
     <div id="lista-listas-guardadas"></div>
     <p class="galeria-vacia" id="listas-vacio" style="display:none;">Todavía no guardaste ninguna lista.</p>
+    <!-- NUEVO: listas de otros evaluadores (se conservan, no se borran solas; ver §listas-espacio) -->
+    <details id="det-listas-otras" style="display:none">
+      <summary id="suma-listas-otras">De otros evaluadores</summary>
+      <div id="lista-listas-otras"></div>
+    </details>
     <button class="modal-cancelar" id="btn-listas-cerrar">Cerrar</button>
   </div>
 </div>
@@ -4032,6 +4164,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elGaleriaNotaVersiones = document.getElementById('galeria-nota-versiones');
   const elBtnGaleriaAnterior = document.getElementById('btn-galeria-anterior');
   const elBtnGaleriaSiguiente = document.getElementById('btn-galeria-siguiente');
+  // NUEVO: imagen del mapa (botón 🗺️ del modo observador)
+  const elPantallaMapa = document.getElementById('pantalla-mapa');
+  const elBtnObservadorMapa = document.getElementById('btn-observador-mapa');
+  const elMapaImagenWrap = document.getElementById('mapa-imagen-wrap');
   // NUEVO: Buscador Global
   const elInputBuscadorTemas = document.getElementById('input-buscador-temas');
   const elDropdownBuscadorTemas = document.getElementById('dropdown-buscador-temas');
@@ -4175,6 +4311,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elPantallaObservador.style.display = nombre === 'observador' ? 'block' : 'none';
     elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  // NUEVO
     elPantallaHuerfanas.style.display = nombre === 'huerfanas' ? 'block' : 'none';  // NUEVO
+    elPantallaMapa.style.display = nombre === 'mapa' ? 'block' : 'none';  // NUEVO
     elPantallaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';  // NUEVO
     elPantallaHistorial.style.display = nombre === 'historial' ? 'block' : 'none';  // NUEVO
 
@@ -5154,6 +5291,44 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     mostrarPantalla('observador');
   }
 
+  // ---------- NUEVO: imagen del mapa (botón 🗺️ del modo observador) ----------
+  // El Pomodoro sigue corriendo mientras se ve el mapa: no se toca para nada
+  // (ni se pausa, ni se cancela); solo se reubica el badge (reubicarBadgePomodoro).
+  function abrirMapa() {
+    if (elBtnObservadorMapa.disabled) return;   // sin imagen: no hace nada (no debería dispararse igual)
+    mostrarPantalla('mapa');
+    // Lazy rendering: recién acá se crea el <img> y se le asigna el 'src'
+    // (data: URI en base64), que es el único momento en que el navegador
+    // decodifica/renderiza la imagen — evita el jank al cargar el HTML.
+    elMapaImagenWrap.innerHTML = '';
+    const img = document.createElement('img');
+    img.id = 'mapa-img';
+    img.className = 'mapa-img';
+    img.alt = 'Imagen del mapa';
+    img.src = elBtnObservadorMapa.dataset.mapaSrc;
+    // Zoom nativo del navegador (Ctrl + rueda) funciona "gratis" sobre un <img>.
+    elMapaImagenWrap.appendChild(img);
+  }
+
+  function cerrarPantallaMapa() {
+    // Se destruye el <img> al salir para liberar la memoria de la imagen
+    // decodificada; la próxima vez que se abra se vuelve a crear (lazy).
+    elMapaImagenWrap.innerHTML = '';
+    mostrarPantalla('observador');
+  }
+
+  function descargarImagenMapa() {
+    const src = elBtnObservadorMapa.dataset.mapaSrc;
+    if (!src) return;
+    const nombre = elBtnObservadorMapa.dataset.mapaNombre || 'mapa';
+    const a = document.createElement('a');
+    a.href = src;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
   // ---------- Buscador de Rutas Huérfanas (número de ruta + contenido) ----------
 
   function textoHuerfanaPlano(numeroRuta) {
@@ -5726,6 +5901,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elModalListas = document.getElementById('modal-listas');
   const elListaListasGuardadas = document.getElementById('lista-listas-guardadas');
   const elListasVacio = document.getElementById('listas-vacio');
+  // NUEVO: listas de otros evaluadores (solo lectura, debajo de las propias)
+  const elDetListasOtras = document.getElementById('det-listas-otras');
+  const elSumaListasOtras = document.getElementById('suma-listas-otras');
+  const elListaListasOtras = document.getElementById('lista-listas-otras');
 
   function hashesVigentesActuales() {
     return new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
@@ -5759,22 +5938,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const vigentes = hashesVigentesActuales();
     const recuperables = hashesRecuperablesDeOtroEspacio();
     let cambio = false;
-
     listas = listas.filter((lista) => {
-      // Las listas de otros evaluadores se conservan intactas.
+      // NUEVO: una lista con 'espacio' propio distinto al actual es de OTRO
+      // evaluador (ver aceptarGuardarLista): se conserva tal cual, igual que
+      // difíciles/notas/razones/imágenes se conservan "De otros evaluadores".
+      // Antes, al no existir este campo, sus hashes (calculados con el
+      // espacio de origen) nunca coincidían con los de ESTE evaluador y la
+      // lista quedaba en 0 hashes -> se borraba sola.
       if (lista.espacio && lista.espacio !== ESPACIO_HASH) return true;
-
       const filtrados = lista.hashes.filter((h) => vigentes.has(h) || recuperables.has(h));
-
       if (filtrados.length !== lista.hashes.length) {
         cambio = true;
-        if (filtrados.length === 0) return false;
+        if (filtrados.length === 0) return false;   // lista vacía: se borra
         lista.hashes = filtrados;
         lista.modificada = Date.now();
       }
       return true;
     });
-
     if (cambio) guardarListas();
   }
 
@@ -5858,7 +6038,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     limpiarListasContraTarjetasActuales();
     elListaListasGuardadas.innerHTML = '';
-    const ordenadas = listas.slice().sort((a, b) => b.creada - a.creada);   // más reciente primero
+    // NUEVO: separar las listas de ESTE evaluador de las de otros (campo
+    // 'espacio' tageado en aceptarGuardarLista). Las listas viejas, guardadas
+    // antes de este fix, no tienen 'espacio' y se siguen tratando como
+    // propias (comportamiento de siempre, sin regresiones).
+    const listasPropias = listas.filter((l) => !l.espacio || l.espacio === ESPACIO_HASH);
+    const listasDeOtros = listas.filter((l) => l.espacio && l.espacio !== ESPACIO_HASH);
+    const ordenadas = listasPropias.slice().sort((a, b) => b.creada - a.creada);   // más reciente primero
 
     if (ordenadas.length === 0) {
       elListasVacio.style.display = 'block';
@@ -5957,6 +6143,46 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
 
       elListaListasGuardadas.appendChild(fila);
+    });
+
+    // ---- NUEVO: listas de otros evaluadores, debajo de las propias ----
+    // Solo lectura (igual criterio que difíciles/notas/razones/imágenes):
+    // se muestran para que no "desaparezcan" sin explicación, pero no se
+    // pueden activar ni editar desde acá (sus hashes no corresponden a
+    // ninguna tarjeta de este evaluador). Se puede borrar una puntual si
+    // ya no se la quiere conservar.
+    elListaListasOtras.innerHTML = '';
+    const otrasOrdenadas = listasDeOtros.slice().sort((a, b) => b.creada - a.creada);
+    elDetListasOtras.style.display = otrasOrdenadas.length > 0 ? 'block' : 'none';
+    elSumaListasOtras.textContent = 'De otros evaluadores (' + otrasOrdenadas.length + ')';
+    otrasOrdenadas.forEach((lista) => {
+      const fila = document.createElement('div');
+      fila.className = 'fila-lista-guardada';
+
+      const cabecera = document.createElement('div');
+      cabecera.className = 'lista-fila-cabecera';
+      const nombre = document.createElement('span');
+      nombre.className = 'lista-nombre-btn';
+      nombre.textContent = lista.nombre + ' (' + etiquetaEspacio(lista.espacio) + ')';
+      cabecera.appendChild(nombre);
+      fila.appendChild(cabecera);
+
+      const acciones = document.createElement('div');
+      acciones.className = 'lista-acciones';
+      const btnBorrar = document.createElement('button');
+      btnBorrar.type = 'button';
+      btnBorrar.textContent = '🗑️ Borrar';
+      btnBorrar.addEventListener('click', () => borrarLista(lista.nombre));
+      acciones.appendChild(btnBorrar);
+      fila.appendChild(acciones);
+
+      const detalle = document.createElement('div');
+      detalle.className = 'lista-detalle';
+      detalle.textContent = lista.hashes.length + ' tarjeta(s) · creada: ' + formatearFechaLista(lista.creada) +
+        ' · modificada: ' + formatearFechaLista(lista.modificada);
+      fila.appendChild(detalle);
+
+      elListaListasOtras.appendChild(fila);
     });
   }
 
@@ -6062,6 +6288,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           creada: typeof imp.creada === 'number' ? imp.creada : Date.now(),
           modificada: impModificada || Date.now(),
           srs: normalizarSrsImportado(imp.srs),   // NUEVO: el progreso de Repaso Espaciado viaja con la lista
+          // NUEVO: si el JSON importado ya traía 'espacio' (export de otro
+          // evaluador), se conserva; si no, se asume que es de ESTE
+          // evaluador (comportamiento de siempre con backups viejos).
+          espacio: typeof imp.espacio === 'string' && imp.espacio ? imp.espacio : ESPACIO_HASH,
         });
         nuevas++;
       } else if (impModificada > existente.modificada) {
@@ -6070,6 +6300,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         existente.creada = typeof imp.creada === 'number' ? imp.creada : existente.creada;
         existente.modificada = impModificada;
         existente.srs = normalizarSrsImportado(imp.srs);   // NUEVO
+        existente.espacio = typeof imp.espacio === 'string' && imp.espacio ? imp.espacio : existente.espacio;
         actualizadas++;
       } else {
         conservadas++;
@@ -6352,7 +6583,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return;
     }
     const ahora = Date.now();
-    const lista = { nombre: nombre, hashes: hashes, espacio: ESPACIO_HASH, creada: ahora, modificada: ahora, srs: Object.assign({}, SRS_DEFAULT) };
+    // NUEVO: se guarda de qué evaluador es esta lista (ESPACIO_HASH al
+    // momento de crearla). Sin esto, limpiarListasContraTarjetasActuales()
+    // no tenía forma de distinguir "lista de otro evaluador" de "lista con
+    // tarjetas borradas", y terminaba vaciando (y borrando) listas enteras
+    // apenas se abría el modal desde un evaluador distinto.
+    const lista = { nombre: nombre, hashes: hashes, creada: ahora, modificada: ahora, srs: Object.assign({}, SRS_DEFAULT), espacio: ESPACIO_HASH };
     listas.push(lista);
     guardarListas();
     asociarRetroactivamente(lista);
@@ -7818,6 +8054,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (elPantallaObservador.style.display !== 'none') { if (!pomodoroActivo) mostrarPantalla('temas'); return; }
     if (elPantallaGaleria.style.display !== 'none') { volverListaDesdeGaleria(); return; }
     if (elPantallaHuerfanas.style.display !== 'none') { volverDesdeHuerfanas(); return; }
+    // NUEVO: la pantalla del mapa SIEMPRE se puede cerrar con ESC, incluso
+    // con el Pomodoro activo (es la salida natural de esa pantalla, igual
+    // que el botón "Volver a observador").
+    if (elPantallaMapa.style.display !== 'none') { cerrarPantallaMapa(); return; }
   });
 
   // ---------- Preview en el modo observador: "🖼 Datos de imágenes guardados" ----------
@@ -8026,6 +8266,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('btn-galeria-volver').addEventListener('click', () => volverListaDesdeGaleria());
   document.getElementById('btn-ver-huerfanas').addEventListener('click', () => abrirHuerfanas());
   document.getElementById('btn-huerfanas-volver').addEventListener('click', () => volverDesdeHuerfanas());
+
+  // ---------- NUEVO: botón del mapa (🗺️) ----------
+  // Sin imagen seleccionada al generar el evaluador, data-mapa-src queda en
+  // "data:;base64," (sin payload): el botón se deshabilita, pero SIN
+  // ocultarse, para que la fila no cambie de aspecto (ver §imagen del mapa).
+  (function inicializarBotonMapa() {
+    const src = elBtnObservadorMapa.dataset.mapaSrc || '';
+    const payload = src.split(',')[1] || '';
+    if (!payload) {
+      elBtnObservadorMapa.disabled = true;
+      elBtnObservadorMapa.title = 'No se seleccionó imagen del mapa';
+    }
+  })();
+  elBtnObservadorMapa.addEventListener('click', () => abrirMapa());
+  document.getElementById('btn-mapa-volver').addEventListener('click', () => cerrarPantallaMapa());
+  document.getElementById('btn-mapa-descargar').addEventListener('click', () => descargarImagenMapa());
   document.getElementById('btn-galeria-anterior').addEventListener('click', () => navegarGaleria(-1));
   document.getElementById('btn-galeria-siguiente').addEventListener('click', () => navegarGaleria(1));
   elBtnGaleriaDificil.addEventListener('click', () => toggleDificilImagenActual());
@@ -9221,9 +9477,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // ---------- Evaluación: palabras vacías, raíces y tolerancia a tipeos ----------
 
-const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','ersion','sion','ucion','adoras','adores','adora',
-  'ador','ivas','ivos','iva','ivo','ables','ibles','able','ible','idad','anza','ante','ente','ados','idos','ado','ido',
-  'ando','iendo','ismo','ista','ero','aje'];
+  const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','ersion','sion','iciones','ucion','adoras','adores','adora','ador',
+    'ivas','ivos','iva','ivo','ables','ibles','able','ible','idad','anza','ante','ente','ados','idos','ado','ido','ando','iendo'
+    ,'ismo','ista','ero','aje'];
 
   // Raíz simplificada para comparar singular/plural, género y algunas derivaciones.
   // Recibe cualquier palabra (se normaliza antes: minúsculas y sin tildes).
@@ -10921,6 +11177,7 @@ const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','ersion','
   const elSlotPomodoroObservador = document.getElementById('pomodoro-badge-slot-observador');
   const elSlotPomodoroGaleria = document.getElementById('pomodoro-badge-slot-galeria');
   const elSlotPomodoroHuerfanas = document.getElementById('pomodoro-badge-slot-huerfanas');
+  const elSlotPomodoroMapa = document.getElementById('pomodoro-badge-slot-mapa');  // NUEVO
   const elBtnObservadorSalir = document.getElementById('btn-observador-salir');
   const elModalPomodoroIniciar = document.getElementById('modal-pomodoro-iniciar');
   const elModalPomodoroAbandonar = document.getElementById('modal-pomodoro-abandonar');
@@ -10951,6 +11208,7 @@ const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','ersion','
     const slot = nombrePantalla === 'observador' ? elSlotPomodoroObservador
       : nombrePantalla === 'galeria' ? elSlotPomodoroGaleria
       : nombrePantalla === 'huerfanas' ? elSlotPomodoroHuerfanas
+      : nombrePantalla === 'mapa' ? elSlotPomodoroMapa   // NUEVO
       : null;
     if (slot && elPomodoroBadge.parentElement !== slot) slot.appendChild(elPomodoroBadge);
   }
@@ -11267,13 +11525,16 @@ def preguntar_resaltado(raiz):
 
 # ---------------- PIPELINE (compartido por el modo interactivo y --config) ----------------
 
-def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, propagar=False):
+def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_imagen_mapa=None, propagar=False):
     """
     Genera UN evaluador. Es el pipeline de siempre, sin cambios de lógica:
     parsear respuestas -> parsear recordatorio -> (resaltar drawio) ->
     extraer descripciones -> generar_html. ESPACIO_HASH = stem de 'respuestas'.
 
     'colores' es un NOMBRE de PALETA_COLORES (si no existe, se usa COLOR_DEFAULT).
+    'ruta_imagen_mapa' es OPCIONAL (None = sin botón de mapa habilitado); si
+    no se puede usar (extensión no soportada o archivo corrupto) se avisa
+    por consola y se continúa sin imagen, sin que falle la generación.
     Devuelve (True, "") si salió bien o (False, motivo) si falló. Con
     propagar=True las excepciones no se capturan (así el modo interactivo
     conserva su comportamiento de siempre: traceback).
@@ -11318,7 +11579,15 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, propa
         descripciones_rutas = extraer_descripciones_drawio(drawio)
         print(f"Rutas con descripciones de imagen extraídas del drawio: {len(descripciones_rutas)}")
 
-        generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, respuestas, Path(respuestas).stem, descripciones_rutas)
+        #--- NUEVO: imagen del mapa (botón 🗺️ del modo observador), opcional ---
+        imagen_mapa = None
+        if ruta_imagen_mapa:
+            imagen_mapa = cargar_imagen_mapa_base64(ruta_imagen_mapa)
+            if imagen_mapa:
+                print(f"Imagen del mapa incluida: {ruta_imagen_mapa}")
+
+        generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, respuestas, Path(respuestas).stem,
+                     descripciones_rutas, imagen_mapa=imagen_mapa)
     except Exception as error:
         if propagar:
             raise
@@ -11337,6 +11606,13 @@ CAMPOS_CONFIG = {
     "colores": str,
 }
 CAMPOS_RUTA = ("recordatorio", "respuestas", "drawio")
+
+# NUEVO: campos opcionales (si faltan, no es error). 'imagen_mapa' habilita
+# el botón 🗺️ del modo observador (ver §imagen del mapa).
+CAMPOS_OPCIONALES = {
+    "imagen_mapa": str,
+}
+EXTENSIONES_IMAGEN_MAPA = (".png", ".jpg", ".jpeg")
 
 
 class ErrorConfig(Exception):
@@ -11410,7 +11686,7 @@ def validar_entrada(entrada, carpeta_config):
         return None, [f"la entrada debe ser un objeto JSON (se encontró: {_tipo_json(entrada)})"], avisos
 
     for campo in entrada:
-        if campo not in CAMPOS_CONFIG:
+        if campo not in CAMPOS_CONFIG and campo not in CAMPOS_OPCIONALES:
             avisos.append(f"campo desconocido '{campo}' (se ignora)")
 
     valores = {}
@@ -11454,6 +11730,33 @@ def validar_entrada(entrada, carpeta_config):
             "(se distinguen mayúsculas y minúsculas; no se aceptan hex). "
             f"Válidos: {', '.join(PALETA_COLORES)}"
         )
+
+    # NUEVO: 'imagen_mapa' es OPCIONAL (si no está, se genera sin botón de
+    # mapa habilitado); si está, se valida igual que los campos de ruta.
+    if "imagen_mapa" in entrada:
+        valor = entrada["imagen_mapa"]
+        if not isinstance(valor, str):
+            errores.append(f"campo 'imagen_mapa': debe ser texto (se encontró: {_tipo_json(valor)})")
+        elif not valor.strip():
+            errores.append("campo 'imagen_mapa': está vacío")
+        else:
+            ruta_img = Path(valor)
+            if not ruta_img.is_absolute():
+                ruta_img = carpeta_config / ruta_img
+            try:
+                ruta_img = ruta_img.resolve()
+                existe = ruta_img.is_file()
+            except (OSError, ValueError):
+                existe = False
+            if not existe:
+                errores.append(f"campo 'imagen_mapa': no existe el archivo {ruta_img}")
+            elif ruta_img.suffix.lower() not in EXTENSIONES_IMAGEN_MAPA:
+                errores.append(
+                    f"campo 'imagen_mapa': debe tener extensión .png, .jpg o .jpeg "
+                    f"(se encontró: '{ruta_img.suffix}')"
+                )
+            else:
+                valores["imagen_mapa"] = ruta_img
 
     if errores:
         return None, errores, avisos
@@ -11528,6 +11831,7 @@ def ejecutar_config(ruta_config):
         ok, motivo = generar_evaluador(
             str(r["recordatorio"]), str(r["respuestas"]), str(r["drawio"]),
             r["resaltar"], r["colores"],
+            ruta_imagen_mapa=str(r["imagen_mapa"]) if "imagen_mapa" in r else None,
         )
         resultados[pos] = (etiqueta, ok, motivo)
 
@@ -11580,11 +11884,23 @@ def main_interactivo():
     opciones = elegir_color(raiz, PALETA_COLORES, COLOR_DEFAULT)
     print(f"Color elegido: {opciones}")
 
+    #--- NUEVO: Diálogo OPCIONAL para la imagen del mapa (botón 🗺️ del modo
+    #    observador). Si se cancela, no es un error: se genera sin imagen. ---
+    ruta_imagen_mapa = filedialog.askopenfilename(
+        title="Selecciona la imagen del mapa (opcional; cancelá si no querés agregar una)",
+        filetypes=[("Imagen PNG", "*.png"), ("Imagen JPG", "*.jpg;*.jpeg")]
+    )
+    if ruta_imagen_mapa:
+        print(f"Imagen del mapa seleccionada: {ruta_imagen_mapa}")
+    else:
+        print("No se seleccionó imagen del mapa: el botón 🗺️ se genera deshabilitado.")
+
     #--- Ventana personalizada para preguntar por el resaltado ---
     aplicar_resaltado = preguntar_resaltado(raiz)
     print(f"Resaltado en drawio: {'Sí' if aplicar_resaltado else 'No'}")
 
-    generar_evaluador(txt, txt_respuestas, ruta_drawio, aplicar_resaltado, opciones, propagar=True)
+    generar_evaluador(txt, txt_respuestas, ruta_drawio, aplicar_resaltado, opciones,
+                       ruta_imagen_mapa=ruta_imagen_mapa or None, propagar=True)
 
 
 def main():
@@ -11596,7 +11912,8 @@ def main():
     parser.add_argument(
         "--config", metavar="RUTA",
         help="JSON con la forma {\"entradas\": [...]} (obligatorio, aunque sea 1 solo evaluador); cada entrada: "
-             "recordatorio, respuestas, drawio, resaltar, colores (todos obligatorios).",
+             "recordatorio, respuestas, drawio, resaltar, colores (todos obligatorios); imagen_mapa (opcional, "
+             "ruta a un .png/.jpg/.jpeg para el botón 🗺️ del modo observador).",
     )
     args = parser.parse_args()
     if args.config is not None:
