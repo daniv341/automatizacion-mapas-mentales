@@ -4031,8 +4031,8 @@
 
   const ES_DISPOSITIVO_TACTIL = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
   const ZOOM_MAPA_MIN = 0.5;
-  const ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 10 : 5;     // PC: se mantiene igual que antes
-  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 0.5 : 0.25;   // PC: se mantiene igual que antes
+  const ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 20 : 5;     // PC: se mantiene igual que antes
+  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 1 : 0.25;   // PC: se mantiene igual que antes
 
   function aplicarTransformMapa() {
     if (!elMapaImg) return;
