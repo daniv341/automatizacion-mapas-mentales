@@ -974,7 +974,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     /* NUEVO: color propio de la interfaz (botones, inputs, títulos, etc.).
        Ya no depende de la paleta de colores elegida al generar el evaluador:
        --stroke-color queda reservado SOLO para el look de las tarjetas
-       (.tema, .tarjeta, .primero, .segundo, .badge-rutas, .palabra-clave...). */
+       (.tema, .tarjeta, .primero, .segundo, .palabra-clave...). */
     --color-boton: #4F46E5;
   }
 
@@ -1236,10 +1236,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .tarjeta {
-    /* MODIFICADO: look "comic/pop" — sin clip-path, sombra dura offset,
-       esquinas redondeadas y leve rotación (ver pedido del usuario). */
     position: relative;
-    background: var(--fill-color);
+    background:
+      radial-gradient(
+        ellipse at 20% 20%,
+        color-mix(in srgb, var(--stroke-color) 60%, transparent) 0%,
+        transparent 90%
+      ),
+      var(--fill-color);
     border: 3px solid var(--stroke-color);
     border-radius: 12px;
     box-shadow: 6px 6px 0 var(--stroke-color);
@@ -1266,9 +1270,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     right: 14px;
     font-size: 12px;
     font-weight: 700;
-    color: var(--stroke-color);
+    color: var(--color-boton);
     background: rgba(255,255,255,0.65);
-    border: 1.5px solid var(--stroke-color);
+    border: 1.5px solid var(--color-boton);
     border-radius: 12px;
     padding: 2px 10px;
     pointer-events: none;
@@ -2746,6 +2750,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-style: italic;
   }
 
+  /* NUEVO: fila de descarga de la imagen de la galería, entre la descripción
+     y Difícil/Nota */
+  .fila-descarga-separada {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
   .sin-tarjetas {
     color: #888;
     font-size: 15px;
@@ -2792,7 +2804,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     align-items: flex-start;
     gap: 10px;
   }
-  .columna-pomodoro-observador { flex: 1 1 auto; min-width: 0; }
+  .columna-pomodoro-observador { 
+      flex: 1 1 auto; 
+      min-width: 0; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: flex-end;
+  }
 
   /* NUEVO: imagen del mapa (pantalla a pantalla completa desde observador) */
   .mapa-img {
@@ -2803,7 +2821,41 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     border: 2px solid var(--color-boton);
     background: #fff;
     display: block;
+    transform-origin: center center;
+    touch-action: none;   /* NUEVO: el gesto de zoom/pan lo maneja el JS, no el navegador */
+    cursor: default;
   }
+  .mapa-img.mapa-img-pan { cursor: grab; }
+  .mapa-img.mapa-img-arrastrando { cursor: grabbing; }
+
+  /* NUEVO: botones de zoom/pan de la pantalla del mapa (flotantes) */
+  .mapa-zoom-controles {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 60;
+  }
+  .mapa-zoom-boton {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid var(--color-boton);
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    font-family: inherit;
+    padding: 0;
+    color: #333;
+  }
+  .mapa-zoom-boton:hover { background: #f4f6fb; }
 
   /* ===== NUEVO: Pomodoro (modo observador) ===== */
   .pomodoro-badge-slot { margin-bottom: 10px; }
@@ -3105,6 +3157,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <!-- NUEVO: descripción de la imagen (extraída del drawio), debajo de la imagen y arriba de Difícil/Nota -->
     <p class="galeria-descripcion" id="galeria-descripcion" style="display:none;"></p>
 
+    <!-- NUEVO: descargar la imagen actualmente visible -->
+    <div class="fila-descarga-separada" id="fila-galeria-descarga" style="display:none;">
+      <button class="boton-secundario" id="btn-galeria-descargar">⬇ Descargar imagen</button>
+    </div>
+
     <div class="fila-galeria-acciones" style="margin-top:14px;">
       <button class="boton-dificil" id="btn-galeria-dificil" title="Marcar/desmarcar esta imagen como difícil">☆ Difícil</button>
       <button class="boton-nota" id="btn-galeria-nota" title="Ver/editar nota de esta imagen">💡</button>
@@ -3167,11 +3224,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <!-- Pomodoro (sticky arriba, igual que en Huérfanas/Galería, si está activo) -->
     <div class="pomodoro-badge-slot pomodoro-badge-slot-sticky" id="pomodoro-badge-slot-mapa"></div>
 
+    <!-- NUEVO: zoom/pan de la imagen del mapa -->
+    <div class="mapa-zoom-controles">
+      <button type="button" class="mapa-zoom-boton" id="btn-mapa-zoom-mas" title="Acercar">+</button>
+      <button type="button" class="mapa-zoom-boton" id="btn-mapa-zoom-menos" title="Alejar">−</button>
+      <button type="button" class="mapa-zoom-boton" id="btn-mapa-zoom-reset" title="Restablecer zoom">↺</button>
+    </div>
+
     <div class="galeria-imagen-wrap" id="mapa-imagen-wrap"></div>
 
     <div class="navegacion" style="margin-top:20px;">
       <button class="boton-secundario" id="btn-mapa-descargar">⬇ Descargar</button>
-      <button class="boton-secundario" id="btn-mapa-volver">☰ Volver a observador</button>
+      <button class="boton-secundario" id="btn-mapa-volver">☰ Volver a la lista</button>
     </div>
   </div>
 
@@ -3548,17 +3612,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="fila-acciones-listas">
       <button class="boton-mini boton-mini-peligro" id="btn-listas-vaciar">Vaciar todas</button>
     </div>
-    <details id="det-listas-vincular" style="display:none">
-      <summary id="suma-listas-vincular">Hay tarjetas de listas de otros evaluadores</summary>
-      <button class="boton-mini" id="btn-listas-vincular" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
-    </details>
     <button class="boton-secundario boton-lista-fila" id="btn-lista-ninguna">Ninguna (selección manual)</button>
     <div id="lista-listas-guardadas"></div>
     <p class="galeria-vacia" id="listas-vacio" style="display:none;">Todavía no guardaste ninguna lista.</p>
-    <!-- NUEVO: listas de otros evaluadores (se conservan, no se borran solas; ver §listas-espacio) -->
+    <!-- NUEVO: listas de otros evaluadores (se conservan, no se borran solas; ver §listas-espacio).
+         MODIFICADO: un solo botón "Vincular a este evaluador" para toda la
+         sección, igual que difíciles/notas/razones (antes era una sección
+         aparte, "Hay tarjetas de listas de otros evaluadores"). -->
     <details id="det-listas-otras" style="display:none">
       <summary id="suma-listas-otras">De otros evaluadores</summary>
       <div id="lista-listas-otras"></div>
+      <button class="boton-mini" id="btn-listas-vincular" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
     </details>
     <button class="modal-cancelar" id="btn-listas-cerrar">Cerrar</button>
   </div>
@@ -4156,6 +4220,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elGaleriaImg = document.getElementById('galeria-img');
   const elGaleriaVacia = document.getElementById('galeria-vacia');
   const elGaleriaDescripcion = document.getElementById('galeria-descripcion');
+  const elFilaGaleriaDescarga = document.getElementById('fila-galeria-descarga');   // NUEVO
   const elBtnGaleriaDificil = document.getElementById('btn-galeria-dificil');
   const elBtnGaleriaNota = document.getElementById('btn-galeria-nota');
   const elPanelGaleriaNota = document.getElementById('panel-galeria-nota');
@@ -4962,6 +5027,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elGaleriaVacia.style.display = 'block';
       elGaleriaDescripcion.style.display = 'none';
       elGaleriaDescripcion.textContent = '';
+      elFilaGaleriaDescarga.style.display = 'none';   // NUEVO: sin imágenes, no aparece
       elBtnGaleriaDificil.style.display = 'none';
       elBtnGaleriaNota.style.display = 'none';
       elPanelGaleriaNota.style.display = 'none';
@@ -4972,6 +5038,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     elGaleriaVacia.style.display = 'none';
     elGaleriaImg.style.display = 'inline-block';
+    elFilaGaleriaDescarga.style.display = 'flex';   // NUEVO
     elBtnGaleriaDificil.style.display = 'inline-block';
     elBtnGaleriaNota.style.display = 'inline-flex';
     elBtnGaleriaAnterior.disabled = false;
@@ -5306,18 +5373,38 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     img.className = 'mapa-img';
     img.alt = 'Imagen del mapa';
     img.src = elBtnObservadorMapa.dataset.mapaSrc;
-    // Zoom nativo del navegador (Ctrl + rueda) funciona "gratis" sobre un <img>.
     elMapaImagenWrap.appendChild(img);
+    elMapaImg = img;        // NUEVO: referencia para zoom/pan (ver más abajo)
+    resetearZoomMapa();     // NUEVO: siempre arranca en zoom 1, sin pan
   }
 
   function cerrarPantallaMapa() {
     // Se destruye el <img> al salir para liberar la memoria de la imagen
     // decodificada; la próxima vez que se abra se vuelve a crear (lazy).
     elMapaImagenWrap.innerHTML = '';
+    elMapaImg = null;        // NUEVO: libera la referencia de zoom/pan
+    resetearZoomMapa();      // NUEVO: §8 resetea zoom y pan al salir
     mostrarPantalla('observador');
   }
 
+  // NUEVO: descarga la imagen actualmente visible en la Galería (misma idea
+  // que descargarImagenMapa, pero tomando src/nombre de INDICE_IMAGENES).
+  function descargarImagenGaleria() {
+    if (INDICE_IMAGENES.length === 0) return;
+    const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
+    const src = srcDeImagen(ruta, indice);
+    if (!src) return;
+    const a = document.createElement('a');
+    a.href = src;
+    a.download = 'ruta_' + ruta + '_img_' + (indice + 1) + '.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
   function descargarImagenMapa() {
+    // §9: descarga la imagen ORIGINAL (el data: URI nunca se tocó), no la
+    // versión con zoom/pan aplicado (que es solo un transform visual).
     const src = elBtnObservadorMapa.dataset.mapaSrc;
     if (!src) return;
     const nombre = elBtnObservadorMapa.dataset.mapaNombre || 'mapa';
@@ -5328,6 +5415,117 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     a.click();
     a.remove();
   }
+
+  // ---------- NUEVO: zoom y pan de la imagen del mapa ----------
+  // Listeners atados UNA SOLA VEZ (al wrapper estático #mapa-imagen-wrap y a
+  // 'window'), no en cada abrirMapa(): el <img> se recrea cada vez (lazy
+  // rendering), pero 'elMapaImg' siempre apunta al vigente, así que no hace
+  // falta re-adjuntar nada ni se acumulan listeners huérfanos.
+  let elMapaImg = null;                               // <img> actual, o null si la pantalla está cerrada
+  let zoomMapa = 1;
+  let panMapa = { x: 0, y: 0 };
+  let arrastreMapa = { activo: false, x: 0, y: 0 };    // x/y: offset inicial del drag (mouse o 1 dedo)
+  let pinchMapa = null;                                // { distancia, zoomInicial } mientras hay 2 dedos
+
+  const ZOOM_MAPA_MIN = 0.5;
+  const ZOOM_MAPA_MAX = 5;
+  const ZOOM_MAPA_PASO = 0.25;
+
+  function aplicarTransformMapa() {
+    if (!elMapaImg) return;
+    elMapaImg.style.transform = 'translate(' + panMapa.x + 'px, ' + panMapa.y + 'px) scale(' + zoomMapa + ')';
+    // §4: solo se puede arrastrar con zoom > 1 (cursor 'grab' lo indica).
+    elMapaImg.classList.toggle('mapa-img-pan', zoomMapa > 1);
+  }
+
+  function fijarZoomMapa(nuevoZoom) {
+    zoomMapa = Math.min(ZOOM_MAPA_MAX, Math.max(ZOOM_MAPA_MIN, nuevoZoom));
+    if (zoomMapa === 1) { panMapa.x = 0; panMapa.y = 0; }   // §5: al volver a 1 también se resetea la posición
+    aplicarTransformMapa();
+  }
+
+  function resetearZoomMapa() {
+    zoomMapa = 1;
+    panMapa = { x: 0, y: 0 };
+    arrastreMapa = { activo: false, x: 0, y: 0 };
+    pinchMapa = null;
+    aplicarTransformMapa();
+  }
+
+  function distanciaEntreToquesMapa(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // ---- §2: rueda del mouse (PC) ----
+  elMapaImagenWrap.addEventListener('wheel', (e) => {
+    if (!elMapaImg) return;
+    e.preventDefault();
+    fijarZoomMapa(zoomMapa + (e.deltaY < 0 ? ZOOM_MAPA_PASO : -ZOOM_MAPA_PASO));
+  }, { passive: false });
+
+  // ---- §4: arrastrar con mouse (PC), solo con zoom > 1 ----
+  elMapaImagenWrap.addEventListener('mousedown', (e) => {
+    if (!elMapaImg || zoomMapa <= 1) return;
+    arrastreMapa = { activo: true, x: e.clientX - panMapa.x, y: e.clientY - panMapa.y };
+    elMapaImg.classList.add('mapa-img-arrastrando');   // §7: cursor 'grabbing'
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!arrastreMapa.activo || !elMapaImg) return;
+    panMapa.x = e.clientX - arrastreMapa.x;
+    panMapa.y = e.clientY - arrastreMapa.y;
+    aplicarTransformMapa();
+  });
+  window.addEventListener('mouseup', () => {
+    if (!arrastreMapa.activo) return;
+    arrastreMapa.activo = false;
+    if (elMapaImg) elMapaImg.classList.remove('mapa-img-arrastrando');
+  });
+
+  // ---- §3/§4: touch — pinch-to-zoom (2 dedos) y pan (1 dedo, con zoom > 1) ----
+  elMapaImagenWrap.addEventListener('touchstart', (e) => {
+    if (!elMapaImg) return;
+    if (e.touches.length === 2) {
+      pinchMapa = { distancia: distanciaEntreToquesMapa(e.touches), zoomInicial: zoomMapa };
+      arrastreMapa.activo = false;
+    } else if (e.touches.length === 1 && zoomMapa > 1) {
+      arrastreMapa = { activo: true, x: e.touches[0].clientX - panMapa.x, y: e.touches[0].clientY - panMapa.y };
+      elMapaImg.classList.add('mapa-img-arrastrando');
+    }
+  }, { passive: true });
+
+  elMapaImagenWrap.addEventListener('touchmove', (e) => {
+    if (!elMapaImg) return;
+    if (e.touches.length === 2 && pinchMapa) {
+      e.preventDefault();
+      const factor = distanciaEntreToquesMapa(e.touches) / pinchMapa.distancia;
+      fijarZoomMapa(pinchMapa.zoomInicial * factor);
+    } else if (e.touches.length === 1 && arrastreMapa.activo) {
+      e.preventDefault();
+      panMapa.x = e.touches[0].clientX - arrastreMapa.x;
+      panMapa.y = e.touches[0].clientY - arrastreMapa.y;
+      aplicarTransformMapa();
+    }
+  }, { passive: false });
+
+  elMapaImagenWrap.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) pinchMapa = null;
+    if (e.touches.length === 0) {
+      arrastreMapa.activo = false;
+      if (elMapaImg) elMapaImg.classList.remove('mapa-img-arrastrando');
+    }
+  });
+  elMapaImagenWrap.addEventListener('touchcancel', () => {
+    pinchMapa = null;
+    arrastreMapa.activo = false;
+    if (elMapaImg) elMapaImg.classList.remove('mapa-img-arrastrando');
+  });
+
+  // ---- §1: botones +/-/↺ ----
+  document.getElementById('btn-mapa-zoom-mas').addEventListener('click', () => fijarZoomMapa(zoomMapa + ZOOM_MAPA_PASO));
+  document.getElementById('btn-mapa-zoom-menos').addEventListener('click', () => fijarZoomMapa(zoomMapa - ZOOM_MAPA_PASO));
+  document.getElementById('btn-mapa-zoom-reset').addEventListener('click', () => resetearZoomMapa());
 
   // ---------- Buscador de Rutas Huérfanas (número de ruta + contenido) ----------
 
@@ -6028,14 +6226,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function renderListasGuardadas() {
-    // NUEVO (tarea 3): la cantidad "de otros evaluadores" se mide ANTES de la
-    // limpieza automática de huérfanas (§12.2 las descarta enseguida), para
-    // que el botón de vincular sea visible al menos en el render donde
-    // realmente aparecieron esas tarjetas ajenas.
-    const nOtrasListas = contarOtrasListas();
-    document.getElementById('det-listas-vincular').style.display = nOtrasListas > 0 ? 'block' : 'none';
-    document.getElementById('suma-listas-vincular').textContent = 'Hay tarjetas de listas de otros evaluadores (' + nOtrasListas + ')';
-
+    // MODIFICADO: se quitó la sección aparte "Hay tarjetas de listas de otros
+    // evaluadores" (det-listas-vincular/suma-listas-vincular): su botón
+    // "Vincular a este evaluador" ahora vive DENTRO de "De otros evaluadores"
+    // (det-listas-otras), igual que en difíciles/notas/razones. La lógica de
+    // contarOtrasListas()/vincular sigue existiendo (la usa el modal de
+    // sincronización), solo se quitó esta sección visual duplicada.
     limpiarListasContraTarjetasActuales();
     elListaListasGuardadas.innerHTML = '';
     // NUEVO: separar las listas de ESTE evaluador de las de otros (campo
@@ -8284,6 +8480,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('btn-mapa-descargar').addEventListener('click', () => descargarImagenMapa());
   document.getElementById('btn-galeria-anterior').addEventListener('click', () => navegarGaleria(-1));
   document.getElementById('btn-galeria-siguiente').addEventListener('click', () => navegarGaleria(1));
+  document.getElementById('btn-galeria-descargar').addEventListener('click', () => descargarImagenGaleria());
   elBtnGaleriaDificil.addEventListener('click', () => toggleDificilImagenActual());
   elBtnGaleriaNota.addEventListener('click', () => { galeriaNotaAbierta ? cerrarGaleriaNota() : abrirGaleriaNota(); });
   document.getElementById('btn-galeria-nota-editar').addEventListener('click', () => empezarEdicionGaleriaNota());
@@ -9477,9 +9674,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   // ---------- Evaluación: palabras vacías, raíces y tolerancia a tipeos ----------
 
-  const SUFIJOS_RAIZ = ['imientos','imiento','aciones','acion','siones','ersion','sion','iciones','ucion','adoras','adores','adora','ador',
-    'ivas','ivos','iva','ivo','ables','ibles','able','ible','idad','anza','ante','ente','ados','idos','ado','ido','ando','iendo'
-    ,'ismo','ista','ero','aje'];
+const SUFIJOS_RAIZ = [
+    'imientos','imiento',
+    'aciones','acion',
+    'siones','ersion','sion','ucion',
+    'adoras','adores','adora','ador',
+    'ivas','ivos','iva','ivo',
+    'ables','ibles','able','ible',
+    'idad',
+    'anza','ante','ente',
+    'ados','idos','ado','ido',
+    'ando','iendo',
+    'ismo','ista','ero','aje'
+  ];
 
   // Raíz simplificada para comparar singular/plural, género y algunas derivaciones.
   // Recibe cualquier palabra (se normaliza antes: minúsculas y sin tildes).
