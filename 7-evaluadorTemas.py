@@ -2478,7 +2478,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     align-items: flex-start;
     gap: 10px;
   }
-  .columna-pomodoro-observador { flex: 1 1 auto; min-width: 0; }
+  
+  .columna-pomodoro-observador { 
+      flex: 1 1 auto; 
+      min-width: 0; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: flex-end; /* Empuja el botón y el badge a la derecha */
+  }
 
   .mapa-img {
     max-width: 95vw;
@@ -2827,7 +2834,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <div class="navegacion" style="margin-top:20px;">
       <button class="boton-secundario" id="btn-galeria-anterior">&larr; Anterior</button>
-      <button class="boton-secundario" id="btn-galeria-volver">☰ Volver a la lista</button>
+      <button class="boton-secundario" id="btn-galeria-volver">☰ Volver a observador</button>
       <button class="boton-secundario" id="btn-galeria-siguiente">Siguiente &rarr;</button>
     </div>
   </div>
@@ -2846,7 +2853,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <p class="galeria-vacia" id="huerfanas-vacia" style="display:none;">No hay rutas huérfanas (todas las rutas de respuestas.txt están asociadas a tarjetas).</p>
 
     <div style="display:flex; justify-content:center; margin-top:20px;">
-      <button class="boton-secundario" id="btn-huerfanas-volver">☰ Volver a la lista</button>
+      <button class="boton-secundario" id="btn-huerfanas-volver">☰ Volver a observador</button>
     </div>
   </div>
 
@@ -3005,7 +3012,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="navegacion">
       <button class="boton-nav" id="btn-anterior">&larr; Anterior</button>
       <button class="boton-finalizar" id="btn-finalizar">Finalizar sesión</button>
-      <button class="boton-finalizar" id="btn-observador-volver">☰ Volver a la lista</button>
+      <button class="boton-finalizar" id="btn-observador-volver">☰ Volver a observador</button>
       <button class="boton-nav" id="btn-siguiente">Siguiente &rarr;</button>
     </div>
   </div>
