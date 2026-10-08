@@ -10,53 +10,34 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 try:
     from tkinter import Tk, filedialog
-except ImportError:   # p. ej. servidor sin tkinter: solo se puede usar --config
+except ImportError:
     Tk = filedialog = None
 
 # ---------------- CONFIG EVALUACIÓN DE RESPUESTAS ESCRITAS ----------------
-# Fracción de claves del 'segundo' para llegar a "Casi"
-# (100% = "Bien"; por debajo de UMBRAL_CASI = "Mal")
 UMBRAL_CASI = 0.5
-# Similitud (Dice) con el contenido del bloque que, combinada con claves
-# >= UMBRAL_CASI, premia parafrasear bien y da "Bien"
 SIM_ALTA = 0.7
-# Cuando aparecen TODAS las claves: coincidencia mínima (Dice) para "Bien"
-# si NO se usó "Mostrar pista" (por debajo => "Casi")
 SIM_SIN_PISTA = 0.5
-# Igual, pero si SÍ se usó "Mostrar pista": la coincidencia debe ser MAYOR a
-# este valor (si no llega => "Casi")
 SIM_CON_PISTA = 0.6
 
 # ---------------- CONFIG ECONOMÍA (tienda) ----------------
-# Valores provisorios. Orden de precio: pista < segunda oportunidad < escudo < comodín.
 PRECIO_COMODIN = 100
 PRECIO_PISTA_GRATIS = 50
 PRECIO_ESCUDO_RACHA = 90
 PRECIO_SEGUNDA_OPORTUNIDAD = 70
-# Fracción de los puntos que se cobra al acertar el reintento de la segunda oportunidad
 FACTOR_RECOMPENSA_REINTENTO = 0.5
 
 # ---------------- CONFIG POMODORO ----------------
-DURACION_LECTURA_SEG = 25 * 60      # 25 minutos
-DURACION_DESCANSO_SEG = 5 * 60      # 5 minutos
+DURACION_LECTURA_SEG = 25 * 60
+DURACION_DESCANSO_SEG = 5 * 60
 
-# Palabras vacías que se ignoran al evaluar (claves, respuesta escrita y texto
-# de referencia de las rutas). Solo afecta la evaluación: el texto de las rutas
-# se muestra completo. Van sin acentos (mismo formato que normalizar_palabra).
 STOPWORDS_ES = {
-    # artículos
     "el", "la", "los", "las",
-    # preposiciones
     "a", "con", "de", "del", "en", "para", "por", "sin", "so", "tras", "via",
-    # conjunciones
     "y", "e", "ni", "que", "o", "u", "pero", "mas", "aunque", "sino", "si", "pues", "ya",
-    # pronombres comunes
     "me", "te", "se", "nos", "os", "le", "les", "lo", "mi", "tu", "su", "mis", "tus", "sus",
     "esto", "eso", "aquello",
 }
 
-# ============================================================
-# UTILIDADES DE RESALTADO (claves extraídas del campo 'segundo')
 # ============================================================
 
 def normalizar_palabra(palabra):
@@ -64,79 +45,50 @@ def normalizar_palabra(palabra):
     forma = unicodedata.normalize('NFD', palabra.lower())
     return ''.join(c for c in forma if unicodedata.combining(c) == 0)
 
-
-# NUEVO: letras griegas y símbolos matemáticos/lógicos/de conjuntos que el
-# usuario no puede tipear desde un teclado común → su nombre en español
-# (sin acentos, mismo formato que normalizar_palabra). Si la tarjeta dice
-# "ε" y el usuario escribe "epsilon" (o viceversa), cuenta como acierto.
 SIMBOLOS_ESPECIALES = {
-    # Letras griegas minúsculas
     "α": "alfa", "β": "beta", "γ": "gamma", "δ": "delta", "ε": "epsilon",
     "ζ": "zeta", "η": "eta", "θ": "theta", "ι": "iota", "κ": "kappa",
     "λ": "lambda", "μ": "mu", "ν": "nu", "ξ": "xi", "ο": "omicron",
     "π": "pi", "ρ": "rho", "σ": "sigma", "τ": "tau", "υ": "upsilon",
     "φ": "fi", "χ": "chi", "ψ": "psi", "ω": "omega",
-    # Letras griegas mayúsculas
     "Α": "alfa", "Β": "beta", "Γ": "gamma", "Δ": "delta", "Ε": "epsilon",
     "Ζ": "zeta", "Η": "eta", "Θ": "theta", "Ι": "iota", "Κ": "kappa",
     "Λ": "lambda", "Μ": "mu", "Ν": "nu", "Ξ": "xi", "Ο": "omicron",
     "Π": "pi", "Ρ": "rho", "Σ": "sigma", "Τ": "tau", "Υ": "upsilon",
     "Φ": "fi", "Χ": "chi", "Ψ": "psi", "Ω": "omega",
-    # Operadores matemáticos básicos
     "±": "mas menos", "∓": "menos mas", "×": "por", "÷": "dividido",
     "·": "por", "⋅": "por", "∗": "por",
-    # Relaciones
     "=": "igual", "≠": "distinto", "≈": "aproximado", "≡": "identico",
     "≃": "aproximadamente igual", "≅": "isomorfo", "∼": "similar",
     "<": "menor", ">": "mayor", "≤": "menor igual", "≥": "mayor igual",
     "≪": "mucho menor", "≫": "mucho mayor",
-    # Conjuntos y pertenencia
     "∈": "pertenece", "∉": "no pertenece", "∋": "contiene",
     "⊂": "subconjunto", "⊃": "superconjunto",
     "⊆": "subconjunto igual", "⊇": "superconjunto igual",
     "∪": "union", "∩": "interseccion", "∅": "vacio",
     "∖": "menos", "∁": "complemento",
-    # Lógica
     "∧": "y logico", "∨": "o logico", "¬": "negacion", "⊕": "o exclusivo",
     "⇒": "implica", "⇐": "implicado por", "⇔": "si y solo si",
     "→": "flecha", "←": "flecha izquierda", "↔": "flecha doble",
     "↑": "flecha arriba", "↓": "flecha abajo", "↦": "mapea",
     "∀": "para todo", "∃": "existe", "∄": "no existe",
     "∴": "por lo tanto", "∵": "porque",
-    # Cálculo y análisis
     "∞": "infinito", "∑": "sumatoria", "∏": "productoria", "∫": "integral",
     "∬": "integral doble", "∭": "integral triple", "∮": "integral cerrada",
     "√": "raiz", "∛": "raiz cubica", "∜": "raiz cuarta",
     "∂": "derivada parcial", "∇": "gradiente",
     "Δ": "delta", "δ": "delta",
     "ℝ": "reales", "ℂ": "complejos", "ℕ": "naturales", "ℤ": "enteros", "ℚ": "racionales",
-    # Geometría y unidades
     "°": "grados", "′": "minutos", "″": "segundos",
     "℃": "grados celsius", "℉": "grados fahrenheit", "ₖ": "kelvin",
     "Å": "angstrom", "Ω": "ohmio", "℧": "mho",
     "‰": "por mil", "‱": "por diez mil",
 }
-# Inverso (nombre → símbolo). Si dos símbolos comparten nombre (p. ej. Δ/δ,
-# ambas "delta"), el último del diccionario de arriba gana acá, pero no
-# importa: la comparación siempre es por NOMBRE normalizado, no por este
-# inverso en sí (se arma solo por si algo del lado JS lo necesita).
 NOMBRES_A_SIMBOLOS = {v: k for k, v in SIMBOLOS_ESPECIALES.items()}
 
-# NUEVO: igual que el PATRON_PALABRA del drawio (más abajo), pero incluyendo
-# letras griegas, para que "λ" o "Σ" tokenicen como palabra completa.
 PATRON_PALABRA_CON_SIMBOLOS = re.compile(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+')
 
-
 def extraer_claves(segundo):
-    """
-    Extrae palabras clave del campo 'segundo' de la tarjeta.
-    Tokeniza letras (incluidas griegas): los números solos ('1', '2') se
-    descartan solos. Devuelve claves normalizadas (minúsculas, sin acentos),
-    sin duplicados y sin palabras vacías (STOPWORDS_ES).
-    NUEVO: además, cada símbolo especial (ε, ∑, ∞, etc.) presente en el
-    texto agrega el NOMBRE del símbolo como clave adicional, para que
-    tipear "epsilon" cuente como acierto si la tarjeta dice "ε".
-    """
     if not segundo:
         return []
     claves = []
@@ -153,20 +105,11 @@ def extraer_claves(segundo):
                 claves.append(nombre)
     return claves
 
-
-# ============================================================
-# PARSEO DE RESPUESTAS.TXT (rutas del diagrama)
 # ============================================================
 
 PATRON_CABECERA_RUTA = re.compile(r'^ruta\s+(\d+)\s*$', re.IGNORECASE)
 
-
 def preparar_linea_ruta(linea):
-    """
-    Normaliza los renglones de imagen.
-    Acepta 'IMG:data:image/png,...' (sin ;base64) y también
-    'IMG:data:image/png;base64,...', devolviendo siempre un data URL válido.
-    """
     if linea.startswith("IMG:data:image/"):
         datos = linea[len("IMG:"):]
         if ";base64," not in datos:
@@ -176,19 +119,10 @@ def preparar_linea_ruta(linea):
         return "IMG:" + datos
     return linea
 
-
 def parsear_respuestas(txt):
-    """
-    Lee respuestas.txt y arma un diccionario {numero_ruta: {"tema": ..., "lineas": [...]}}.
-    - Renglón 1 del bloque: 'ruta N' (mayúsculas o minúsculas).
-    - Renglón 2: tema (solo organización interna, NUNCA se muestra en la UI).
-    - Renglones siguientes: contenido (texto e imágenes intercaladas).
-    Si una ruta está duplicada en el archivo, gana la primera aparición.
-    """
     rutas = {}
 
     try:
-        # utf-8-sig: tolera archivos guardados con Bloc de notas (que agregan BOM)
         with open(txt, "r", encoding="utf-8-sig") as archivo:
             lineas = archivo.readlines()
     except (FileNotFoundError, TypeError):
@@ -202,7 +136,7 @@ def parsear_respuestas(txt):
     def cerrar_bloque():
         nonlocal ruta_actual, tema_actual, contenido, esperando_tema
         if ruta_actual is not None and contenido:
-            if ruta_actual not in rutas:  # duplicada: gana la primera
+            if ruta_actual not in rutas:
                 rutas[ruta_actual] = {"tema": tema_actual, "lineas": contenido}
         ruta_actual = None
         tema_actual = ""
@@ -219,11 +153,11 @@ def parsear_respuestas(txt):
             esperando_tema = True
             continue
 
-        if not renglon:  # línea vacía: separador, se ignora
+        if not renglon:
             continue
 
         if esperando_tema:
-            tema_actual = renglon  # se procesa pero no se muestra
+            tema_actual = renglon
             esperando_tema = False
             continue
 
@@ -232,36 +166,12 @@ def parsear_respuestas(txt):
     cerrar_bloque()
     return rutas
 
-
-# ============================================================
-# PARSEO DE RECORDATORIO.TXT (tarjetas)
 # ============================================================
 
-# '&' + números al final; tolera coma/punto/punto y coma sueltos al final:
-# '&1,4' / '&1, 23, 24, 46,' / '&3.'
 PATRON_RUTAS_TARJETA = re.compile(r'&\s*([0-9]+(?:\s*,\s*[0-9]+)*)\s*[.,;]*\s*$')
-# '&' suelto al final (también tolera comas sobrantes: '&,' o '& , ')
 PATRON_AMPERSAND_SUELTO = re.compile(r'&[\s,;]*$')
 
-
 def parsear_recordatorio(txt):
-    """
-    Lee recordatorio.txt y arma una lista de tarjetas.
-    - 'subT' define el tema de las tarjetas siguientes.
-    - Cada tarjeta es 'primero + segundo' y opcionalmente termina con '&N,M'
-      indicando las rutas asociadas.
-    - NUEVO: opcionalmente, después de todo lo anterior, '| nota' agrega un
-      apunte personal. Formato completo:  primero + segundo &1,4 | nota
-      La línea se corta en el PRIMER '|' ANTES de cualquier otro análisis: lo de
-      la izquierda sigue el flujo de siempre y lo de la derecha es la nota
-      (puede contener '+', '&', 'subT' o más '|' sin problema). La nota no
-      participa en claves, hash de difíciles ni resaltado del drawio.
-      El texto literal '\\n' dentro de la nota se convierte en salto de línea.
-    - Un '&' final SIN números se limpia de la tarjeta (no se muestra) y se
-      avisa por consola que esa tarjeta no tendrá botón 'Mostrar respuesta'.
-    - Un '&' en medio del texto se conserva como texto literal.
-    - Rutas repetidas en la misma tarjeta (&1,1) se deduplican.
-    """
     with open(txt, "r", encoding="utf-8-sig") as archivo:
         lineas = archivo.readlines()
 
@@ -276,14 +186,12 @@ def parsear_recordatorio(txt):
         if not renglon:
             continue
 
-        # NUEVO: separar la nota ('|') ANTES de todo lo demás
         nota = ""
         if "|" in renglon:
             renglon, nota = renglon.split("|", 1)
             renglon = renglon.strip()
             nota = nota.strip().replace("\\n", "\n")
             if not renglon:
-                # línea que empieza con '|': no hay tarjeta a la que asignarle la nota
                 lineas_solo_nota.append(nota)
                 continue
 
@@ -296,11 +204,10 @@ def parsear_recordatorio(txt):
         if m:
             for num in m.group(1).split(","):
                 num = int(num)
-                if num not in rutas_asociadas:  # deduplicar (&1,1 -> [1])
+                if num not in rutas_asociadas:
                     rutas_asociadas.append(num)
             renglon = renglon[:m.start()].strip()
         elif PATRON_AMPERSAND_SUELTO.search(renglon):
-            # '&' sin números: se quita para que no aparezca en la tarjeta
             renglon = PATRON_AMPERSAND_SUELTO.sub("", renglon).strip()
             ampersands_sueltos.append(renglon)
 
@@ -334,7 +241,6 @@ def parsear_recordatorio(txt):
 
     return tarjetas
 
-
 def reportar_asociaciones(tarjetas, rutas):
     """Diagnóstico por consola: cuántas tarjetas tienen botón y rutas faltantes."""
     con_rutas = [t for t in tarjetas if t["rutas"]]
@@ -349,59 +255,34 @@ def reportar_asociaciones(tarjetas, rutas):
     else:
         print("Todas las rutas citadas existen en respuestas.txt.")
 
-
-# ============================================================
-# RESALTADO EN EL DIAGRAMA DRAWIO (marcador automático por celda)
 # ============================================================
 
-# MODIFICADO: ya no existe un COLOR_RESALTADO fijo que haya que cambiar a mano.
-# Para cada celda se lee el fontColor y el fillColor de su style y se elige,
-# de esta paleta, el color con mejor contraste contra la letra, descartando
-# los que no se distinguirían del fondo del cuadro. Editá la paleta si querés
-# otra gama de marcadores.
 PALETA_RESALTADO = [
-    "#FFFF00",  # amarillo  -> ideal para letras oscuras
-    "#0000FF",  # azul      -> ideal para letras claras
-    "#00FFFF",  # cian
-    "#FF00FF",  # magenta
-    "#FF8000",  # naranja
-    "#00FF00",  # verde
+    "#FFFF00",
+    "#0000FF",
+    "#00FFFF",
+    "#FF00FF",
+    "#FF8000",
+    "#00FF00",
 ]
 
-# Contraste mínimo (WCAG) entre el marcador elegido y el fondo del cuadro
-# para considerar que el marcador se distingue del cuadro.
 CONTRASTE_FONDO_MIN = 1.3
 
 PATRON_PALABRA = re.compile(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+')
-# Limpieza: quita exactamente los tags <font style="background-color:...">...</font>
-# que este script inserta (cualquier color, así las re-ejecuciones siguen seguras)
 PATRON_LIMPIEZA = re.compile(r'<font style="background-color:[^"]*">([^<]*)</font>')
 
 NOMBRE_MODULO_RUTAS = "6-generadorRespuestas.py"
 
-# Índice de la página (pestaña) del .drawio que contiene las imágenes con
-# 'ruta'/'descripcion'. Es la MISMA página que usa resaltar_drawio (la
-# primera, índice 0). Si en algún momento cambiás el diagrama de página,
-# solo hay que actualizar este número.
 INDICE_PAGINA_DRAWIO = 0
 
 # BUGFIX: además de <object>, las versiones recientes de draw.io serializan
-# las celdas con atributos personalizados (id, ruta, descripcion, etc.) como
-# <UserObject> en lugar de <object>. Es habitual que, dentro de un mismo
-# .drawio, las celdas de TEXTO (creadas hace tiempo) queden como <object> y
-# las celdas de IMAGEN (agregadas después, con una versión más nueva de
-# draw.io) queden como <UserObject> -- por eso "descripcion" no se extraía de
-# las imágenes: el código solo miraba <object>. Se centraliza acá para que
-# todo el script reconozca ambas variantes de forma consistente.
 TAGS_OBJETO_DRAWIO = ("object", "UserObject")
-
 
 def normalizar_tema(texto):
     """Normaliza un tema completo (minúsculas, sin acentos, espacios colapsados)."""
     if not texto:
         return ""
     return " ".join(normalizar_palabra(texto).split())
-
 
 def cargar_generador_respuestas():
     """
@@ -429,18 +310,9 @@ def cargar_generador_respuestas():
         print(f"AVISO: no pude importar {NOMBRE_MODULO_RUTAS}: {error}")
         return None
 
-
 def calcular_claves_por_ruta(tarjetas, mapa_rutas):
-    """
-    Opción A con cascada:
-    - Ruta citada con '&': claves = unión de los 'segundo' de las tarjetas que la citan.
-    - Ruta no citada: claves por tema. El generador deja tema=None en el primer
-      bloque de cada grupo (ej. ruta 12 'Naturales'); esas rutas heredan el tema
-      no-vacío más cercano (primero se busca hacia ADELANTE, luego hacia atrás),
-      porque el subtítulo del grupo aparece recién en el bloque siguiente.
-    """
-    claves_citadas = {}   # numero_ruta -> set de claves
-    claves_por_tema = {}  # tema normalizado -> set de claves
+    claves_citadas = {}
+    claves_por_tema = {}
 
     for tarjeta in tarjetas:
         claves = set(tarjeta.get("claves", []))
@@ -462,13 +334,11 @@ def calcular_claves_por_ruta(tarjetas, mapa_rutas):
 
         tema = temas[numero]
         if not tema:
-            # Sin tema propio (primer bloque del grupo): buscar hacia adelante
             for j in range(i + 1, len(numeros)):
                 if temas[numeros[j]]:
                     tema = temas[numeros[j]]
                     break
         if not tema:
-            # Último recurso: hacia atrás
             for j in range(i - 1, -1, -1):
                 if temas[numeros[j]]:
                     tema = temas[numeros[j]]
@@ -485,12 +355,10 @@ def calcular_claves_por_ruta(tarjetas, mapa_rutas):
               + ", ".join(map(str, sin_claves)))
     return resultado
 
-
 def style_tiene_html1(style):
     if not style:
         return False
     return any(p.strip() == "html=1" for p in style.split(";"))
-
 
 def style_agregar_html1(style):
     if not style:
@@ -499,12 +367,7 @@ def style_agregar_html1(style):
         return style + "html=1;"
     return style + ";html=1;"
 
-
 def activar_html_en_celda(elem):
-    """
-    Asegura html=1 en el style de la celda tocada. En <object> el style vive
-    en el mxCell interno, no en el object.
-    """
     tag = elem.tag.split("}")[-1]
     if tag in TAGS_OBJETO_DRAWIO:
         style = elem.get("style")
@@ -519,9 +382,6 @@ def activar_html_en_celda(elem):
         style = elem.get("style")
         if not style_tiene_html1(style):
             elem.set("style", style_agregar_html1(style))
-
-
-# ---------- MODIFICADO: elección automática del color de marcador ----------
 
 def _expandir_hex(valor):
     """'#abc' -> '#aabbcc'. Devuelve None si no es un hex válido."""
@@ -538,7 +398,6 @@ def _expandir_hex(valor):
         return None
     return '#' + v.lower()
 
-
 def luminancia_relativa(hex_color):
     """Luminancia relativa WCAG (0..1). None si el color es inválido."""
     hex_color = _expandir_hex(hex_color)
@@ -551,7 +410,6 @@ def luminancia_relativa(hex_color):
 
     return 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(b)
 
-
 def contraste(color1, color2):
     """Ratio de contraste WCAG (1 = idénticos, 21 = máximo). 0 si algo es inválido."""
     l1 = luminancia_relativa(color1)
@@ -560,7 +418,6 @@ def contraste(color1, color2):
         return 0.0
     clara, oscura = max(l1, l2), min(l1, l2)
     return (clara + 0.05) / (oscura + 0.05)
-
 
 def extraer_style_param(style, clave):
     """De un style drawio ('html=1;fillColor=#ff0000;...') saca el valor de un parámetro."""
@@ -573,12 +430,7 @@ def extraer_style_param(style, clave):
             return parte[len(prefijo):]
     return None
 
-
 def style_de_celda(elem):
-    """
-    Style 'visual' de la celda. En <object> el style vive en el mxCell
-    interno (igual que con html=1); si no hubiera, se usa el del object.
-    """
     if elem.tag.split('}')[-1] in TAGS_OBJETO_DRAWIO:
         for hijo in elem:
             if hijo.tag.split('}')[-1] == 'mxCell':
@@ -588,26 +440,13 @@ def style_de_celda(elem):
         return elem.get('style')
     return elem.get('style')
 
-
 def colores_de_celda(elem):
-    """
-    (color de letra, color de fondo) según el style de la celda.
-    Sin fontColor explícito drawio usa negro; sin fillColor se devuelve None
-    (no se puede filtrar por fondo).
-    """
     style = style_de_celda(elem) or ''
     letra = _expandir_hex(extraer_style_param(style, 'fontColor')) or '#000000'
     fondo = _expandir_hex(extraer_style_param(style, 'fillColor'))
     return letra, fondo
 
-
 def elegir_color_resaltado(letra, fondo=None):
-    """
-    Elige de PALETA_RESALTADO el color con mejor contraste contra la letra.
-    Si se conoce el fondo del cuadro, se descartan los candidatos que no se
-    distinguirían de él (contraste < CONTRASTE_FONDO_MIN); si todos quedan
-    descartados, gana el de mejor contraste con la letra.
-    """
     ordenados = sorted(PALETA_RESALTADO, key=lambda c: contraste(c, letra), reverse=True)
     if fondo:
         for c in ordenados:
@@ -615,13 +454,7 @@ def elegir_color_resaltado(letra, fondo=None):
                 return c
     return ordenados[0]
 
-
 def resaltar_texto(texto, claves, color):
-    """
-    Envuelve en <font style="background-color:..."> las palabras cuyo
-    normalized match esté en claves, usando el color dado para esta celda.
-    Devuelve (nuevo_texto, hubo_cambio).
-    """
     partes = []
     ultimo = 0
     cambio = False
@@ -638,20 +471,7 @@ def resaltar_texto(texto, claves, color):
     partes.append(texto[ultimo:])
     return "".join(partes), True
 
-
 def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
-    """
-    Resalta en el drawio las palabras coincidentes y REESCRIBE el original
-    en su misma ruta. Primero limpia cualquier resaltado previo (re-ejecuciones).
-
-    MODIFICADO: el color del marcador se elige por celda según el contraste
-    con el fontColor (legibilidad) y el fillColor (que se note sobre el cuadro).
-
-    Convergencias: cuando varias celdas apuntan a un mismo destino, el
-    generador las colapsa en __CONVERGENCE__<destino> y las celdas fuente
-    (donde está el texto real) no aparecen en el mapa. Aquí se resuelven:
-    se visita el destino Y todas las celdas con flecha hacia él.
-    """
     mapa_rutas = get_routes_id_map(Path(ruta_drawio))
     if not mapa_rutas:
         print("AVISO: get_routes_id_map no devolvió rutas; drawio sin cambios.")
@@ -662,11 +482,9 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
     tree = ET.parse(ruta_drawio)
     root = tree.getroot()
 
-    # Misma página que usa el generador (la primera)
     diagrams = root.findall("./diagram")
     alcance = diagrams[0] if diagrams else root
 
-    # id -> (elemento, atributo de texto). <object> usa 'label', <mxCell> usa 'value'.
     elementos = {}
     for elem in alcance.iter():
         tag = elem.tag.split("}")[-1]
@@ -677,14 +495,10 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
             elementos[eid] = (elem, "label")
         elif tag == "UserObject":
             # BUGFIX: mismo caso que <object> (ver TAGS_OBJETO_DRAWIO), las
-            # versiones recientes de draw.io usan <UserObject> para celdas
-            # con atributos personalizados (frecuente en imágenes agregadas
-            # después). Antes se ignoraban acá y no se resaltaban ni resolvían.
             elementos[eid] = (elem, "label")
         elif tag == "mxCell" and eid not in elementos:
             elementos[eid] = (elem, "value")
 
-    # Predecesores según las aristas del XML: destino -> {fuentes}
     predecesores = {}
     for elem in alcance.iter():
         if elem.tag.split("}")[-1] == "mxCell" and elem.get("edge") == "1":
@@ -706,29 +520,26 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
             return [destino] + fuentes
         return [id_celda]
 
-    # id de celda real -> claves (unión de todas las rutas que la mencionan)
     claves_por_celda = {}
     ids_en_mapa = set()
     for numero, bloque in mapa_rutas.items():
         for cruda in set(bloque.get("ids", {}).values()):
             resueltas = resolver_id(cruda)
-            ids_en_mapa.update(resueltas)  # también se limpian al re-ejecutar
+            ids_en_mapa.update(resueltas)
             for id_real in resueltas:
                 claves_por_celda.setdefault(id_real, set()).update(
                     claves_por_ruta.get(numero, set())
                 )
 
-    # 1) Limpieza previa en TODAS las celdas alcanzables del mapa
     for id_celda in ids_en_mapa:
         par = elementos.get(id_celda)
         if par is None:
-            continue  # id inexistente en el XML: se ignora en silencio
+            continue
         elem, attr = par
         texto = elem.get(attr, "")
         if texto and PATRON_LIMPIEZA.search(texto):
             elem.set(attr, PATRON_LIMPIEZA.sub(r"\1", texto))
 
-    # 2) Resaltado nuevo (MODIFICADO: color elegido por celda según letra y fondo)
     resaltadas = 0
     colores_usados = {}
     for id_celda, claves in claves_por_celda.items():
@@ -746,7 +557,7 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
         nuevo, cambio = resaltar_texto(texto, claves, color)
         if cambio:
             elem.set(attr, nuevo)
-            activar_html_en_celda(elem)  # drawio solo interpreta HTML con html=1
+            activar_html_en_celda(elem)
             resaltadas += 1
             colores_usados[color] = colores_usados.get(color, 0) + 1
 
@@ -763,36 +574,7 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
         print("AVISO: rutas citadas que no aparecen en el mapa del drawio: "
               + ", ".join(map(str, ausentes)))
 
-
 def extraer_descripciones_drawio(ruta_drawio):
-    """
-    NUEVO: lee el .drawio en modo SOLO LECTURA (no lo modifica) y extrae, de
-    las celdas de IMAGEN (style con 'shape=image') que tienen el atributo
-    personalizado 'ruta' (el mismo que ya usa 6-generadorRespuestas.py para
-    identificar rutas), el atributo personalizado 'descripcion'.
-
-    Devuelve { numero_ruta (int): ["desc de la imagen 0", "desc de la imagen 1", ...] }
-    Es decir: UNA LISTA por ruta, con una posición por cada imagen de esa
-    ruta encontrada en el drawio (en el orden en que aparecen en el XML),
-    análogo al 'indice' que ya usa la galería para navegar imágenes dentro
-    de una misma ruta (construirIndiceImagenes/INDICE_IMAGENES en el JS). Si
-    una imagen puntual no tiene descripción cargada, su posición queda como
-    "" (string vacío) para no correr el índice de las demás imágenes de esa
-    ruta.
-
-    Independiente de get_routes_id_map y de resaltar_drawio: no comparte
-    estado con ellos ni los modifica, así que una falla acá nunca puede
-    romper el resaltado ni el resto del flujo (se atrapa cualquier excepción
-    y se devuelve un diccionario vacío).
-
-    Usa la misma página que resaltar_drawio: INDICE_PAGINA_DRAWIO.
-
-    IMPORTANTE: el orden de las imágenes acá es el orden en que aparecen en
-    el .drawio (documento XML). Para que el índice coincida con el de la
-    galería (que ordena según las líneas 'IMG:' de respuestas.txt), las
-    imágenes de una misma ruta deben estar en el mismo orden en ambos
-    lugares. Si no coincide, avisá y lo ajustamos.
-    """
     descripciones = {}
     con_ruta = 0
     con_descripcion = 0
@@ -806,23 +588,21 @@ def extraer_descripciones_drawio(ruta_drawio):
         for elem in alcance.iter():
             tag = elem.tag.split("}")[-1]
             if tag not in TAGS_OBJETO_DRAWIO:
-                # 'ruta'/'descripcion' son atributos personalizados: viven
-                # en <object> o <UserObject> (ver TAGS_OBJETO_DRAWIO).
                 continue
 
             estilo = style_de_celda(elem) or ""
             if "shape=image" not in estilo:
-                continue  # no es una celda de imagen: no aporta al índice de imágenes
+                continue
 
             ruta_attr = elem.get("ruta")
             tiene_ruta = ruta_attr is not None and str(ruta_attr).strip() != ""
             if not tiene_ruta:
-                continue  # imagen sin ruta asignada: no se puede ubicar en la galería
+                continue
 
             try:
                 numero = int(str(ruta_attr).strip())
             except (TypeError, ValueError):
-                continue  # atributo 'ruta' no numérico: se ignora en silencio
+                continue
 
             descripcion = elem.get("descripcion") or ""
             descripcion = descripcion.strip()
@@ -831,15 +611,11 @@ def extraer_descripciones_drawio(ruta_drawio):
             if descripcion:
                 con_descripcion += 1
 
-            # Se agrega SIEMPRE (aunque venga vacía) para no desalinear el
-            # índice de las demás imágenes de esta misma ruta.
             descripciones.setdefault(numero, []).append(descripcion)
     except Exception as error:
         print(f"AVISO: no pude extraer descripciones del drawio: {error}")
         return {}
 
-    # NUEVO: diagnóstico para detectar fácilmente por qué no se extrae nada
-    # (p. ej. celdas con 'ruta' pero sin 'descripcion', o viceversa).
     rutas_con_imagenes = len(descripciones)
     total_imagenes = sum(len(lista) for lista in descripciones.values())
     print(f"  Imágenes con 'ruta': {con_ruta}  |  con 'descripcion' no vacía: {con_descripcion}  "
@@ -847,21 +623,11 @@ def extraer_descripciones_drawio(ruta_drawio):
 
     return descripciones
 
-
-# ============================================================
-# NUEVO: imagen del mapa (botón 🗺️ del modo observador)
-# ============================================================
-
-# Extensión -> firma de archivo esperada (para detectar "corrupto": un
-# archivo con extensión válida pero que no es realmente una imagen de ese
-# tipo). No reemplaza una validación completa de imagen (no hay Pillow
-# disponible), pero alcanza para el caso pedido: avisar y seguir sin imagen.
 _FIRMAS_IMAGEN_MAPA = {
     ".png": b"\x89PNG\r\n\x1a\n",
     ".jpg": b"\xff\xd8\xff",
     ".jpeg": b"\xff\xd8\xff",
 }
-
 
 def _tipo_mime_imagen_mapa(ruta):
     ext = Path(ruta).suffix.lower()
@@ -871,15 +637,7 @@ def _tipo_mime_imagen_mapa(ruta):
         return "image/jpeg"
     return None
 
-
 def cargar_imagen_mapa_base64(ruta):
-    """
-    Lee 'ruta' y la convierte a base64 para inyectarla en el HTML. Devuelve
-    (base64_str, tipo_mime, nombre_original_sin_extension) si todo salió
-    bien, o None si hay que continuar SIN imagen (avisando en consola):
-    extensión no soportada, archivo corrupto (firma inválida) o error de
-    lectura. No hay límite de tamaño: se convierte sin importar el peso.
-    """
     ruta = Path(ruta)
     mime = _tipo_mime_imagen_mapa(ruta)
     if mime is None:
@@ -898,7 +656,6 @@ def cargar_imagen_mapa_base64(ruta):
     codificado = base64.b64encode(datos).decode("ascii")
     return codificado, mime, ruta.stem
 
-
 def _escapar_atributo_html(texto):
     """Escapa texto para insertarlo dentro de un atributo HTML con comillas dobles."""
     return (
@@ -908,11 +665,6 @@ def _escapar_atributo_html(texto):
         .replace("<", "&lt;")
         .replace(">", "&gt;")
     )
-
-
-# ============================================================
-# GENERACIÓN DEL HTML
-# ============================================================
 
 def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash, descripciones_rutas=None, imagen_mapa=None):
     datos = {"tarjetas": tarjetas, "rutas": rutas, "descripciones_rutas": descripciones_rutas or {}}
@@ -936,15 +688,9 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     html = html.replace("__SIM_SIN_PISTA__", str(SIM_SIN_PISTA))
     html = html.replace("__SIM_CON_PISTA__", str(SIM_CON_PISTA))
     html = html.replace("__STOPWORDS__", json.dumps(sorted(STOPWORDS_ES)))
-    # NUEVO: símbolos especiales (letras griegas, operadores, etc.) → nombre
-    # en español, para que el lado JS (analizarTexto) también los reconozca.
     html = html.replace("__SIMBOLOS_ESPECIALES__", json.dumps(SIMBOLOS_ESPECIALES, ensure_ascii=False))
-    # NUEVO: identidad de este evaluador (para que difíciles/notas/razones no se
-    # mezclen entre dos evaluadores con tarjetas de texto idéntico). Ver hashTarjeta().
     html = html.replace("__ESPACIO__", json.dumps(espacio_hash))
 
-    # NUEVO: imagen del mapa (botón 🗺️ del modo observador). Sin imagen,
-    # los placeholders quedan vacíos: el botón se ve deshabilitado (ver JS).
     if imagen_mapa:
         base64_mapa, tipo_mapa, nombre_mapa = imagen_mapa
     else:
@@ -960,7 +706,6 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     print(f"  Tarjetas: {len(tarjetas)}")
     print(f"  Rutas cargadas: {len(rutas)}")
 
-
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -971,10 +716,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   :root {
     --fill-color: __FILL_COLOR__;
     --stroke-color: __STROKE_COLOR__;
-    /* NUEVO: color propio de la interfaz (botones, inputs, títulos, etc.).
-       Ya no depende de la paleta de colores elegida al generar el evaluador:
-       --stroke-color queda reservado SOLO para el look de las tarjetas
-       (.tema, .tarjeta, .primero, .segundo, .palabra-clave...). */
     --color-boton: #4F46E5;
   }
 
@@ -1022,8 +763,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-bottom: clamp(8px, 3vw, 16px);
   }
 
-  /* ---------- Pantalla de selección de temas ---------- */
-
   .lista-temas {
     text-align: left;
     background: #fff;
@@ -1070,7 +809,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cursor: not-allowed;
   }
 
-  /* MODIFICADO: modos especiales + zona de difíciles */
   .zona-modos {
     display: flex;
     justify-content: center;
@@ -1144,8 +882,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-top: 8px;
   }
 
-  /* ---------- Área de estudio ---------- */
-
   .barra-superior {
     display: flex;
     flex-direction: column;
@@ -1153,7 +889,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-bottom: 8px;
   }
 
-  /* NUEVO: Fila 1 de la barra superior (gamificación) */
   .fila-gamificacion {
     display: flex;
     justify-content: space-between;
@@ -1177,7 +912,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-family: inherit;
   }
 
-  /* Fila 2 de la barra superior (navegación, ya existía como barra-superior) */
   .fila-navegacion-superior {
     display: flex;
     justify-content: space-between;
@@ -1222,7 +956,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-bottom: clamp(10px, 3vw, 18px);
     font-weight: 600;
     font-size: 15px;
-    color: #222;   /* MODIFICADO: fijo, var(--stroke-color) a veces no contrastaba con el fondo */
+    color: #222;   
     letter-spacing: 0.3px;
   }
 
@@ -1263,7 +997,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     to { opacity: 1; transform: translateY(0) rotate(-0.5deg); }
   }
 
-  /* MODIFICADO: badge con la cantidad de rutas asociadas (esquina sup. derecha) */
   .badge-rutas {
     position: absolute;
     top: 10px;
@@ -1330,7 +1063,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .boton-pista:hover:not(:disabled),
   .boton-respuesta:hover:not(:disabled) { transform: translateY(-2px); }
 
-  /* NUEVO: botón 💡 de nota (toggle) */
   .boton-nota {
     width: clamp(34px, 9vw, 40px);
     height: clamp(34px, 9vw, 40px);
@@ -1356,7 +1088,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     box-shadow: 0 0 0 3px rgba(240,200,80,0.35);
   }
 
-  /* NUEVO: 💡 sin nota (invita a agregar) y marca de "nota distinta a la del txt" */
   .boton-nota { position: relative; }
   .boton-nota.vacia { border-style: dashed; opacity: 0.6; }
   .boton-nota.dif::after {
@@ -1371,7 +1102,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     border: 2px solid #fff;
   }
 
-  /* NUEVO: panel de nota estilo post-it, debajo de la tarjeta */
   .panel-nota {
     display: none;
     margin-top: 14px;
@@ -1447,7 +1177,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-top: 10px;
   }
 
-  /* NUEVO: lista de notas en la pantalla "Elegir temas" */
   .item-nota-dif, .item-nota-otra {
     border-bottom: 1px solid #f1f1f1;
     padding: 8px 0;
@@ -1521,8 +1250,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     line-height: 1.5;
   }
 
-  /* ---------- Evaluación de respuesta escrita ---------- */
-
   .zona-eval { display:none; margin-top: 14px; text-align:left; }
 
   .zona-eval textarea {
@@ -1541,7 +1268,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .resultado-eval {
     display: none; min-height: 18px;
     font-size: 13px; font-weight: 600; margin-top: 10px;
-    text-align: left; /* MODIFICADO: evaluación multilínea alineada a la izquierda */
+    text-align: left; 
   }
 
   .resultado-eval.bien { color: #3aa76d; }
@@ -1553,8 +1280,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .item-resultado.bien { color: #3aa76d; }
   .item-resultado.casi { color: #e0a030; }
   .item-resultado.mal  { color: #e0574c; }
-
-  /* ---------- Rutas (acordeón de respuestas) ---------- */
 
   .rutas-contenedor {
     margin-top: 18px;
@@ -1625,8 +1350,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cursor: zoom-in;
   }
 
-  /* ---------- Lightbox de imágenes ---------- */
-
   .lightbox {
     display: none;
     position: fixed;
@@ -1674,9 +1397,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .estado-marca.no { color: #e0574c; }
   .estado-marca.saltar { color: #b8b8c4; }
 
-  /* MODIFICADO: dos filas agrupadas por función (decisión / etiquetas), en vez
-     de una sola fila con wrap. Evita que el ✓ quede solo, descentrado, cuando
-     no entran los 5 botones en una línea (pantallas angostas). */
   .botonera {
     display: flex;
     flex-direction: column;
@@ -1735,7 +1455,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     border: 2px solid #d8d8e0;
   }
 
-  /* MODIFICADO: botón toggle de tarjeta difícil */
   .boton-dificil {
     padding: clamp(9px, 3vw, 12px) clamp(13px, 4vw, 18px);
     border-radius: 24px;
@@ -1786,8 +1505,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cursor: pointer;
     font-family: inherit;
   }
-
-  /* ---------- Pantalla de resumen ---------- */
 
   .pantalla-resumen {
     display: none;
@@ -1946,7 +1663,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     color: #aaa;
   }
 
-  /* NUEVO: pantalla de temas con subT desplegables y tarjetas seleccionables */
   .grupo-tema { border-bottom: 1px solid #f1f1f1; }
   .grupo-tema:last-child { border-bottom: none; }
 
@@ -2010,7 +1726,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .tc-segundo { color: #8a8a8a; font-size: 13px; }
   .tc-marcas { margin-left: auto; padding-left: 8px; font-size: 13px; white-space: nowrap; }
 
-  /* NUEVO: modo observador */
   .fila-observador {
     display: flex;
     align-items: flex-start;
@@ -2044,7 +1759,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   #area-tarjeta.observador #btn-saltar,
   #area-tarjeta.observador #btn-finalizar { display: none !important; }
 
-  /* NUEVO: resultados agrupados por subT */
   .sub-desplegable { border-top: 1px solid #f1f1f1; }
   .sub-desplegable:first-child { border-top: none; }
 
@@ -2073,11 +1787,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .sub-desplegable[open] > summary::after { transform: rotate(180deg); }
   .sub-desplegable .item-lista { padding-left: 8px; }
 
-  /* NUEVO: estado "Casi" */
   .estado-marca.casi { color: #e0a030; }
   .punto-casi { background: #e0a030; }
 
-  /* NUEVO: pausa manual del cronómetro */
   .grupo-cronometro { display: flex; align-items: center; gap: 10px; }
 
   .boton-pausa {
@@ -2112,9 +1824,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .titulo-pausa { font-size: 26px; font-weight: 700; color: var(--color-boton); }
   .texto-pausa { font-size: 14px; color: #777; max-width: 340px; }
 
-  /* NUEVO: botón "Revisar" (esquina superior izquierda). MODIFICADO: ya no
-     hay clip-path que esquivar, y se le dio el mismo aire comic que
-     .badge-rutas (borde var(--stroke-color), fondo blanco semitransparente) */
   .boton-revisar {
     position: absolute;
     top: 10px;
@@ -2132,7 +1841,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .boton-revisar.activa { background: #ffe3c2; border-color: #e0812a; color: #a85a10; }
 
-  /* NUEVO: "Entendida por comprensión" reemplaza al tilde */
   .boton-circular.boton-si.comprension {
     width: auto;
     height: auto;
@@ -2142,7 +1850,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-size: 14px;
   }
 
-  /* NUEVO: modal de "Continuar con las no respondidas" */
   .modal-overlay {
     display: none;
     position: fixed;
@@ -2182,7 +1889,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     padding: 8px;
   }
 
-  /* NUEVO: Gamificación — modal de selección de modo */
   .opciones-modo {
     display: flex;
     flex-direction: column;
@@ -2208,7 +1914,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .opcion-modo-nombre { font-weight: 700; color: #333; margin-right: auto; }
   .opcion-modo-detalle { font-size: 12px; color: #888; }
 
-  /* NUEVO: Gamificación — modal de Game Over */
   .modal-gameover.abierto { background: rgba(60,0,0,0.75); }
   .modal-caja-gameover { background: #2a1010; }
   .titulo-gameover { color: #ff5252 !important; font-size: 24px !important; }
@@ -2217,7 +1922,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   #area-tarjeta.observador .grupo-cronometro,
   #area-tarjeta.observador #btn-pausa { display: none !important; }
 
-  /* NUEVO: botón y panel de razones */
   .boton-razones { position: relative; }
   .boton-razones.activa { border-color: #8B5CF6; color: #8B5CF6; }
   .boton-nota:disabled, .boton-razones:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -2295,10 +1999,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .dot-razon { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
   .panel-razones-acciones { display: flex; gap: 8px; margin-top: 12px; }
 
-  /* CORREGIDO: antes esto ocultaba las razones en modo observador; el panel
-     de razones debe verse y editarse igual que en modo estudio */
-
-  /* NUEVO: galería de imágenes (modo observador) */
   .fila-obs-botones { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
 
   .galeria-indicador {
@@ -2321,7 +2021,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .galeria-vacia { color: #888; padding: 30px 0; }
 
-  /* NUEVO: pantalla "Rutas Huérfanas" */
   .lista-huerfanas-scroll {
     max-height: 65vh;
     overflow-y: auto;
@@ -2341,7 +2040,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     white-space: nowrap;
   }
 
-  /* Mismo estilo que .boton-revisar pero relative (vive dentro de un <summary>) */
   .boton-revisar-huerfana {
     position: relative;
     flex-shrink: 0;
@@ -2358,7 +2056,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .boton-revisar-huerfana.activa { background: #ffe3c2; border-color: #e0812a; color: #a85a10; }
 
-  /* NUEVO: Gamificación — Tienda */
   .saldo-tienda {
     font-size: 16px;
     font-weight: 700;
@@ -2411,7 +2108,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .item-tienda-inventario { font-size: 12px; color: var(--color-boton); font-weight: 700; }
 
-  /* NUEVO: Gamificación — Historial */
   .fila-acciones-historial {
     display: flex;
     flex-direction: column;
@@ -2426,7 +2122,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     padding-right: 4px;
   }
 
-  /* NUEVO: paginación del historial */
   .historial-paginacion {
     display: flex;
     align-items: center;
@@ -2436,7 +2131,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   .historial-paginacion-texto { font-size: 13px; color: #666; font-weight: 600; }
 
-  /* NUEVO: resumen histórico consolidado (sesiones ya podadas) */
   .resumen-historico {
     margin-top: 14px;
     padding: 10px 12px;
@@ -2463,7 +2157,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .item-historial-fecha { font-weight: 700; color: #333; }
   .item-historial-detalle { display: flex; flex-wrap: wrap; gap: 10px; color: #777; }
 
-  /* NUEVO: chip del espacio (evaluador) en cada sesion */
   .chip-espacio {
     display: inline-block;
     margin-left: 8px;
@@ -2492,7 +2185,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .fila-acciones-historial button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* NUEVO: grupos de sesiones de otros evaluadores */
   #zona-historial-otros details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: #444; }
   .grupo-historial-otro {
     display: flex;
@@ -2509,8 +2201,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .grupo-historial-otro .grupo-titulo { font-weight: 700; color: #333; display: block; overflow-wrap: anywhere; }
   .grupo-historial-otro .grupo-detalle { color: #777; font-size: 12px; }
 
-  /* NUEVO: modal de revinculacion */
-  /* NUEVO: chip de lista activa en "Elegir temas" */
   .chip-lista-activa {
     display: flex;
     align-items: center;
@@ -2543,7 +2233,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   .pantalla-resumen { position: relative; }
 
-  /* NUEVO: botón "Análisis de la sesión" — esquina opuesta al de guardar lista */
   .boton-analisis-sesion {
     position: absolute;
     top: 14px;
@@ -2565,7 +2254,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .analisis-badge-verde { background: #e6f6ee; color: #3aa76d; }
   .analisis-comentarios { margin: 4px 0 0; padding-left: 18px; font-size: 13px; color: #444; }
   .analisis-comentarios li { margin-bottom: 2px; }
-  /* NUEVO: Resumen Ejecutivo, al principio del modal de análisis */
   .analisis-resumen-ejecutivo {
     background: #f7f8fc;
     border: 1px solid #e2e4ec;
@@ -2583,7 +2271,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   .analisis-resumen-linea { font-size: 13px; color: #333; margin: 2px 0; }
 
-  /* NUEVO: dictado por voz (botón 🎙 sobre los textareas) */
   .wrap-dictado { position: relative; }
   .boton-dictado {
     position: absolute;
@@ -2610,14 +2297,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     100% { transform: scale(1); }
   }
 
-  /* NUEVO: coincidencias entre la respuesta del usuario y las rutas/claves */
   .coincidencia-usuario {
     text-decoration: underline;
     text-decoration-color: #2563EB;
     text-underline-offset: 2px;
   }
-  /* NUEVO: respuesta del usuario, de solo lectura, con sus propias palabras
-     subrayadas según coincidan con las claves o con el contenido de la ruta */
   .respuesta-usuario-resaltada {
     width: 100%; min-height: 74px;
     border: 2px solid var(--color-boton); border-radius: 10px;
@@ -2681,7 +2365,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     background: none; border: none; cursor: pointer; font-size: 12px; color: #555; padding: 2px 4px;
   }
 
-  /* NUEVO: botón 🧠 (Repaso Espaciado) con sus 3 estados */
   .lista-srs-btn {
     border: 1.5px solid #ddd;
     border-radius: 8px;
@@ -2713,7 +2396,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .lista-ver-tarjeta-item.lista-ver-tarjeta-faltante { color: #999; }
   .lista-ver-tarjeta-nota { margin-top: 4px; font-size: 11px; color: #999; font-style: italic; }
 
-  /* NUEVO: badge de sesión de Repaso Espaciado */
   .badge-srs {
     display: inline-block;
     background: #ff8c1a;
@@ -2739,7 +2421,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     text-align: left;
   }
 
-  /* NUEVO: descripción de la imagen (atributo 'descripcion' del drawio) */
   .galeria-descripcion {
     margin: 14px auto 0;
     max-width: 90%;
@@ -2750,8 +2431,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-style: italic;
   }
 
-  /* NUEVO: fila de descarga de la imagen de la galería, entre la descripción
-     y Difícil/Nota */
   .fila-descarga-separada {
     display: flex;
     justify-content: center;
@@ -2763,7 +2442,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-size: 15px;
   }
 
-  /* NUEVO: Gamificación — iconos circulares (Historial / Tienda) */
   .fila-iconos-gamificacion {
     display: flex;
     justify-content: space-between;
@@ -2787,8 +2465,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     padding: 0;
   }
   .boton-icono-circular:hover { border-color: var(--color-boton); }
-  /* NUEVO: botón del mapa (🗺️) sin imagen seleccionada: deshabilitado pero
-     visible, para que la fila no cambie de aspecto (ver §imagen del mapa). */
   .boton-icono-circular:disabled {
     opacity: 0.4;
     cursor: not-allowed;
@@ -2796,23 +2472,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   .boton-icono-circular:disabled:hover { border-color: #e2e4ec; }
 
-  /* NUEVO: fila entre el subtítulo del observador y el buscador: mapa a la
-     izquierda, botón/badge del Pomodoro a la derecha. */
   .fila-mapa-observador {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 10px;
   }
-  .columna-pomodoro-observador { 
-      flex: 1 1 auto; 
-      min-width: 0; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: flex-end;
-  }
+  .columna-pomodoro-observador { flex: 1 1 auto; min-width: 0; }
 
-  /* NUEVO: imagen del mapa (pantalla a pantalla completa desde observador) */
   .mapa-img {
     max-width: 95vw;
     max-height: 75vh;
@@ -2822,13 +2489,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     background: #fff;
     display: block;
     transform-origin: center center;
-    touch-action: none;   /* NUEVO: el gesto de zoom/pan lo maneja el JS, no el navegador */
+    touch-action: none;   
     cursor: default;
   }
   .mapa-img.mapa-img-pan { cursor: grab; }
   .mapa-img.mapa-img-arrastrando { cursor: grabbing; }
 
-  /* NUEVO: botones de zoom/pan de la pantalla del mapa (flotantes) */
   .mapa-zoom-controles {
     position: fixed;
     top: 16px;
@@ -2857,7 +2523,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   .mapa-zoom-boton:hover { background: #f4f6fb; }
 
-  /* ===== NUEVO: Pomodoro (modo observador) ===== */
   .pomodoro-badge-slot { margin-bottom: 10px; }
   .pomodoro-badge-slot-sticky:not(:empty) {
     position: sticky;
@@ -2886,7 +2551,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .pomodoro-badge-botones { display: flex; gap: 6px; flex-wrap: wrap; }
   .boton-secundario:disabled { opacity: 0.45; cursor: not-allowed; }
 
-  /* ===== NUEVO: Buscador Global (Elegir Temas / Observador / Galería) ===== */
   .zona-buscador {
     position: relative;
     text-align: left;
@@ -2908,7 +2572,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .input-buscador:focus { border-color: var(--color-boton); }
 
-  /* Galería: la barra debe quedar fija mientras se navega entre imágenes */
   .zona-buscador.sticky-buscador {
     position: sticky;
     top: 0;
@@ -2979,20 +2642,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div id="pantalla-temas">
     <p class="subtitulo">Elegí qué temas (o tarjetas) querés estudiar</p>
 
-    <!-- NUEVO: Gamificación — accesos a Historial y Tienda -->
     <div class="fila-iconos-gamificacion">
       <button class="boton-icono-circular" id="btn-abrir-historial" title="Historial de sesiones">🕐</button>
       <button class="boton-icono-circular" id="btn-abrir-listas" title="Listas guardadas">📋</button>
       <button class="boton-icono-circular" id="btn-abrir-tienda" title="Tienda">🛒</button>
     </div>
 
-    <!-- NUEVO: Buscador Global -->
     <div class="zona-buscador" id="zona-buscador-temas">
       <input type="text" class="input-buscador" id="input-buscador-temas" placeholder="Buscar tarjetas o rutas..." autocomplete="off">
       <div class="dropdown-buscador" id="dropdown-buscador-temas"></div>
     </div>
 
-    <!-- NUEVO: chip de la lista guardada activa (si hay una seleccionada) -->
     <div class="chip-lista-activa" id="chip-lista-activa" style="display:none;">
       <span>📋 Usando lista: "<span id="chip-lista-nombre"></span>"</span>
       <button type="button" id="btn-chip-lista-quitar" title="Quitar lista activa">✕</button>
@@ -3001,15 +2661,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="lista-temas" id="lista-temas"></div>
     <button class="boton-principal" id="btn-comenzar">Comenzar estudio</button>
 
-    <!-- MODIFICADO: modos especiales de inicio -->
     <div class="zona-modos">
       <button class="boton-modo" id="btn-modo-completo" title="Estudia todas las tarjetas, ignora los temas marcados">Evaluación completa</button>
       <button class="boton-modo" id="btn-modo-dificiles" title="Estudia solo las tarjetas marcadas como difíciles en sesiones anteriores" disabled>Repasar difíciles (0)</button>
-      <!-- NUEVO: ver/editar tarjetas sin evaluarse -->
       <button class="boton-modo" id="btn-modo-observador" title="Recorrer las tarjetas sin evaluarte: ver, editar notas, marcar difíciles">👁 Modo observador</button>
     </div>
 
-    <!-- MODIFICADO: vista previa / gestión de las difíciles guardadas -->
     <div class="lista-temas zona-dificiles" id="zona-dificiles">
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">☆ Difíciles guardadas</span>
@@ -3020,7 +2677,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div id="lista-dificiles-otros"></div>
         <button class="boton-mini" id="btn-vincular-dificiles" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
       </details>
-      <!-- MODIFICADO: sección de desmarcadas (no se borran, se pueden re-activar) -->
       <details id="det-dificiles-desm" style="display:none">
         <summary id="suma-dificiles-desm">Desmarcadas (0)</summary>
         <div id="lista-dificiles-desm"></div>
@@ -3029,7 +2685,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <p class="nota-dificiles" id="nota-dificiles"></p>
     </div>
 
-    <!-- NUEVO: notas editadas en el navegador (localStorage) -->
     <div class="lista-temas zona-dificiles" id="zona-notas">
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">💡 Notas editadas</span>
@@ -3047,7 +2702,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-mini" id="btn-vaciar-notas" style="display:none;">Vaciar todas</button>
     </div>
 
-    <!-- NUEVO: tarjetas marcadas 🚩 Revisar (persisten entre sesiones) -->
     <div class="lista-temas zona-dificiles" id="zona-revisar">
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">🚩 Para revisar guardadas</span>
@@ -3059,7 +2713,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <p class="nota-dificiles" id="nota-revisar"></p>
     </div>
 
-    <!-- NUEVO: razones guardadas -->
     <div class="lista-temas zona-dificiles" id="zona-razones">
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">🏷 Razones guardadas</span>
@@ -3078,26 +2731,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- NUEVO: modo observador (lista de tarjetas por subT; al tocar una se abre) -->
   <div id="pantalla-observador" style="display:none;">
     <p class="subtitulo">Modo observador: tocá una tarjeta para verla (sin evaluarte)</p>
 
-    <!-- NUEVO: fila mapa + Pomodoro, entre el subtítulo y el buscador. El
-         botón 🗺️ queda SIEMPRE visible (no se mete dentro de
-         fila-pomodoro-boton, que se oculta cuando el Pomodoro está activo). -->
     <div class="fila-mapa-observador">
       <button class="boton-icono-circular" id="btn-observador-mapa" title="Ver mapa"
               data-mapa-src="data:__TIPO_IMAGEN_MAPA__;base64,__IMAGEN_MAPA_BASE64__"
               data-mapa-nombre="__NOMBRE_IMAGEN_MAPA__">🗺️</button>
       <div class="columna-pomodoro-observador">
-        <!-- NUEVO: Pomodoro (botón para iniciarlo, o el badge mientras corre) -->
         <div class="fila-iconos-gamificacion" id="fila-pomodoro-boton">
           <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
         </div>
         <div class="pomodoro-badge-slot" id="pomodoro-badge-slot-observador">
-          <!-- NUEVO: badge del Pomodoro. Un solo nodo, se reubica (appendChild)
-               en el slot de la pantalla donde esté el usuario (observador,
-               huérfanas, galería o mapa) cada vez que cambia de pantalla. -->
           <div class="pomodoro-badge" id="pomodoro-badge" style="display:none;">
             <span class="pomodoro-badge-info" id="pomodoro-badge-info"></span>
             <span class="pomodoro-badge-botones">
@@ -3110,21 +2755,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- NUEVO: Buscador Global -->
     <div class="zona-buscador" id="zona-buscador-observador">
       <input type="text" class="input-buscador" id="input-buscador-observador" placeholder="Buscar tarjetas o rutas..." autocomplete="off">
       <div class="dropdown-buscador" id="dropdown-buscador-observador"></div>
     </div>
 
     <div class="lista-temas" id="lista-observador"></div>
-    <!-- MODIFICADO: se agrega "Ver imágenes" junto al botón de volver -->
     <div class="fila-obs-botones">
       <button class="boton-secundario" id="btn-ver-huerfanas">📄 Rutas Huérfanas</button>
       <button class="boton-secundario" id="btn-ver-imagenes">🖼 Ver imágenes</button>
       <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
     </div>
 
-    <!-- NUEVO: notas y difíciles de imágenes (independiente de las de tarjetas) -->
     <div class="lista-temas zona-dificiles" id="zona-imagenes">
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">🖼 Datos de imágenes guardados</span>
@@ -3139,11 +2781,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- NUEVO: galería de imágenes de las rutas, vista secuencial e independiente -->
   <div id="pantalla-galeria" style="display:none;">
-    <!-- NUEVO: Pomodoro (sticky arriba, igual que el buscador, si está activo) -->
     <div class="pomodoro-badge-slot pomodoro-badge-slot-sticky" id="pomodoro-badge-slot-galeria"></div>
-    <!-- NUEVO: Buscador Global (fijo/sticky para poder buscar mientras se navega) -->
     <div class="zona-buscador sticky-buscador" id="zona-buscador-galeria">
       <input type="text" class="input-buscador" id="input-buscador-galeria" placeholder="Buscar por ruta o descripción..." autocomplete="off">
       <div class="dropdown-buscador" id="dropdown-buscador-galeria"></div>
@@ -3154,10 +2793,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <img id="galeria-img" class="galeria-img" alt="Imagen de una ruta" style="display:none;">
     </div>
     <p class="galeria-vacia" id="galeria-vacia" style="display:none;">No hay imágenes en las rutas de respuestas.txt.</p>
-    <!-- NUEVO: descripción de la imagen (extraída del drawio), debajo de la imagen y arriba de Difícil/Nota -->
     <p class="galeria-descripcion" id="galeria-descripcion" style="display:none;"></p>
 
-    <!-- NUEVO: descargar la imagen actualmente visible -->
     <div class="fila-descarga-separada" id="fila-galeria-descarga" style="display:none;">
       <button class="boton-secundario" id="btn-galeria-descargar">⬇ Descargar imagen</button>
     </div>
@@ -3167,7 +2804,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-nota" id="btn-galeria-nota" title="Ver/editar nota de esta imagen">💡</button>
     </div>
 
-    <!-- NUEVO: mismo estilo post-it que la nota de tarjeta -->
     <div class="panel-nota" id="panel-galeria-nota" style="display:none;">
       <div class="panel-nota-cabecera">
         <div class="panel-nota-titulo">💡 Nota de la imagen</div>
@@ -3177,7 +2813,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
       </div>
       <div class="panel-nota-texto" id="galeria-nota-texto"></div>
-      <!-- NUEVO: dictado por voz -->
       <div class="wrap-dictado">
         <textarea class="panel-nota-editor" id="galeria-nota-editor" style="display:none;" placeholder="Escribí una nota para esta imagen"></textarea>
         <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-galeria-nota-editor" data-dictado-target="galeria-nota-editor" style="display:none;" title="Dictado por voz">🎙</button>
@@ -3197,11 +2832,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- NUEVO: rutas de respuestas.txt no citadas por ninguna tarjeta -->
   <div id="pantalla-huerfanas" style="display:none;">
     <p class="subtitulo" id="huerfanas-subtitulo">Rutas de respuestas.txt que no están citadas por ninguna tarjeta</p>
 
-    <!-- NUEVO: Pomodoro (sticky arriba, igual que el buscador, si está activo) -->
     <div class="pomodoro-badge-slot pomodoro-badge-slot-sticky" id="pomodoro-badge-slot-huerfanas"></div>
 
     <div class="zona-buscador sticky-buscador" id="zona-buscador-huerfanas">
@@ -3217,14 +2850,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- NUEVO: pantalla del mapa (botón 🗺️ del modo observador). El <img> NO
-       vive acá: se crea al entrar (lazy rendering) y se destruye al salir
-       (ver abrirMapa/cerrarPantallaMapa). -->
   <div id="pantalla-mapa" style="display:none;">
-    <!-- Pomodoro (sticky arriba, igual que en Huérfanas/Galería, si está activo) -->
     <div class="pomodoro-badge-slot pomodoro-badge-slot-sticky" id="pomodoro-badge-slot-mapa"></div>
 
-    <!-- NUEVO: zoom/pan de la imagen del mapa -->
     <div class="mapa-zoom-controles">
       <button type="button" class="mapa-zoom-boton" id="btn-mapa-zoom-mas" title="Acercar">+</button>
       <button type="button" class="mapa-zoom-boton" id="btn-mapa-zoom-menos" title="Alejar">−</button>
@@ -3235,11 +2863,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <div class="navegacion" style="margin-top:20px;">
       <button class="boton-secundario" id="btn-mapa-descargar">⬇ Descargar</button>
-      <button class="boton-secundario" id="btn-mapa-volver">☰ Volver a la lista</button>
+      <button class="boton-secundario" id="btn-mapa-volver">☰ Volver a observador</button>
     </div>
   </div>
 
-  <!-- NUEVO: Gamificación — Tienda -->
   <div id="pantalla-tienda" style="display:none;">
     <p class="subtitulo">Tienda</p>
     <div class="saldo-tienda" id="saldo-tienda">Puntos disponibles: 0</div>
@@ -3249,7 +2876,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
   </div>
 
-  <!-- NUEVO: Gamificación — Historial -->
   <div id="pantalla-historial" style="display:none;">
     <p class="subtitulo">Historial de sesiones</p>
     <div class="fila-acciones-historial">
@@ -3259,10 +2885,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
     <div class="lista-historial-scroll" id="lista-historial"></div>
     <div class="historial-paginacion" id="historial-paginacion" style="display:none;"></div>
-    <!-- NUEVO: estadísticas históricas consolidadas (sesiones ya podadas) de este evaluador -->
     <div class="resumen-historico" id="resumen-historico" style="display:none;"></div>
     <p class="galeria-vacia" id="historial-vacio" style="display:none;">Aún no hay sesiones guardadas.</p>
-    <!-- NUEVO: sesiones de otros evaluadores (solo lectura, agrupadas por espacio) -->
     <div class="lista-temas zona-dificiles" id="zona-historial-otros" style="display:none; margin-top:14px;">
       <details id="det-historial-otros">
         <summary id="suma-historial-otros">Sesiones de otros evaluadores</summary>
@@ -3275,10 +2899,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 
   <div id="area-tarjeta" style="display:none;">
-    <!-- NUEVO: badge visible durante toda una sesión de Repaso Espaciado -->
     <div class="badge-srs" id="badge-srs" style="display:none;">🧠 Repaso Espaciado</div>
     <div class="barra-superior">
-      <!-- NUEVO: Fila 1 — estadísticas de gamificación -->
       <div class="fila-gamificacion" id="fila-gamificacion">
         <span class="stat-gamificacion" id="stat-puntos">⭐ 0</span>
         <span class="stat-gamificacion" id="stat-racha">🔥 0</span>
@@ -3287,12 +2909,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="stat-gamificacion" id="stat-segunda" title="Segundas oportunidades"></span>
         <button class="boton-mute" id="btn-mute" title="Silenciar/activar sonidos">🔊</button>
       </div>
-      <!-- Fila 2 — navegación (ya existía) -->
       <div class="fila-navegacion-superior">
         <div class="progreso-texto" id="progreso-texto"></div>
         <div class="grupo-cronometro">
           <div class="cronometro" id="cronometro">⏱ 00:00</div>
-          <!-- NUEVO: pausa manual (por si dejás de estudiar un rato) -->
           <button class="boton-pausa" id="btn-pausa" title="Pausar el cronómetro">⏸ Pausar</button>
         </div>
       </div>
@@ -3305,16 +2925,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <div class="tarjeta" id="tarjeta">
-      <!-- MODIFICADO: badge con cantidad de rutas asociadas -->
       <div class="badge-rutas" id="badge-rutas" style="display:none;"></div>
-      <!-- NUEVO: marcar la tarjeta para revisar (solo en memoria, durante esta sesión) -->
       <button class="boton-revisar" id="btn-revisar" title="Marcar para revisar (solo durante esta sesión)">🚩 Revisar</button>
       <div class="primero" id="tarjeta-primero"></div>
       <div class="zona-segundo" id="zona-segundo">
         <div class="fila-botones-tarjeta">
           <button class="boton-pista" id="btn-pista">Mostrar pista<span class="badge-conteo" id="badge-pista-gratis" style="display:none;"></span></button>
           <button class="boton-respuesta" id="btn-respuesta">Mostrar respuesta</button>
-          <!-- NUEVO: botón de nota (solo se ve si la tarjeta tiene nota) -->
           <button class="boton-nota" id="btn-nota" title="Ver/ocultar nota (pausa el cronómetro)">💡</button>
         </div>
         <div class="separador-tarjeta" id="separador-tarjeta" style="display:none;"></div>
@@ -3322,7 +2939,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- NUEVO: panel de nota (texto plano, se inyecta con textContent) -->
     <div class="panel-nota" id="panel-nota">
       <div class="panel-nota-cabecera">
         <div class="panel-nota-titulo">💡 Nota <span class="panel-nota-estado" id="panel-nota-estado"></span></div>
@@ -3332,7 +2948,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </div>
       </div>
       <div class="panel-nota-texto" id="panel-nota-texto"></div>
-      <!-- NUEVO: dictado por voz -->
       <div class="wrap-dictado">
         <textarea class="panel-nota-editor" id="nota-editor" style="display:none;" placeholder="Escribí tu nota (Ctrl+Enter para guardar)"></textarea>
         <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-nota-editor" data-dictado-target="nota-editor" style="display:none;" title="Dictado por voz">🎙</button>
@@ -3345,10 +2960,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- NUEVO: chips de razones guardadas (solo lectura) -->
     <div class="chips-razones" id="chips-razones" style="display:none;"></div>
 
-    <!-- NUEVO: panel de razones (checkboxes de las 6 predefinidas) -->
     <div class="panel-razones" id="panel-razones" style="display:none;">
       <div class="panel-razones-titulo">🏷 ¿Por qué la marcaste así?</div>
       <div class="lista-check-razones" id="lista-check-razones"></div>
@@ -3359,16 +2972,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <div class="zona-eval" id="zona-eval">
-      <!-- NUEVO: dictado por voz -->
       <div class="wrap-dictado">
         <textarea id="texto-eval" placeholder="Escribí la respuesta con tus palabras (opcional). Enter para evaluar"></textarea>
         <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-texto-eval" data-dictado-target="texto-eval" title="Dictado por voz">🎙</button>
       </div>
-      <!-- NUEVO: igual que el textarea pero de solo lectura, con las palabras
-           que coinciden con las claves/contenido de la respuesta subrayadas.
-           Se muestra en vez del textarea una vez evaluada la tarjeta. -->
       <div class="respuesta-usuario-resaltada" id="respuesta-usuario-resaltada" style="display:none;"></div>
-      <!-- MODIFICADO: id agregado para poder ocultar el botón tras evaluar -->
       <div class="fila-eval" id="fila-eval">
         <button class="boton-pista" id="btn-evaluar">Evaluar respuesta</button>
       </div>
@@ -3376,7 +2984,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <div class="rutas-contenedor" id="rutas-contenedor"></div>
 
-    <!-- NUEVO: avisos de consumibles (escudo / segunda oportunidad) -->
     <div class="aviso-juego" id="aviso-juego" role="status" style="display:none;"></div>
 
     <div class="estado-marca" id="estado-marca"></div>
@@ -3384,13 +2991,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="resultado-eval" id="resultado-eval"></div>
 
     <div class="botonera">
-      <!-- MODIFICADO: fila de decisión (cambian resultados[] / avanzan la tarjeta) -->
       <div class="fila-decision">
         <button class="boton boton-circular boton-no" id="btn-no" title="No entendido">&#10007;</button>
         <button class="boton boton-saltar" id="btn-saltar">Pasar sin marcar<span class="badge-conteo" id="badge-comodines" style="display:none;"></span></button>
         <button class="boton boton-circular boton-si" id="btn-si" title="Entendido">&#10003;</button>
       </div>
-      <!-- MODIFICADO: fila de etiquetas (metadata; no afectan la calificación) -->
       <div class="fila-etiquetas">
         <button class="boton-dificil" id="btn-dificil" title="Marcar/desmarcar como difícil (se guarda entre sesiones)">☆ Difícil</button>
         <button class="boton-dificil boton-razones" id="btn-razones" title="Registrar por qué marcaste esta tarjeta así">🏷 Razones<span class="badge-conteo" id="badge-conteo-razones" style="display:none;"></span></button>
@@ -3400,22 +3005,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="navegacion">
       <button class="boton-nav" id="btn-anterior">&larr; Anterior</button>
       <button class="boton-finalizar" id="btn-finalizar">Finalizar sesión</button>
-      <!-- NUEVO: solo visible en modo observador (reemplaza a Finalizar sesión) -->
       <button class="boton-finalizar" id="btn-observador-volver">☰ Volver a la lista</button>
       <button class="boton-nav" id="btn-siguiente">Siguiente &rarr;</button>
     </div>
   </div>
 
   <div class="pantalla-resumen" id="pantalla-resumen">
-    <!-- NUEVO: guardar la selección de esta sesión como lista (solo si no venía de una lista) -->
     <button class="boton-icono-circular boton-guardar-lista" id="btn-resumen-guardar-lista" title="Guardar esta selección como lista" style="display:none;">📋</button>
-    <!-- NUEVO: análisis de la sesión por subtema -->
     <button class="boton-icono-circular boton-analisis-sesion" id="btn-analisis-sesion" title="Análisis de la sesión" style="display:none;">📊</button>
     <h2>Resumen de la sesión</h2>
     <div class="nota-sesion" id="nota-sesion">🎓 Nota de la sesión: 0.0 / 10</div>
     <div class="nota-listado" id="nota-listado" style="display:none;"></div>
 
-    <!-- NUEVO: Gamificación — puntos, racha y modo jugado -->
     <div class="listas-resumen" id="resumen-gamificacion" style="display:none;">
       <div class="fila-resumen">
         <span class="etiqueta-resumen" id="resumen-puntos">⭐ Puntos ganados: 0</span>
@@ -3438,8 +3039,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <div class="listas-resumen">
-      <!-- MODIFICADO: solo 3 desplegables; tiempo, respuesta escrita y
-           evaluación de cada tarjeta se muestran dentro de cada item -->
       <details class="lista-desplegable">
         <summary><span class="etiqueta-resumen"><span class="punto punto-si"></span> <span id="etq-si">Entendidas (0)</span></span></summary>
         <div class="lista-contenido" id="lista-si"></div>
@@ -3456,7 +3055,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <summary><span class="etiqueta-resumen"><span class="punto punto-saltar"></span> <span id="etq-saltar">Pasadas sin marcar (0)</span></span></summary>
         <div class="lista-contenido" id="lista-saltar"></div>
       </details>
-      <!-- NUEVO: tarjetas marcadas con 🚩 Revisar durante la sesión -->
       <details class="lista-desplegable">
         <summary><span class="etiqueta-resumen" id="etq-revisar">🚩 Para revisar (0)</span></summary>
         <div class="lista-contenido" id="lista-revisar"></div>
@@ -3472,14 +3070,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: overlay de pausa manual -->
 <div class="overlay-pausa" id="overlay-pausa">
   <div class="titulo-pausa" id="titulo-pausa">⏸ En pausa</div>
   <div class="texto-pausa" id="texto-pausa">El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.</div>
   <button class="boton-reiniciar" id="btn-reanudar">▶ Reanudar</button>
 </div>
 
-<!-- NUEVO: Pomodoro (modo observador) -->
 <div class="modal-overlay" id="modal-pomodoro-iniciar">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>¿Empezar a estudiar?</h3>
@@ -3508,7 +3104,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: modal (no usa window.confirm) para continuar con las no respondidas -->
 <div class="modal-overlay" id="modal-continuar">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>Continuar con las no respondidas</h3>
@@ -3521,7 +3116,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: modal Sí/No de la Segunda oportunidad -->
 <div class="modal-overlay" id="modal-segunda">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>🔁 Segunda oportunidad</h3>
@@ -3532,7 +3126,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: modal de sincronización (backup unificado) -->
 <div class="modal-overlay" id="modal-sync">
   <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
     <h3>🔄 Sincronización</h3>
@@ -3604,7 +3197,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: modal de listas guardadas -->
 <div class="modal-overlay" id="modal-listas">
   <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
     <h3>📋 Listas guardadas</h3>
@@ -3615,10 +3207,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <button class="boton-secundario boton-lista-fila" id="btn-lista-ninguna">Ninguna (selección manual)</button>
     <div id="lista-listas-guardadas"></div>
     <p class="galeria-vacia" id="listas-vacio" style="display:none;">Todavía no guardaste ninguna lista.</p>
-    <!-- NUEVO: listas de otros evaluadores (se conservan, no se borran solas; ver §listas-espacio).
-         MODIFICADO: un solo botón "Vincular a este evaluador" para toda la
-         sección, igual que difíciles/notas/razones (antes era una sección
-         aparte, "Hay tarjetas de listas de otros evaluadores"). -->
     <details id="det-listas-otras" style="display:none">
       <summary id="suma-listas-otras">De otros evaluadores</summary>
       <div id="lista-listas-otras"></div>
@@ -3628,7 +3216,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: modal "Análisis de la sesión" (desde el resumen) -->
 <div class="modal-overlay" id="modal-analisis-sesion">
   <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
     <h3>📊 Análisis de la sesión</h3>
@@ -3637,11 +3224,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: modal para nombrar una lista nueva (desde el resumen) -->
 <div class="modal-overlay" id="modal-guardar-lista">
   <div class="modal-caja" role="dialog" aria-modal="true">
-    <h3>📋 Guardar como lista</h3>
-    <p>Nombrá esta selección de tarjetas para poder reutilizarla después.</p>
+    <h3 id="guardar-lista-titulo">📋 Guardar como lista</h3>
+    <p id="guardar-lista-descripcion">Nombrá esta selección de tarjetas para poder reutilizarla después.</p>
     <input type="text" class="input-buscador" id="input-guardar-lista-nombre" placeholder="Nombre de la lista" autocomplete="off">
     <div class="vinc-aviso" id="guardar-lista-error" style="display:none;"></div>
     <button class="boton-reiniciar" id="btn-guardar-lista-aceptar">Guardar</button>
@@ -3649,7 +3235,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: modal de aviso de Repaso Espaciado (listas SRS vencidas) -->
 <div class="modal-overlay" id="modal-srs-aviso">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>🧠 Repaso Espaciado</h3>
@@ -3661,7 +3246,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: modal de revinculación (recuperar datos de un evaluador renombrado) -->
 <div class="modal-overlay" id="modal-vincular">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3 id="vinc-titulo">Vincular a este evaluador</h3>
@@ -3687,7 +3271,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: Gamificación — modal de selección de modo, antes de iniciar sesión -->
 <div class="modal-overlay" id="modal-modo">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>Elegí el modo de juego</h3>
@@ -3713,7 +3296,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- NUEVO: Gamificación — modal de Game Over (solo Tryhard/Normal) -->
 <div class="modal-overlay modal-gameover" id="modal-gameover">
   <div class="modal-caja modal-caja-gameover" role="dialog" aria-modal="true">
     <h3 class="titulo-gameover">💀 Game Over</h3>
@@ -3733,7 +3315,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
   const modoAleatorio = __MODO_ALEATORIO__;
   const UMBRAL_CASI = __UMBRAL_CASI__;
-  // NUEVO: economía de los consumibles de la tienda (se editan arriba, en el .py)
   const PRECIO_COMODIN = __PRECIO_COMODIN__;
   const PRECIO_PISTA_GRATIS = __PRECIO_PISTA_GRATIS__;
   const PRECIO_ESCUDO_RACHA = __PRECIO_ESCUDO_RACHA__;
@@ -3746,17 +3327,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const SIM_CON_PISTA = __SIM_CON_PISTA__;   // NUEVO: todas las claves, con pista (debe ser MAYOR)
   const STOPWORDS = new Set(__STOPWORDS__);  // NUEVO: palabras vacías (solo para evaluar)
 
-  // NUEVO: letras griegas y símbolos especiales (ver extraer_claves() del
-  // lado Python) → su nombre en español, y el inverso. Permiten que "ε" y
-  // "epsilon" cuenten como lo mismo al evaluar.
   const SIMBOLOS_ESPECIALES = __SIMBOLOS_ESPECIALES__;
   const NOMBRES_A_SIMBOLOS = {};
   Object.keys(SIMBOLOS_ESPECIALES).forEach((simbolo) => {
     NOMBRES_A_SIMBOLOS[SIMBOLOS_ESPECIALES[simbolo]] = simbolo;
   });
-  // Mismo patrón que tokeniza palabras latinas/griegas, más cada símbolo
-  // especial como un token de un solo carácter (p. ej. "∑", "ε", "=").
-  // Escapa \\, ], ^ y - (los únicos problemáticos dentro de una clase [...]).
   const PATRON_PALABRA_CON_SIMBOLOS = new RegExp(
     '[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+|[' +
     Object.keys(SIMBOLOS_ESPECIALES).map((s) => s.replace(/[\\\]^-]/g, '\\$&')).join('') +
@@ -3764,7 +3339,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     'g'
   );
 
-  // ---------- Estado de la ronda actual ----------
   let tarjetasSesion = [];
   let resultados = [];
   let tiempos = [];
@@ -3782,11 +3356,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let modoObservador = false;  // NUEVO: viendo tarjetas sin evaluarse (sin cronómetro ni calificación)
   let observadorAbiertos = new Set();  // NUEVO: subT abiertos en la lista del observador
   let pausaManual = false;     // NUEVO: cronómetro pausado a mano (botón ⏸ Pausar)
-  // ---------- MODIFICADO: "Revisar" en memoria, sin persistencia en disco ----------
-  // Vive solo mientras la pestaña está abierta: no lee ni escribe localStorage.
-  // Al recargar o cerrar la página, revisarEnMemoria se pierde por completo (a
-  // propósito). Funciona igual en sesión de estudio y en modo observador, porque
-  // ambos operan sobre tarjetasSesion[indiceActual].
   let revisarEnMemoria = {};
 
   function esRevisar(t) { return !!revisarEnMemoria[hashTarjeta(t)]; }
@@ -3806,7 +3375,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let razonesAbierto = false;  // NUEVO: panel de razones abierto (pausa el cronómetro)
   let razonesPendientes = null; // NUEVO: array de códigos en edición, null si el panel está cerrado
 
-  // NUEVO: razones predefinidas (código fijo, sin texto libre ni personalización)
   const RAZONES_DEF = [
     { codigo: 'olvido', texto: 'Olvido', color: '#9CA3AF' },
     { codigo: 'incompleto', texto: 'Incompleto', color: '#F59E0B' },
@@ -3825,9 +3393,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let tiempoInicioTarjeta = 0;
   let cronometroIntervalId = null;
 
-  // ============================================================
-  // NUEVO: Gamificación — persistencia unificada (localStorage)
-  // ============================================================
   const CLAVE_GAMIFICACION = 'gamificacion_v1';
 
   function valoresPorDefectoGamificacion() {
@@ -3840,7 +3405,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (!crudo) return valoresPorDefectoGamificacion();
       const obj = JSON.parse(crudo);
       if (!obj || typeof obj !== 'object') return valoresPorDefectoGamificacion();
-      // Retrocompatibilidad: si falta algún campo, se completa con el default.
       const base = valoresPorDefectoGamificacion();
       return {
         puntosTotales: typeof obj.puntosTotales === 'number' ? obj.puntosTotales : base.puntosTotales,
@@ -3851,7 +3415,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           segundasOportunidades: (obj.inventario && typeof obj.inventario.segundasOportunidades === 'number') ? obj.inventario.segundasOportunidades : base.inventario.segundasOportunidades,
         },
         historial: Array.isArray(obj.historial) ? obj.historial : base.historial,
-        // NUEVO: estadísticas consolidadas de sesiones ya podadas, por evaluador
         resumenPorEvaluador: (obj.resumenPorEvaluador && typeof obj.resumenPorEvaluador === 'object') ? obj.resumenPorEvaluador : base.resumenPorEvaluador,
       };
     } catch (e) {
@@ -3863,13 +3426,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     try {
       localStorage.setItem(CLAVE_GAMIFICACION, JSON.stringify(gamificacion));
     } catch (e) {
-      // Sin localStorage disponible: solo queda en memoria de esta sesión
     }
   }
 
   let gamificacion = cargarGamificacion();
 
-  // ---------- Estado de sesión (se resetea en cada iniciarSesion) ----------
   let modoJuego = 'light';        // 'tryhard' | 'normal' | 'light'
   let vidasMaximas = 0;
   let vidasActuales = 0;
@@ -3881,22 +3442,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let pistaGratisUsadaPorTarjeta = [];    // paralelo a resultados
   let gameOverDisparado = false;
   let historialGuardadoEstaSesion = false;
-  // NUEVO: segunda oportunidad / escudo. SOLO en memoria: se reinician en cada sesión.
   let reintentadasSesion = new Set();      // tarjetas (objeto) que ya usaron su reintento en esta sesión
   let primerIntentoFallido = new Set();    // índices que fallaron el primer intento y usaron segunda oportunidad (quedan para repaso)
   let reintentoExitoso = new Set();        // subconjunto: el reintento salió bien (recompensa reducida)
   let segundaPendiente = false;            // hay un diálogo Sí/No abierto
   let modoZombie = false;   // NUEVO: si es true, se ignora POR COMPLETO la lógica de puntos/vidas/racha
-  // NUEVO: sesión de Repaso Espaciado en curso. null = sesión normal.
-  // { nombres: string[], hashesPorLista: { nombreLista: Set<hash> } }
   let srsSesionActiva = null;
   let sonidosActivos = true;   // NUEVO: efímero (no se guarda en localStorage), como pide el prompt
 
-  // ---------- MODIFICADO: estado persistente de tarjetas difíciles ----------
-  // Mapa { hash: {p, s, activa} } guardado en localStorage.
-  // El hash se calcula sobre el texto normalizado, así el marcado sobrevive
-  // a regeneraciones del HTML y a reordenamientos del recordatorio.txt.
-  // activa=false = desmarcada: sigue guardada y se puede re-activar.
   const CLAVE_DIFICILES = 'dificiles_tarjetas_v1';
   let dificiles = cargarDificiles();
 
@@ -3906,7 +3459,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (!crudo) return {};
       const obj = JSON.parse(crudo);
       if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-        // Migración: entradas viejas sin 'activa' se toman como activas
         Object.keys(obj).forEach((h) => {
           if (obj[h] && typeof obj[h] === 'object' && typeof obj[h].activa === 'undefined') {
             obj[h].activa = true;
@@ -3920,14 +3472,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  // ---------- OPTIMIZACIÓN: debounce de los guardados en localStorage ----------
-  // Cada cambio (marcar difícil, editar nota, guardar razón, etc.) dispara un
-  // guardado; si el usuario hace varios cambios seguidos (p. ej. marcar 10
-  // tarjetas), antes se serializaba el objeto completo 10 veces. Con
-  // crearGuardadoDebounced() se agrupan en UNA sola escritura 200-300ms
-  // después del último cambio. _guardadosPendientes guarda el flush() de cada
-  // guardado debounced registrado, para poder forzarlos todos en beforeunload
-  // (si el usuario cierra la pestaña antes de que dispare el timer).
   const _guardadosPendientes = [];
 
   function crearGuardadoDebounced(fnGuardarYa, ms) {
@@ -3952,8 +3496,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return debounced;
   }
 
-  // Si el usuario cierra/recarga la pestaña con guardados pendientes (dentro
-  // de la ventana del debounce), se fuerza a que se escriban ya mismo.
   window.addEventListener('beforeunload', () => {
     _guardadosPendientes.forEach((d) => d.flush());
   });
@@ -3962,12 +3504,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     try {
       localStorage.setItem(CLAVE_DIFICILES, JSON.stringify(dificiles));
     } catch (e) {
-      // Sin localStorage disponible: solo quedan en memoria de esta sesión
     }
   }
   const guardarDificiles = crearGuardadoDebounced(guardarDificilesYa, 250);
 
-  // NUEVO: Listas guardadas de tarjetas (selecciones reutilizables de "Elegir temas")
   const CLAVE_LISTAS = 'listas_guardadas_v1';
   let listas = cargarListas();
   let listaActivaNombre = null;   // null = selección manual; string = nombre de la lista activa
@@ -3987,7 +3527,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     try {
       localStorage.setItem(CLAVE_LISTAS, JSON.stringify(listas));
     } catch (e) {
-      // Sin localStorage disponible: quedan solo en memoria de esta sesión
     }
   }
   const guardarListas = crearGuardadoDebounced(guardarListasYa, 250);
@@ -3997,9 +3536,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return listas.find((l) => l.nombre.toLowerCase() === clave) || null;
   }
 
-  // ============================================================
-  // NUEVO: Repaso Espaciado (SRS) — opera a nivel de LISTA completa.
-  // ============================================================
+  function buscarListaEnEspacio(nombre, espacio) {
+    const clave = nombre.toLowerCase();
+    return listas.find((l) => l.nombre.toLowerCase() === clave && (l.espacio || ESPACIO_HASH) === espacio) || null;
+  }
+
+  function buscarListaPropia(nombre) {
+    return buscarListaEnEspacio(nombre, ESPACIO_HASH);
+  }
+
   const SRS_DEFAULT = { activated: false, startDate: 0, currentLevel: 1, lastReviewDate: 0, graduated: false, snoozeUntil: 0 };
   const SRS_INTERVALOS_DIAS = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30, 6: 60 };
   const SRS_MS_DIA = 86400000;
@@ -4008,23 +3553,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return SRS_INTERVALOS_DIAS[level] || SRS_INTERVALOS_DIAS[6];
   }
 
-  // Devuelve el objeto srs de una lista, completando con los valores por
-  // defecto los campos que falten (listas guardadas antes de este cambio, o
-  // importadas de forma incompleta). Muta 'lista.srs' para dejarlo completo.
   function obtenerSrsLista(lista) {
     lista.srs = Object.assign({}, SRS_DEFAULT, (lista.srs && typeof lista.srs === 'object') ? lista.srs : {});
     return lista.srs;
   }
 
-  // Solo el vencimiento por intervalo (sin mirar snoozeUntil); usado para el
-  // texto "Vencido" del modal de listas.
   function srsIntervaloVencido(srs) {
     if (!srs.activated || srs.graduated) return false;
     return Date.now() >= (srs.lastReviewDate + calcularIntervaloDias(srs.currentLevel) * SRS_MS_DIA);
   }
 
-  // §4.2: condición completa para que una lista dispare el aviso (intervalo
-  // vencido Y no silenciada Y con tarjetas).
   function srsListaParaAviso(lista) {
     const srs = obtenerSrsLista(lista);
     if (!srs.activated || srs.graduated) return false;
@@ -4034,7 +3572,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return true;
   }
 
-  // Texto estático (no es un cronómetro en vivo) del "Próximo repaso".
   function srsTextoProximoRepaso(srs) {
     const objetivo = srs.lastReviewDate + calcularIntervaloDias(srs.currentLevel) * SRS_MS_DIA;
     const diasRestantes = (objetivo - Date.now()) / SRS_MS_DIA;
@@ -4053,8 +3590,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return '';
   }
 
-  // Validación defensiva de un objeto 'srs' que llega de un import (individual
-  // o de un backup completo), para que datos corruptos no rompan nada.
   function normalizarSrsImportado(srsRaw) {
     if (!srsRaw || typeof srsRaw !== 'object') return Object.assign({}, SRS_DEFAULT);
     const nivel = (typeof srsRaw.currentLevel === 'number' && srsRaw.currentLevel >= 1 && srsRaw.currentLevel <= 6) ? srsRaw.currentLevel : 1;
@@ -4068,20 +3603,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     };
   }
 
-
-  // NUEVO: identifica a ESTE evaluador (nombre de su recordatorio.txt). Se mezcla
-  // en el hash para que dos evaluadores distintos con una tarjeta de texto
-  // idéntico ("primero + segundo" igual) no compartan difíciles, notas ni razones.
-  // Regenerar el HTML desde el MISMO recordatorio.txt mantiene este valor igual
-  // (no invalida lo ya guardado); solo cambia si el archivo cambia de nombre.
   const ESPACIO_HASH = __ESPACIO__;
   document.getElementById('nombre-evaluador').textContent = ESPACIO_HASH;
 
   function hashTarjetaCon(espacio, t) {
     const base = espacio + '\\u0001' + (t.primero || '') + '\\u0000' + (t.segundo || '');
     const norm = normalizarPalabra(base).replace(/\\s+/g, ' ').trim();
-    // djb2 -> hash de 32 bits (suficiente y sin dependencias; se mantiene corto
-    // aunque se agregue el espacio, porque solo se usa como entrada del hash)
     let h = 5381;
     for (let i = 0; i < norm.length; i++) {
       h = ((h << 5) + h + norm.charCodeAt(i)) >>> 0;
@@ -4089,13 +3616,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return 'h' + h.toString(36);
   }
 
-  // NUEVO: hash de ESTE evaluador (el de siempre). hashTarjetaCon permite
-  // recomputar el hash que tendria una tarjeta bajo OTRO espacio (revinculacion).
-  // OPTIMIZACIÓN: hashTarjeta() se llama decenas de veces por render con el
-  // MISMO objeto 't' (viene siempre del mismo array de tarjetas parseadas),
-  // así que se cachea por identidad de objeto en un WeakMap: si 't' no cambia,
-  // no se vuelve a normalizar ni recalcular el djb2. hashTarjetaCon() (usada
-  // para revincular con OTRO espacio) no se toca: no es el camino caliente.
   const _cacheHashTarjeta = new WeakMap();
   function hashTarjeta(t) {
     const previo = _cacheHashTarjeta.get(t);
@@ -4130,14 +3650,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderTarjeta();
   }
 
-  // ---------- NUEVO: notas locales (editables en el HTML) ----------
-  // Mapa { hash: {p, s, nota, base, t} } guardado en localStorage.
-  //  - hash: el mismo de las difíciles (primero + segundo normalizados).
-  //  - nota: texto de MI versión ('' = la borré a propósito).
-  //  - base: nota que venía del txt cuando edité (sirve para distinguir
-  //          'pendiente de pasar al txt' de 'el txt cambió después').
-  //  - t: fecha de última edición (al importar gana la más reciente).
-  // La nota local manda sobre la del txt; el txt nunca se modifica.
   const CLAVE_NOTAS = 'notas_tarjetas_v1';
   let notasLocales = cargarNotas();
 
@@ -4157,7 +3669,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     try {
       localStorage.setItem(CLAVE_NOTAS, JSON.stringify(notasLocales));
     } catch (e) {
-      // Sin localStorage: quedan solo en memoria de esta sesión
     }
   }
   const guardarNotas = crearGuardadoDebounced(guardarNotasYa, 250);
@@ -4166,13 +3677,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function entradaNotaDe(t) { return notasLocales[hashTarjeta(t)] || null; }
 
-  // Nota que se muestra: la local si existe, si no la del txt
   function notaEfectivaDe(t) {
     const e = entradaNotaDe(t);
     return e ? (e.nota || '') : notaTxtDe(t);
   }
 
-  // 'igual' | 'pendiente' (edité yo, el txt sigue como estaba) | 'conflicto' (el txt cambió después)
   function estadoNotaDe(t) {
     const e = entradaNotaDe(t);
     if (!e) return 'igual';
@@ -4198,7 +3707,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     guardarNotas();
   }
 
-  // "Quedarme con la mía": acepto que el txt cambió y mantengo mi versión
   function conservarMiNota(t) {
     const e = entradaNotaDe(t);
     if (!e) return;
@@ -4207,14 +3715,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     guardarNotas();
   }
 
-  // ---------- Elementos ----------
   const elPantallaTemas = document.getElementById('pantalla-temas');
   const elListaTemas = document.getElementById('lista-temas');
   const elAreaTarjeta = document.getElementById('area-tarjeta');
   const elPantallaResumen = document.getElementById('pantalla-resumen');
   const elPantallaObservador = document.getElementById('pantalla-observador');
   const elListaObservador = document.getElementById('lista-observador');
-  // NUEVO: galería de imágenes
   const elPantallaGaleria = document.getElementById('pantalla-galeria');
   const elGaleriaIndicador = document.getElementById('galeria-indicador');
   const elGaleriaImg = document.getElementById('galeria-img');
@@ -4229,24 +3735,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elGaleriaNotaVersiones = document.getElementById('galeria-nota-versiones');
   const elBtnGaleriaAnterior = document.getElementById('btn-galeria-anterior');
   const elBtnGaleriaSiguiente = document.getElementById('btn-galeria-siguiente');
-  // NUEVO: imagen del mapa (botón 🗺️ del modo observador)
   const elPantallaMapa = document.getElementById('pantalla-mapa');
   const elBtnObservadorMapa = document.getElementById('btn-observador-mapa');
   const elMapaImagenWrap = document.getElementById('mapa-imagen-wrap');
-  // NUEVO: Buscador Global
   const elInputBuscadorTemas = document.getElementById('input-buscador-temas');
   const elDropdownBuscadorTemas = document.getElementById('dropdown-buscador-temas');
   const elInputBuscadorObservador = document.getElementById('input-buscador-observador');
   const elDropdownBuscadorObservador = document.getElementById('dropdown-buscador-observador');
   const elInputBuscadorGaleria = document.getElementById('input-buscador-galeria');
   const elDropdownBuscadorGaleria = document.getElementById('dropdown-buscador-galeria');
-  // NUEVO: Rutas Huérfanas
   const elPantallaHuerfanas = document.getElementById('pantalla-huerfanas');
   const elListaHuerfanas = document.getElementById('lista-huerfanas');
   const elHuerfanasVacia = document.getElementById('huerfanas-vacia');
   const elInputBuscadorHuerfanas = document.getElementById('input-buscador-huerfanas');
   const elDropdownBuscadorHuerfanas = document.getElementById('dropdown-buscador-huerfanas');
-  // NUEVO: Gamificación — elementos DOM
   const elBtnAbrirHistorial = document.getElementById('btn-abrir-historial');
   const elBtnAbrirTienda = document.getElementById('btn-abrir-tienda');
   const elBtnAbrirListas = document.getElementById('btn-abrir-listas');
@@ -4301,7 +3803,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elRespuestaUsuarioResaltada = document.getElementById('respuesta-usuario-resaltada');   // NUEVO
   const elBtnDictadoTextoEval = document.getElementById('btn-dictado-texto-eval');   // NUEVO
   const elBtnEvaluar = document.getElementById('btn-evaluar');
-  // NUEVO: nota
   const elBtnNota = document.getElementById('btn-nota');
   const elPanelNota = document.getElementById('panel-nota');
   const elPanelNotaTexto = document.getElementById('panel-nota-texto');
@@ -4315,7 +3816,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elBtnNotaCancelar = document.getElementById('btn-nota-cancelar');
   const elBtnNotaBorrar = document.getElementById('btn-nota-borrar');
   const elResultadoEval = document.getElementById('resultado-eval');
-  // MODIFICADO: nuevos elementos
   const elFilaEval = document.getElementById('fila-eval');
   const elBadgeRutas = document.getElementById('badge-rutas');
   const elBtnRazones = document.getElementById('btn-razones');
@@ -4334,8 +3834,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   const elLightbox = document.getElementById('lightbox');
   const elLightboxImg = document.getElementById('lightbox-img');
-
-  // ---------- Utilidades ----------
 
   function mezclar(lista) {
     const copia = [...lista];
@@ -4381,19 +3879,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elPantallaHistorial.style.display = nombre === 'historial' ? 'block' : 'none';  // NUEVO
 
     if (nombre === 'observador') {
-      // OPTIMIZACIÓN: se deja pintar primero el cambio de pantalla (el
-      // display:block de arriba) y recién en el siguiente frame se hace el
-      // trabajo pesado; evita que todo el reflow caiga en el mismo frame
-      // sincrónico del click (se nota sobre todo en PC).
       requestAnimationFrame(() => {
         renderImagenesPreview();   // NUEVO: refresca también al entrar por primera vez (mismo motivo que "temas")
       });
     }
 
     if (nombre === 'temas') {
-      // OPTIMIZACIÓN: mismo motivo que arriba — se agrupan las 6 funciones
-      // de render en un solo requestAnimationFrame para que no se ejecuten
-      // todas sincrónicamente pegadas al cambio de pantalla.
       requestAnimationFrame(() => {
         renderDificilesPreview();  // MODIFICADO: actualizar la vista de difíciles
         renderNotasPreview();      // NUEVO: notas distintas a las del txt
@@ -4407,19 +3898,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       detenerCronometro();
     }
 
-    // NUEVO: Pomodoro — el badge "sigue" al usuario entre observador,
-    // huérfanas y galería (se reubica en el slot de la pantalla actual).
     reubicarBadgePomodoro(nombre);
   }
-
-  // ---------- Pantalla de selección de temas ----------
 
   function nombreTema(tarjeta) {
     return tarjeta.tema && tarjeta.tema.trim() !== '' ? tarjeta.tema : '(Sin tema)';
   }
 
-  // NUEVO: subT en el orden de aparición en recordatorio.txt, con los índices
-  // (dentro de tarjetasCompletas) de sus tarjetas, también en orden del txt.
   function agruparPorTema() {
     const mapa = new Map();
     tarjetasCompletas.forEach((t, i) => {
@@ -4430,7 +3915,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return Array.from(mapa.entries()).map((par) => ({ nombre: par[0], indices: par[1] }));
   }
 
-  // Primero (en negrita) y segundo (gris), para listas de tarjetas
   function crearTextosTarjeta(t) {
     const cont = document.createElement('span');
     cont.className = 'tc-textos';
@@ -4447,14 +3931,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return cont;
   }
 
-  // OPTIMIZACIÓN (lazy rendering): con construcción perezosa, el cuerpo de un
-  // subT colapsado puede no existir todavía en el DOM, así que la selección
-  // ya NO se puede leer de los checkboxes (algunos ni están creados). Se
-  // guarda aparte, por ÍNDICE de tarjeta: por defecto todo está seleccionado
-  // (como siempre al abrir el HTML), así que solo se registran las
-  // EXCLUSIONES explícitas del usuario. Esto permite que "Comenzar estudio"
-  // y los contadores de cada subT sean correctos aunque ese subT nunca se
-  // haya abierto (y por lo tanto nunca haya construido sus checkboxes).
   const seleccionTemasExcluidos = new Set();
   function estaSeleccionado(i) { return !seleccionTemasExcluidos.has(i); }
   function fijarSeleccionado(i, val) {
@@ -4462,15 +3938,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     else seleccionTemasExcluidos.add(i);
   }
 
-  // nombre del subT -> { det, lazyCtrl, checkGrupo, cuenta, indices, cuerpoEl (null hasta abrirse) }
   const gruposTemaInfo = new Map();
-  // índice de tarjeta -> nombre de su subT (para ubicarla aunque su grupo
-  // esté colapsado/sin construir, p. ej. desde el buscador global)
   const indiceAGrupoTema = new Map();
 
-  // Sincroniza el check del subT (marcado / parcial) y su contador n/m a
-  // partir del ESTADO (seleccionTemasExcluidos), no del DOM: así es correcto
-  // incluso si el cuerpo de ese subT todavía no se construyó.
   function actualizarResumenGrupo(nombreGrupo) {
     const info = gruposTemaInfo.get(nombreGrupo);
     if (!info) return;
@@ -4494,8 +3964,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     btn.disabled = n === 0;
   }
 
-  // NUEVO: refresca solo los indicadores ★/💡/🏷 de "Elegir temas" sin
-  // reconstruir la lista (eso reiniciaría las casillas ya marcadas por el usuario)
   function actualizarMarcasTemas() {
     elListaTemas.querySelectorAll('.item-tarjeta-check').forEach((fila) => {
       const c = fila.querySelector('input[data-idx]');
@@ -4519,9 +3987,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  // Marca SOLO las tarjetas cuyo hash está en 'hashes'. Actualiza el ESTADO
-  // (sirve aunque haya subT colapsados sin construir) y, de paso, sincroniza
-  // los checkboxes de los subT que SÍ están abiertos/construidos.
   function aplicarSeleccionPorHashes(hashes) {
     const set = new Set(hashes);
     tarjetasCompletas.forEach((t, i) => fijarSeleccionado(i, set.has(hashTarjeta(t))));
@@ -4532,16 +3997,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     actualizarConteoSeleccion();
   }
 
-  // Selecciona una lista guardada como selección activa de "Elegir temas"
   function seleccionarListaActiva(nombre) {
-    const lista = buscarLista(nombre);
+    const lista = buscarListaPropia(nombre);   // NUEVO: nunca una lista ajena con el mismo nombre
     if (!lista) return;
     listaActivaNombre = lista.nombre;
     aplicarSeleccionPorHashes(lista.hashes);
     actualizarChipListaActiva();
   }
 
-  // "Ninguna": vuelve a la selección manual (todas marcadas, como al abrir el HTML)
   function quitarListaActiva() {
     listaActivaNombre = null;
     seleccionTemasExcluidos.clear();
@@ -4553,16 +4016,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   document.getElementById('btn-chip-lista-quitar').addEventListener('click', () => quitarListaActiva());
 
-  // ---------- OPTIMIZACIÓN: construcción perezosa de <details> colapsados ----------
-  // Al entrar a una pantalla se armaban TODOS los nodos DOM de TODAS sus
-  // secciones, incluidas las que el usuario nunca abre (p. ej. "Desmarcadas",
-  // o cada subT de "Elegir temas"). Con prepararDetallesLazy(det, construir)
-  // el <summary> (título + contador) se arma de entrada como siempre, pero
-  // 'construir' (el cuerpo pesado) recién corre la PRIMERA vez que ese
-  // <details> se abre, y queda cacheado: cerrar/reabrir no lo reconstruye.
-  // Invalidación: _detallesConstruidos.delete(det) antes de volver a abrir
-  // fuerza una reconstrucción (se usa tras operaciones masivas que cambian
-  // el contenido de una sección ya construida).
   const _detallesConstruidos = new WeakSet();
   function prepararDetallesLazy(det, construir) {
     const intentar = () => {
@@ -4574,17 +4027,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     det.addEventListener('toggle', intentar);
     if (det.open) intentar();   // ya estaba abierto al prepararlo (p. ej. estado recordado)
     return {
-      // Abre (si hace falta) y garantiza que el contenido ya esté construido;
-      // usado cuando hay que "saltar" directo a una fila dentro de la sección.
       abrirYConstruir() {
         if (!det.open) det.open = true;   // dispara 'toggle' -> intentar(), sincrónico
         intentar();                       // red de seguridad por si el navegador no lo disparó ya
       },
       invalidar() { _detallesConstruidos.delete(det); },
-      // Invalida y, si la sección ya estaba abierta, la reconstruye YA (para
-      // secciones cuyo contenido depende de datos que cambian entre
-      // renders, p. ej. al reabrir la pantalla "Elegir temas"). 'construir'
-      // debe ser idempotente (limpiar su contenedor antes de rearmarlo).
       refrescar() {
         _detallesConstruidos.delete(det);
         intentar();
@@ -4592,13 +4039,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     };
   }
 
-  // OPTIMIZACIÓN (lazy rendering): el <summary> (checkbox del grupo + nombre
-  // + contador n/m) se arma siempre, pero el .cuerpo-grupo (un checkbox por
-  // tarjeta del subT) recién se construye la PRIMERA vez que ese subT se
-  // abre, vía prepararDetallesLazy. La selección en sí vive en
-  // seleccionTemasExcluidos (independiente del DOM), así que "Comenzar
-  // estudio" y los contadores son correctos aunque el subT nunca se haya
-  // abierto.
   function construirListaTemas() {
     elListaTemas.innerHTML = '';
     gruposTemaInfo.clear();
@@ -4626,9 +4066,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       gruposTemaInfo.set(g.nombre, info);
       g.indices.forEach((i) => indiceAGrupoTema.set(i, g.nombre));
 
-      // Marcar/desmarcar el subT marca/desmarca todas sus tarjetas (funciona
-      // aunque el cuerpo todavía no esté construido: actualiza el ESTADO y,
-      // si el cuerpo ya existe, también sus checkboxes).
       checkGrupo.addEventListener('change', () => {
         g.indices.forEach((i) => fijarSeleccionado(i, checkGrupo.checked));
         if (info.cuerpoEl) {
@@ -4655,7 +4092,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           });
           fila.appendChild(c);
           fila.appendChild(crearTextosTarjeta(tarjetasCompletas[i]));
-          // NUEVO: indicadores visuales (solo informativos, no clickeables)
           const marcas = document.createElement('span');
           marcas.className = 'tc-marcas';
           marcas.textContent = (esDificil(tarjetasCompletas[i]) ? '★ ' : '') + (notaEfectivaDe(tarjetasCompletas[i]) !== '' ? '💡 ' : '') + (razonesDeTarjeta(tarjetasCompletas[i]).length > 0 ? ' 🏷' : '');
@@ -4672,8 +4108,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     actualizarConteoSeleccion();
   }
 
-  // MODIFICADO: ahora se estudian las tarjetas marcadas (una por una), en el
-  // orden del txt; si el evaluador se generó en modo aleatorio, se mezclan.
   document.getElementById('btn-comenzar').addEventListener('click', () => {
     const seleccion = indicesSeleccionados();
     if (seleccion.size === 0) return;
@@ -4684,23 +4118,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     abrirModalSeleccionModo(filtradas);  // MODIFICADO: gamificación
   });
 
-  // ---------- NUEVO: modo observador ----------
-  // Recorre las tarjetas en el orden del txt SIN evaluarse: sin cronómetro,
-  // sin Entendí / No entendí, sin Finalizar. Sí se pueden ver pista y rutas,
-  // editar notas y marcar ☆ Difícil. Reutiliza la vista de tarjeta del evaluador.
-
-  // nombre del subT -> { lazyCtrl, cuerpoEl (null hasta abrirse) }; e índice
-  // de tarjeta -> nombre de su subT, para poder ubicarla y forzar su
-  // construcción aunque el grupo esté colapsado (ver salirObservador).
   const gruposObservadorInfo = new Map();
   const indiceAGrupoObservador = new Map();
 
-  // OPTIMIZACIÓN (lazy rendering): construirListaObservador() se llama cada
-  // vez que se entra o se vuelve del observador (para refrescar ★/💡), así
-  // que antes se reconstruían TODOS los botones de TODAS las tarjetas de
-  // TODOS los subT en cada vuelta, abiertos o no. Ahora el cuerpo de un subT
-  // colapsado recién se arma la primera vez que se abre (o, si ya estaba
-  // abierto —viene de 'observadorAbiertos'—, se arma de una, como antes).
   function construirListaObservador() {
     elListaObservador.innerHTML = '';
     gruposObservadorInfo.clear();
@@ -4756,9 +4176,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function entrarObservador() {
     if (tarjetasCompletas.length === 0) return;
     mostrarPantalla('observador');
-    // OPTIMIZACIÓN: se deja pintar la pantalla (vacía) primero, y recién en
-    // el siguiente frame se arma la lista — evita apilar el reflow del
-    // cambio de pantalla con el de construir la lista en el mismo frame.
     requestAnimationFrame(() => {
       construirListaObservador();
     });
@@ -4793,14 +4210,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     modoObservador = false;
     elAreaTarjeta.classList.remove('observador');
     mostrarPantalla('observador');
-    // OPTIMIZACIÓN: igual que entrarObservador() — el reflow de
-    // construirListaObservador() (+ la apertura/scroll a la última tarjeta
-    // vista, que depende de que la lista ya esté armada) se corre en el
-    // siguiente frame, no pegado al cambio de pantalla.
     requestAnimationFrame(() => {
       construirListaObservador();   // refresca ★ y 💡
-      // Volver al lugar donde se estaba: forzar la construcción (lazy) de su
-      // subT si hiciera falta, abrirlo y mostrar la fila.
       const nombreGrupo = indiceAGrupoObservador.get(ultimo);
       const info = nombreGrupo ? gruposObservadorInfo.get(nombreGrupo) : null;
       if (info && info.lazyCtrl) info.lazyCtrl.abrirYConstruir();
@@ -4813,12 +4224,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
   }
 
-  // ============================================================
-  // NUEVO: galería de imágenes de las rutas (solo desde el modo observador)
-  // ============================================================
-  // Datos completamente independientes de las notas/difíciles de tarjetas:
-  // propia clave de localStorage, propio hash y su propia sección de preview
-  // (no se suman a "Difíciles guardadas" ni "Notas editadas").
   const CLAVE_IMAGENES = 'datos_imagenes_v1';
   let datosImagenes = cargarImagenes();
   let galeriaPos = 0;            // posición actual dentro de INDICE_IMAGENES
@@ -4841,13 +4246,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     try {
       localStorage.setItem(CLAVE_IMAGENES, JSON.stringify(datosImagenes));
     } catch (e) {
-      // sin localStorage: quedan solo en memoria de esta sesión
     }
   }
   const guardarImagenesStorage = crearGuardadoDebounced(guardarImagenesStorageYa, 250);
 
-  // Hash liviano: espacio del evaluador + número de ruta + índice de la imagen
-  // DENTRO de esa ruta (solo contando líneas 'IMG:'). Sin base64, sin subT.
   function hashImagenCon(espacio, ruta, indice) {
     const base = espacio + '\u0001' + ruta + '\u0000' + indice;
     let h = 5381;
@@ -4857,10 +4259,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return 'i' + h.toString(36);   // prefijo 'i' (imagen) para no confundir con 'h' de tarjeta
   }
 
-  // OPTIMIZACIÓN: igual que hashTarjeta(), hashImagen() se llama muchas veces
-  // por render con el mismo (ruta, índice). Como son primitivos (no un objeto
-  // para usar WeakMap), se cachea en un Map normal con clave compuesta.
-  // hashImagenCon() (revinculación con OTRO espacio) no se toca.
   const _cacheHashImagen = new Map();
   function hashImagen(ruta, indice) {
     const clave = ruta + '\u0000' + indice;
@@ -4871,9 +4269,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return h;
   }
 
-  // Recorre rutasDisp en orden numérico de ruta y arma la lista de coordenadas
-  // {ruta, indice} de TODAS las imágenes, en el mismo orden en que aparecen en
-  // respuestas.txt. No guarda el src acá: eso se busca "al vuelo" al renderizar.
   function construirIndiceImagenes() {
     const nav = [];
     Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
@@ -4885,7 +4280,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   const INDICE_IMAGENES = construirIndiceImagenes();   // fijo: no cambia durante la sesión
 
-  // Busca el src de una imagen por coordenadas, filtrando solo líneas 'IMG:'
   function srcDeImagen(ruta, indice) {
     const lineas = (rutasDisp[ruta] && rutasDisp[ruta].lineas) || [];
     const imagenes = lineas.filter(esImagen);
@@ -4893,11 +4287,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return linea ? linea.substring(4) : '';   // quitar el prefijo 'IMG:'
   }
 
-  // NUEVO: descripción de UNA imagen puntual (ruta + posición dentro de la
-  // ruta), extraída del drawio. datos.descripciones_rutas ahora es
-  // { ruta: [desc_img0, desc_img1, ...] } -- una lista por ruta, análoga al
-  // 'indice' que ya usa srcDeImagen/INDICE_IMAGENES para navegar imágenes
-  // dentro de una misma ruta.
   function descripcionDeImagen(ruta, indice) {
     const listas = datos.descripciones_rutas || {};
     const lista = listas[ruta] || listas[String(ruta)] || [];
@@ -4914,8 +4303,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function notaBaseImagen() { const e = entradaImagenActual(); return e ? (e.base || '') : ''; }
   function esDificilImagen() { const e = entradaImagenActual(); return !!(e && e.dificil); }
 
-  // Guarda la entrada de esta imagen, o la borra si queda "vacía" (sin nota y
-  // sin marca de difícil), para no acumular entradas basura en localStorage.
   function guardarEntradaImagen(ruta, indice, cambios) {
     const h = hashImagen(ruta, indice);
     const actual = datosImagenes[h] || { ruta: ruta, indice: indice, nota: '', base: '', dificil: false, t: 0 };
@@ -4934,8 +4321,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     guardarEntradaImagen(ruta, indice, { dificil: !esDificilImagen() });
     renderGaleria();
   }
-
-  // ---------- Nota de la imagen: ver / editar / revertir a la anterior ----------
 
   function galeriaCambiosSinGuardar() {
     if (!galeriaEditando) return false;
@@ -4957,7 +4342,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (INDICE_IMAGENES.length === 0) return;
     galeriaNotaAbierta = true;
     galeriaVerAnterior = false;
-    // sin nota y sin versión anterior: directo a escribir
     galeriaEditando = (notaActualImagen() === '' && notaBaseImagen() === '');
     if (galeriaEditando) elGaleriaNotaEditor.value = '';
     renderGaleria();
@@ -4984,7 +4368,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
     const anterior = notaActualImagen();
     const nueva = elGaleriaNotaEditor.value.trim();
-    // solo se actualiza 'base' (versión anterior) si el texto realmente cambió
     const cambios = (nueva === anterior) ? { nota: nueva } : { nota: nueva, base: anterior };
     guardarEntradaImagen(ruta, indice, cambios);
     galeriaEditando = false;
@@ -5005,7 +4388,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderGaleria();
   }
 
-  // "Revertir": la versión anterior pasa a ser la actual (deshacer de un solo nivel)
   function revertirGaleriaNota() {
     if (INDICE_IMAGENES.length === 0) return;
     const base = notaBaseImagen();
@@ -5015,8 +4397,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     galeriaVerAnterior = false;
     renderGaleria();
   }
-
-  // ---------- Render y navegación ----------
 
   function renderGaleria() {
     const total = INDICE_IMAGENES.length;
@@ -5048,9 +4428,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elGaleriaImg.src = srcDeImagen(ruta, indice);
     elGaleriaIndicador.textContent = 'Imagen ' + (galeriaPos + 1) + ' de ' + total + ' (Ruta ' + ruta + ')';
 
-    // NUEVO: descripción de ESTA imagen puntual (atributo 'descripcion' del
-    // drawio, indexada por ruta + posición dentro de la ruta, igual que
-    // srcDeImagen/INDICE_IMAGENES).
     const descripcionImg = descripcionDeImagen(ruta, indice);
     if (descripcionImg) {
       elGaleriaDescripcion.textContent = descripcionImg;
@@ -5110,7 +4487,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!confirmarDescartarGaleria()) return;
     const total = INDICE_IMAGENES.length;
     if (total === 0) return;
-    // navegación continua: de la última imagen de una ruta pasa a la primera de la siguiente
     galeriaPos = (galeriaPos + delta + total) % total;
     resetGaleriaNotaUI();
     renderGaleria();
@@ -5120,8 +4496,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     galeriaPos = 0;
     resetGaleriaNotaUI();
     mostrarPantalla('galeria');
-    // OPTIMIZACIÓN: se deja pintar el cambio de pantalla primero; recién en
-    // el siguiente frame se arma/decodifica la imagen de la galería.
     requestAnimationFrame(() => {
       renderGaleria();
     });
@@ -5130,19 +4504,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function volverListaDesdeGaleria() {
     if (!confirmarDescartarGaleria()) return;
     resetGaleriaNotaUI();
-    // MODIFICADO: no se reconstruye la lista del observador (a diferencia de
-    // salirObservador), así los subT que estaban abiertos quedan como estaban.
-    // renderImagenesPreview() ya se llama dentro de mostrarPantalla('observador').
     mostrarPantalla('observador');
   }
 
-  // ============================================================
-  // NUEVO: Rutas Huérfanas (rutas de respuestas.txt no citadas por ninguna
-  // tarjeta). Pantalla independiente, solo accesible desde el observador.
-  // ============================================================
-
-  // Se calcula UNA sola vez: las rutas huérfanas no cambian durante la sesión
-  // (mismo criterio que INDICE_IMAGENES).
   const rutasHuerfanas = (() => {
     const citadas = new Set();
     tarjetasCompletas.forEach((t) => rutasValidasDe(t).forEach((n) => citadas.add(n)));
@@ -5152,28 +4516,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       .sort((a, b) => a - b);
   })();
 
-  // NUEVO: indicador de cantidad, en el botón que abre la pantalla y en su
-  // subtítulo (rutasHuerfanas no cambia durante la sesión, así que alcanza
-  // con fijar el texto una sola vez, al cargar).
   document.getElementById('btn-ver-huerfanas').textContent = '📄 Rutas Huérfanas (' + rutasHuerfanas.length + ')';
   document.getElementById('huerfanas-subtitulo').textContent =
     'Rutas de respuestas.txt que no están citadas por ninguna tarjeta (' + rutasHuerfanas.length + ')';
 
-  // ============================================================
-  // NUEVO: índices invertidos para el buscador global (§3 del pedido de
-  // optimización). Filtran candidatos antes de aplicar la MISMA comprobación
-  // exacta de siempre, así que no cambia ningún resultado de búsqueda.
-  // ============================================================
-
-  // Separa en palabras normalizadas de 3+ caracteres, sin palabras vacías
-  // (mismo STOPWORDS que ya usa el resaltado de evaluación).
   function tokenizarParaIndice(texto) {
     return normalizarPalabra(texto || '')
       .split(/[^a-z0-9áéíóúñ]+/)
       .filter((tok) => tok.length >= 3 && !STOPWORDS.has(tok));
   }
 
-  // items: lista de ids a indexar. extraerTexto(id) -> texto completo de ese id.
   function construirIndiceInvertido(items, extraerTexto) {
     const indice = new Map();   // token -> Set<id>
     items.forEach((id) => {
@@ -5186,15 +4538,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return indice;
   }
 
-  // Candidatos cuyo texto PODRÍA contener 'consultaNorm': para cada palabra
-  // de la consulta busca, entre las CLAVES del índice, las que la contienen
-  // como subcadena (cubre coincidencias parciales de palabra, igual que la
-  // búsqueda de siempre) y une sus ids; intersecta entre palabras de la
-  // consulta (deben aparecer todas, en cualquier lugar del texto indexado).
-  // Si una palabra de la consulta es muy corta/vacía y no aporta ningún
-  // token, esa palabra no filtra (nunca se pierden resultados verdaderos).
-  // Devuelve null si no se pudo acotar nada: en ese caso se recorre todo,
-  // igual que antes del índice (fallback seguro).
   function candidatosPorIndice(indice, consultaNorm) {
     const palabras = consultaNorm.split(/\s+/).filter(Boolean);
     if (palabras.length === 0) return null;
@@ -5214,7 +4557,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return resultado;
   }
 
-  // ---- Índice de tarjetas: primero + segundo + texto de sus rutas ----
   const indiceTarjetas = construirIndiceInvertido(
     tarjetasCompletas.map((_, i) => i),
     (i) => {
@@ -5223,13 +4565,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   );
 
-  // ---- Índice de rutas huérfanas: "ruta N" + su contenido de texto ----
   const indiceHuerfanas = construirIndiceInvertido(
     rutasHuerfanas,
     (numeroRuta) => 'ruta ' + numeroRuta + ' ' + (textoHuerfanaPlano(numeroRuta) || '')
   );
 
-  // ---- Índice de imágenes: "ruta N" + descripción, por posición en INDICE_IMAGENES ----
   const indiceImagenes = construirIndiceInvertido(
     INDICE_IMAGENES.map((_, i) => i),
     (posImg) => {
@@ -5238,11 +4578,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   );
 
-
-
-  // "Revisar" de rutas huérfanas: EFÍMERO en memoria (igual política que
-  // revisarEnMemoria de tarjetas). Objeto paralelo e independiente: nunca se
-  // mezcla con revisarEnMemoria ni aparece en "🚩 Para revisar guardadas".
   let revisarRutasEnMemoria = {};
   function esRevisarRuta(numeroRuta) { return !!revisarRutasEnMemoria[numeroRuta]; }
   function toggleRevisarHuerfana(numeroRuta) {
@@ -5253,9 +4588,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  // Línea de ruta SIN resaltado de palabras clave (no hay tarjeta asociada
-  // de donde sacar claves): a diferencia de agregarLineaResaltada, acá el
-  // texto va tal cual, como nodo de texto (nunca se interpreta como HTML).
   function agregarLineaPlana(contenedor, linea) {
     const div = document.createElement('div');
     div.className = 'ruta-linea';
@@ -5269,9 +4601,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     boton.textContent = activa ? '🚩 Para revisar' : '🚩 Revisar';
   }
 
-  // Arma los <details> UNA sola vez (las rutas huérfanas no cambian). Cada
-  // <details> es independiente entre sí: abrir uno no cierra los demás (es
-  // el comportamiento nativo de <details>, no hay nada que coordinarlos).
   function construirListaHuerfanas() {
     elListaHuerfanas.innerHTML = '';
     rutasHuerfanas.forEach((numeroRuta) => {
@@ -5296,7 +4625,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       btnRevisar.dataset.ruta = String(numeroRuta);
       actualizarBotonRevisarHuerfana(btnRevisar, numeroRuta);
       btnRevisar.addEventListener('click', (e) => {
-        // No debe colapsar/expandir el <details> al marcar/desmarcar.
         e.preventDefault();
         e.stopPropagation();
         toggleRevisarHuerfana(numeroRuta);
@@ -5307,10 +4635,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
       det.appendChild(sum);
 
-      // OPTIMIZACIÓN (lazy rendering): el contenido (líneas + imágenes) de
-      // cada ruta recién se arma la primera vez que esa ruta se abre; con
-      // muchas rutas huérfanas (e imágenes pesadas) evita construir TODAS
-      // las miniaturas de entrada, aunque el usuario nunca las abra.
       prepararDetallesLazy(det, () => {
         const contenido = document.createElement('div');
         contenido.className = 'ruta-contenido';
@@ -5333,8 +4657,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   construirListaHuerfanas();  // una sola vez: no cambia durante la sesión
 
-  // Reutiliza el lightbox ya existente (misma función que usan las rutas de
-  // las tarjetas), con su propio listener delegado sobre esta lista.
   elListaHuerfanas.addEventListener('click', (evento) => {
     if (evento.target.classList.contains('ruta-img-thumb')) {
       abrirLightbox(evento.target.src);
@@ -5353,20 +4675,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function volverDesdeHuerfanas() {
-    // Igual que volverListaDesdeGaleria: no se reconstruye la lista del
-    // observador, así los subT que estaban abiertos quedan como estaban.
     mostrarPantalla('observador');
   }
 
-  // ---------- NUEVO: imagen del mapa (botón 🗺️ del modo observador) ----------
-  // El Pomodoro sigue corriendo mientras se ve el mapa: no se toca para nada
-  // (ni se pausa, ni se cancela); solo se reubica el badge (reubicarBadgePomodoro).
   function abrirMapa() {
     if (elBtnObservadorMapa.disabled) return;   // sin imagen: no hace nada (no debería dispararse igual)
     mostrarPantalla('mapa');
-    // Lazy rendering: recién acá se crea el <img> y se le asigna el 'src'
-    // (data: URI en base64), que es el único momento en que el navegador
-    // decodifica/renderiza la imagen — evita el jank al cargar el HTML.
     elMapaImagenWrap.innerHTML = '';
     const img = document.createElement('img');
     img.id = 'mapa-img';
@@ -5379,16 +4693,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function cerrarPantallaMapa() {
-    // Se destruye el <img> al salir para liberar la memoria de la imagen
-    // decodificada; la próxima vez que se abra se vuelve a crear (lazy).
     elMapaImagenWrap.innerHTML = '';
     elMapaImg = null;        // NUEVO: libera la referencia de zoom/pan
     resetearZoomMapa();      // NUEVO: §8 resetea zoom y pan al salir
     mostrarPantalla('observador');
   }
 
-  // NUEVO: descarga la imagen actualmente visible en la Galería (misma idea
-  // que descargarImagenMapa, pero tomando src/nombre de INDICE_IMAGENES).
   function descargarImagenGaleria() {
     if (INDICE_IMAGENES.length === 0) return;
     const { ruta, indice } = INDICE_IMAGENES[galeriaPos];
@@ -5403,8 +4713,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function descargarImagenMapa() {
-    // §9: descarga la imagen ORIGINAL (el data: URI nunca se tocó), no la
-    // versión con zoom/pan aplicado (que es solo un transform visual).
     const src = elBtnObservadorMapa.dataset.mapaSrc;
     if (!src) return;
     const nombre = elBtnObservadorMapa.dataset.mapaNombre || 'mapa';
@@ -5416,25 +4724,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     a.remove();
   }
 
-  // ---------- NUEVO: zoom y pan de la imagen del mapa ----------
-  // Listeners atados UNA SOLA VEZ (al wrapper estático #mapa-imagen-wrap y a
-  // 'window'), no en cada abrirMapa(): el <img> se recrea cada vez (lazy
-  // rendering), pero 'elMapaImg' siempre apunta al vigente, así que no hace
-  // falta re-adjuntar nada ni se acumulan listeners huérfanos.
   let elMapaImg = null;                               // <img> actual, o null si la pantalla está cerrada
   let zoomMapa = 1;
   let panMapa = { x: 0, y: 0 };
   let arrastreMapa = { activo: false, x: 0, y: 0 };    // x/y: offset inicial del drag (mouse o 1 dedo)
   let pinchMapa = null;                                // { distancia, zoomInicial } mientras hay 2 dedos
 
+  const ES_DISPOSITIVO_TACTIL = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
   const ZOOM_MAPA_MIN = 0.5;
-  const ZOOM_MAPA_MAX = 5;
-  const ZOOM_MAPA_PASO = 0.25;
+  const ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 10 : 5;     // PC: se mantiene igual que antes
+  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 0.5 : 0.25;   // PC: se mantiene igual que antes
 
   function aplicarTransformMapa() {
     if (!elMapaImg) return;
     elMapaImg.style.transform = 'translate(' + panMapa.x + 'px, ' + panMapa.y + 'px) scale(' + zoomMapa + ')';
-    // §4: solo se puede arrastrar con zoom > 1 (cursor 'grab' lo indica).
     elMapaImg.classList.toggle('mapa-img-pan', zoomMapa > 1);
   }
 
@@ -5458,14 +4761,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return Math.sqrt(dx * dx + dy * dy);
   }
 
-  // ---- §2: rueda del mouse (PC) ----
   elMapaImagenWrap.addEventListener('wheel', (e) => {
     if (!elMapaImg) return;
     e.preventDefault();
     fijarZoomMapa(zoomMapa + (e.deltaY < 0 ? ZOOM_MAPA_PASO : -ZOOM_MAPA_PASO));
   }, { passive: false });
 
-  // ---- §4: arrastrar con mouse (PC), solo con zoom > 1 ----
   elMapaImagenWrap.addEventListener('mousedown', (e) => {
     if (!elMapaImg || zoomMapa <= 1) return;
     arrastreMapa = { activo: true, x: e.clientX - panMapa.x, y: e.clientY - panMapa.y };
@@ -5483,7 +4784,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (elMapaImg) elMapaImg.classList.remove('mapa-img-arrastrando');
   });
 
-  // ---- §3/§4: touch — pinch-to-zoom (2 dedos) y pan (1 dedo, con zoom > 1) ----
   elMapaImagenWrap.addEventListener('touchstart', (e) => {
     if (!elMapaImg) return;
     if (e.touches.length === 2) {
@@ -5522,12 +4822,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (elMapaImg) elMapaImg.classList.remove('mapa-img-arrastrando');
   });
 
-  // ---- §1: botones +/-/↺ ----
   document.getElementById('btn-mapa-zoom-mas').addEventListener('click', () => fijarZoomMapa(zoomMapa + ZOOM_MAPA_PASO));
   document.getElementById('btn-mapa-zoom-menos').addEventListener('click', () => fijarZoomMapa(zoomMapa - ZOOM_MAPA_PASO));
   document.getElementById('btn-mapa-zoom-reset').addEventListener('click', () => resetearZoomMapa());
-
-  // ---------- Buscador de Rutas Huérfanas (número de ruta + contenido) ----------
 
   function textoHuerfanaPlano(numeroRuta) {
     const lineas = (rutasDisp[numeroRuta] && rutasDisp[numeroRuta].lineas) || [];
@@ -5553,8 +4850,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return resultados;
   }
 
-  // Al seleccionar: abre ESE <details> puntual (sin cerrar los demás que ya
-  // estuvieran abiertos) y hace scroll hasta él.
   function seleccionarResultadoHuerfana(numeroRuta) {
     const det = elListaHuerfanas.querySelector('details[data-ruta="' + numeroRuta + '"]');
     if (det) {
@@ -5584,13 +4879,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elDropdownBuscadorHuerfanas.classList.add('abierto');
   }
 
-  // ============================================================
-  // NUEVO: Gamificación — sonidos, puntos, rachas, vidas, tienda, historial
-  // ============================================================
-  // Reglas de integración: NADA de esto se activa si modoObservador === true.
-  // No toca localStorage de dificiles/notas/razones/imágenes ni el buscador.
-
-  // ---------- Sonidos (Web Audio API: sin archivos embebidos) ----------
   let contextoAudio = null;
   function obtenerContextoAudio() {
     if (!contextoAudio) {
@@ -5602,7 +4890,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return contextoAudio;
   }
 
-  // Tono simple con envolvente (ataque/decaimiento) para no "clickear".
   function tono(ctx, freq, inicio, duracion, tipo, volumen) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -5642,20 +4929,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         tono(ctx, 240, 0.2, 0.25, 'sawtooth', 0.2);
         tono(ctx, 160, 0.4, 0.45, 'sawtooth', 0.22);
       } else if (nombre === 'pomodoro_lectura_a_descanso') {
-        // Lectura -> Descanso: campanada suave, un solo tono
         tono(ctx, 700, 0, 0.5, 'sine', 0.18);
       } else if (nombre === 'pomodoro_retencion_a_descanso') {
-        // Retención -> Descanso: más enérgica, dos tonos
         tono(ctx, 700, 0, 0.18, 'sine', 0.2);
         tono(ctx, 900, 0.16, 0.35, 'sine', 0.2);
       } else if (nombre === 'pomodoro_nuevo_ciclo') {
-        // Descanso -> Lectura (nuevo ciclo): "despertar", tres tonos ascendentes
         tono(ctx, 523, 0, 0.14, 'triangle', 0.2);
         tono(ctx, 659, 0.13, 0.14, 'triangle', 0.2);
         tono(ctx, 784, 0.26, 0.3, 'triangle', 0.22);
       }
     } catch (e) {
-      // Si el navegador bloquea audio (por política de autoplay), se ignora en silencio.
     }
   }
 
@@ -5665,10 +4948,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   elBtnMute.addEventListener('click', () => toggleMute());
 
-  // ---------- Puntos, rachas y vidas ----------
-
-  // Tabla de puntos base (ver prompt). El multiplicador de racha se aplica
-  // solo a los puntos base POSITIVOS (nunca a la penalización de Saltar).
   function calcularPuntosBase(resultado, opciones) {
     opciones = opciones || {};
     if (resultado === 'si') {
@@ -5704,7 +4983,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function actualizarRachaTrasResultado(resultado, comodinUsado, escudoUsado) {
-    // El escudo de racha solo evita que el 'no' rompa la racha (y con ella el multiplicador)
     const rompeRacha = ((resultado === 'no') && !escudoUsado) || (resultado === 'saltar' && !comodinUsado);
     if (rompeRacha) {
       rachaActual = 0;
@@ -5722,15 +5000,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (vidasActuales === 0) dispararGameOver();
   }
 
-  // Hook principal: se llama UNA vez por cada tarjeta que pasa de null a un
-  // resultado final (primera vez que se marca). Nunca en modo observador.
   function procesarResultadoGamificacion(indice, resultado, opciones) {
     if (modoObservador) return;
 
-    // NUEVO: "modo zombie" — sesión retomada después de un Game Over. El
-    // usuario puede seguir viendo/respondiendo tarjetas, pero puntos, racha
-    // y vidas quedan CONGELADOS en lo que tenían al momento del Game Over:
-    // se salta por completo la lógica de puntaje/racha/vidas (y su sonido).
     if (modoZombie) return;
 
     opciones = opciones || {};
@@ -5741,11 +5013,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     puntosPorTarjeta[indice] = puntos;
     if (modoJuego !== 'light') puntosSesion += delta;
 
-    // NUEVO: Escudo de racha (pasivo). Solo actúa ante un fallo ('no') y si hay racha
-    // que proteger; con racha 0 NO se consume. La penitencia (vida, sonido) se cobra
-    // completa igual: el escudo únicamente conserva racha y multiplicador.
-    // CORREGIDO: racha, multiplicador y consumibles son solo de Normal/Tryhard; en
-    // Light no se consume el escudo ni se actualiza la racha (queda siempre en 0).
     let escudoUsado = false;
     if (modoJuego !== 'light') {
       if (resultado === 'no' && rachaActual > 0 && (gamificacion.inventario.escudosRacha || 0) > 0) {
@@ -5777,10 +5044,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     actualizarBarraGamificacion();
   }
 
-  // Ajuste de SOLO puntos (usado por "Entendida por comprensión": la tarjeta
-  // ya había sumado puntos como 'casi'/'mal' y ahora pasa a 'si'). No se
-  // retocan racha/vidas/sonido acá para no duplicar efectos ya disparados en
-  // el momento de la evaluación original (limitación documentada).
   function ajustarPuntosGamificacion(indice, resultado, opciones) {
     if (modoObservador) return;
     if (modoZombie) return;   // NUEVO: sesión zombie -> puntaje congelado, ni el ajuste de "entendida" suma
@@ -5806,22 +5069,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return 'Light';
   }
 
-  // Refresca puntos/racha/vidas/badges de inventario. Se llama tras cada
-  // cambio relevante (marcar, comprar, iniciar sesión).
   function actualizarBarraGamificacion() {
     if (modoObservador) return;
 
     elStatPuntos.style.display = modoJuego === 'light' ? 'none' : 'inline';
     elStatPuntos.textContent = '⭐ ' + puntosSesion;
 
-    // CORREGIDO: racha y estos consumibles son solo de Normal/Tryhard; en Light
-    // se ocultan (igual que ya pasa con puntos y vidas), para no mostrar algo
-    // que no se puede usar en ese modo.
     const esLight = modoJuego === 'light';
     elStatRacha.style.display = esLight ? 'none' : 'inline';
     elStatRacha.textContent = '🔥 ' + rachaActual + (multiplicadorActual > 1 ? (' x' + multiplicadorActual) : '');
 
-    // NUEVO: contadores de consumibles (icono + cantidad); atenuados en 0
     const nEscudos = gamificacion.inventario.escudosRacha || 0;
     const nSegundas = gamificacion.inventario.segundasOportunidades || 0;
     elStatEscudo.style.display = esLight ? 'none' : 'inline';
@@ -5841,7 +5098,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elStatVidas.textContent = corazones;
     }
 
-    // Badges de inventario en los botones de la tarjeta (ocultos en Light: ahí no se consumen)
     if (!esLight && gamificacion.inventario.pistasGratis > 0) {
       elBadgePistaGratis.textContent = 'x' + gamificacion.inventario.pistasGratis;
       elBadgePistaGratis.style.display = 'block';
@@ -5856,7 +5112,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  // ---------- Modal de selección de modo ----------
   let listaPendienteInicio = null;
   let modoElegidoEnModal = 'light';
 
@@ -5894,14 +5149,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('btn-modo-confirmar').addEventListener('click', () => confirmarModoYComenzar());
   document.getElementById('btn-modo-cancelar').addEventListener('click', () => cancelarModalModo());
 
-  // ---------- Game Over ----------
-
   function dispararGameOver() {
     if (modoJuego === 'light') return;   // nunca en Light
     if (gameOverDisparado) return;       // no disparar 2 veces
     gameOverDisparado = true;
-    // Reutiliza el guard ya existente (marcar/evaluarRespuesta/navegar lo
-    // chequean todos): bloquea la sesión sin tocar su lógica.
     pausaManual = true;
     reproducirSonido('game_over');
     elModalGameOver.classList.add('abierto');
@@ -5913,17 +5164,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     finalizarSesion();
   });
 
-  // ---------- Historial de sesiones (guardado desde mostrarResumen) ----------
-
-
-  // ============================================================
-  // NUEVO: poda automática del historial (100 sesiones por evaluador)
-  // ============================================================
   const LIMITE_HISTORIAL_POR_EVALUADOR = 100;
 
-  // Suma 'sesionesPodadas' (ya extraídas del historial) al resumen consolidado
-  // de 'espacio'. Si ya existía un resumen previo, se SUMAN los totales y la
-  // mejor nota se actualiza solo si la nueva es superior (nunca baja).
   function consolidarResumenEvaluador(espacio, sesionesPodadas) {
     if (sesionesPodadas.length === 0) return;
     if (!gamificacion.resumenPorEvaluador) gamificacion.resumenPorEvaluador = {};
@@ -5943,9 +5185,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gamificacion.resumenPorEvaluador[espacio] = acc;
   }
 
-  // Agrupa el historial por 'espacio'; en cada grupo que supere el límite,
-  // extrae las sesiones MÁS ANTIGUAS que exceden (no las primeras N) y las
-  // consolida en el resumen de ese evaluador antes de descartarlas.
   function podarHistorialPorEvaluador() {
     const porEspacio = {};
     gamificacion.historial.forEach((s) => {
@@ -5980,10 +5219,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       duracion_ms: duracionMs,
       puntos_ganados: modoJuego === 'light' ? 0 : puntosSesion,
       espacio: ESPACIO_HASH,   // NUEVO: de que evaluador es esta sesion
-      // NUEVO: hashes de las tarjetas de esta sesion (permite comparar con una lista
-      // guardada, incluso retroactivamente si la lista se crea después de jugar)
       tarjetas: tarjetasSesion.map((t) => hashTarjeta(t)),
-      // NUEVO: nombre de la lista activa, o de la(s) lista(s) del Repaso Espaciado
       listado: srsSesionActiva
         ? (srsSesionActiva.nombres.length === 1 ? srsSesionActiva.nombres[0] : 'SRS Múltiple')
         : (listaActivaNombre || ''),
@@ -6012,8 +5248,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elNota.classList.remove('game-over');
     }
   }
-
-  // ---------- Tienda ----------
 
   const ITEMS_TIENDA = [
     { id: 'comodines', icono: '🃏', nombre: 'Comodín', precio: PRECIO_COMODIN, descripcion: 'Salta una tarjeta sin perder vida ni puntos.' },
@@ -6090,16 +5324,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnAbrirTienda.addEventListener('click', () => abrirTienda());
   document.getElementById('btn-tienda-volver').addEventListener('click', () => mostrarPantalla('temas'));
 
-  // ---------- Historial ----------
-
-
-  // ============================================================
-  // NUEVO: modal "Listas guardadas"
-  // ============================================================
   const elModalListas = document.getElementById('modal-listas');
   const elListaListasGuardadas = document.getElementById('lista-listas-guardadas');
   const elListasVacio = document.getElementById('listas-vacio');
-  // NUEVO: listas de otros evaluadores (solo lectura, debajo de las propias)
   const elDetListasOtras = document.getElementById('det-listas-otras');
   const elSumaListasOtras = document.getElementById('suma-listas-otras');
   const elListaListasOtras = document.getElementById('lista-listas-otras');
@@ -6108,11 +5335,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
   }
 
-  // Hashes que HOY no corresponden a ninguna tarjeta actual, pero que SÍ
-  // corresponderían a alguna bajo el nombre viejo de un evaluador que
-  // aparece en el historial (candidato a "Vincular a este evaluador", §14).
-  // Existen para que la limpieza automática de abajo no los borre antes de
-  // que el usuario tenga chance de migrarlos.
   function hashesRecuperablesDeOtroEspacio() {
     const recuperables = new Set();
     const candidatos = new Set();
@@ -6129,20 +5351,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return recuperables;
   }
 
-  // 12.2: al entrar al modal se limpian automáticamente los hashes que ya no
-  // corresponden a ninguna tarjeta actual NI a una recuperable (ver arriba);
-  // si una lista queda vacía, se borra.
   function limpiarListasContraTarjetasActuales() {
     const vigentes = hashesVigentesActuales();
     const recuperables = hashesRecuperablesDeOtroEspacio();
     let cambio = false;
     listas = listas.filter((lista) => {
-      // NUEVO: una lista con 'espacio' propio distinto al actual es de OTRO
-      // evaluador (ver aceptarGuardarLista): se conserva tal cual, igual que
-      // difíciles/notas/razones/imágenes se conservan "De otros evaluadores".
-      // Antes, al no existir este campo, sus hashes (calculados con el
-      // espacio de origen) nunca coincidían con los de ESTE evaluador y la
-      // lista quedaba en 0 hashes -> se borraba sola.
       if (lista.espacio && lista.espacio !== ESPACIO_HASH) return true;
       const filtrados = lista.hashes.filter((h) => vigentes.has(h) || recuperables.has(h));
       if (filtrados.length !== lista.hashes.length) {
@@ -6160,13 +5373,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     try { return new Date(ms).toLocaleString(); } catch (e) { return String(ms); }
   }
 
-  // Nombres de listas con el 👁 desplegado en este momento (solo en memoria;
-  // se pierde al recargar, como el resto del estado de UI del modal).
   const listasVerTarjetasExpandido = new Set();
 
-  // 👁: arma la vista con scroll interno de las tarjetas de una lista. Las
-  // listas NO guardan el texto de la tarjeta, solo el hash — si una tarjeta
-  // ya no existe no hay forma de mostrar qué decía, solo que falta.
   function construirVistaTarjetasLista(lista) {
     const cont = document.createElement('div');
     cont.className = 'lista-ver-tarjetas';
@@ -6195,10 +5403,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return cont;
   }
 
-  // Botón 🧠: blanco (inactivo) -> naranja (activo) -> [fallo] -> blanco;
-  // y azul (graduado) -> confirm -> naranja de nuevo en nivel 1.
   function alternarSrsLista(nombre) {
-    const lista = buscarLista(nombre);
+    const lista = buscarListaPropia(nombre);   // NUEVO: nunca una lista ajena con el mismo nombre
     if (!lista) return;
     const srs = obtenerSrsLista(lista);
     if (srs.graduated) {
@@ -6209,10 +5415,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       srs.activated = true;
       srs.snoozeUntil = 0;
     } else if (srs.activated) {
-      // Activo -> inactivo: se borra todo el historial de progreso (vuelve a los valores por defecto)
       lista.srs = Object.assign({}, SRS_DEFAULT);
     } else {
-      // Inactivo -> activo
       srs.activated = true;
       srs.startDate = Date.now();
       srs.currentLevel = 1;
@@ -6226,18 +5430,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function renderListasGuardadas() {
-    // MODIFICADO: se quitó la sección aparte "Hay tarjetas de listas de otros
-    // evaluadores" (det-listas-vincular/suma-listas-vincular): su botón
-    // "Vincular a este evaluador" ahora vive DENTRO de "De otros evaluadores"
-    // (det-listas-otras), igual que en difíciles/notas/razones. La lógica de
-    // contarOtrasListas()/vincular sigue existiendo (la usa el modal de
-    // sincronización), solo se quitó esta sección visual duplicada.
     limpiarListasContraTarjetasActuales();
     elListaListasGuardadas.innerHTML = '';
-    // NUEVO: separar las listas de ESTE evaluador de las de otros (campo
-    // 'espacio' tageado en aceptarGuardarLista). Las listas viejas, guardadas
-    // antes de este fix, no tienen 'espacio' y se siguen tratando como
-    // propias (comportamiento de siempre, sin regresiones).
     const listasPropias = listas.filter((l) => !l.espacio || l.espacio === ESPACIO_HASH);
     const listasDeOtros = listas.filter((l) => l.espacio && l.espacio !== ESPACIO_HASH);
     const ordenadas = listasPropias.slice().sort((a, b) => b.creada - a.creada);   // más reciente primero
@@ -6253,7 +5447,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const fila = document.createElement('div');
       fila.className = 'fila-lista-guardada';
 
-      // ---- Cabecera: 🧠 + nombre + estado SRS + 👁 ----
       const cabecera = document.createElement('div');
       cabecera.className = 'lista-fila-cabecera';
 
@@ -6288,10 +5481,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         cabecera.appendChild(estado);
       }
 
-      // OPTIMIZACIÓN: antes, tocar el 👁 llamaba a renderListasGuardadas()
-      // y reconstruía TODO el modal (todas las filas) desde cero. Ahora solo
-      // crea/inserta (o quita) el div.lista-ver-tarjetas DENTRO de esta fila
-      // puntual, sin tocar el resto de la lista.
       const btnOjo = document.createElement('button');
       btnOjo.type = 'button';
       btnOjo.className = 'lista-ojo-btn';
@@ -6311,7 +5500,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
       fila.appendChild(cabecera);
 
-      // ---- Acciones (Renombrar / Borrar), debajo del título ----
       const acciones = document.createElement('div');
       acciones.className = 'lista-acciones';
       const btnRenombrar = document.createElement('button');
@@ -6326,14 +5514,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       acciones.appendChild(btnBorrar);
       fila.appendChild(acciones);
 
-      // ---- Cantidad y fechas, debajo de las acciones ----
       const detalle = document.createElement('div');
       detalle.className = 'lista-detalle';
       detalle.textContent = lista.hashes.length + ' tarjeta(s) · creada: ' + formatearFechaLista(lista.creada) +
         ' · modificada: ' + formatearFechaLista(lista.modificada);
       fila.appendChild(detalle);
 
-      // ---- 👁 Ver tarjetas (con scroll interno) ----
       if (listasVerTarjetasExpandido.has(lista.nombre)) {
         fila.appendChild(construirVistaTarjetasLista(lista));
       }
@@ -6341,12 +5527,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elListaListasGuardadas.appendChild(fila);
     });
 
-    // ---- NUEVO: listas de otros evaluadores, debajo de las propias ----
-    // Solo lectura (igual criterio que difíciles/notas/razones/imágenes):
-    // se muestran para que no "desaparezcan" sin explicación, pero no se
-    // pueden activar ni editar desde acá (sus hashes no corresponden a
-    // ninguna tarjeta de este evaluador). Se puede borrar una puntual si
-    // ya no se la quiere conservar.
     elListaListasOtras.innerHTML = '';
     const otrasOrdenadas = listasDeOtros.slice().sort((a, b) => b.creada - a.creada);
     elDetListasOtras.style.display = otrasOrdenadas.length > 0 ? 'block' : 'none';
@@ -6368,7 +5548,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const btnBorrar = document.createElement('button');
       btnBorrar.type = 'button';
       btnBorrar.textContent = '🗑️ Borrar';
-      btnBorrar.addEventListener('click', () => borrarLista(lista.nombre));
+      btnBorrar.addEventListener('click', () => borrarLista(lista.nombre, lista.espacio));   // NUEVO: scoped a SU espacio
       acciones.appendChild(btnBorrar);
       fila.appendChild(acciones);
 
@@ -6384,8 +5564,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function abrirModalListas() {
     elModalListas.classList.add('abierto');
-    // OPTIMIZACIÓN: se deja pintar el modal (vacío) primero; recién en el
-    // siguiente frame se arma el contenido (todas las filas/listas).
     requestAnimationFrame(() => {
       renderListasGuardadas();
     });
@@ -6401,29 +5579,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
 
   function renombrarLista(nombreActual) {
-    const lista = buscarLista(nombreActual);
-    if (!lista) return;
-    const nuevo = window.prompt('Nuevo nombre para la lista:', lista.nombre);
-    if (nuevo === null) return;
-    const limpio = nuevo.trim();
-    if (!limpio) { window.alert('El nombre no puede estar vacío.'); return; }
-    if (limpio.toLowerCase() !== lista.nombre.toLowerCase() && buscarLista(limpio)) {
-      window.alert('Ya existe una lista llamada «' + limpio + '».');
-      return;
-    }
-    if (listaActivaNombre === lista.nombre) listaActivaNombre = limpio;
-    lista.nombre = limpio;
-    lista.modificada = Date.now();
-    guardarListas();
-    renderListasGuardadas();
-    actualizarChipListaActiva();
+    abrirModalRenombrarLista(nombreActual);
   }
 
-  function borrarLista(nombre) {
-    if (!window.confirm('¿Borrar la lista «' + nombre + '»? Las sesiones guardadas que la usaron se conservan (mostrarán el nombre tachado).')) return;
-    listas = listas.filter((l) => l.nombre !== nombre);
+  function borrarLista(nombre, espacio) {
+    const esp = espacio || ESPACIO_HASH;
+    const esPropia = esp === ESPACIO_HASH;
+    const aviso = esPropia
+      ? '¿Borrar la lista «' + nombre + '»? Las sesiones guardadas que la usaron se conservan (mostrarán el nombre tachado).'
+      : '¿Borrar la lista «' + nombre + '» (del evaluador «' + etiquetaEspacio(esp) + '»)?';
+    if (!window.confirm(aviso)) return;
+    listas = listas.filter((l) => !(l.nombre === nombre && (l.espacio || ESPACIO_HASH) === esp));
     guardarListas();
-    if (listaActivaNombre === nombre) quitarListaActiva();
+    if (esPropia && listaActivaNombre === nombre) quitarListaActiva();
     renderListasGuardadas();
   }
 
@@ -6436,7 +5604,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderListasGuardadas();
   });
 
-  // ---------- Exportar / Importar ----------
   document.getElementById('btn-listas-exportar').addEventListener('click', () => {
     const salida = { version: 1, listas: listas };
     const blob = new Blob([JSON.stringify(salida, null, 2)], { type: 'application/json' });
@@ -6468,14 +5635,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lector.readAsText(archivo);
   });
 
-  // NUEVO: fusiona listas entrantes (individual o dentro de un backup completo).
-  // Mismo nombre (case-insensitive): gana la más reciente por 'modificada'. Nombre
-  // nuevo: se agrega.
   function fusionarListasEntrantes(entrantes) {
     let nuevas = 0, actualizadas = 0, conservadas = 0;
     entrantes.forEach((imp) => {
       if (!imp || typeof imp.nombre !== 'string' || !Array.isArray(imp.hashes)) return;
-      const existente = buscarLista(imp.nombre);
+      const impEspacio = typeof imp.espacio === 'string' && imp.espacio ? imp.espacio : ESPACIO_HASH;
+      const existente = buscarListaEnEspacio(imp.nombre, impEspacio);
       const impModificada = typeof imp.modificada === 'number' ? imp.modificada : 0;
       if (!existente) {
         listas.push({
@@ -6484,10 +5649,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           creada: typeof imp.creada === 'number' ? imp.creada : Date.now(),
           modificada: impModificada || Date.now(),
           srs: normalizarSrsImportado(imp.srs),   // NUEVO: el progreso de Repaso Espaciado viaja con la lista
-          // NUEVO: si el JSON importado ya traía 'espacio' (export de otro
-          // evaluador), se conserva; si no, se asume que es de ESTE
-          // evaluador (comportamiento de siempre con backups viejos).
-          espacio: typeof imp.espacio === 'string' && imp.espacio ? imp.espacio : ESPACIO_HASH,
+          espacio: impEspacio,   // NUEVO: el espacio que traía el JSON (o este evaluador si no traía)
         });
         nuevas++;
       } else if (impModificada > existente.modificada) {
@@ -6496,7 +5658,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         existente.creada = typeof imp.creada === 'number' ? imp.creada : existente.creada;
         existente.modificada = impModificada;
         existente.srs = normalizarSrsImportado(imp.srs);   // NUEVO
-        existente.espacio = typeof imp.espacio === 'string' && imp.espacio ? imp.espacio : existente.espacio;
+        existente.espacio = impEspacio;   // NUEVO: ya coincidía (se buscó por nombre+espacio), normaliza legacy
         actualizadas++;
       } else {
         conservadas++;
@@ -6508,11 +5670,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas };
   }
 
-  // ---------- Guardar una lista nueva (desde el resumen) ----------
   const elBtnResumenGuardarLista = document.getElementById('btn-resumen-guardar-lista');
   const elModalGuardarLista = document.getElementById('modal-guardar-lista');
   const elInputGuardarListaNombre = document.getElementById('input-guardar-lista-nombre');
   const elGuardarListaError = document.getElementById('guardar-lista-error');
+  const elGuardarListaTitulo = document.getElementById('guardar-lista-titulo');
+  const elGuardarListaDescripcion = document.getElementById('guardar-lista-descripcion');
+  const elBtnGuardarListaAceptar = document.getElementById('btn-guardar-lista-aceptar');
+  let listaRenombrandoNombre = null;
 
   function mismoConjuntoHashes(a, b) {
     if (a.length !== b.length) return false;
@@ -6521,24 +5686,42 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function abrirModalGuardarLista() {
+    listaRenombrandoNombre = null;   // NUEVO: modo "guardar nueva lista"
+    elGuardarListaTitulo.textContent = '📋 Guardar como lista';
+    elGuardarListaDescripcion.textContent = 'Nombrá esta selección de tarjetas para poder reutilizarla después.';
+    elBtnGuardarListaAceptar.textContent = 'Guardar';
     elInputGuardarListaNombre.value = '';
     elGuardarListaError.style.display = 'none';
     elModalGuardarLista.classList.add('abierto');
     elInputGuardarListaNombre.focus();
   }
+
+  function abrirModalRenombrarLista(nombreActual) {
+    const lista = buscarListaPropia(nombreActual);   // nunca una lista ajena con el mismo nombre
+    if (!lista) return;
+    listaRenombrandoNombre = lista.nombre;
+    elGuardarListaTitulo.textContent = '✏️ Renombrar lista';
+    elGuardarListaDescripcion.textContent = 'Elegí un nuevo nombre para esta lista.';
+    elBtnGuardarListaAceptar.textContent = 'Renombrar';
+    elInputGuardarListaNombre.value = lista.nombre;
+    elGuardarListaError.style.display = 'none';
+    elModalGuardarLista.classList.add('abierto');
+    elInputGuardarListaNombre.focus();
+    elInputGuardarListaNombre.select();
+  }
+
   function cerrarModalGuardarLista() {
     elModalGuardarLista.classList.remove('abierto');
+    listaRenombrandoNombre = null;   // NUEVO: por las dudas, que no quede modo "renombrar" pegado
   }
   elBtnResumenGuardarLista.addEventListener('click', () => abrirModalGuardarLista());
   document.getElementById('btn-guardar-lista-cancelar').addEventListener('click', () => cerrarModalGuardarLista());
   elInputGuardarListaNombre.addEventListener('keydown', (e) => { if (e.key === 'Enter') aceptarGuardarLista(); });
 
-  // ---------- NUEVO: "Análisis de la sesión" (por subtema, desde el resumen) ----------
   const elBtnAnalisisSesion = document.getElementById('btn-analisis-sesion');
   const elModalAnalisisSesion = document.getElementById('modal-analisis-sesion');
   const elAnalisisSesionContenido = document.getElementById('analisis-sesion-contenido');
 
-  // Agrupa los índices (de tarjetasSesion) de la sesión actual por subT.
   function agruparSesionPorTema() {
     const grupos = new Map();   // nombre -> indices[]
     tarjetasSesion.forEach((t, i) => {
@@ -6549,8 +5732,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return grupos;
   }
 
-  // Calcula indicadores + comentarios para UN subtema. Devuelve null si no
-  // llega al mínimo de 3 evaluadas (no se incluye en el análisis).
   function analizarSubtemaSesion(indices) {
     const esEvaluada = (i) => resultados[i] === 'si' || resultados[i] === 'no' || resultados[i] === 'casi';
     const evaluadas = indices.filter(esEvaluada);
@@ -6573,9 +5754,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const tiempoProFallas = promedioMs(fallos);
     const tiempoProEvaluadas = promedioMs(evaluadas);
 
-    // NUEVO: cada comentario lleva entre paréntesis el dato concreto que lo
-    // justifica (p. ej. "Dependencia de pistas (3 de 5)"), para que no quede
-    // como una etiqueta sin contexto.
     const pctFallosR = Math.round(pctFallos);
     const pctCasiR = Math.round(pctCasi);
     const pctAciertosR = Math.round(pctAciertos);
@@ -6584,19 +5762,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const comentarios = [];   // { texto, color }
 
-    // 🔴 Rojo
     if (pctFallos >= 70) comentarios.push({ texto: 'Revisión urgente (' + pctFallosR + '% fallos)', color: 'rojo' });
     if (aciertos.length === 0 && nEval >= 2) comentarios.push({ texto: 'No acertaste ninguna (0 de ' + nEval + ')', color: 'rojo' });
     if (pctPista > 50) comentarios.push({ texto: 'Dependencia de pistas (' + nPista + ' de ' + nEval + ')', color: 'rojo' });
     if (pctResp > 50) comentarios.push({ texto: 'Revisa el contenido antes de evaluar (' + nResp + ' de ' + nEval + ')', color: 'rojo' });
     if (fallos.length > 0 && tiempoProFallas > 30000) comentarios.push({ texto: '¿Te trabaste en este tema? (prom. ' + segFallas + 's en falladas)', color: 'rojo' });
 
-    // 🟠 Naranja
     if (pctFallos >= 50 && pctFallos < 70) comentarios.push({ texto: 'En proceso (' + pctFallosR + '% fallos)', color: 'naranja' });
     if (pctPista >= 20 && pctPista <= 50) comentarios.push({ texto: 'Depende un poco de pistas (' + nPista + ' de ' + nEval + ')', color: 'naranja' });
     if (pctCasi >= 60) comentarios.push({ texto: 'Estás cerca, repasa los detalles (' + pctCasiR + '% "Casi")', color: 'naranja' });
 
-    // 🟢 Verde
     if (pctAciertos >= 80) {
       comentarios.push({ texto: 'Dominado (' + pctAciertosR + '% aciertos)', color: 'verde' });
     } else if (pctAciertos >= 60) {
@@ -6606,9 +5781,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (pctPista === 0 && pctResp === 0) comentarios.push({ texto: 'Autónomo (0 ayudas usadas)', color: 'verde' });
     if (saltadas.length === 0) comentarios.push({ texto: 'Completo (0 saltadas)', color: 'verde' });
 
-    // Color predominante del badge: el peor color presente entre los
-    // comentarios que se dispararon; si ninguno se disparó, se usa el
-    // porcentaje de aciertos como respaldo.
     let color = 'naranja';
     if (comentarios.some((c) => c.color === 'rojo')) color = 'rojo';
     else if (comentarios.some((c) => c.color === 'naranja')) color = 'naranja';
@@ -6624,16 +5796,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     };
   }
 
-  // OPTIMIZACIÓN: el cálculo y el armado del DOM del modal son relativamente
-  // livianos (acotados por la cantidad de subT de la sesión, no por la
-  // cantidad de tarjetas), pero igual se calculan solo al ABRIR el modal —
-  // no en mostrarAnalisisSesion() (que solo decide si el botón se muestra) —
-  // para no sumarle trabajo extra a mostrarResumen() si el usuario nunca
-  // llega a abrirlo.
-  // NUEVO: "Resumen Ejecutivo", al principio del modal. Se basa SOLO en los
-  // subtemas que ya pasaron el mínimo de 3 evaluadas (el mismo array 'filas'
-  // que arma el detalle). Null si hay menos de 2 subtemas (no hay nada que
-  // comparar).
   function construirResumenEjecutivo(filas) {
     if (filas.length < 2) return null;
 
@@ -6663,8 +5825,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return div;
     }
 
-    // Desempate: mayor % aciertos; en empate, más evaluadas; si persiste,
-    // orden alfabético. Se ordena de mejor a peor y se toman las puntas.
     const ordenados = [...filas].sort((a, b) => {
       if (b.info.pctAciertos !== a.info.pctAciertos) return b.info.pctAciertos - a.info.pctAciertos;
       if (b.info.nEvaluadas !== a.info.nEvaluadas) return b.info.nEvaluadas - a.info.nEvaluadas;
@@ -6672,10 +5832,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
     const mejor = ordenados[0];
     const peor = ordenados[ordenados.length - 1];
-    // El comentario más grave que aplica al peor subT: 'comentarios' ya está
-    // armado en orden de gravedad (rojo, luego naranja, luego verde), así
-    // que el primero es el más grave. Si no tiene ninguno (caso raro, sin
-    // comentarios aplicables), se usa un texto genérico.
     const prioridadTexto = peor.info.comentarios.length > 0
       ? peor.info.comentarios[0].texto
       : 'Repasar este subtema';
@@ -6737,9 +5893,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elAnalisisSesionContenido.appendChild(frag);
   }
 
-  // Llamada al final de mostrarResumen(): SOLO decide si el botón se
-  // muestra (barato: un .some() sobre 'resultados'). El cálculo pesado del
-  // análisis queda en construirAnalisisSesion(), disparado al abrir el modal.
   function mostrarAnalisisSesion() {
     const huboEvaluadas = resultados.some((r) => r === 'si' || r === 'no' || r === 'casi');
     elBtnAnalisisSesion.style.display = huboEvaluadas ? 'block' : 'none';
@@ -6755,9 +5908,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnAnalisisSesion.addEventListener('click', () => abrirModalAnalisisSesion());
   document.getElementById('btn-analisis-sesion-cerrar').addEventListener('click', () => cerrarModalAnalisisSesion());
 
-  // 8.3: asocia retroactivamente las sesiones "Sin listado" cuyo conjunto de
-  // tarjetas coincide 100% con la lista recién guardada (incluye, de paso, a
-  // la sesión que se acaba de guardar en el historial).
   function asociarRetroactivamente(lista) {
     let n = 0;
     gamificacion.historial.forEach((s) => {
@@ -6771,7 +5921,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function aceptarGuardarLista() {
     const nombre = elInputGuardarListaNombre.value.trim();
     if (!nombre) { elGuardarListaError.textContent = 'El nombre no puede estar vacío.'; elGuardarListaError.style.display = 'block'; return; }
-    if (buscarLista(nombre)) { elGuardarListaError.textContent = 'Ya existe una lista llamada «' + nombre + '».'; elGuardarListaError.style.display = 'block'; return; }
+
+    if (listaRenombrandoNombre !== null) {
+      const lista = buscarListaPropia(listaRenombrandoNombre);
+      if (!lista) { cerrarModalGuardarLista(); return; }   // se borró mientras el modal estaba abierto
+      if (nombre.toLowerCase() !== lista.nombre.toLowerCase() && buscarListaPropia(nombre)) {
+        elGuardarListaError.textContent = 'Ya existe una lista llamada «' + nombre + '».';
+        elGuardarListaError.style.display = 'block';
+        return;
+      }
+      if (listaActivaNombre === lista.nombre) listaActivaNombre = nombre;
+      lista.nombre = nombre;
+      lista.modificada = Date.now();
+      guardarListas();
+      cerrarModalGuardarLista();
+      renderListasGuardadas();
+      actualizarChipListaActiva();
+      return;
+    }
+
+    if (buscarListaPropia(nombre)) { elGuardarListaError.textContent = 'Ya existe una lista llamada «' + nombre + '».'; elGuardarListaError.style.display = 'block'; return; }
     const hashes = tarjetasSesion.map((t) => hashTarjeta(t));
     if (listas.some((l) => mismoConjuntoHashes(l.hashes, hashes))) {
       elGuardarListaError.textContent = 'Ya existe una lista con exactamente estas mismas tarjetas.';
@@ -6779,11 +5948,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return;
     }
     const ahora = Date.now();
-    // NUEVO: se guarda de qué evaluador es esta lista (ESPACIO_HASH al
-    // momento de crearla). Sin esto, limpiarListasContraTarjetasActuales()
-    // no tenía forma de distinguir "lista de otro evaluador" de "lista con
-    // tarjetas borradas", y terminaba vaciando (y borrando) listas enteras
-    // apenas se abría el modal desde un evaluador distinto.
     const lista = { nombre: nombre, hashes: hashes, creada: ahora, modificada: ahora, srs: Object.assign({}, SRS_DEFAULT), espacio: ESPACIO_HASH };
     listas.push(lista);
     guardarListas();
@@ -6794,12 +5958,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   document.getElementById('btn-guardar-lista-aceptar').addEventListener('click', () => aceptarGuardarLista());
 
-  // ---------- Estadísticas del listado en el resumen (§11) ----------
   const elNotaListado = document.getElementById('nota-listado');
 
   function renderResumenListado() {
-    const nombre = listaActivaNombre;
-    if (!nombre || !buscarLista(nombre)) { elNotaListado.style.display = 'none'; return; }
+    const nombre = listaActivaNombre;   // siempre una lista PROPIA (viene de seleccionarListaActiva)
+    if (!nombre || !buscarListaPropia(nombre)) { elNotaListado.style.display = 'none'; return; }
     const sesiones = gamificacion.historial.filter((s) => esSesionLocal(s) && s.listado === nombre);
     if (sesiones.length === 0) { elNotaListado.style.display = 'none'; return; }
     const ordenadas = sesiones.slice().sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
@@ -6813,14 +5976,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elNotaListado.style.display = 'block';
   }
 
-
-  // ============================================================
-  // NUEVO: Backup / Sincronización unificado
-  // ============================================================
-
-  // §7: timestamp del último backup, uno por evaluador. Se guarda como el
-  // valor plano que pide el prompt (Date.now()); el snapshot de puntos e
-  // inventario para §8 vive en una clave aparte (ver nota en marcarUltimoBackup).
   function claveUltimoBackup() { return 'ultimo_backup_' + ESPACIO_HASH; }
   function claveSnapshotBackup() { return 'ultimo_backup_snapshot_' + ESPACIO_HASH; }
 
@@ -6842,11 +5997,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  // Se llama al exportar o importar un BACKUP COMPLETO (nunca en los
-  // individuales, ver §7). Además del timestamp, guarda una foto de
-  // puntosTotales/inventario: es lo que permite saber si "los puntos
-  // cambiaron desde el último backup" (§8) sin agregar un campo 't' a algo
-  // que no lo tiene.
   function marcarUltimoBackup() {
     try {
       localStorage.setItem(claveUltimoBackup(), String(Date.now()));
@@ -6855,12 +6005,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         inventario: Object.assign({}, gamificacion.inventario),
       }));
     } catch (e) {
-      // sin localStorage disponible: el indicador simplemente no podrá saberlo
     }
     actualizarIndicadorSync();
   }
 
-  // §8: hay al menos una entrada con t (o equivalente) posterior al último backup.
   function hayCambiosSinRespaldar() {
     const ultimo = obtenerUltimoBackup();
     if (Object.keys(dificiles).some((h) => (dificiles[h].t || 0) > ultimo)) return true;
@@ -6872,8 +6020,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const f = Date.parse(s.fecha);
       return !isNaN(f) && f > ultimo;
     })) return true;
-    // Puntos/inventario: comparados contra la foto tomada en el último backup
-    // (comprar en la tienda, por ejemplo, no deja rastro en ninguna otra zona).
     const foto = obtenerSnapshotBackup();
     if (!foto) return ultimo > 0 ? false : (gamificacion.puntosTotales > 0);   // nunca hubo backup: solo avisa si ya hay algo que perder
     if (gamificacion.puntosTotales !== foto.puntosTotales) return true;
@@ -6890,8 +6036,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     document.getElementById('sync-aviso-pendientes').style.display = hayCambiosSinRespaldar() ? 'block' : 'none';
   }
 
-  // §4: arma el objeto completo de backup, reutilizando exactamente las
-  // mismas funciones que arman cada JSON individual.
   function construirBackupCompleto() {
     return {
       version: 1,
@@ -6921,9 +6065,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     document.getElementById('sync-backup-info').textContent = 'Backup exportado: ' + new Date().toLocaleString() + '.';
   }
 
-  // §6: fusiona cada sección presente reutilizando las MISMAS reglas de
-  // fusión que ya usa cada JSON individual. Secciones ausentes se ignoran
-  // (§10: un backup viejo sin alguna sección no rompe nada).
   function importarBackupCompleto(datos) {
     if (!datos || typeof datos !== 'object') return { error: 'El archivo no es un JSON válido.' };
     if (typeof datos.version !== 'number') return { error: 'El archivo no tiene el formato esperado (falta "version").' };
@@ -7018,16 +6159,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  // NUEVO: espacio (evaluador) de una sesion. '' = sesion sin identificar.
   function espacioDeSesion(s) {
     return (s && typeof s.espacio === 'string') ? s.espacio : '';
   }
   function esSesionLocal(s) { return espacioDeSesion(s) === ESPACIO_HASH; }
   function etiquetaEspacio(esp) { return esp ? esp : 'Sin identificar'; }
 
-  // NUEVO: muestra las estadísticas consolidadas (sesiones ya podadas) de ESTE
-  // evaluador, debajo de las sesiones recientes paginadas. Oculto si todavía
-  // no se podó nada para este evaluador.
   function renderResumenHistorico() {
     const el = document.getElementById('resumen-historico');
     const r = gamificacion.resumenPorEvaluador && gamificacion.resumenPorEvaluador[ESPACIO_HASH];
@@ -7046,10 +6183,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     el.style.display = 'block';
   }
 
-  // NUEVO: cache de nodos ya construidos por sesión (clave = 'fecha', única
-  // por sesión). Las sesiones son inmutables una vez guardadas, así que
-  // reutilizar el mismo nodo al volver a mostrar una página ya vista es
-  // seguro: nunca hace falta reconstruirlo, solo reordenar/reinsertar.
   const nodosHistorial = new Map();   // fecha -> nodo item-historial
 
   function construirItemHistorial(entrada) {
@@ -7084,11 +6217,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return item;
   }
 
-  // NUEVO: arma o refresca SOLO el fragmento "listado" (tachado si la lista ya
-  // no existe, §9.2/§10) dentro de un nodo ya construido. Se llama siempre que
-  // se reutiliza un nodo cacheado, porque a diferencia del resto de los datos
-  // de la sesión (inmutables), si una lista se borra o renombra DESPUÉS este
-  // estado puede cambiar sin que la sesión en sí haya cambiado.
   function actualizarListadoEnItem(item, entrada) {
     let listadoTxt = item.querySelector('.item-historial-listado');
     if (!entrada.listado) {
@@ -7101,7 +6229,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       item.querySelector('.item-historial-detalle').appendChild(listadoTxt);
     }
     listadoTxt.innerHTML = '';
-    if (buscarLista(entrada.listado)) {
+    if (buscarListaPropia(entrada.listado)) {
       listadoTxt.textContent = '📋 ' + entrada.listado;
     } else {
       const s = document.createElement('s');
@@ -7115,8 +6243,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const historial = todas.filter(esSesionLocal);   // la lista principal es solo de ESTE evaluador
     elListaHistorial.innerHTML = '';
 
-    // NUEVO: poda del cache de nodos: las sesiones que ya no existen (podadas
-    // o borradas) no deben seguir ocupando memoria.
     if (nodosHistorial.size > 0) {
       const fechasVigentes = new Set(historial.map((s) => s.fecha));
       Array.from(nodosHistorial.keys()).forEach((f) => { if (!fechasVigentes.has(f)) nodosHistorial.delete(f); });
@@ -7136,8 +6262,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elListaHistorial.style.display = 'block';
     elHistorialVacio.style.display = 'none';
 
-    // NUEVO: paginación — 15 por página, más reciente primero. Clampea la
-    // página actual por si el total cambió (p. ej. tras borrar sesiones).
     const masRecientePrimero = historial.slice().reverse();
     const totalPaginas = Math.max(1, Math.ceil(masRecientePrimero.length / HISTORIAL_POR_PAGINA));
     if (historialPaginaActual > totalPaginas) historialPaginaActual = totalPaginas;
@@ -7145,9 +6269,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const inicioPagina = (historialPaginaActual - 1) * HISTORIAL_POR_PAGINA;
     const pagina = masRecientePrimero.slice(inicioPagina, inicioPagina + HISTORIAL_POR_PAGINA);
 
-    // NUEVO: reutiliza el nodo ya construido para esta sesión si existe
-    // (p. ej. al volver a una página ya vista); solo arma nodos nuevos para
-    // las entradas que todavía no se habían mostrado.
     pagina.forEach((entrada) => {
       let item = nodosHistorial.get(entrada.fecha);
       if (!item) {
@@ -7162,8 +6283,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderHistorialPaginacion(totalPaginas);
   }
 
-  // NUEVO: controles "Anterior / Página X de Y / Siguiente". Solo re-renderiza
-  // la lista (sin scroll propio ni ajeno) para no afectar la posición de vista.
   function renderHistorialPaginacion(totalPaginas) {
     const el = document.getElementById('historial-paginacion');
     el.innerHTML = '';
@@ -7192,12 +6311,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     el.appendChild(btnSiguiente);
   }
 
-  // NUEVO: "Sesiones de otros evaluadores" (solo lectura), agrupadas por espacio
-  // OPTIMIZACIÓN (lazy rendering): las filas (una por espacio de otro
-  // evaluador) recién se arman cuando se abre "Sesiones de otros
-  // evaluadores"; mientras tanto solo se actualiza el contador del
-  // <summary>. '_otrasSesionesPendientes' guarda el último dato recibido
-  // para que el constructor perezoso siempre arme con lo último.
   let _otrasSesionesPendientes = [];
 
   function construirHistorialOtrosLazy() {
@@ -7255,12 +6368,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lazyHistorialOtros.refrescar();
   }
 
-  // MODIFICADO: se exporta el objeto COMPLETO de gamificación (puntosTotales +
-  // inventario + historial) en la raíz, no solo el array de historial, para
-  // poder recuperar todo al importar en otro dispositivo.
-  // NUEVO: arma el objeto de gamificación (usado por el botón individual y por el backup completo)
   function construirExportGamificacion() {
-    // cada sesion sale con su "espacio" ('' = sin identificar)
     return Object.assign({}, gamificacion, {
       historial: gamificacion.historial.map((s) => Object.assign({}, s, { espacio: espacioDeSesion(s) })),
     });
@@ -7297,8 +6405,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderHistorial();
   }
 
-  // NUEVO: Importar historial (fusiona con lo local, ver reglas en el prompt)
-
   function sesionMasReciente(historial) {
     if (!historial || historial.length === 0) return null;
     let mejor = historial[0];
@@ -7308,10 +6414,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return mejor;
   }
 
-  // A5: merge sin pisar. Concatena las sesiones descartando duplicados exactos
-  // (misma 'fecha'); puntosTotales = max(actual, importado); cada item de
-  // inventario = max. Lo importado de otros espacios aparece en "Sesiones de
-  // otros evaluadores"; lo importado con el espacio actual cuenta como local.
   function fusionarGamificacionImportada(importado) {
     const impPuntos = typeof importado.puntosTotales === 'number' ? importado.puntosTotales : 0;
     const impInv = importado.inventario || {};
@@ -7338,7 +6440,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       fechasLocales.add(f);
     });
 
-    // NUEVO: fusiona los resúmenes consolidados (sesiones ya podadas) por evaluador
     const impResumen = (importado.resumenPorEvaluador && typeof importado.resumenPorEvaluador === 'object') ? importado.resumenPorEvaluador : {};
     if (!gamificacion.resumenPorEvaluador) gamificacion.resumenPorEvaluador = {};
     Object.keys(impResumen).forEach((esp) => {
@@ -7414,19 +6515,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnHistorialBorrarEste.addEventListener('click', () => borrarHistorialEste());
   elBtnHistorialBorrarGlobal.addEventListener('click', () => borrarHistorialGlobal());
 
-  // ============================================================
-  // NUEVO: Revinculación — recuperar datos de un evaluador renombrado
-  // ============================================================
-  // Si se renombra el recordatorio.txt cambia ESPACIO_HASH y todo lo guardado
-  // bajo el nombre viejo queda "de otro evaluador". Acá se recomputa el hash que
-  // tendría cada tarjeta ACTUAL bajo el espacio viejo (hashTarjetaCon /
-  // hashImagenCon) y se mueven esas entradas al hash nuevo. Es de un solo
-  // sentido (sin deshacer). puntosTotales e inventario nunca se tocan.
-
   function tieneClave(obj, k) { return Object.prototype.hasOwnProperty.call(obj, k); }
 
-  // Zonas con datos por tarjeta/imagen. 'explicitas' = campos donde un valor
-  // vacío/false es una decisión del usuario y NO se pisa al completar.
   const ZONAS_VINCULO = {
     dificiles: {
       plural: 'difíciles', titulo: 'difíciles',
@@ -7450,7 +6540,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     },
   };
 
-  // Entradas de una zona que NO corresponden a ninguna tarjeta/imagen actual
   function contarOtrasTarjetas(almacen) {
     const propios = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
     return Object.keys(almacen).filter((h) => !propios.has(h)).length;
@@ -7464,7 +6553,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function contarOtrasListas() {
     const vigentes = hashesVigentesActuales();
     let n = 0;
-    listas.forEach((lista) => { lista.hashes.forEach((h) => { if (!vigentes.has(h)) n++; }); });
+    listas.forEach((lista) => {
+      if (lista.espacio && lista.espacio !== ESPACIO_HASH) return;
+      lista.hashes.forEach((h) => { if (!vigentes.has(h)) n++; });
+    });
     return n;
   }
   function contarOtrasZona(zona) {
@@ -7473,8 +6565,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return contarOtrasTarjetas(ZONAS_VINCULO[zona].almacen());
   }
 
-  // Lista de {de, a}: solo tarjetas/imágenes ACTUALES cuyo hash viejo existe.
-  // Las entradas que no corresponden a ninguna quedan donde están.
   function movimientosVinculo(zona, viejo) {
     const movs = [];
     const vistos = new Set();
@@ -7505,8 +6595,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return v === '' || v === false || (Array.isArray(v) && v.length === 0);
   }
 
-  // Colisión: gana el existente; solo se completan campos vacíos. Las listas
-  // (ej. códigos de razones) se unen sin duplicados.
   function fusionarEntradaVinculo(existente, entrante, explicitas) {
     const res = Object.assign({}, existente);
     Object.keys(entrante).forEach((k) => {
@@ -7529,17 +6617,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return viejo.toLowerCase() === ESPACIO_HASH.toLowerCase();
   }
 
-  // Vista previa (sin modificar nada): cuánto se movería
-  // §14: listas — recomputa, por cada hash de cada lista, si corresponde al hash
-  // viejo de alguna tarjeta actual. Los que sí, se mueven; los que no corresponden
-  // a NINGUNA tarjeta actual (ni vieja ni nueva) se descartan igual que en §12.2.
+  function perteneceAVinculoListas(lista, viejo) {
+    return !lista.espacio || lista.espacio === ESPACIO_HASH || lista.espacio === viejo;
+  }
+
   function movimientosVinculoListas(viejo) {
     const movs = [];
     tarjetasCompletas.forEach((t) => {
       const de = hashTarjetaCon(viejo, t);
       const a = hashTarjeta(t);
       if (de === a) return;
-      const usaEsteHash = listas.some((lista) => lista.hashes.indexOf(de) !== -1);
+      const usaEsteHash = listas.some((lista) => perteneceAVinculoListas(lista, viejo) && lista.hashes.indexOf(de) !== -1);
       if (usaEsteHash) movs.push({ de: de, a: a });
     });
     return movs;
@@ -7549,6 +6637,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const vigentes = hashesVigentesActuales();
     let movidas = 0;
     listas = listas.filter((lista) => {
+      if (!perteneceAVinculoListas(lista, viejo)) return true;
       const nuevos = [];
       let cambio = false;
       lista.hashes.forEach((h) => {
@@ -7556,7 +6645,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         else if (vigentes.has(h)) { nuevos.push(h); }
         else { cambio = true; }   // huérfano: se descarta
       });
-      if (cambio) { lista.hashes = nuevos; lista.modificada = Date.now(); }
+      if (cambio) {
+        lista.hashes = nuevos;
+        lista.modificada = Date.now();
+        lista.espacio = ESPACIO_HASH;   // NUEVO: tras migrar, pasa a ser una lista de ESTE evaluador
+      }
       return nuevos.length > 0;
     });
     guardarListas();
@@ -7595,7 +6688,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     };
   }
 
-  // Ejecuta el movimiento y devuelve { movidas, sin }
   function ejecutarVinculo(zona, viejo) {
     if (zona === 'listas') return ejecutarVinculoListas(viejo);
     if (zona === 'sesiones') {
@@ -7622,7 +6714,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return { movidas: movs.length, sin: contarOtrasZona(zona) };
   }
 
-  // ---------- "Vincular todo a este evaluador" (varias zonas a la vez) ----------
   const ICONOS_ZONA_VINCULO = { dificiles: '☆', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐' };
   const ZONAS_HASH_PURGABLES = ['dificiles', 'notas', 'razones', 'imagenes'];   // las únicas donde puede quedar un residuo que valga la pena ofrecer borrar
 
@@ -7636,9 +6727,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return movimientosVinculo(zona, viejo).length;
   }
 
-  // Solo espacios que efectivamente tienen algo para mover en AL MENOS una de
-  // las zonas marcadas. La única fuente de "nombres de espacios viejos" que
-  // tiene la app es el historial (igual que en el flujo de una sola zona).
   function candidatosParaZonas(zonas) {
     const candidatos = new Set();
     gamificacion.historial.forEach((s) => {
@@ -7657,8 +6745,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
   }
 
-  // Resumen compacto, ej: "Se moverían: 3 ☆, 2 💡, 0 🏷" — se listan TODAS las
-  // zonas marcadas, incluidas las que dan 0.
   function resumenVinculoTodo(zonas, viejo) {
     if (zonas.length === 0) return { cantidad: 0, texto: 'Marcá al menos una zona.' };
     if (!viejo) return { cantidad: 0, texto: 'Escribí o elegí el nombre anterior del recordatorio para ver qué se movería.' };
@@ -7672,7 +6758,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return { cantidad: total, texto: 'Se moverían: ' + partes.join(', ') };
   }
 
-  // Ejecución parcial: si una zona falla, se sigue con las demás.
   function ejecutarVinculoTodo(zonas, viejo) {
     const resultados = {};
     const errores = [];
@@ -7683,10 +6768,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         errores.push(ICONOS_ZONA_VINCULO[zona] + ' ' + zona + ': ' + e.message);
       }
     });
-    // Residuos: solo tiene sentido contarlos/ofrecer borrarlos en las zonas por
-    // hash que NO se autolimpian al vincular (dificiles/notas/razones/imagenes;
-    // 'listas' ya descarta sus huérfanas sola, y 'sesiones' no es borrado acá:
-    // para eso ya están los botones dedicados de "Borrar historial").
     const zonasResiduo = zonas.filter((z) => ZONAS_HASH_PURGABLES.indexOf(z) !== -1 && resultados[z]);
     const residuos = zonasResiduo.reduce((acc, z) => acc + contarOtrasZona(z), 0);
     return { resultados: resultados, errores: errores, residuos: residuos, zonasResiduo: zonasResiduo };
@@ -7734,13 +6815,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-
-  // ============================================================
-  // NUEVO: Borrado total de los datos de UN evaluador específico
-  // ============================================================
-
-  // Nombres de "espacio" con sesiones en el historial, sin contar este
-  // evaluador (no puede borrarse a sí mismo) ni las sesiones sin identificar.
   function espaciosBorrables() {
     const set = new Set();
     gamificacion.historial.forEach((s) => {
@@ -7785,21 +6859,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     el.style.display = 'block';
   });
 
-  // Borra TODO lo asociado a 'espacio', salvo puntosTotales e inventario
-  // (son globales). Las entradas por tarjeta/imagen se identifican
-  // recomputando el hash que tendría cada elemento ACTUAL bajo ese espacio
-  // (misma técnica que la revinculación): una entrada de una tarjeta ya
-  // editada o borrada del recordatorio no se puede identificar con certeza
-  // y queda sin tocar, igual que en el resto del sistema de vinculación.
   function borrarEvaluadorCompleto(espacio) {
     if (!window.confirm('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes y listas)? ' +
       'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.')) return;
 
-    // Sesiones
     gamificacion.historial = gamificacion.historial.filter((s) => espacioDeSesion(s) !== espacio);
     guardarGamificacion();
 
-    // Difíciles / notas / razones: mismo hash de tarjeta en las tres zonas
     const hashesTarjetas = new Set(tarjetasCompletas.map((t) => hashTarjetaCon(espacio, t)));
     hashesTarjetas.forEach((h) => {
       delete dificiles[h];
@@ -7810,25 +6876,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     guardarNotas();
     guardarRazones();
 
-    // Imágenes
     INDICE_IMAGENES.forEach((c) => {
       delete datosImagenes[hashImagenCon(espacio, c.ruta, c.indice)];
     });
     guardarImagenesStorage();
 
-    // Listas: se quitan los hashes de ese espacio; si una lista queda vacía, se borra
     listas = listas.filter((lista) => {
       lista.hashes = lista.hashes.filter((h) => !hashesTarjetas.has(h));
       return lista.hashes.length > 0;
     });
     guardarListas();
 
-    // Claves de backup (timestamp y snapshot) asociadas a ese espacio
     try {
       localStorage.removeItem('ultimo_backup_' + espacio);
       localStorage.removeItem('ultimo_backup_snapshot_' + espacio);
     } catch (e) {
-      // sin localStorage disponible: nada que limpiar ahí
     }
 
     document.getElementById('lista-borrar-evaluador').style.display = 'none';
@@ -7851,7 +6913,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     refrescarModalVincular();
   }));
 
-  // ---------- Modal ----------
   const elModalVincular = document.getElementById('modal-vincular');
   const elVincTitulo = document.getElementById('vinc-titulo');
   const elVincDescripcion = document.getElementById('vinc-descripcion');
@@ -7902,7 +6963,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elVincDescripcion.textContent = 'Indicá con qué nombre de recordatorio se guardaron estos datos. Pasarán a ser de este evaluador («' + ESPACIO_HASH + '»).';
       elVincCampoEspacio.style.display = 'block';
       elVincEspacio.value = '';
-      // sugerencias: espacios de otros evaluadores que ya aparecen en el historial
       if (zona === 'todo') {
         refrescarDropdownTodo();
       } else {
@@ -7959,17 +7019,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
   document.getElementById('btn-listas-vincular').addEventListener('click', () => abrirModalVincular('listas'));
 
-  // Estado inicial de los stats (por si se entra a 'estudio' antes de iniciar)
   actualizarBarraGamificacion();
-
-  // ============================================================
-  // NUEVO: Buscador Global (Elegir Temas / Observador / Galería)
-  // ============================================================
-  // Opera sobre los datos ya cargados en memoria (tarjetasCompletas,
-  // rutasDisp, datos.descripciones_rutas). No modifica ningún estado de
-  // evaluación, notas, difíciles, razones, cronómetro ni resaltado del
-  // drawio: solo lee y, al seleccionar un resultado, reutiliza funciones
-  // ya existentes (checkbox + 'change', abrirTarjetaObservador, renderGaleria).
 
   function debounce(fn, ms) {
     let temporizador = null;
@@ -7979,10 +7029,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     };
   }
 
-  // Devuelve un fragmento con 'texto' resaltando (en <strong>) la primera
-  // coincidencia de 'consultaNorm' (subcadena, ya normalizada). Compara sobre
-  // el texto normalizado pero recorta sobre el texto ORIGINAL, para no perder
-  // acentos/mayúsculas en lo que se muestra.
   function resaltarCoincidenciaBuscador(texto, consultaNorm) {
     const frag = document.createDocumentFragment();
     if (!texto) return frag;
@@ -8005,8 +7051,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return frag;
   }
 
-  // Texto (sin imágenes) de todas las rutas asociadas a una tarjeta, para
-  // buscar dentro de rutasDisp[id].lineas.
   function textoRutasDeTarjeta(t) {
     return rutasValidasDe(t).map((id) => {
       const lineas = (rutasDisp[id] && rutasDisp[id].lineas) || [];
@@ -8014,9 +7058,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }).join(' ');
   }
 
-  // Busca en primero / segundo / texto de rutas. Devuelve como mucho UN
-  // resultado por tarjeta (dedupe), con el primer campo que haya coincidido
-  // (prioridad: primero > segundo > rutas).
   function buscarTarjetasGlobal(consultaNorm) {
     const resultados = [];
     const candidatos = candidatosPorIndice(indiceTarjetas, consultaNorm);
@@ -8066,12 +7107,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elDropdown.innerHTML = '';
   }
 
-  // ---------- Elegir Temas ----------
-
   function seleccionarResultadoBuscadorTemas(idx) {
-    // OPTIMIZACIÓN: con el subT colapsado puede que su checkbox todavía no
-    // exista (construcción perezosa). Se abre/construye el subT de 'idx'
-    // ANTES de buscar el input (abrirYConstruir dispara 'toggle' sincrónico).
     const nombreGrupo = indiceAGrupoTema.get(idx);
     const info = nombreGrupo ? gruposTemaInfo.get(nombreGrupo) : null;
     if (info) {
@@ -8105,8 +7141,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elDropdownBuscadorTemas.classList.add('abierto');
   }
 
-  // ---------- Modo Observador ----------
-
   function renderDropdownBuscadorObservador(consulta) {
     const consultaNorm = normalizarPalabra((consulta || '').trim());
     elDropdownBuscadorObservador.innerHTML = '';
@@ -8129,18 +7163,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elDropdownBuscadorObservador.classList.add('abierto');
   }
 
-  // ---------- Galería ----------
-
-  // Busca por número de ruta (ej. "ruta 5") o por la descripción de CADA
-  // imagen individual (datos.descripciones_rutas ahora es una lista por
-  // ruta, una posición por imagen). Dedupe por índice de imagen: una misma
-  // posición de INDICE_IMAGENES no se repite en la lista de resultados.
   function buscarGaleriaGlobal(consultaNorm) {
     const resultados = [];
     const posicionesUsadas = new Set();
 
-    // 1) Coincidencias por número de ruta: apuntan a la primera imagen de
-    //    esa ruta (el número de ruta no es específico de una imagen).
     Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
       if (normalizarPalabra('ruta ' + ruta).indexOf(consultaNorm) === -1) return;
       const posImg = INDICE_IMAGENES.findIndex((e) => e.ruta === ruta);
@@ -8149,9 +7175,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       posicionesUsadas.add(posImg);
     });
 
-    // 2) Coincidencias por descripción de CADA imagen individual: apuntan
-    //    exactamente a esa imagen (no siempre a la primera de la ruta), para
-    //    que en rutas con 2+ imágenes se navegue a la que realmente coincide.
     const candidatosI = candidatosPorIndice(indiceImagenes, consultaNorm);
     const posicionesACheck = candidatosI ? Array.from(candidatosI).sort((a, b) => a - b) : INDICE_IMAGENES.map((_, i) => i);
     posicionesACheck.forEach((posImg) => {
@@ -8199,8 +7222,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elDropdownBuscadorGaleria.classList.add('abierto');
   }
 
-  // ---------- Listeners comunes (debounce, cierre por click afuera / Esc) ----------
-
   elInputBuscadorTemas.addEventListener('input', debounce(() => renderDropdownBuscadorTemas(elInputBuscadorTemas.value), 200));
   elInputBuscadorObservador.addEventListener('input', debounce(() => renderDropdownBuscadorObservador(elInputBuscadorObservador.value), 200));
   elInputBuscadorGaleria.addEventListener('input', debounce(() => renderDropdownBuscadorGaleria(elInputBuscadorGaleria.value), 200));
@@ -8221,50 +7242,33 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cerrarDropdownBuscador(elDropdownBuscadorHuerfanas);
   });
 
-  // NUEVO: ESC cierra modales y vuelve atrás en pantallas secundarias.
   document.addEventListener('keydown', (evento) => {
     if (evento.key !== 'Escape') return;
-    // 4) Condición de foco: no interferir mientras se escribe en un input/textarea
     const activo = document.activeElement;
     if (activo && (activo.tagName === 'INPUT' || activo.tagName === 'TEXTAREA')) return;
-    // 3) Excepción obligatoria: el aviso de Repaso Espaciado nunca se cierra con ESC
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
 
-    // 1) Modales
     if (elModalSync.classList.contains('abierto')) { elModalSync.classList.remove('abierto'); return; }
     if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
     if (elModalGuardarLista.classList.contains('abierto')) { cerrarModalGuardarLista(); return; }
     if (elModalAnalisisSesion.classList.contains('abierto')) { cerrarModalAnalisisSesion(); return; }
     if (elModalModo.classList.contains('abierto')) { cancelarModalModo(); return; }
     if (elModalVincular.classList.contains('abierto')) { cerrarModalVincular(); return; }
-    // NUEVO: modales del Pomodoro
     if (elModalPomodoroIniciar.classList.contains('abierto')) { cerrarModalPomodoroIniciar(); return; }
     if (elModalPomodoroAbandonar.classList.contains('abierto')) { cerrarModalPomodoroAbandonar(); return; }
     if (elModalPomodoroResumen.classList.contains('abierto')) { cerrarModalPomodoroResumen(); return; }
 
-    // 2) Pantallas: volver atrás (la tarjeta abierta del observador, antes que su lista)
     if (elAreaTarjeta.style.display !== 'none' && elAreaTarjeta.classList.contains('observador')) { salirObservador(); return; }
     if (elPantallaHistorial.style.display !== 'none') { mostrarPantalla('temas'); return; }
     if (elPantallaTienda.style.display !== 'none') { mostrarPantalla('temas'); return; }
-    // NUEVO: con el Pomodoro activo, ESC no debe sacar del observador
     if (elPantallaObservador.style.display !== 'none') { if (!pomodoroActivo) mostrarPantalla('temas'); return; }
     if (elPantallaGaleria.style.display !== 'none') { volverListaDesdeGaleria(); return; }
     if (elPantallaHuerfanas.style.display !== 'none') { volverDesdeHuerfanas(); return; }
-    // NUEVO: la pantalla del mapa SIEMPRE se puede cerrar con ESC, incluso
-    // con el Pomodoro activo (es la salida natural de esa pantalla, igual
-    // que el botón "Volver a observador").
     if (elPantallaMapa.style.display !== 'none') { cerrarPantallaMapa(); return; }
   });
 
-  // ---------- Preview en el modo observador: "🖼 Datos de imágenes guardados" ----------
-
-  // NUEVO: renderizado incremental de imágenes (mismo patrón que difíciles,
-  // más simple: un solo grupo/lista, sin "de otros evaluadores").
   const nodosImagenes = new Map();   // hash -> fila
 
-  // OPTIMIZACIÓN (lazy rendering): refs fijas + el único <details> se prepara
-  // UNA sola vez; su contenido se arma recién al abrirlo (o de una si ya
-  // estaba abierto).
   const elListaImagenesGuardadas = document.getElementById('lista-imagenes-guardadas');
   const elDetImagenes = document.getElementById('det-imagenes');
   const elSumaImagenes = document.getElementById('suma-imagenes');
@@ -8348,9 +7352,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return div;
   }
 
-  // OPTIMIZACIÓN (lazy rendering): ya no reconstruye las filas directamente;
-  // invalida el grupo y lo refresca YA si ya estaba abierto, o deja la
-  // reconstrucción pendiente para cuando se abra.
   function renderImagenesPreview() {
     nodosImagenes.clear();
     elListaImagenesGuardadas.innerHTML = '';
@@ -8358,7 +7359,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lazyImagenes.refrescar();
   }
 
-  // NUEVO: fusiona una lista de imágenes importada (individual o dentro de un backup completo)
   function fusionarImagenesLista(lista) {
     let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
     lista.forEach((item) => {
@@ -8402,7 +7402,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderImagenesPreview();
   });
 
-  // NUEVO: arma el JSON de imágenes (usado por el botón individual y por el backup completo)
   function construirExportImagenes() {
     const lista = Object.keys(datosImagenes).map((h) => ({
       h: h,
@@ -8457,16 +7456,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lector.readAsText(archivo);
   });
 
-  // ---------- Listeners de la galería ----------
   document.getElementById('btn-ver-imagenes').addEventListener('click', () => abrirGaleria());
   document.getElementById('btn-galeria-volver').addEventListener('click', () => volverListaDesdeGaleria());
   document.getElementById('btn-ver-huerfanas').addEventListener('click', () => abrirHuerfanas());
   document.getElementById('btn-huerfanas-volver').addEventListener('click', () => volverDesdeHuerfanas());
 
-  // ---------- NUEVO: botón del mapa (🗺️) ----------
-  // Sin imagen seleccionada al generar el evaluador, data-mapa-src queda en
-  // "data:;base64," (sin payload): el botón se deshabilita, pero SIN
-  // ocultarse, para que la fila no cambie de aspecto (ver §imagen del mapa).
   (function inicializarBotonMapa() {
     const src = elBtnObservadorMapa.dataset.mapaSrc || '';
     const payload = src.split(',')[1] || '';
@@ -8491,38 +7485,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('btn-galeria-ver-anterior').addEventListener('click', () => { galeriaVerAnterior = true; renderGaleria(); });
   elGaleriaImg.addEventListener('click', () => { if (elGaleriaImg.src) abrirLightbox(elGaleriaImg.src); });
 
-  // ---------- MODIFICADO: modos especiales ----------
-
-  // Modo 1: evaluación completa (todas las tarjetas, ignora los checkboxes)
   document.getElementById('btn-modo-completo').addEventListener('click', () => {
     if (tarjetasCompletas.length === 0) return;
     abrirModalSeleccionModo(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);  // MODIFICADO: gamificación
   });
 
-  // Modo 2: repasar las difíciles activas (solo las presentes en este evaluador)
   document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
     const paraRepasar = tarjetasCompletas.filter((t) => esDificil(t));
     if (paraRepasar.length === 0) return;
     abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar);  // MODIFICADO: gamificación
   });
 
-  // ---------- MODIFICADO: vista previa / gestión de difíciles ----------
-  // Las desmarcadas NO se borran: pasan a la sección 'Desmarcadas' y pueden
-  // re-activarse desde ahí (o desde el botón ☆ durante el estudio).
-
-  // NUEVO: renderizado incremental — mapea cada hash a su fila (nodo DOM) y a
-  // qué grupo pertenece actualmente, para no reconstruir TODO el listado
-  // cuando cambia una sola entrada (p. ej. tildar/destildar el checkbox).
   const nodosDificiles = new Map();   // hash -> { fila, grupo: 'propia'|'otros'|'desm' }
 
-  // OPTIMIZACIÓN (lazy rendering): refs fijas (la pantalla "temas" nunca se
-  // destruye, solo se oculta/muestra) + los dos <details> colapsados
-  // ("De otros evaluadores" y "Desmarcadas") se preparan UNA sola vez con
-  // prepararDetallesLazy; su contenido se arma recién al abrirlos. Como los
-  // datos pueden cambiar entre visitas a la pantalla, renderDificilesPreview()
-  // no reconstruye sus filas directamente: solo recalcula contadores y pide
-  // un refrescar() (que reconstruye YA si ya estaban abiertas, o lo deja
-  // pendiente para la próxima vez que se abran).
   const elListaDificiles = document.getElementById('lista-dificiles');
   const elListaDificilesOtros = document.getElementById('lista-dificiles-otros');
   const elDetDificilesOtros = document.getElementById('det-dificiles-otros');
@@ -8532,10 +7507,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elSumaDificilesDesm = document.getElementById('suma-dificiles-desm');
   const elNotaDificiles = document.getElementById('nota-dificiles');
 
-  // Arma (o completa) las filas de un grupo colapsado a partir de 'dificiles'
-  // actual. Idempotente: si una fila para ese hash y grupo YA existe en
-  // nodosDificiles (p. ej. se agregó individualmente antes de abrir la
-  // sección), no la duplica.
   function construirGrupoDificilesLazy(grupo) {
     const elLista = grupo === 'otros' ? elListaDificilesOtros : elListaDificilesDesm;
     Object.keys(dificiles).forEach((h) => {
@@ -8569,8 +7540,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return document.getElementById('lista-dificiles-desm');
   }
 
-  // Recalcula SOLO los contadores y textos auxiliares (barato: son conteos
-  // sobre el objeto 'dificiles', no tocan el DOM de las filas).
   function actualizarContadoresDificiles() {
     const btnD = document.getElementById('btn-modo-dificiles');
     let nAqui = 0, nOtros = 0, nDesm = 0;
@@ -8592,11 +7561,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       : 'Guardadas: ' + (total - nDesm) + ' activa(s)' + (nDesm > 0 ? ', ' + nDesm + ' desmarcada(s)' : '');
   }
 
-  // Actualización QUIRÚRGICA de una sola entrada: si el grupo no cambió, solo
-  // actualiza el checkbox de su fila ya existente; si cambió de grupo, mueve
-  // esa UNA fila al contenedor correcto. Nunca reconstruye el resto de la
-  // lista. Se usa para cambios de un solo elemento; las operaciones masivas
-  // (importar, vincular, vaciar) siguen llamando a renderDificilesPreview().
   function actualizarFilaDificilIndividual(h) {
     const cache = nodosDificiles.get(h);
     const nuevoGrupo = grupoActualDificil(h);
@@ -8637,7 +7601,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
       dificiles[h].t = Date.now();   // NUEVO: para saber si hay cambios sin respaldar (§8)
       guardarDificiles();
-      // CORREGIDO: actualización quirúrgica de ESTA fila, no todo el listado
       actualizarFilaDificilIndividual(h);
     });
 
@@ -8657,23 +7620,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return label;
   }
 
-  // OPTIMIZACIÓN (lazy rendering): esta función se llama cada vez que se
-  // entra a "Elegir temas". El grupo "propia" (siempre visible, sin
-  // colapsar) se sigue armando entero, como antes. "De otros evaluadores" y
-  // "Desmarcadas" ya NO se reconstruyen acá: solo se invalida su cache y,
-  // si ya estaban abiertas, se refrescan de una (refrescar()); si están
-  // cerradas, quedan pendientes para armarse recién cuando se abran.
   function renderDificilesPreview() {
     elListaDificiles.innerHTML = '';
-    // Se limpian también los nodos de 'otros'/'desm' (van a reconstruirse,
-    // ya sea ahora mismo si están abiertas o más tarde al abrirlas).
     Array.from(nodosDificiles.entries()).forEach(([h, info]) => {
       if (info.grupo !== 'propia') nodosDificiles.delete(h);
     });
     elListaDificilesOtros.innerHTML = '';
     elListaDificilesDesm.innerHTML = '';
 
-    // 1) Difíciles activas de este evaluador
     let nAqui = 0;
     tarjetasCompletas.forEach((t) => {
       const h = hashTarjeta(t);
@@ -8690,9 +7644,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lazyDificilesDesm.refrescar();
   }
 
-  // NUEVO: arma el JSON de difíciles (usado por el botón individual y por el backup completo)
   function construirExportDificiles() {
-    // Solo se exportan las activas (las desmarcadas son un estado local)
     const lista = Object.keys(dificiles)
       .filter((h) => dificiles[h].activa)
       .map((h) => ({
@@ -8746,7 +7698,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lector.readAsText(archivo);
   });
 
-  // NUEVO: fusiona una lista de difíciles importada (individual o dentro de un backup completo)
   function fusionarDificilesLista(lista) {
     let nuevas = 0, repetidas = 0, invalidas = 0;
     lista.forEach((item) => {
@@ -8774,8 +7725,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderDificilesPreview();
   });
 
-  // ---------- NUEVO: notas en la pantalla "Elegir temas" ----------
-
   function bloqueVersion(etiqueta, texto, esTxt, vacio) {
     const div = document.createElement('div');
     div.className = 'bloque-version' + (esTxt ? ' txt' : '') + (vacio ? ' vacio' : '');
@@ -8795,13 +7744,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return b;
   }
 
-  // NUEVO: renderizado incremental de notas (mismo patrón que difíciles).
-  // Dos grupos posibles: 'dif' (distinta a la del txt, de ESTE evaluador) y
-  // 'otras' (de otro evaluador, o cuyo hash ya no corresponde a ninguna
-  // tarjeta actual). El contenido de una fila 'dif' puede cambiar sin
-  // cambiar de grupo (p. ej. conflicto -> pendiente), así que ante CUALQUIER
-  // cambio se reconstruye esa única fila — sigue siendo una actualización
-  // quirúrgica (una fila), nunca el listado completo.
   const nodosNotas = new Map();   // hash -> { fila, grupo: 'dif'|'otras' }
 
   function tarjetaPorHash(h) {
@@ -8818,9 +7760,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return grupo === 'dif' ? elListaNotasDif : elListaNotasOtras;
   }
 
-  // OPTIMIZACIÓN (lazy rendering): refs fijas + los dos <details> ("Distintas
-  // a las del txt" y "De otros evaluadores") se preparan UNA sola vez; su
-  // contenido se arma recién al abrirlos (o de una si ya estaban abiertos).
   const elListaNotasDif = document.getElementById('lista-notas-dif');
   const elDetNotasDif = document.getElementById('det-notas-dif');
   const elSumaNotasDif = document.getElementById('suma-notas-dif');
@@ -8954,9 +7893,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return div;
   }
 
-  // OPTIMIZACIÓN (lazy rendering): ya no reconstruye las filas directamente;
-  // invalida ambos grupos y los refresca YA si ya estaban abiertos, o deja
-  // la reconstrucción pendiente para cuando se abran.
   function renderNotasPreview() {
     nodosNotas.clear();
     elListaNotasDif.innerHTML = '';
@@ -8966,9 +7902,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lazyNotasOtras.refrescar();
   }
 
-  // NUEVO: mismo patrón que "Vaciar todas" de razones
-  // NUEVO: fusiona una lista de notas importada (individual o dentro de un backup completo)
-  // Si la misma tarjeta tiene nota distinta, gana la más reciente (campo t)
   function fusionarNotasLista(lista) {
     let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
     lista.forEach((item) => {
@@ -9009,7 +7942,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderNotasPreview();
   });
 
-  // NUEVO: arma el JSON de notas (usado por el botón individual y por el backup completo)
   function construirExportNotas() {
     const lista = Object.keys(notasLocales).map((h) => ({
       h: h,
@@ -9065,8 +7997,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lector.readAsText(archivo);
   });
 
-  // ---------- NUEVO: "Revisar" guardadas en "Elegir temas" (solo primero + segundo) ----------
-
   function filaRevisarGuardada(hash, entrada) {
     const div = document.createElement('div');
     div.className = 'item-nota-otra';
@@ -9103,9 +8033,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderRevisarGuardadoPreview();
   });
 
-  // ---------- NUEVO: razones guardadas en "Elegir temas" ----------
-
-  // NUEVO: renderizado incremental de razones (mismo patrón que difíciles).
   const nodosRazones = new Map();   // hash -> { fila, grupo: 'aqui'|'otras' }
 
   function grupoActualRazon(h) {
@@ -9117,9 +8044,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return grupo === 'aqui' ? elListaRazonesAqui : elListaRazonesOtras;
   }
 
-  // OPTIMIZACIÓN (lazy rendering): refs fijas + los dos <details> se preparan
-  // UNA sola vez; su contenido se arma recién al abrirlos (o de una si ya
-  // estaban abiertos).
   const elListaRazonesAqui = document.getElementById('lista-razones-aqui');
   const elDetRazonesAqui = document.getElementById('det-razones-aqui');
   const elSumaRazonesAqui = document.getElementById('suma-razones-aqui');
@@ -9225,9 +8149,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return div;
   }
 
-  // OPTIMIZACIÓN (lazy rendering): ya no reconstruye las filas directamente;
-  // invalida ambos grupos y los refresca YA si ya estaban abiertos, o deja
-  // la reconstrucción pendiente para cuando se abran.
   function renderRazonesPreview() {
     nodosRazones.clear();
     elListaRazonesAqui.innerHTML = '';
@@ -9237,7 +8158,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lazyRazonesOtras.refrescar();
   }
 
-  // NUEVO: fusiona una lista de razones importada (individual o dentro de un backup completo)
   function fusionarRazonesLista(lista) {
     let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
     lista.forEach((item) => {
@@ -9280,7 +8200,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderRazonesPreview();
   });
 
-  // NUEVO: arma el JSON de razones (usado por el botón individual y por el backup completo)
   function construirExportRazones() {
     const lista = Object.keys(razonesGuardadas).map((h) => ({
       h: h,
@@ -9334,13 +8253,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lector.readAsText(archivo);
   });
 
-  // MODIFICADO: renderRevisarGuardadoPreview() y renderRazonesPreview() ya se
-  // llaman dentro de mostrarPantalla('temas'), así que alcanza con esto.
   document.getElementById('btn-elegir-temas').addEventListener('click', () => {
     mostrarPantalla('temas');
   });
-
-  // ---------- Sesión de estudio ----------
 
   function iniciarSesion(lista) {
     modoObservador = false;
@@ -9362,8 +8277,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     resetPanelesUI();
     tiempoInicioTarjeta = Date.now();
 
-    // NUEVO: Gamificación — reset de variables de sesión. Usa el modo ya
-    // elegido en el modal (configurarModoJuego ya seteó vidasMaximas).
     puntosSesion = 0;
     rachaActual = 0;
     mejorRacha = 0;
@@ -9398,7 +8311,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     tiempoInicioTarjeta = ahora;
   }
 
-  // MODIFICADO: también congela con la nota o el panel de razones abiertos, o en pausa manual
   function cronometroCongelado() {
     return pausaManual || notaAbierta || razonesAbierto || indiceCongelado === indiceActual;
   }
@@ -9409,8 +8321,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return;
     }
 
-    // Auto-parada del cronómetro: si ya no queda nada por marcar, el tiempo
-    // queda congelado (navegar por las tarjetas ya no suma tiempo).
     if (cronometroActivo && !quedanPendientes()) {
       cronometroActivo = false;
       actualizarCronometro();
@@ -9424,7 +8334,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elPrimero.textContent = actual.primero;
     elSegundo.textContent = actual.segundo;
 
-    // Botón "Mostrar pista" (revela el segundo, sin calificar)
     if (mostrarSegundo) {
       elBtnPista.style.display = 'none';
       elSeparador.style.display = actual.segundo ? 'block' : 'none';
@@ -9435,8 +8344,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elSegundo.style.display = 'none';
     }
 
-    // Botón "Mostrar respuesta" (rutas): solo si la tarjeta tiene rutas válidas
-    // y todavía no se mostraron. No se deshabilita si la tarjeta ya fue marcada.
     const validas = rutasValidasDe(actual);
     elBtnRespuesta.style.display = (validas.length > 0 && !respuestaMostrada[indiceActual])
       ? 'inline-block' : 'none';
@@ -9445,7 +8352,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const marcadas = resultados.filter((r) => r !== null).length;
     elBarraRelleno.style.width = (marcadas / tarjetasSesion.length * 100) + '%';
 
-    // Texto de estado (puede combinar marca + respuesta mostrada)
     let textoEstado = '';
     let claseEstado = 'estado-marca';
 
@@ -9471,8 +8377,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const yaMarcada = marcada !== null;
 
-    // NUEVO: si la respuesta escrita salió "Casi" o "Mal", el tilde se reemplaza por
-    // "Entendida por comprensión" (permite corregir el veredicto del evaluador)
     const evActual = evaluaciones[indiceActual];
     const permiteComprension = !modoObservador && !!evActual &&
       (evActual.resultado === 'casi' || evActual.resultado === 'mal') && marcada !== 'si';
@@ -9488,20 +8392,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elBtnAnterior.disabled = indiceActual === 0;
     elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
 
-    // MODIFICADO: Zona de respuesta escrita:
-    // - sin marcar y evaluable: editable, con botón Evaluar.
-    // - ya marcada con texto escrito: queda visible en solo lectura,
-    //   para poder comparar con la respuesta real ('Mostrar respuesta').
     const puedeEvaluar = (marcada === null) && evaluable(actual);
     const textoGuardado = escritos[indiceActual] || '';
     const mostrarZona = puedeEvaluar || (marcada !== null && textoGuardado.trim() !== '');
     elZonaEval.style.display = mostrarZona ? 'block' : 'none';
     elFilaEval.style.display = puedeEvaluar ? 'flex' : 'none';
     if (mostrarZona) {
-      // NUEVO: una vez evaluada, se reemplaza el textarea por una vista de
-      // solo lectura con las palabras del usuario subrayadas (clave/
-      // contenido). Mientras se puede seguir editando (sin evaluar
-      // todavía), se usa el textarea de siempre.
       const evActualParaResaltado = evaluaciones[indiceActual];
       if (evActualParaResaltado) {
         elTextoEval.style.display = 'none';
@@ -9529,7 +8425,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       renderResultadoEval(evaluaciones[indiceActual]);
     }
 
-    // MODIFICADO: contador de rutas asociadas (esquina de la tarjeta)
     if (validas.length > 0) {
       elBadgeRutas.textContent = 'rutas = ' + validas.length;
       elBadgeRutas.style.display = 'block';
@@ -9537,12 +8432,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elBadgeRutas.style.display = 'none';
     }
 
-    // NUEVO: botón Pausar (solo mientras el cronómetro corre) y toggle Revisar
     elBtnPausa.style.display = (cronometroActivo && !modoObservador) ? 'inline-block' : 'none';
     elBtnRevisar.classList.toggle('activa', esRevisar(actual));
     elBtnRevisar.textContent = esRevisar(actual) ? '🚩 Para revisar' : '🚩 Revisar';
 
-    // MODIFICADO: estado del toggle Difícil (siempre activo, aunque ya marcada)
     const esDif = esDificil(actual);
     elBtnDificil.textContent = esDif ? '★ Difícil' : '☆ Difícil';
     elBtnDificil.classList.toggle('activa', esDif);
@@ -9552,27 +8445,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     renderRutas(actual);
 
-    // Reiniciar animación de entrada
     elTarjeta.style.animation = 'none';
     void elTarjeta.offsetWidth;
     elTarjeta.style.animation = null;
   }
 
-  // ---------- Rutas (acordeón de respuestas) ----------
-
-  // Agrega una línea al acordeón resaltando (negrita + color) las palabras
-  // que coinciden con las claves de la tarjeta actual. Construye nodos DOM,
-  // así el texto nunca se interpreta como código.
-  // NUEVO 'raicesUsuario' (opcional): Set de RAÍCES (no palabras exactas) de
-  // la respuesta del usuario. Toda palabra de la ruta que comparta raíz con
-  // algo que escribiste se subraya (p. ej. escribiste "sistemas" y la ruta
-  // dice "sistema": ambas comparten raíz, así que acá se subraya "sistema"),
-  // sea o no clave de la tarjeta — mismo criterio (clave/contenido) que ya
-  // usa renderRespuestaUsuarioConCoincidencias() del lado de tu respuesta:
-  //  - clave + coincide con vos: negrita + subrayado azul (palabra-clave +
-  //    coincidencia-usuario).
-  //  - NO es clave pero coincide con vos: subrayado verde, sin negrita
-  //    (coincidencia-contenido), igual que del lado de tu respuesta.
   function agregarLineaResaltada(contenedor, linea, claves, raicesUsuario) {
     const div = document.createElement('div');
     div.className = 'ruta-linea';
@@ -9625,14 +8502,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     elRutasContenedor.style.display = 'block';
 
-    // Claves de ESTA tarjeta: la misma ruta resalta palabras distintas
-    // según qué tarjeta la invocó.
     const claves = new Set(tarjeta.claves || []);
 
-    // NUEVO: si la tarjeta ya fue evaluada, también se resaltan (subrayado)
-    // las palabras de la respuesta del usuario que comparten raíz con las
-    // claves (p. ej. escribiste "sistemas" y la ruta dice "sistema": se
-    // subraya "sistema" acá).
     const evActual = evaluaciones[indiceActual];
     const raicesUsuario = evActual ? extraerPalabrasUsuario(escritos[indiceActual] || '') : null;
 
@@ -9646,9 +8517,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       sum.textContent = 'Ruta ' + id;
       det.appendChild(sum);
 
-      // OPTIMIZACIÓN (lazy rendering): el contenido (líneas resaltadas +
-      // imágenes) de cada ruta recién se arma la primera vez que el usuario
-      // la despliega (abre el acordeón), no apenas toca "Mostrar respuesta".
       prepararDetallesLazy(det, () => {
         const contenido = document.createElement('div');
         contenido.className = 'ruta-contenido';
@@ -9670,11 +8538,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
   }
 
-  // ---------- Evaluación de respuesta escrita ----------
-
-  // ---------- Evaluación: palabras vacías, raíces y tolerancia a tipeos ----------
-
-const SUFIJOS_RAIZ = [
+  const SUFIJOS_RAIZ = [
     'imientos','imiento',
     'aciones','acion',
     'siones','ersion','sion','ucion',
@@ -9688,11 +8552,6 @@ const SUFIJOS_RAIZ = [
     'ismo','ista','ero','aje'
   ];
 
-  // Raíz simplificada para comparar singular/plural, género y algunas derivaciones.
-  // Recibe cualquier palabra (se normaliza antes: minúsculas y sin tildes).
-  // Ajustes respecto de la versión original (ver notas del cambio):
-  //  - el plural en -s se quita también en -as/-os/-is/-us (sistemas -> sistema, polos -> polo)
-  //  - los sufijos se quitan solo si la raíz queda con 4+ letras (evita estado = estable)
   function raiz(palabra) {
     let p = normalizarPalabra(palabra).trim();
     if (p.length <= 3) return p;
@@ -9703,13 +8562,6 @@ const SUFIJOS_RAIZ = [
       p = p.slice(0, -1);
     }
     if (p.endsWith('mente') && p.length > 7) p = p.slice(0, -5);
-    // ARREGLADO: -acion/-sion (SUFIJOS_RAIZ) se prueba ANTES que el patrón
-    // aumentativo -on/-ona de más abajo. Antes, "interpretacion" terminaba
-    // matcheando el aumentativo "-on" (pensado para "raton"->"rat") y
-    // devolvía "interpretaci", en vez de "-acion" (pensado para esto) que
-    // hubiera dado "interpret" — la misma raíz que "interpretar". Al mover
-    // este bloque primero, las palabras en "-ción"/"-sión" quedan resueltas
-    // por el sufijo correcto antes de que el aumentativo las intercepte.
     for (const suf of SUFIJOS_RAIZ) {
       if (p.endsWith(suf) && p.length - suf.length >= 4) { p = p.slice(0, -suf.length); return terminarRaiz(p); }
     }
@@ -9723,18 +8575,12 @@ const SUFIJOS_RAIZ = [
     return terminarRaiz(p);
   }
 
-  // Últimos retoques compartidos por las dos salidas posibles de raiz():
-  // la que ya pasó por SUFIJOS_RAIZ (-acion/-sion/etc.) y la que pasó por
-  // la terminación verbal -ar/-er/-ir.
   function terminarRaiz(p) {
     if (p.length >= 5 && (p.endsWith('a') || p.endsWith('o'))) p = p.slice(0, -1);
     if (p.endsWith('c')) p = p.slice(0, -1) + 'z';
     return p;
   }
 
-  // Una palabra en -es puede ser plural de una palabra en consonante (condiciones ->
-  // condicion) o de una en -e (estables -> estable, partes -> parte). Como no se
-  // puede saber cuál, se guardan las dos raíces posibles y basta que coincida una.
   function variantesRaiz(palabra) {
     const p = normalizarPalabra(palabra).trim();
     const v = [raiz(p)];
@@ -9745,8 +8591,6 @@ const SUFIJOS_RAIZ = [
     return v;
   }
 
-  // true si a y b difieren en 1 letra como máximo (de más, de menos, cambiada,
-  // o dos letras seguidas invertidas)
   function distanciaMax1(a, b) {
     if (a === b) return true;
     const la = a.length, lb = b.length;
@@ -9762,10 +8606,6 @@ const SUFIJOS_RAIZ = [
     return b.slice(i + 1) === a.slice(i);
   }
 
-  // NUEVO: si 'orig' es un símbolo especial (ε, ∑, ∞...) o 'w' es el NOMBRE
-  // normalizado de uno, se agrega la contraparte a las variantes de raíz —
-  // así compartenRaiz() (que solo compara .v sin saber nada de símbolos)
-  // considera "ε" y "epsilon" como la misma raíz, sin tocar su lógica.
   function crearEntrada(w, orig) {
     const v = variantesRaiz(w);
     const nombreSimbolo = SIMBOLOS_ESPECIALES[orig];   // se busca por 'orig': los símbolos distinguen mayús/minús (Ω ≠ ω)
@@ -9779,9 +8619,6 @@ const SUFIJOS_RAIZ = [
     return { w: w, orig: orig, v: v };
   }
 
-  // Palabras (y símbolos especiales) de un texto, sin palabras vacías y sin
-  // repetir raíz. Solo se usa para EVALUAR: el texto de las rutas se
-  // muestra completo y no pasa por acá (ver nota sobre el drawio).
   function analizarTexto(texto) {
     const vistos = new Set();
     const salida = [];
@@ -9800,28 +8637,14 @@ const SUFIJOS_RAIZ = [
     return a.v.some((x) => b.v.indexOf(x) !== -1);
   }
 
-  // NUEVO: Set de RAÍCES (no palabras exactas, sin stopwords) de la
-  // respuesta del usuario, para comparar por raíz compartida en
-  // agregarLineaResaltada (un solo .has() por palabra de la ruta, ya con
-  // las raíces precalculadas de este lado). Reutiliza analizarTexto(), que
-  // ya tokeniza, filtra stopwords y calcula las variantes de raíz (.v) de
-  // cada palabra.
   function extraerPalabrasUsuario(texto) {
     const raices = new Set();
     analizarTexto(texto || '').forEach((e) => { e.v.forEach((r) => raices.add(r)); });
     return raices;
   }
 
-  // NUEVO: arma un DocumentFragment con el texto del usuario, donde las
-  // palabras que comparten raíz con 'claves' quedan en <span
-  // class="coincidencia-clave">, las que comparten raíz con el contenido de
-  // la ruta (y no eran ya clave) en <span class="coincidencia-contenido">,
-  // y el resto como texto plano. Nunca usa innerHTML: todo nodo de texto
-  // viene de textContent, así que no hay riesgo de inyectar HTML.
   function renderRespuestaUsuarioConCoincidencias(texto, claves, contenidoReferencia) {
     const frag = document.createDocumentFragment();
-    // Se tokeniza UNA vez cada lado (claves y contenido de referencia); el
-    // texto del usuario se recorre con un solo matchAll.
     const entradasClaves = (claves || []).map((c) => crearEntrada(normalizarPalabra(c), c));
     const entradasContenido = analizarTexto(contenidoReferencia || '');
 
@@ -9830,7 +8653,6 @@ const SUFIJOS_RAIZ = [
       if (m.index > ultimo) frag.appendChild(document.createTextNode(texto.slice(ultimo, m.index)));
       const entradaUsuario = crearEntrada(normalizarPalabra(m[0]), m[0]);
       const esClave = entradasClaves.some((e) => compartenRaiz(entradaUsuario, e));
-      // Prioridad: si coincide con clave Y con contenido, se marca como clave.
       const esContenido = !esClave && entradasContenido.some((e) => compartenRaiz(entradaUsuario, e));
       if (esClave || esContenido) {
         const span = document.createElement('span');
@@ -9846,7 +8668,6 @@ const SUFIJOS_RAIZ = [
     return frag;
   }
 
-  // Tolerancia de tipeo: 1 letra de diferencia en palabras (o raíces) de 5+ letras
   function seParecen(a, b) {
     if (a.w.length >= 5 && b.w.length >= 5 && distanciaMax1(a.w, b.w)) return true;
     for (const x of a.v) {
@@ -9857,8 +8678,6 @@ const SUFIJOS_RAIZ = [
     return false;
   }
 
-  // Empareja uno a uno las entradas de A con las de B: primero por raíz
-  // (raiz(a) === raiz(b)) y, lo que quede, por tipeo. Devuelve Map indiceA -> indiceB.
   function emparejar(A, B) {
     const usadosB = new Set();
     const pares = new Map();
@@ -9878,13 +8697,10 @@ const SUFIJOS_RAIZ = [
     return pares;
   }
 
-  // Claves para evaluar: mismo criterio del resaltado, sin palabras de 1-2 letras
   function clavesEvalDe(tarjeta) {
     return (tarjeta.claves || []).filter((c) => c.length >= 3 && !STOPWORDS.has(c));
   }
 
-  // Texto de referencia: contenido de las rutas válidas (sin imágenes);
-  // si no hay rutas, el propio 'segundo'
   function textoReferenciaDe(tarjeta) {
     const partes = [];
     rutasValidasDe(tarjeta).forEach((id) => {
@@ -9899,9 +8715,6 @@ const SUFIJOS_RAIZ = [
     return clavesEvalDe(tarjeta).length > 0 || textoReferenciaDe(tarjeta).length > 0;
   }
 
-  // MODIFICADO: resultado de la evaluación, en este orden:
-  // 1) veredicto + claves, 2) mapeo de claves, 3) coincidencia con el contenido,
-  // 4) palabras en común
   function renderResultadoEval(ev) {
     elResultadoEval.innerHTML = '';
 
@@ -9910,7 +8723,6 @@ const SUFIJOS_RAIZ = [
     else if (ev.resultado === 'casi') textoVeredicto = '✗ Casi';
     else textoVeredicto = '✗ Mal';
 
-    // 1) veredicto + claves
     const linea1 = document.createElement('div');
     let t1 = textoVeredicto;
     if (ev.clavesTotal > 0) {
@@ -9922,7 +8734,6 @@ const SUFIJOS_RAIZ = [
     linea1.textContent = t1;
     elResultadoEval.appendChild(linea1);
 
-    // 2) mapeo de claves: con qué palabra tuya coincidió cada clave
     if (ev.mapeo && ev.mapeo.length > 0) {
       const enc = document.createElement('div');
       enc.textContent = 'Mapeo Claves:';
@@ -9935,7 +8746,6 @@ const SUFIJOS_RAIZ = [
       });
     }
 
-    // 3) coincidencia con el contenido
     const linea2 = document.createElement('div');
     linea2.textContent = 'coincidencia con el contenido: ' + Math.round(ev.sim * 100) + '%' +
       ' (tu respuesta: ' + ev.totalEscritas + ' distintas, contenido: ' + ev.totalReferencia + ')' +
@@ -9943,7 +8753,6 @@ const SUFIJOS_RAIZ = [
         ? ' — usaste la pista: para "Bien" se exige más de ' + Math.round(SIM_CON_PISTA * 100) + '%' : '');
     elResultadoEval.appendChild(linea2);
 
-    // 4) palabras en común
     const linea3 = document.createElement('div');
     linea3.textContent = ev.comunes + ' palabra(s) en común';
     elResultadoEval.appendChild(linea3);
@@ -9965,9 +8774,6 @@ const SUFIJOS_RAIZ = [
     elResultadoEval.className = 'resultado-eval ' + ev.resultado;
   }
 
-  // ============================================================
-  // NUEVO: avisos y Segunda oportunidad
-  // ============================================================
   let avisoTimer = null;
 
   function mostrarAviso(texto) {
@@ -9983,8 +8789,6 @@ const SUFIJOS_RAIZ = [
     elAvisoJuego.style.display = 'none';
   }
 
-  // Solo aplica a un fallo de RESPUESTA ESCRITA (evaluada por el sistema). Nada de
-  // esto corre en modo observador ni zombie (no se aplica nada, no se consume nada).
   function puedeSegundaOportunidad(idx) {
     if (modoObservador || modoZombie || segundaPendiente) return false;
     if (modoJuego === 'light') return false;   // CORREGIDO: consumible de Normal/Tryhard, no de Light
@@ -10015,8 +8819,6 @@ const SUFIJOS_RAIZ = [
   document.getElementById('btn-segunda-si').addEventListener('click', () => resolverSegundaOportunidad(true));
   document.getElementById('btn-segunda-no').addEventListener('click', () => resolverSegundaOportunidad(false));
 
-  // Acepta: consume 1, marca la tarjeta como fallada-para-repaso y pide una nueva respuesta.
-  // Racha y multiplicador NO se tocan (el fallo todavía no se aplica).
   function iniciarReintento(idx) {
     gamificacion.inventario.segundasOportunidades--;
     guardarGamificacion();
@@ -10031,7 +8833,6 @@ const SUFIJOS_RAIZ = [
     elTextoEval.focus();
   }
 
-  // Factor de recompensa: solo baja si esta tarjeta falló el primer intento y ahora sale bien.
   function factorReintento(idx, resultado) {
     if (modoObservador || !primerIntentoFallido.has(idx)) return 1;
     if (resultado === 'si' || resultado === 'casi') {
@@ -10058,7 +8859,6 @@ const SUFIJOS_RAIZ = [
     const claves = clavesEvalDe(actual);
     const escritas = analizarTexto(texto);
 
-    // Claves acertadas: cada clave contra las palabras escritas (raíz o tipeo)
     const entradasClaves = claves.map((c) => crearEntrada(c, c));
     const paresClaves = emparejar(entradasClaves, escritas);
     const acertadas = [];
@@ -10074,14 +8874,11 @@ const SUFIJOS_RAIZ = [
     });
     const propClaves = claves.length > 0 ? acertadas.length / claves.length : null;
 
-    // Coincidencia con el contenido (Dice sobre palabras con raíz equivalente)
     const referencia = analizarTexto(textoReferenciaDe(actual));
     const comunes = emparejar(escritas, referencia).size;
     const sim = (escritas.length === 0 || referencia.length === 0)
       ? 0 : (2 * comunes) / (escritas.length + referencia.length);
 
-    // Calificación (ver tabla): con pista, para "Bien" la coincidencia debe ser
-    // MAYOR a SIM_CON_PISTA; sin pista alcanza con SIM_SIN_PISTA.
     const conPista = !!pistaMostrada[indiceActual];
     let resultado;
     if (claves.length > 0) {
@@ -10113,8 +8910,6 @@ const SUFIJOS_RAIZ = [
       totalReferencia: referencia.length,
     };
 
-    // NUEVO: cascada de fallo, paso 1 — Segunda oportunidad. Se pregunta ANTES de
-    // consumir y ANTES de comprometer el resultado (si acepta, nada de esto se aplica).
     if (resultado === 'mal' && puedeSegundaOportunidad(indiceActual)) {
       const idx = indiceActual;
       segundaPendiente = true;
@@ -10130,21 +8925,16 @@ const SUFIJOS_RAIZ = [
     confirmarEvaluacion(texto, resultado, detalleEval);
   }
 
-  // Aplica la evaluación (lógica original, sin cambios salvo el factor del reintento).
-  // Si es un fallo, procesarResultadoGamificacion sigue la cascada: escudo -> fallo normal.
   function confirmarEvaluacion(texto, resultado, detalleEval) {
     escritos[indiceActual] = texto;
     evaluaciones[indiceActual] = detalleEval;
 
-    // Auto-marca: bien -> Entendida; casi -> Casi (0.5); mal -> No entendida.
-    // NO avanza: el feedback queda a la vista y el avance es manual.
     if (cronometroActivo && !cronometroCongelado()) {
       acumularTiempo();
     }
     resultados[indiceActual] = (resultado === 'bien') ? 'si' : (resultado === 'casi' ? 'casi' : 'no');
     revelado[indiceActual] = true;
 
-    // NUEVO: Gamificación — puntos, racha, vidas y sonido (nunca en modo observador)
     if (!modoObservador) {
       procesarResultadoGamificacion(indiceActual, resultados[indiceActual], {
         conPista: !!pistaMostrada[indiceActual],
@@ -10157,8 +8947,6 @@ const SUFIJOS_RAIZ = [
 
     renderTarjeta();
   }
-
-  // ---------- Lightbox ----------
 
   function abrirLightbox(src) {
     elLightboxImg.src = src;
@@ -10182,15 +8970,11 @@ const SUFIJOS_RAIZ = [
     }
   });
 
-  // ---------- Marcado y navegación ----------
-
   function marcar(resultado) {
     if (pausaManual) return;
     if (resultados[indiceActual] !== null) return;
     if (!confirmarDescartarBorrador()) return;
 
-    // MODIFICADO (guard): si el cronómetro está congelado (nota abierta) el
-    // tiempo de lectura NO se suma; solo se reinicia la referencia.
     if (!cronometroCongelado()) {
       acumularTiempo();
     } else {
@@ -10198,9 +8982,6 @@ const SUFIJOS_RAIZ = [
     }
     resetPanelesUI();
 
-    // NUEVO: Gamificación — si se salta con un Comodín disponible, se
-    // consume del inventario PERSISTENTE (no de la sesión) y esta tarjeta
-    // no penaliza puntos ni vidas.
     let comodinUsado = false;
     if (!modoObservador && !modoZombie && modoJuego !== 'light' && resultado === 'saltar' && gamificacion.inventario.comodines > 0) {
       gamificacion.inventario.comodines--;
@@ -10211,7 +8992,6 @@ const SUFIJOS_RAIZ = [
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
 
-    // NUEVO: Gamificación — puntos, racha, vidas y sonido (nunca en modo observador)
     if (!modoObservador) {
       procesarResultadoGamificacion(indiceActual, resultado, {
         conPista: !!pistaMostrada[indiceActual],
@@ -10235,30 +9015,19 @@ const SUFIJOS_RAIZ = [
 
     respuestaMostrada[indiceActual] = true;
 
-    // NUEVO: en modo observador solo se muestran las rutas (sin cronómetro ni calificación)
     if (modoObservador) {
       renderTarjeta();
       return;
     }
 
-    // Congelar el cronómetro de TODA la sesión (solo si sigue activo):
-    // el tiempo de esta tarjeta queda contado hasta este momento;
-    // el tiempo de lectura no cuenta.
-    // MODIFICADO: si la nota ya estaba abierta el reloj ya está parado (no se
-    // acumula de nuevo), pero igual se registra el congelado por respuesta para
-    // que cerrar la nota no reanude el reloj mientras se lee la respuesta.
     if (cronometroActivo && indiceCongelado !== indiceActual) {
       if (!cronometroCongelado()) acumularTiempo();
       indiceCongelado = indiceActual;
     }
 
-    // Auto-calificar como "No entendida" solo si todavía no estaba marcada.
     if (resultados[indiceActual] === null) {
       resultados[indiceActual] = 'no';
 
-      // NUEVO: Gamificación — "Mostrar respuesta" auto-califica como 'no',
-      // así que debe disparar exactamente la misma lógica de puntos/racha/
-      // vidas que un "Mal" marcado a mano (nunca en observador).
       if (!modoObservador) {
         procesarResultadoGamificacion(indiceActual, 'no', {
           conPista: !!pistaMostrada[indiceActual],
@@ -10268,13 +9037,10 @@ const SUFIJOS_RAIZ = [
       }
     }
 
-    // NO avanza automáticamente: el usuario se queda leyendo y avanza con "Siguiente".
     actualizarCronometro();
     renderTarjeta();
   }
 
-  // NUEVO: "Entendida por comprensión": cuando la respuesta escrita salió Casi o Mal,
-  // permite marcar la tarjeta como entendida igual. Suma 1 punto, o 0.5 si se usó la pista.
   function marcarPorComprension() {
     if (pausaManual || modoObservador) return;
     const ev = evaluaciones[indiceActual];
@@ -10284,17 +9050,6 @@ const SUFIJOS_RAIZ = [
     resultados[indiceActual] = 'si';
     porComprension[indiceActual] = true;
 
-    // NUEVO: Gamificación — solo ajusta el DELTA de puntos (la tarjeta ya
-    // había sumado puntos como 'casi'/'mal'). No se REESCRIBE el pasado de
-    // racha/vidas (limitación documentada), pero sí se reproduce el sonido
-    // que corresponde a este resultado corregido:
-    // - 'casi' -> 'si': el 'casi' YA había sumado un acierto a la racha en su
-    //   momento (no rompe racha), así que acá NO se vuelve a incrementar
-    //   (evita duplicar el conteo). Solo suena "bien".
-    // - 'mal' -> 'si': el 'mal' original SÍ había roto la racha a 0 sin sumar
-    //   ningún acierto. Como esta tarjeta ahora cuenta como entendida, se
-    //   suma como acierto DE ACÁ EN ADELANTE (no retroactivo): puede subir el
-    //   multiplicador y sonar "racha", además de "bien".
     ajustarPuntosGamificacion(indiceActual, 'si', {
       conPista: !!pistaMostrada[indiceActual],
       pistaGratisUsada: !!pistaGratisUsadaPorTarjeta[indiceActual],
@@ -10310,8 +9065,6 @@ const SUFIJOS_RAIZ = [
     renderTarjeta();
   }
 
-  // NUEVO: pausa manual del cronómetro. Mientras dura, el tiempo no cuenta y un
-  // overlay tapa la pantalla (no se puede leer, marcar ni navegar).
   function pausarManual() {
     if (modoObservador || !cronometroActivo || pausaManual) return;
     if (!cronometroCongelado()) acumularTiempo();
@@ -10337,11 +9090,8 @@ const SUFIJOS_RAIZ = [
     if (!confirmarDescartarBorrador()) return;
 
     if (!cronometroActivo) {
-      // Sesión completa: el tiempo ya está congelado, navegar no suma
       indiceActual = nuevo;
     } else if (cronometroCongelado()) {
-      // Se estaba viendo una respuesta: el tiempo de esa tarjeta ya fue
-      // acumulado al congelar. Solo se reanuda el reloj para la nueva tarjeta.
       indiceActual = nuevo;
       tiempoInicioTarjeta = Date.now();
     } else {
@@ -10353,23 +9103,17 @@ const SUFIJOS_RAIZ = [
     renderTarjeta();
   }
 
-  // ---------- NUEVO: nota de la tarjeta (ver / editar / versiones) ----------
-  // No influye en la calificación; mientras el panel está abierto (viendo o
-  // editando) el cronómetro queda pausado.
-
   function resetNotaUI() {
     notaAbierta = false;
     editandoNota = false;
     versionNota = 'local';
   }
 
-  // NUEVO: cierra el panel de razones sin preguntar (usar resetPanelesUI para el caso general)
   function resetRazonesUI() {
     razonesAbierto = false;
     razonesPendientes = null;
   }
 
-  // NUEVO: cierra nota y razones juntos (cambio de tarjeta, inicio de sesión, etc.)
   function resetPanelesUI() {
     resetNotaUI();
     resetRazonesUI();
@@ -10381,7 +9125,6 @@ const SUFIJOS_RAIZ = [
     return actual ? (elNotaEditor.value.trim() !== notaEfectivaDe(actual)) : false;
   }
 
-  // NUEVO: cambios sin guardar en el panel de razones (checkboxes tocados sin apretar Guardar)
   function razonesSinGuardar() {
     if (!razonesAbierto || razonesPendientes === null) return false;
     const actual = tarjetasSesion[indiceActual];
@@ -10391,7 +9134,6 @@ const SUFIJOS_RAIZ = [
     return guardado !== pendiente;
   }
 
-  // MODIFICADO: cubre tanto la nota como el panel de razones
   function confirmarDescartarBorrador() {
     if (!borradorSinGuardar() && !razonesSinGuardar()) return true;
     return confirm('Tenés cambios sin guardar (nota y/o razones). ¿Descartarlos?');
@@ -10403,8 +9145,6 @@ const SUFIJOS_RAIZ = [
     const hayNota = efectiva !== '';
     const hayDif = est !== 'igual';
 
-    // Botón 💡: siempre visible (sin nota = punteado, invita a agregar); deshabilitado
-    // mientras el panel de razones está abierto (solo un panel a la vez)
     elBtnNota.style.display = 'inline-flex';
     elBtnNota.disabled = razonesAbierto;
     elBtnNota.classList.toggle('activa', notaAbierta);
@@ -10422,7 +9162,6 @@ const SUFIJOS_RAIZ = [
 
     if (!hayDif) versionNota = 'local';
 
-    // Estado + selector de versión (solo cuando difieren y no se está editando)
     elPanelNotaEstado.textContent = hayDif
       ? (est === 'pendiente' ? '· editada, pendiente de pasar al txt' : '· el txt cambió desde tu edición')
       : '';
@@ -10465,11 +9204,9 @@ const SUFIJOS_RAIZ = [
   function abrirNota() {
     const actual = tarjetasSesion[indiceActual];
     if (!actual) return;
-    // Abrir: guardar el tiempo corrido hasta ahora (si el reloj estaba andando)
     if (cronometroActivo && !cronometroCongelado()) acumularTiempo();
     notaAbierta = true;
     versionNota = 'local';
-    // Sin nota y sin diferencias: directo a escribir
     editandoNota = (notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual');
     if (editandoNota) elNotaEditor.value = '';
     actualizarCronometro();
@@ -10478,8 +9215,6 @@ const SUFIJOS_RAIZ = [
   }
 
   function cerrarNota() {
-    // Cerrar: reanudar salvo que la respuesta siga mostrada (congelado propio)
-    // o que el panel de razones haya quedado abierto (no se toca acá)
     const siguePorRespuesta = indiceCongelado === indiceActual;
     resetNotaUI();
     if (cronometroActivo && !siguePorRespuesta && !razonesAbierto) tiempoInicioTarjeta = Date.now();
@@ -10514,7 +9249,6 @@ const SUFIJOS_RAIZ = [
     guardarNotaLocal(actual, elNotaEditor.value);
     editandoNota = false;
     versionNota = 'local';
-    // Nota vacía y sin diferencias con el txt: no hay nada que mostrar, se cierra
     if (notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual') {
       cerrarNota();
     } else {
@@ -10543,9 +9277,6 @@ const SUFIJOS_RAIZ = [
     cerrarNota();
   }
 
-  // ---------- NUEVO: razones (por qué se marcó así) ----------
-  // Igual patrón que las notas locales: persisten en localStorage, no en el txt.
-  // A diferencia de la nota, no hay "versión del txt": son solo 6 códigos fijos.
   const CLAVE_RAZONES = 'razones_tarjetas_v1';
   let razonesGuardadas = cargarRazones();
 
@@ -10564,7 +9295,6 @@ const SUFIJOS_RAIZ = [
     try {
       localStorage.setItem(CLAVE_RAZONES, JSON.stringify(razonesGuardadas));
     } catch (e) {
-      // sin localStorage: quedan solo en memoria de esta sesión
     }
   }
   const guardarRazones = crearGuardadoDebounced(guardarRazonesYa, 250);
@@ -10601,8 +9331,6 @@ const SUFIJOS_RAIZ = [
     renderTarjeta();
   }
 
-  // "Guardar": persiste los códigos marcados (array vacío si no hay ninguno,
-  // lo que equivale a borrar el registro de esta tarjeta)
   function guardarRazonesActual() {
     const actual = tarjetasSesion[indiceActual];
     if (!actual || razonesPendientes === null) return;
@@ -10653,7 +9381,6 @@ const SUFIJOS_RAIZ = [
     elBadgeRazones.textContent = String(guardadas.length);
     elBadgeRazones.style.display = guardadas.length > 0 ? 'inline-block' : 'none';
     elBtnRazones.classList.toggle('activa', guardadas.length > 0 || razonesAbierto);
-    // deshabilitado mientras la nota está abierta (solo un panel a la vez)
     elBtnRazones.disabled = notaAbierta;
 
     renderChipsRazones(actual);   // chips de solo lectura (lo ya guardado)
@@ -10681,9 +9408,6 @@ const SUFIJOS_RAIZ = [
     });
   }
 
-  // MODIFICADO: registrar el uso de la pista (baja la nota a 0.5 si la tarjeta
-  // termina como Entendida). NUEVO: si hay Pistas Gratis en el inventario, se
-  // consume 1 y esta tarjeta no penaliza puntos por usar pista (15 en vez de 8).
   elBtnPista.addEventListener('click', () => {
     revelado[indiceActual] = true;
     pistaMostrada[indiceActual] = true;
@@ -10708,14 +9432,12 @@ const SUFIJOS_RAIZ = [
   elBtnVerLocal.addEventListener('click', () => { versionNota = 'local'; renderTarjeta(); });
   elBtnVerTxt.addEventListener('click', () => { versionNota = 'txt'; renderTarjeta(); });
   elNotaEditor.addEventListener('keydown', (evento) => {
-    // Ctrl+Enter (o Cmd+Enter) guarda; Enter solo es salto de línea
     if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
       evento.preventDefault();
       guardarEdicionNota();
     }
   });
 
-  // MODIFICADO: toggle de difícil (persiste entre sesiones)
   elBtnDificil.addEventListener('click', () => toggleDificilActual());
 
   elBtnEvaluar.addEventListener('click', () => evaluarRespuesta());
@@ -10724,7 +9446,6 @@ const SUFIJOS_RAIZ = [
     elBtnEvaluar.disabled = (elTextoEval.value.trim() === '');
   });
   elTextoEval.addEventListener('keydown', (evento) => {
-    // Enter evalúa; Shift+Enter = salto de línea
     if (evento.key === 'Enter' && !evento.shiftKey) {
       evento.preventDefault();
       if (!elBtnEvaluar.disabled) evaluarRespuesta();
@@ -10761,13 +9482,11 @@ const SUFIJOS_RAIZ = [
       if (evento.key === 'Escape') cerrarLightbox();
       return;
     }
-    // NUEVO: Esc sale del cuadro de texto para poder usar las flechas
     if (evento.key === 'Escape' && (evento.target === elTextoEval || evento.target === elNotaEditor || evento.target === elGaleriaNotaEditor)) {
       evento.target.blur();
       return;
     }
     if (evento.target === elTextoEval || evento.target === elNotaEditor || evento.target === elGaleriaNotaEditor) return;  // no navegar mientras se escribe
-    // NUEVO: flechas también en la galería de imágenes (Anterior/Siguiente)
     if (elPantallaGaleria.style.display !== 'none') {
       if (evento.key === 'ArrowLeft') navegarGaleria(-1);
       if (evento.key === 'ArrowRight') navegarGaleria(1);
@@ -10777,8 +9496,6 @@ const SUFIJOS_RAIZ = [
     if (evento.key === 'ArrowLeft') navegar(-1);
     if (evento.key === 'ArrowRight') navegar(1);
   });
-
-  // ---------- Cronómetro ----------
 
   function actualizarCronometro() {
     const congelado = cronometroCongelado();
@@ -10804,12 +9521,8 @@ const SUFIJOS_RAIZ = [
     }
   }
 
-  // ---------- Resumen ----------
-
   function finalizarSesion() {
     if (!confirmarDescartarBorrador()) return;
-    // El tiempo extra no cuenta si el cronómetro ya está parado
-    // (sesión completa) o congelado (leyendo una respuesta).
     if (cronometroActivo && !cronometroCongelado()) {
       acumularTiempo();
     }
@@ -10819,8 +9532,6 @@ const SUFIJOS_RAIZ = [
     mostrarResumen();
   }
 
-  // MODIFICADO: Entendida sin pista = 1 punto; Entendida con pista = 0.5;
-  // Casi = 0.5; No entendida y Pasada sin marcar = 0
   function calcularNota() {
     let puntos = 0;
     resultados.forEach((r, i) => {
@@ -10830,9 +9541,6 @@ const SUFIJOS_RAIZ = [
     return tarjetasSesion.length > 0 ? (10 * puntos) / tarjetasSesion.length : 0;
   }
 
-  // NUEVO: arma el item de una tarjeta del resumen (conTema=false cuando ya está
-  // dentro de un grupo de su subT). Incluye primero + segundo, tiempo, respuesta
-  // escrita (si la hubo) y su evaluación; marca ☆ las difíciles.
   function crearItemResultado(i, conTema, mostrarRazones) {
     const tarjeta = tarjetasSesion[i];
     const item = document.createElement('div');
@@ -10855,7 +9563,6 @@ const SUFIJOS_RAIZ = [
     tiempo.textContent = '⏱ ' + formatearTiempo(tiempos[i]);
     item.appendChild(tiempo);
 
-    // Respuesta escrita (si la hubo) + su evaluación
     if (escritos[i] && escritos[i].trim() !== '') {
       const escrito = document.createElement('span');
       escrito.className = 'item-escrito';
@@ -10886,7 +9593,6 @@ const SUFIJOS_RAIZ = [
       item.appendChild(tag);
     }
 
-    // NUEVO: razones guardadas (no se muestran en la sección "Revisar")
     if (mostrarRazones) {
       const codigos = razonesDeTarjeta(tarjeta);
       if (codigos.length > 0) {
@@ -10911,17 +9617,6 @@ const SUFIJOS_RAIZ = [
     return item;
   }
 
-  // OPTIMIZACIÓN (lazy rendering), DOS NIVELES:
-  //  1) El <details class="lista-desplegable"> externo (Entendidas, Casi,
-  //     No entendidas, Pasadas sin marcar, Revisar): su contenido (los
-  //     subT agrupados) recién se arma al abrirlo.
-  //  2) Cada <details class="sub-desplegable"> (un subT dentro de esa
-  //     categoría): sus ítems (crearItemResultado, uno por tarjeta) recién
-  //     se arman al abrir ESE subT puntual.
-  // '_resumenListaDatos' guarda los índices/razones más recientes por
-  // contenedor (mostrarResumen() puede llamarse de nuevo tras "continuar con
-  // las no respondidas"); '_resumenListaCtrl' cachea el lazyCtrl del
-  // <details> externo para no registrar el listener 'toggle' más de una vez.
   const _resumenListaDatos = new Map();   // idContenedor -> { indices, mostrarRazones }
   const _resumenListaCtrl = new Map();    // idContenedor -> lazyCtrl
 
@@ -10957,7 +9652,6 @@ const SUFIJOS_RAIZ = [
       const sum = document.createElement('summary');
       sum.textContent = nombre + ' (' + lista.length + ')';
       det.appendChild(sum);
-      // Segundo nivel: los ítems de ESTE subT recién se arman al abrirlo.
       prepararDetallesLazy(det, () => {
         lista.forEach((i) => det.appendChild(crearItemResultado(i, false, mostrarRazones)));
       });
@@ -10965,9 +9659,6 @@ const SUFIJOS_RAIZ = [
     });
   }
 
-  // MODIFICADO: recibe índices y los agrupa en desplegables por subT.
-  // Orden: subT en el orden del txt; dentro de cada subT, tarjetas en el orden del txt.
-  // mostrarRazones=false se usa para la sección "Revisar" (sin chips de razones).
   function llenarLista(idContenedor, indices, mostrarRazones) {
     if (mostrarRazones === undefined) mostrarRazones = true;
     _resumenListaDatos.set(idContenedor, { indices: indices, mostrarRazones: mostrarRazones });
@@ -10981,7 +9672,6 @@ const SUFIJOS_RAIZ = [
   }
 
   function mostrarResumen() {
-    // Se guardan índices en lugar de tarjetas
     const conteos = { si: 0, casi: 0, no: 0, saltar: 0 };
     const indices = { si: [], casi: [], no: [], saltar: [] };
 
@@ -10990,7 +9680,6 @@ const SUFIJOS_RAIZ = [
       indices[r].push(i);
     });
 
-    // Nota general de la sesión (verde >= 6, rojo < 6)
     const nota = calcularNota();
     const elNota = document.getElementById('nota-sesion');
     elNota.textContent = '🎓 Nota de la sesión: ' + nota.toFixed(1) + ' / 10';
@@ -11011,21 +9700,17 @@ const SUFIJOS_RAIZ = [
     llenarLista('lista-no', indices.no);
     llenarLista('lista-saltar', indices.saltar);
 
-    // NUEVO: tarjetas marcadas con 🚩 Revisar durante la sesión
     const idxRevisar = [];
     tarjetasSesion.forEach((t, i) => { if (esRevisar(t)) idxRevisar.push(i); });
     llenarLista('lista-revisar', idxRevisar, false);   // NUEVO: sin razones en "Revisar"
     document.getElementById('etq-revisar').textContent = '🚩 Para revisar (' + idxRevisar.length + ')';
 
-    // NUEVO: continuar con las no respondidas (pasadas sin marcar)
     const elBtnContinuar = document.getElementById('btn-continuar-pendientes');
     elBtnContinuar.style.display = conteos.saltar > 0 ? 'block' : 'none';
     elBtnContinuar.textContent = 'Continuar con las no respondidas (' + conteos.saltar + ')';
     elBtnContinuar.onclick = () => abrirModalContinuar();
 
-    // "Casi" también se repasa (antes contaba como No entendida)
     const elBtnRepasarNo = document.getElementById('btn-repasar-no');
-    // NUEVO: también van a repaso las que fallaron el primer intento (segunda oportunidad)
     const paraRepaso = (i) => resultados[i] === 'no' || resultados[i] === 'casi' || primerIntentoFallido.has(i);
     elBtnRepasarNo.style.display = tarjetasSesion.some((_, i) => paraRepaso(i)) ? 'block' : 'none';
     elBtnRepasarNo.onclick = () => {
@@ -11039,27 +9724,19 @@ const SUFIJOS_RAIZ = [
       iniciarSesion(nuevaLista);
     };
 
-    // NUEVO: Gamificación — filas de puntos/racha/modo + guardado en historial
     renderResumenGamificacion(nota);
     guardarHistorialSesion(nota);
 
-    // NUEVO: fue (o no) una sesión de Repaso Espaciado — se captura ANTES de
-    // aplicar la progresión, porque esta limpia srsSesionActiva al terminar.
     const fueSesionSRS = !!srsSesionActiva;
     actualizarProgresionSRS();
 
-    // NUEVO: botón "guardar como lista" — solo si esta sesión NO venía de una lista guardada NI del SRS
     elBtnResumenGuardarLista.style.display = (!modoObservador && !listaActivaNombre && !fueSesionSRS) ? 'block' : 'none';
     renderResumenListado();
 
-    // NUEVO: botón "📊 Análisis de la sesión" (visibilidad; el contenido se
-    // arma recién al abrir el modal, ver construirAnalisisSesion()).
     mostrarAnalisisSesion();
 
     mostrarPantalla('resumen');
   }
-
-  // ---------- NUEVO: modal "Continuar con las no respondidas" ----------
 
   function abrirModalContinuar() {
     const n = resultados.filter((r) => r === 'saltar').length;
@@ -11072,21 +9749,14 @@ const SUFIJOS_RAIZ = [
     elModalContinuar.classList.remove('abierto');
   }
 
-  // Opción 1: seguir en la MISMA sesión. Se conservan tiempos, aciertos y demás
-  // resultados; solo las pasadas sin marcar vuelven a quedar pendientes.
   function continuarEnEstaSesion() {
     cerrarModalContinuar();
-    // NUEVO: Gamificación — si esta sesión ya tuvo Game Over (0 vidas) y el
-    // usuario igual elige seguir, entra en "modo zombie": puede seguir viendo
-    // y respondiendo tarjetas, pero puntos/racha/vidas quedan CONGELADOS tal
-    // como estaban en el momento del Game Over (no sigue sumando negativo).
     if (gameOverDisparado) {
       modoZombie = true;
     }
     resultados.forEach((r, i) => {
       if (r === 'saltar') {
         resultados[i] = null;
-        // Al pasarla se había revelado el segundo sin usar la pista: se vuelve a ocultar
         revelado[i] = !!pistaMostrada[i];
       }
     });
@@ -11104,7 +9774,6 @@ const SUFIJOS_RAIZ = [
     window.scrollTo(0, 0);
   }
 
-  // Opción 2: sesión nueva y aislada solo con las pendientes
   function iniciarNuevaRondaPendientes() {
     cerrarModalContinuar();
     let pendientes = tarjetasSesion.filter((_, i) => resultados[i] === 'saltar');
@@ -11119,7 +9788,6 @@ const SUFIJOS_RAIZ = [
     if (evento.target === elModalContinuar) cerrarModalContinuar();
   });
 
-  // NUEVO: listeners del modo observador
   document.getElementById('btn-modo-observador').addEventListener('click', () => entrarObservador());
   document.getElementById('btn-observador-salir').addEventListener('click', () => {
     if (pomodoroActivo) return;   // NUEVO: bloqueado mientras el Pomodoro corre (también deshabilitado visualmente)
@@ -11127,18 +9795,11 @@ const SUFIJOS_RAIZ = [
   });
   document.getElementById('btn-observador-volver').addEventListener('click', () => salirObservador());
 
-
-  // ============================================================
-  // NUEVO: sesión y aviso de Repaso Espaciado (SRS)
-  // ============================================================
   const elBadgeSrs = document.getElementById('badge-srs');
   function actualizarBadgeSrs() {
     elBadgeSrs.style.display = srsSesionActiva ? 'inline-block' : 'none';
   }
 
-  // §5: arma una sesión TEMPORAL en RAM con las tarjetas de las listas
-  // vencidas (sin tocar los hashes de las listas originales) y la arranca
-  // como una sesión normal de estudio.
   function iniciarSesionSRS(listasVencidas) {
     const hashesPorLista = {};
     const todosLosHashes = new Set();
@@ -11154,16 +9815,11 @@ const SUFIJOS_RAIZ = [
     actualizarBadgeSrs();
   }
 
-  // §5.6: al terminar la sesión, por cada lista involucrada se calcula su
-  // propio % de aciertos (sobre SUS tarjetas dentro de esta sesión) y se
-  // aplica la tabla de progresión. Limpia srsSesionActiva al terminar, lo que
-  // además evita aplicar la progresión dos veces si mostrarResumen() se
-  // llamara más de una vez.
   function actualizarProgresionSRS() {
     if (!srsSesionActiva) return;
     const hashesPorLista = srsSesionActiva.hashesPorLista;
     srsSesionActiva.nombres.forEach((nombre) => {
-      const lista = buscarLista(nombre);
+      const lista = buscarListaPropia(nombre);   // NUEVO: las listas vencidas de SRS siempre son propias
       if (!lista) return;   // pudo haberse borrado durante la sesión; no hay nada que actualizar
       const hashesLista = hashesPorLista[nombre];
       let total = 0, exitos = 0;
@@ -11177,7 +9833,7 @@ const SUFIJOS_RAIZ = [
       const pct = exitos / total;
       const srs = obtenerSrsLista(lista);
       if (pct >= 0.8) srs.currentLevel += 1;
-      else if (pct >= 0.6) { /* se mantiene */ }
+      else if (pct >= 0.6) {  }
       else if (pct >= 0.4) srs.currentLevel = Math.max(1, srs.currentLevel - 1);
       else srs.currentLevel = 1;
 
@@ -11194,14 +9850,10 @@ const SUFIJOS_RAIZ = [
     actualizarBadgeSrs();
   }
 
-  // §4: al cargar el HTML (mostrarPantalla('temas') corre también en el
-  // arranque) y cada vez que se vuelve a "Elegir temas". NUNCA interrumpe una
-  // sesión en curso, porque solo se llama desde la rama 'temas' de
-  // mostrarPantalla.
   let srsListasVencidasAviso = [];
   function evaluarAvisoSRS() {
     limpiarListasContraTarjetasActuales();
-    const vencidas = listas.filter((l) => srsListaParaAviso(l));
+    const vencidas = listas.filter((l) => (!l.espacio || l.espacio === ESPACIO_HASH) && srsListaParaAviso(l));
     if (vencidas.length === 0) return;
     srsListasVencidasAviso = vencidas;
     const elLista = document.getElementById('srs-aviso-lista');
@@ -11237,10 +9889,6 @@ const SUFIJOS_RAIZ = [
     document.getElementById('modal-srs-aviso').classList.remove('abierto');
   });
 
-  // ---------- NUEVO: Dictado por voz (🎙) en los textareas ----------
-  // Una sola instancia de SpeechRecognition, reutilizada por los 3 botones
-  // (#texto-eval, #nota-editor, #galeria-nota-editor), vía su atributo
-  // data-dictado-target.
   (function () {
     const RecognitionCtor = window.webkitSpeechRecognition || window.SpeechRecognition;
     const soportado = !!RecognitionCtor;
@@ -11278,7 +9926,6 @@ const SUFIJOS_RAIZ = [
       try {
         reconocimiento.start();
       } catch (e) {
-        // ya estaba iniciado, o el micrófono no arrancó: vuelve al estado normal
         detenerVisualDictado();
       }
     }
@@ -11289,8 +9936,6 @@ const SUFIJOS_RAIZ = [
       r.continuous = true;
       r.interimResults = false;
 
-      // Concatena SOLO los resultados finales nuevos desde el último evento
-      // (con interimResults=false, respeta mayúsculas/puntuación del motor).
       r.onresult = (evento) => {
         if (!textareaDictadoActivo) return;
         let textoNuevo = '';
@@ -11301,14 +9946,11 @@ const SUFIJOS_RAIZ = [
         if (textoNuevo === '') return;
         const actual = textareaDictadoActivo.value;
         textareaDictadoActivo.value = (actual && !/\s$/.test(actual)) ? actual + ' ' + textoNuevo : actual + textoNuevo;
-        // avisa a otros listeners (contadores, autosave, etc.) del cambio
         textareaDictadoActivo.dispatchEvent(new Event('input', { bubbles: true }));
       };
 
       r.onerror = (evento) => {
         if (evento.error === 'no-speech') {
-          // silencio prolongado: no interrumpe con un alert, el propio
-          // 'onend' resetea el botón en un instante
           if (botonActivo) botonActivo.title = 'No se detectó voz';
           return;
         }
@@ -11319,8 +9961,6 @@ const SUFIJOS_RAIZ = [
         alert(mensajes[evento.error] || ('Error de dictado: ' + evento.error));
       };
 
-      // Se dispara tanto al detener manualmente como al cortarse solo
-      // (silencio prolongado): en ambos casos, vuelve al estado visual normal.
       r.onend = () => {
         detenerVisualDictado();
         if (targetPendiente) {
@@ -11335,7 +9975,7 @@ const SUFIJOS_RAIZ = [
 
     function detenerDictado() {
       if (reconocimiento && textareaDictadoActivo) {
-        try { reconocimiento.stop(); } catch (e) { /* noop */ }
+        try { reconocimiento.stop(); } catch (e) {  }
       } else {
         detenerVisualDictado();
       }
@@ -11344,9 +9984,8 @@ const SUFIJOS_RAIZ = [
     function iniciarDictado(boton, textarea) {
       if (!reconocimiento) reconocimiento = crearReconocimiento();
       if (textareaDictadoActivo && textareaDictadoActivo !== textarea) {
-        // hay otro textarea dictando: lo corta y arranca este cuando termine
         targetPendiente = { boton: boton, textarea: textarea };
-        try { reconocimiento.stop(); } catch (e) { /* noop */ }
+        try { reconocimiento.stop(); } catch (e) {  }
         return;
       }
       arrancarAhora(boton, textarea);
@@ -11361,19 +10000,11 @@ const SUFIJOS_RAIZ = [
       });
     });
 
-    // Para cortar el dictado desde otras partes del código (p. ej. al
-    // cancelar/guardar una nota mientras se está dictando en ese textarea).
     window.__detenerDictadoSiActivoEn = function (textarea) {
       if (textareaDictadoActivo === textarea) detenerDictado();
     };
   })();
 
-  // ============================================================
-  // NUEVO: Pomodoro (modo observador). 100% efímero (no usa localStorage);
-  // no toca evaluación, gamificación, notas/difíciles/razones, buscador ni
-  // el resaltado del drawio. Reutiliza overlay-pausa (pausa) y
-  // reproducirSonido() (sonidos, respeta sonidosActivos).
-  // ============================================================
   const elBtnPomodoro = document.getElementById('btn-pomodoro');
   const elFilaPomodoroBoton = document.getElementById('fila-pomodoro-boton');
   const elPomodoroBadge = document.getElementById('pomodoro-badge');
@@ -11408,8 +10039,6 @@ const SUFIJOS_RAIZ = [
     return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
   }
 
-  // Reubica el badge (un solo nodo) en el slot de la pantalla actual. Si el
-  // Pomodoro no está activo, no hace falta: el badge sigue oculto donde esté.
   function reubicarBadgePomodoro(nombrePantalla) {
     if (!pomodoroActivo) return;
     const slot = nombrePantalla === 'observador' ? elSlotPomodoroObservador
@@ -11428,11 +10057,8 @@ const SUFIJOS_RAIZ = [
     };
     elPomodoroBadge.className = 'pomodoro-badge fase-' + pomodoroFase;
     elPomodoroBadgeInfo.textContent = etiquetas[pomodoroFase] + ' · ⏲️ Ciclo ' + pomodoroCiclo + ' · ' + formatoMMSS(pomodoroSegundosRestantes);
-    // §10: aviso visual (sin sonido) en el último minuto de CUALQUIER fase
     elPomodoroBadgeInfo.classList.toggle('ultimo-minuto', pomodoroSegundosRestantes <= 60);
-    // §4.3: "Retención" solo visible durante Lectura
     elBtnPomodoroRetencion.style.display = pomodoroFase === 'lectura' ? 'inline-block' : 'none';
-    // §7: no se puede pausar durante el Descanso
     elBtnPomodoroPausar.style.display = pomodoroFase === 'descanso' ? 'none' : 'inline-block';
   }
 
@@ -11454,7 +10080,6 @@ const SUFIJOS_RAIZ = [
       pomodoroSegundosRestantes = DURACION_DESCANSO_SEG;
       reproducirSonido(veniaDeRetencion ? 'pomodoro_retencion_a_descanso' : 'pomodoro_lectura_a_descanso');
     } else {
-      // Termina el Descanso: nuevo ciclo (§4.2 — se incrementa ACÁ, antes de arrancar la Lectura)
       pomodoroCiclo++;
       pomodoroFase = 'lectura';
       pomodoroSegundosRestantes = DURACION_LECTURA_SEG;
@@ -11468,7 +10093,6 @@ const SUFIJOS_RAIZ = [
     pomodoroIntervalo = setInterval(tickPomodoro, 1000);
   }
 
-  // ---- Abrir/cerrar modal de confirmación inicial ----
   function abrirModalPomodoroIniciar() {
     elModalPomodoroIniciar.classList.add('abierto');
   }
@@ -11500,14 +10124,12 @@ const SUFIJOS_RAIZ = [
   document.getElementById('btn-pomodoro-iniciar-si').addEventListener('click', () => iniciarPomodoro());
   document.getElementById('btn-pomodoro-iniciar-cancelar').addEventListener('click', () => cerrarModalPomodoroIniciar());
 
-  // ---- Retención activa ----
   elBtnPomodoroRetencion.addEventListener('click', () => {
     if (pomodoroFase !== 'lectura') return;
     pomodoroFase = 'retencion';   // el contador NO se reinicia
     actualizarBadgePomodoro();
   });
 
-  // ---- Pausa (reutiliza el overlay-pausa existente, con su propio texto) ----
   function pausarPomodoro() {
     if (!pomodoroActivo || pomodoroPausado || pomodoroFase === 'descanso') return;
     pomodoroPausado = true;
@@ -11527,7 +10149,6 @@ const SUFIJOS_RAIZ = [
   }
   elBtnPomodoroPausar.addEventListener('click', () => pausarPomodoro());
 
-  // ---- Cancelar / abandonar ----
   function abrirModalPomodoroAbandonar() {
     elModalPomodoroAbandonar.classList.add('abierto');
   }
@@ -11558,7 +10179,6 @@ const SUFIJOS_RAIZ = [
     pomodoroActivo = false;
     elPomodoroBadge.style.display = 'none';
     elBtnObservadorSalir.disabled = false;
-    // El badge vuelve a su slot "hogar" (observador) para la próxima vez.
     if (elPomodoroBadge.parentElement !== elSlotPomodoroObservador) elSlotPomodoroObservador.appendChild(elPomodoroBadge);
 
     elModalPomodoroResumen.classList.add('abierto');
@@ -11570,7 +10190,6 @@ const SUFIJOS_RAIZ = [
   }
   document.getElementById('btn-pomodoro-resumen-cerrar').addEventListener('click', () => cerrarModalPomodoroResumen());
 
-  // ---------- Arranque ----------
   construirListaTemas();
   mostrarPantalla('temas');
 </script>
@@ -11578,7 +10197,6 @@ const SUFIJOS_RAIZ = [
 </body>
 </html>
 """
-
 
 # ---------------- CONFIGURACIÓN ----------------
 
@@ -11589,14 +10207,7 @@ except ImportError:
 
 COLOR_DEFAULT = "rosadoClaro"
 
-
 def elegir_color(raiz, colores, default):
-    """
-    Ventana modal con un botón por color (grilla de 3 columnas).
-    Devuelve la clave elegida; si se cierra con la X, devuelve el default.
-    NOTA: sin transient() — con la raíz oculta, en Windows el Toplevel
-    transient se oculta y wait_window quedaría esperando para siempre.
-    """
     eleccion = {"clave": None}
 
     def confirmar(nombre):
@@ -11646,8 +10257,6 @@ def elegir_color(raiz, colores, default):
     raiz.wait_window(vent)
     return eleccion["clave"] if eleccion["clave"] else default
 
-
-# Fuente única de la paleta: la usan la ventana "Selecciona un color" y --config.
 PALETA_COLORES = {
     "amarillo": ["#DEDE00", "#5C5C5C"],
     "celeste": ["#00CCCC", "#5C5C5C"],
@@ -11678,10 +10287,6 @@ PALETA_COLORES = {
 }
 
 def preguntar_resaltado(raiz):
-    """
-    Ventana modal personalizada (mismo estilo que elegir_color) para preguntar 
-    si se desea aplicar el resaltado. Devuelve True (Sí) o False (No).
-    """
     eleccion = {"aplicar": False}
     
     def confirmar(valor):
@@ -11733,19 +10338,6 @@ def preguntar_resaltado(raiz):
 # ---------------- PIPELINE (compartido por el modo interactivo y --config) ----------------
 
 def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_imagen_mapa=None, propagar=False):
-    """
-    Genera UN evaluador. Es el pipeline de siempre, sin cambios de lógica:
-    parsear respuestas -> parsear recordatorio -> (resaltar drawio) ->
-    extraer descripciones -> generar_html. ESPACIO_HASH = stem de 'respuestas'.
-
-    'colores' es un NOMBRE de PALETA_COLORES (si no existe, se usa COLOR_DEFAULT).
-    'ruta_imagen_mapa' es OPCIONAL (None = sin botón de mapa habilitado); si
-    no se puede usar (extensión no soportada o archivo corrupto) se avisa
-    por consola y se continúa sin imagen, sin que falle la generación.
-    Devuelve (True, "") si salió bien o (False, motivo) si falló. Con
-    propagar=True las excepciones no se capturan (así el modo interactivo
-    conserva su comportamiento de siempre: traceback).
-    """
     try:
         if colores in PALETA_COLORES:
             fill_color = PALETA_COLORES[colores][0]
@@ -11754,8 +10346,6 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
             fill_color = PALETA_COLORES[COLOR_DEFAULT][0]
             stroke_color = PALETA_COLORES[COLOR_DEFAULT][-1]
 
-        #Modo de estudio: 1 = secuencial (orden del recordatorio.txt), 2 = aleatorio
-        #El mezclado real ocurre en el navegador (JS), así que "Reiniciar" vuelve a mezclar.
         modo = 2
 
         if respuestas:
@@ -11781,12 +10371,9 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
         else:
             print("El usuario eligió omitir el resaltado del drawio.")
 
-        #--- NUEVO: extracción de descripciones para el Buscador Global (independiente
-        #    del resaltado: se hace siempre que haya .drawio, sin tocar el archivo) ---
         descripciones_rutas = extraer_descripciones_drawio(drawio)
         print(f"Rutas con descripciones de imagen extraídas del drawio: {len(descripciones_rutas)}")
 
-        #--- NUEVO: imagen del mapa (botón 🗺️ del modo observador), opcional ---
         imagen_mapa = None
         if ruta_imagen_mapa:
             imagen_mapa = cargar_imagen_mapa_base64(ruta_imagen_mapa)
@@ -11801,10 +10388,8 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
         return False, f"{type(error).__name__}: {error}"
     return True, ""
 
-
 # ---------------- MODO --config (sin ninguna UI) ----------------
 
-# campo -> tipo JSON esperado. TODOS son obligatorios.
 CAMPOS_CONFIG = {
     "recordatorio": str,
     "respuestas": str,
@@ -11814,17 +10399,13 @@ CAMPOS_CONFIG = {
 }
 CAMPOS_RUTA = ("recordatorio", "respuestas", "drawio")
 
-# NUEVO: campos opcionales (si faltan, no es error). 'imagen_mapa' habilita
-# el botón 🗺️ del modo observador (ver §imagen del mapa).
 CAMPOS_OPCIONALES = {
     "imagen_mapa": str,
 }
 EXTENSIONES_IMAGEN_MAPA = (".png", ".jpg", ".jpeg")
 
-
 class ErrorConfig(Exception):
     """Error global del config (archivo ausente, JSON inválido, estructura...): aborta el lote."""
-
 
 def _tipo_json(valor):
     if valor is None:
@@ -11839,17 +10420,11 @@ def _tipo_json(valor):
         return "lista"
     return "objeto"
 
-
 def leer_config(ruta_config):
-    """
-    Lee el config (solo lectura; nunca se modifica) y devuelve (entradas, avisos).
-    Formato obligatorio: {"entradas": [ ... ]}, incluso con un solo evaluador.
-    """
     ruta = Path(ruta_config)
     if not ruta.is_file():
         raise ErrorConfig(f"no existe el archivo de configuración: {ruta}")
     try:
-        # utf-8-sig: tolera el BOM que agrega el Bloc de notas
         with open(ruta, "r", encoding="utf-8-sig") as archivo:
             datos = json.load(archivo)
     except json.JSONDecodeError as error:
@@ -11881,13 +10456,7 @@ def leer_config(ruta_config):
             avisos.append(f"campo desconocido '{clave}' fuera de 'entradas' (se ignora)")
     return entradas, avisos
 
-
 def validar_entrada(entrada, carpeta_config):
-    """
-    Validación estricta de UNA entrada. Devuelve (resuelta, errores, avisos).
-    'resuelta' (dict con rutas absolutas como Path) es None si hay errores.
-    Las rutas relativas se resuelven contra la carpeta del config, no contra el cwd.
-    """
     errores, avisos = [], []
     if not isinstance(entrada, dict):
         return None, [f"la entrada debe ser un objeto JSON (se encontró: {_tipo_json(entrada)})"], avisos
@@ -11938,8 +10507,6 @@ def validar_entrada(entrada, carpeta_config):
             f"Válidos: {', '.join(PALETA_COLORES)}"
         )
 
-    # NUEVO: 'imagen_mapa' es OPCIONAL (si no está, se genera sin botón de
-    # mapa habilitado); si está, se valida igual que los campos de ruta.
     if "imagen_mapa" in entrada:
         valor = entrada["imagen_mapa"]
         if not isinstance(valor, str):
@@ -11969,7 +10536,6 @@ def validar_entrada(entrada, carpeta_config):
         return None, errores, avisos
     return valores, errores, avisos
 
-
 def _etiqueta_entrada(entrada, numero):
     """Nombre para la consola: stem de su respuestas.txt, o 'entrada N' si no se puede saber."""
     if isinstance(entrada, dict):
@@ -11977,7 +10543,6 @@ def _etiqueta_entrada(entrada, numero):
         if isinstance(resp, str) and resp.strip():
             return Path(resp).stem or f"entrada {numero}"
     return f"entrada {numero}"
-
 
 def ejecutar_config(ruta_config):
     """Procesa TODAS las entradas aunque alguna falle. Devuelve el código de salida (0 = todo OK)."""
@@ -11991,8 +10556,8 @@ def ejecutar_config(ruta_config):
 
     carpeta_config = Path(ruta_config).resolve().parent
     total = len(entradas)
-    resultados = [None] * total   # (etiqueta, ok, motivo)
-    validas = {}                  # posición -> (etiqueta, entrada resuelta)
+    resultados = [None] * total
+    validas = {}
 
     for pos, entrada in enumerate(entradas):
         etiqueta = _etiqueta_entrada(entrada, pos + 1)
@@ -12004,7 +10569,6 @@ def ejecutar_config(ruta_config):
         else:
             validas[pos] = (etiqueta, resuelta)
 
-    # Dos entradas con el mismo stem de respuestas escribirían el MISMO html: ninguna se genera.
     por_stem = {}
     for pos, (_, r) in validas.items():
         por_stem.setdefault(r["respuestas"].stem.casefold(), []).append(pos)
@@ -12020,7 +10584,6 @@ def ejecutar_config(ruta_config):
                 )
                 del validas[p]
 
-    # Un .drawio compartido: el resaltado de una pasada limpia el de la anterior.
     por_drawio = {}
     for pos, (_, r) in validas.items():
         por_drawio.setdefault(os.path.normcase(str(r["drawio"])), []).append(pos)
@@ -12048,7 +10611,6 @@ def ejecutar_config(ruta_config):
     fallos = sum(1 for _, ok, _ in resultados if not ok)
     print(f"{total - fallos} de {total} evaluadores generados.")
     return 1 if fallos else 0
-
 
 # ---------------- MODO INTERACTIVO (el flujo de siempre) ----------------
 
@@ -12091,8 +10653,6 @@ def main_interactivo():
     opciones = elegir_color(raiz, PALETA_COLORES, COLOR_DEFAULT)
     print(f"Color elegido: {opciones}")
 
-    #--- NUEVO: Diálogo OPCIONAL para la imagen del mapa (botón 🗺️ del modo
-    #    observador). Si se cancela, no es un error: se genera sin imagen. ---
     ruta_imagen_mapa = filedialog.askopenfilename(
         title="Selecciona la imagen del mapa (opcional; cancelá si no querés agregar una)",
         filetypes=[("Imagen PNG", "*.png"), ("Imagen JPG", "*.jpg;*.jpeg")]
@@ -12108,7 +10668,6 @@ def main_interactivo():
 
     generar_evaluador(txt, txt_respuestas, ruta_drawio, aplicar_resaltado, opciones,
                        ruta_imagen_mapa=ruta_imagen_mapa or None, propagar=True)
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -12126,7 +10685,6 @@ def main():
     if args.config is not None:
         raise SystemExit(ejecutar_config(args.config))
     main_interactivo()
-
 
 if __name__ == "__main__":
     main()
