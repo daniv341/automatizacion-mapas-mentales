@@ -29,6 +29,7 @@ colores = {
     "rojoClaro": ["#FF6347", "#FFFFFF"],
     "marronClaro": ["#CD853F", "#FFFFFF"],
     "amarilloClaro": ["#FFFF80", "#5C5C5C"],
+    "azulOscuro": ["#000096", "#FFFFFF"],
 }
 
 

@@ -51,15 +51,15 @@
       "colores": "amarilloClaro"
     },
     {
-      "recordatorio": "../guardados/recordatorios/recordatorio Gestion desempeño.txt",
-      "respuestas": "../guardados/rutas/Gestion de Desempeño.txt",
+      "recordatorio": "../guardados/antiguos/recordatorios/recordatorio Gestion desempeño.txt",
+      "respuestas": "../guardados/antiguos/rutas/Gestion de Desempeño.txt",
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Desempeño.drawio",
       "resaltar": false,
       "colores": "grisClaro"
     },
     {
-      "recordatorio": "../guardados/recordatorios/recordatorio Gestion de Operaciones.txt",
-      "respuestas": "../guardados/rutas/Gestion de Operaciones.txt",
+      "recordatorio": "../guardados/antiguos/recordatorios/recordatorio Gestion de Operaciones.txt",
+      "respuestas": "../guardados/antiguos/rutas/Gestion de Operaciones.txt",
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Operaciones.drawio",
       "resaltar": false,
       "colores": "azul",
@@ -69,7 +69,7 @@
       "recordatorio": "../guardados/recordatorios/recordatorio SCOR.txt",
       "respuestas": "../guardados/rutas/SCOR.txt",
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\SCOR.drawio",
-      "resaltar": false,
+      "resaltar": true,
       "colores": "rojoClaro",
       "imagen_mapa":"E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\SCOR.jpg"
     }

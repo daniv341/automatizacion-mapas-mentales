@@ -7,7 +7,10 @@
 (function() {
   try {
     var t = localStorage.getItem('tema_app_v1');
-    document.documentElement.setAttribute('data-tema', t === 'oscuro' ? 'oscuro' : 'claro');
+    document.documentElement.setAttribute(
+      'data-tema',
+      t === 'oscuro' ? 'oscuro' : 'claro'
+    );
   } catch (e) {
     document.documentElement.setAttribute('data-tema', 'claro');
   }
@@ -310,7 +313,7 @@
   let evaluadores = [];
   let evaluadoresAntiguos = [];
 
-  // Modo claro/oscuro
+  // MODO CLARO/OSCURO COMPARTIDO CON TODOS LOS EVALUADORES
   const CLAVE_TEMA = 'tema_app_v1';
   const elBtnTemaOscuro = document.getElementById('btn-tema-oscuro');
 
@@ -320,20 +323,11 @@
       tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
   }
 
-  function alternarTema() {
-    const actual =
-      document.documentElement.getAttribute('data-tema') === 'oscuro'
-        ? 'oscuro'
-        : 'claro';
-
-    const nuevo = actual === 'oscuro' ? 'claro' : 'oscuro';
+  function aplicarTema(tema) {
+    const nuevo = tema === 'oscuro' ? 'oscuro' : 'claro';
 
     document.documentElement.classList.add('sin-transiciones');
     document.documentElement.setAttribute('data-tema', nuevo);
-
-    try {
-      localStorage.setItem(CLAVE_TEMA, nuevo);
-    } catch (e) {}
 
     actualizarBotonTema(nuevo);
 
@@ -344,13 +338,39 @@
     });
   }
 
-  actualizarBotonTema(
-    document.documentElement.getAttribute('data-tema') === 'oscuro'
-      ? 'oscuro'
-      : 'claro'
-  );
+  function alternarTema() {
+    const actual =
+      document.documentElement.getAttribute('data-tema') === 'oscuro'
+        ? 'oscuro'
+        : 'claro';
 
+    const nuevo = actual === 'oscuro' ? 'claro' : 'oscuro';
+
+    try {
+      localStorage.setItem(CLAVE_TEMA, nuevo);
+    } catch (e) {}
+
+    aplicarTema(nuevo);
+  }
+
+  // Leer la preferencia compartida al abrir el index.
+  try {
+    aplicarTema(localStorage.getItem(CLAVE_TEMA) || 'claro');
+  } catch (e) {
+    aplicarTema('claro');
+  }
+
+  // Cambiar el tema desde el botón del index.
   elBtnTemaOscuro.addEventListener('click', alternarTema);
+
+  // Sincronizar cambios realizados desde otra pestaña del mismo origen.
+  window.addEventListener('storage', (evento) => {
+    if (evento.key === CLAVE_TEMA) {
+      aplicarTema(evento.newValue || 'claro');
+    }
+  });
+
+  // -----------------------------------------------------
 
   function limpiarNombre(nombre) {
     return nombre
@@ -412,13 +432,17 @@
         );
       } catch (err) {
         evaluadoresAntiguos = [];
-        console.error('No se pudieron cargar los evaluadores antiguos:', err);
+        console.error(
+          'No se pudieron cargar los evaluadores antiguos:',
+          err
+        );
       }
 
       renderizarSecciones();
 
       elFooter.textContent =
-        `${evaluadores.length} evaluador(es) actual(es) · ` +
+        `${evaluadores.length + evaluadoresAntiguos.length} evaluador(es) · ` +
+        `${evaluadores.length} actual(es) · ` +
         `${evaluadoresAntiguos.length} antiguo(s) · actualizado al cargar la página`;
 
     } catch (err) {
@@ -494,6 +518,7 @@
 
     elContenido.innerHTML = '';
 
+    // Sección de evaluadores actuales.
     const encabezadoActuales = document.createElement('div');
     encabezadoActuales.className = 'encabezado';
 
@@ -510,12 +535,14 @@
       )
     );
 
+    // Separación visual entre las secciones.
     const separador = document.createElement('div');
     separador.style.marginTop = '28px';
     separador.style.paddingTop = '20px';
     separador.style.borderTop = '1px solid var(--color-borde-medio)';
     elContenido.appendChild(separador);
 
+    // Sección de evaluadores antiguos.
     const encabezadoAntiguos = document.createElement('div');
     encabezadoAntiguos.className = 'encabezado';
 

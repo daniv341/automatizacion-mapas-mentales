@@ -2553,11 +2553,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     z-index: 10;
   }
   
-  .columna-pomodoro-observador { 
-      min-width: 0; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: flex-end; /* Empuja el botón y el badge a la derecha */
+  .columna-pomodoro-observador {
+    display: contents;
+  }
+
+  #fila-pomodoro-boton {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  #pomodoro-badge-slot-observador {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
   }
 
   .mapa-img {
@@ -10972,6 +10981,7 @@ PALETA_COLORES = {
     "rojoClaro": ["#FF6347", "#5C5C5C"],     
     "marronClaro": ["#CD853F", "#5C5C5C"],     
     "amarilloClaro": ["#FFFF80", "#5C5C5C"],
+    "azulOscuro": ["#000096", "#D0D0D0"],
 }
 
 def preguntar_resaltado(raiz):

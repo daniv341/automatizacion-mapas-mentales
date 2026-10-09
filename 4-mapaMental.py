@@ -91,6 +91,7 @@ COLORES = {
    "rojoClaro" : ['fillColor=#C94E38','fillColor=#FF6347','strokeColor=#C94E38','gradientColor=#4F4F4F','fontColor=#FFFFFF'],
    "marronClaro" : ['fillColor=#9C6530','fillColor=#CD853F','strokeColor=#9C6530','gradientColor=#4F4F4F','fontColor=#FFFFFF'],
    "amarilloClaro" : ['fillColor=#E3E372','fillColor=#FFFF80','strokeColor=#E3E372','gradientColor=#FFFFFF','fontColor=#5C5C5C'],
+   "azulOscuro" : ['fillColor=#000055','fillColor=#000096','strokeColor=#000055','gradientColor=#4F4F4F','fontColor=#FFFFFF'],
 }
 
 
