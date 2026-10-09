@@ -2,20 +2,79 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+
+<script>
+(function() {
+  try {
+    var t = localStorage.getItem('tema_app_v1');
+    document.documentElement.setAttribute('data-tema', t === 'oscuro' ? 'oscuro' : 'claro');
+  } catch (e) {
+    document.documentElement.setAttribute('data-tema', 'claro');
+  }
+})();
+</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mis Evaluadores</title>
+
 <style>
   :root {
     --color-boton: #4F46E5;
-    --fondo: linear-gradient(135deg, #f5f3fa 0%, #eef1f7 100%);
+    --bg-pagina-1: #f5f3fa;
+    --bg-pagina-2: #eef1f7;
+    --bg-superficie: #ffffff;
+    --bg-superficie-hover: #f7f7fb;
+    --texto-principal: #333333;
+    --texto-cabecera: #444444;
+    --texto-suave: #888888;
+    --texto-tenue: #999999;
+    --color-borde-suave: #f1f1f1;
+    --color-borde-medio: #e2e2ea;
+    --color-sombra: rgba(0,0,0,0.1);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html[data-tema="oscuro"] {
+    --bg-pagina-1: #15151f;
+    --bg-pagina-2: #1b1f2a;
+    --bg-superficie: #23232f;
+    --bg-superficie-hover: #30303f;
+    --texto-principal: #e7e7ef;
+    --texto-cabecera: #e7e7ef;
+    --texto-suave: #b7b7c8;
+    --texto-tenue: #8a8aa0;
+    --color-borde-suave: #35354a;
+    --color-borde-medio: #3c3c52;
+    --color-sombra: rgba(0,0,0,0.35);
+  }
+
+  html {
+    min-height: 100%;
+    background: var(--bg-pagina-1);
+  }
+
+  html.sin-transiciones,
+  html.sin-transiciones * {
+    transition: none !important;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
   body {
     min-height: 100vh;
-    background: var(--fondo);
+    background: linear-gradient(
+      135deg,
+      var(--bg-pagina-1) 0%,
+      var(--bg-pagina-2) 100%
+    );
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
     font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-    color: #333;
+    color: var(--texto-principal);
     padding: clamp(12px, 4vw, 24px);
     display: flex;
     align-items: flex-start;
@@ -25,22 +84,28 @@
   .contenedor {
     width: 100%;
     max-width: 560px;
-    background: #fff;
+    background: var(--bg-superficie);
     border-radius: 16px;
     padding: clamp(20px, 7vw, 40px) clamp(16px, 5.5vw, 30px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px var(--color-sombra);
+  }
+
+  .encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
   }
 
   h1 {
     font-size: clamp(18px, 5vw, 22px);
     font-weight: 600;
-    color: #444;
-    margin-bottom: 4px;
+    color: var(--texto-cabecera);
   }
 
   .subtitulo {
     font-size: 14px;
-    color: #888;
+    color: var(--texto-suave);
     margin-bottom: clamp(14px, 4vw, 20px);
   }
 
@@ -48,45 +113,82 @@
     width: 100%;
     padding: 12px 16px;
     border-radius: 24px;
-    border: 2px solid #E2E4EC;
+    border: 2px solid var(--color-borde-medio);
     font-size: 14px;
     font-family: inherit;
-    color: #333;
+    color: var(--texto-principal);
+    background: var(--bg-superficie);
     outline: none;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     transition: border-color 0.15s;
     margin-bottom: 16px;
   }
-  .input-buscador:focus { border-color: var(--color-boton); }
 
-  .lista { list-style: none; }
+  .input-buscador:focus {
+    border-color: var(--color-boton);
+  }
+
+  .lista {
+    list-style: none;
+  }
 
   .item {
-    padding: 14px 16px;
-    border-bottom: 1px solid #f1f1f1;
+    padding: 14px 10px 14px 16px;
+    border-bottom: 1px solid var(--color-borde-suave);
     display: flex;
     align-items: center;
     gap: 12px;
     transition: background 0.15s;
     border-radius: 10px;
   }
-  .item:hover { background: #f7f7fb; }
-  .item:last-child { border-bottom: none; }
 
-  .item a {
+  .item:hover {
+    background: var(--bg-superficie-hover);
+  }
+
+  .item:last-child {
+    border-bottom: none;
+  }
+
+  .item a.nombre-evaluador {
     color: var(--color-boton);
     text-decoration: none;
     font-weight: 600;
     font-size: 15px;
     flex: 1;
+    min-width: 0;
     overflow-wrap: anywhere;
   }
-  .item a:hover { text-decoration: underline; }
+
+  .item a.nombre-evaluador:hover {
+    text-decoration: underline;
+  }
 
   .item .fecha {
-    color: #999;
+    color: var(--texto-tenue);
     font-size: 12px;
     white-space: nowrap;
+  }
+
+  .btn-descargar {
+    flex-shrink: 0;
+    padding: 7px 10px;
+    border: 1.5px solid var(--color-boton);
+    border-radius: 18px;
+    background: var(--bg-superficie);
+    color: var(--color-boton);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .btn-descargar:hover {
+    background: var(--color-boton);
+    color: #fff;
   }
 
   .vacio, .cargando, .error {
@@ -94,36 +196,83 @@
     padding: 40px 0;
     font-size: 14px;
   }
-  .cargando { color: var(--color-boton); }
-  .error { color: #c0392b; }
-  .error a { color: var(--color-boton); }
+
+  .cargando {
+    color: var(--color-boton);
+  }
+
+  .error {
+    color: #e0574c;
+  }
+
+  .error a {
+    color: var(--color-boton);
+  }
 
   .footer {
     text-align: center;
     margin-top: 18px;
     font-size: 12px;
-    color: #aaa;
+    color: var(--texto-tenue);
   }
 
-  .btn-externo {
-    display: inline-block;
-    margin-top: 12px;
-    padding: 10px 18px;
-    border-radius: 20px;
-    background: #fff;
-    color: var(--color-boton);
-    border: 2px solid var(--color-boton);
-    font-size: 13px;
-    font-weight: 600;
-    text-decoration: none;
+  .boton-icono-circular {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-superficie);
+    border: 1.5px solid var(--color-borde-medio);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     font-family: inherit;
+    padding: 0;
+    color: var(--texto-principal);
+    transition: border-color 0.15s;
   }
-  .btn-externo:hover { background: var(--color-boton); color: #fff; }
+
+  .boton-icono-circular:hover {
+    border-color: var(--color-boton);
+  }
+
+  @media (max-width: 400px) {
+    .item {
+      gap: 7px;
+      padding-left: 8px;
+      padding-right: 4px;
+    }
+
+    .item a.nombre-evaluador {
+      font-size: 13px;
+    }
+
+    .item .fecha {
+      font-size: 10px;
+    }
+
+    .btn-descargar {
+      padding: 6px 7px;
+      font-size: 11px;
+    }
+  }
 </style>
 </head>
+
 <body>
 <div class="contenedor">
-  <h1>📚 Mis Evaluadores</h1>
+
+  <div class="encabezado">
+    <h1>📚 Mis Evaluadores</h1>
+    <button
+      class="boton-icono-circular"
+      id="btn-tema-oscuro"
+      title="Cambiar tema claro/oscuro"
+    >🌙</button>
+  </div>
+
   <p class="subtitulo">Listado automático desde el repositorio</p>
 
   <input
@@ -134,7 +283,9 @@
     autocomplete="off"
   >
 
-  <div id="contenido"><p class="cargando">Cargando evaluadores...</p></div>
+  <div id="contenido">
+    <p class="cargando">Cargando evaluadores...</p>
+  </div>
 
   <div class="footer" id="footer"></div>
 </div>
@@ -142,17 +293,64 @@
 <script>
   const USUARIO = 'daniv341';
   const REPO = 'automatizaci%C3%B3n-mapas-mentales';
+
   const CARPETA = 'guardados/evaluadores';
-/*
-enlace para acceder al buscador de evaluadores: 
-https://daniv341.github.io/automatizacion-mapas-mentales/
-*/
-  const API_URL = `https://api.github.com/repos/${USUARIO}/${REPO}/contents/${CARPETA}`;
+  const CARPETA_ANTIGUOS = 'guardados/antiguos/evaluadores';
+
+  const API_URL =
+    `https://api.github.com/repos/${USUARIO}/${REPO}/contents/${CARPETA}`;
+
+  const API_URL_ANTIGUOS =
+    `https://api.github.com/repos/${USUARIO}/${REPO}/contents/${CARPETA_ANTIGUOS}`;
 
   const elContenido = document.getElementById('contenido');
   const elFooter = document.getElementById('footer');
   const elBuscador = document.getElementById('buscador');
+
   let evaluadores = [];
+  let evaluadoresAntiguos = [];
+
+  // Modo claro/oscuro
+  const CLAVE_TEMA = 'tema_app_v1';
+  const elBtnTemaOscuro = document.getElementById('btn-tema-oscuro');
+
+  function actualizarBotonTema(tema) {
+    elBtnTemaOscuro.textContent = tema === 'oscuro' ? '☀️' : '🌙';
+    elBtnTemaOscuro.title =
+      tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
+  }
+
+  function alternarTema() {
+    const actual =
+      document.documentElement.getAttribute('data-tema') === 'oscuro'
+        ? 'oscuro'
+        : 'claro';
+
+    const nuevo = actual === 'oscuro' ? 'claro' : 'oscuro';
+
+    document.documentElement.classList.add('sin-transiciones');
+    document.documentElement.setAttribute('data-tema', nuevo);
+
+    try {
+      localStorage.setItem(CLAVE_TEMA, nuevo);
+    } catch (e) {}
+
+    actualizarBotonTema(nuevo);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove('sin-transiciones');
+      });
+    });
+  }
+
+  actualizarBotonTema(
+    document.documentElement.getAttribute('data-tema') === 'oscuro'
+      ? 'oscuro'
+      : 'claro'
+  );
+
+  elBtnTemaOscuro.addEventListener('click', alternarTema);
 
   function limpiarNombre(nombre) {
     return nombre
@@ -164,67 +362,185 @@ https://daniv341.github.io/automatizacion-mapas-mentales/
   function formatearFecha(iso) {
     try {
       const d = new Date(iso);
+
       return d.toLocaleDateString('es-AR', {
-        day: '2-digit', month: '2-digit', year: 'numeric'
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
       });
-    } catch { return ''; }
+    } catch {
+      return '';
+    }
+  }
+
+  function procesarEvaluadores(data, carpeta) {
+    return data
+      .filter(f =>
+        f.type === 'file' &&
+        f.name.toLowerCase().endsWith('.html') &&
+        f.name.toLowerCase().startsWith('evaluador_')
+      )
+      .map(f => ({
+        nombre: limpiarNombre(f.name),
+        archivo: f.name,
+        url: `${carpeta}/${f.name}`,
+        fecha: f.commit?.commit?.committer?.date || ''
+      }))
+      .sort((a, b) => b.nombre.localeCompare(a.nombre));
+  }
+
+  async function obtenerEvaluadores(apiUrl, carpeta) {
+    const res = await fetch(apiUrl);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    return procesarEvaluadores(data, carpeta);
   }
 
   async function cargar() {
     try {
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      evaluadores = await obtenerEvaluadores(API_URL, CARPETA);
+      renderizarSecciones();
 
-      evaluadores = data
-        .filter(f => f.name.toLowerCase().endsWith('.html') && f.name.toLowerCase().startsWith('evaluador_'))
-        .map(f => ({
-          nombre: limpiarNombre(f.name),
-          archivo: f.name,
-          url: `guardados/evaluadores/${f.name}`,
-          fecha: f.commit?.commit?.committer?.date || '',
-        }))
-        .sort((a, b) => b.nombre.localeCompare(a.nombre));
+      try {
+        evaluadoresAntiguos = await obtenerEvaluadores(
+          API_URL_ANTIGUOS,
+          CARPETA_ANTIGUOS
+        );
+      } catch (err) {
+        evaluadoresAntiguos = [];
+        console.error('No se pudieron cargar los evaluadores antiguos:', err);
+      }
 
-      render(evaluadores);
-      elFooter.textContent = `${evaluadores.length} evaluador(es) · actualizado al cargar la página`;
+      renderizarSecciones();
+
+      elFooter.textContent =
+        `${evaluadores.length} evaluador(es) actual(es) · ` +
+        `${evaluadoresAntiguos.length} antiguo(s) · actualizado al cargar la página`;
+
     } catch (err) {
       elContenido.innerHTML = `
         <div class="error">
-          No se pudo cargar el listado.<br>
+          No se pudo cargar el listado de evaluadores actuales.<br>
           <small>${err.message}</small><br><br>
-          <a class="btn-externo" href="https://github.com/${USUARIO}/${REPO}/tree/main/${CARPETA}" target="_blank">
-            Ver carpeta en GitHub →
+          <a
+            href="https://github.com/${USUARIO}/${REPO}/tree/main/${CARPETA}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Ver evaluadores actuales en GitHub →
           </a>
-        </div>`;
+        </div>
+      `;
     }
   }
 
-  function render(lista) {
+  function crearLista(lista, mensajeVacio) {
     if (lista.length === 0) {
-      elContenido.innerHTML = '<p class="vacio">No hay evaluadores que coincidan.</p>';
-      return;
+      const p = document.createElement('p');
+      p.className = 'vacio';
+      p.textContent = mensajeVacio;
+      return p;
     }
+
     const ul = document.createElement('ul');
     ul.className = 'lista';
+
     lista.forEach(ev => {
       const li = document.createElement('li');
       li.className = 'item';
-      li.innerHTML = `
-        <a href="${ev.url}">${ev.nombre}</a>
-        ${ev.fecha ? `<span class="fecha">${formatearFecha(ev.fecha)}</span>` : ''}
-      `;
+
+      const enlace = document.createElement('a');
+      enlace.className = 'nombre-evaluador';
+      enlace.href = ev.url;
+      enlace.textContent = ev.nombre;
+
+      const descarga = document.createElement('a');
+      descarga.className = 'btn-descargar';
+      descarga.href = ev.url;
+      descarga.setAttribute('download', ev.archivo);
+      descarga.setAttribute('aria-label', `Descargar ${ev.nombre}`);
+      descarga.textContent = 'Descargar';
+
+      li.appendChild(enlace);
+
+      if (ev.fecha) {
+        const fecha = document.createElement('span');
+        fecha.className = 'fecha';
+        fecha.textContent = formatearFecha(ev.fecha);
+        li.appendChild(fecha);
+      }
+
+      li.appendChild(descarga);
       ul.appendChild(li);
     });
-    elContenido.innerHTML = '';
-    elContenido.appendChild(ul);
+
+    return ul;
   }
 
-  elBuscador.addEventListener('input', () => {
+  function renderizarSecciones() {
     const q = elBuscador.value.toLowerCase().trim();
-    if (!q) { render(evaluadores); return; }
-    render(evaluadores.filter(ev => ev.nombre.toLowerCase().includes(q)));
-  });
+
+    const actualesFiltrados = evaluadores.filter(ev =>
+      ev.nombre.toLowerCase().includes(q)
+    );
+
+    const antiguosFiltrados = evaluadoresAntiguos.filter(ev =>
+      ev.nombre.toLowerCase().includes(q)
+    );
+
+    elContenido.innerHTML = '';
+
+    const encabezadoActuales = document.createElement('div');
+    encabezadoActuales.className = 'encabezado';
+
+    const tituloActuales = document.createElement('h1');
+    tituloActuales.textContent = 'Evaluadores actuales';
+
+    encabezadoActuales.appendChild(tituloActuales);
+    elContenido.appendChild(encabezadoActuales);
+
+    elContenido.appendChild(
+      crearLista(
+        actualesFiltrados,
+        'No hay evaluadores actuales que coincidan.'
+      )
+    );
+
+    const separador = document.createElement('div');
+    separador.style.marginTop = '28px';
+    separador.style.paddingTop = '20px';
+    separador.style.borderTop = '1px solid var(--color-borde-medio)';
+    elContenido.appendChild(separador);
+
+    const encabezadoAntiguos = document.createElement('div');
+    encabezadoAntiguos.className = 'encabezado';
+
+    const tituloAntiguos = document.createElement('h1');
+    tituloAntiguos.textContent = 'Evaluadores antiguos';
+
+    encabezadoAntiguos.appendChild(tituloAntiguos);
+    elContenido.appendChild(encabezadoAntiguos);
+
+    const descripcionAntiguos = document.createElement('p');
+    descripcionAntiguos.className = 'subtitulo';
+    descripcionAntiguos.textContent =
+      'Evaluadores guardados que hace mucho tiempo no se utilizan.';
+
+    elContenido.appendChild(descripcionAntiguos);
+
+    elContenido.appendChild(
+      crearLista(
+        antiguosFiltrados,
+        'No hay evaluadores antiguos que coincidan.'
+      )
+    );
+  }
+
+  elBuscador.addEventListener('input', renderizarSecciones);
 
   cargar();
 </script>

@@ -69,7 +69,7 @@
       "recordatorio": "../guardados/recordatorios/recordatorio SCOR.txt",
       "respuestas": "../guardados/rutas/SCOR.txt",
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\SCOR.drawio",
-      "resaltar": false,
+      "resaltar": true,
       "colores": "rojoClaro",
       "imagen_mapa":"E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\SCOR.jpg"
     }

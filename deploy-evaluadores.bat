@@ -26,7 +26,7 @@ setlocal enabledelayedexpansion
 ::
 :: 3) Desde la raiz del repositorio, ejecuta:
 ::
-::        deploy-evaluadores.bat
+::        .\deploy-evaluadores.bat
 ::
 :: 4) El script:
 ::        - Agrega solamente guardados/evaluadores/
@@ -91,18 +91,23 @@ set MSG=
 set TOTAL=0
 set MOSTRADOS=0
 
-for /f "tokens=1,*" %%a in ('git diff --cached --name-status') do (
+for /f "tokens=1,* delims=	" %%a in ('git -c "core.quotePath=false" diff --cached --name-status') do (
 
     set /a TOTAL+=1
 
     if !MOSTRADOS! lss 3 (
 
-        if "%%a"=="A" (
-            set MSG=!MSG! + '%%b'
-        ) else if "%%a"=="M" (
-            set MSG=!MSG! ~ '%%b'
-        ) else if "%%a"=="D" (
-            set MSG=!MSG! - '%%b'
+        set "TIPO=%%a"
+        set "ARCHIVO=%%b"
+
+        set "ARCHIVO=!ARCHIVO:guardados/evaluadores/=!"
+
+        if "!TIPO!"=="A" (
+            set MSG=!MSG! + '!ARCHIVO!'
+        ) else if "!TIPO!"=="M" (
+            set MSG=!MSG! ~ '!ARCHIVO!'
+        ) else if "!TIPO!"=="D" (
+            set MSG=!MSG! - '!ARCHIVO!'
         )
 
         set /a MOSTRADOS+=1

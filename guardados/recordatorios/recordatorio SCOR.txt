@@ -1,0 +1,27 @@
+subT DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR
+quien creo SCOR? + Supply Chain Council & 1
+que nos proporciona este marco? + vincula, unificada & 3
+
+subT ALCANCE Y PROCESOS SCOR
+que describe este modelo? + empresariales, demanda & 4
+se organiza en torno a que? + cinco procesos, sencillas & 5, 6
+esta diseñado y mantenido para que? + soporte, diversa & 7
+
+subT ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+que permiten los atributos de rendimiento? + analizarla, comparacion & 9
+que atributos identifica SCOR? + cinco, agilidad, dificil & 10, 11
+que son las metricas nivel 1? + rendimiento, calculos & 12, 13
+las metricas en SCOR como son? + jerarquicas & 14
+a partir de que se crean las metricas nivel 1? + inferiores & 15
+que son las metricas nivel 2? + reducido & 16
+
+subT PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
+que proporciona la seccion dedicada a personal? + herramientas, conocimientos & 19
+que es una competencia? + capacidad, caracterizada & 20
+que es la experiencia? + conocimiento, mediante & 21, 22
+que es un aptitud? + natural, adquirida & 23
+que es la formacion? + competencia, comportamiento & 24
+
+subT PRÁCTICAS SCOR
+para que las empresas utilizan estas practicas? + identificar, operar & 25
+que recomienda SCC para adoptar SCOR? + adapten, investigacion & 27

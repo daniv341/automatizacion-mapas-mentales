@@ -1309,6 +1309,8 @@
 
   .chip-razon.chico { font-size: 11px; font-weight: 600; padding: 1px 8px; margin: 3px 4px 0 0; }
   .chip-razon.vacio { border-style: dashed; opacity: 0.7; font-style: italic; font-weight: 500; }
+  .chip-categoria-nota { cursor: pointer; user-select: none; }
+  .item-nota-evaluador { display: block; }
   .item-razones { margin-top: 4px; }
   .fila-chips-mini { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
 
@@ -1357,7 +1359,13 @@
   }
 
   .galeria-imagen-wrap { display: flex; justify-content: center; }
-  #mapa-imagen-wrap { overflow: hidden; }
+  #mapa-imagen-wrap {
+    overflow: hidden;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    align-items: center;
+  }
 
   .galeria-img {
     max-width: 100%;
@@ -1629,6 +1637,7 @@
     height: 32px;
     font-size: 15px;
     z-index: 2;
+    color: #e0574c;
   }
   .boton-dictado.activo {
     background: #e0574c;
@@ -1822,14 +1831,21 @@
   .boton-icono-circular:disabled:hover { border-color: var(--color-borde-medio); }
 
   .fila-mapa-observador {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: flex-start;
     gap: 10px;
+    position: relative;
+  }
+
+  #btn-notas-evaluador {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
   }
   
   .columna-pomodoro-observador { 
-      flex: 1 1 auto; 
       min-width: 0; 
       display: flex; 
       flex-direction: column; 
@@ -1837,8 +1853,8 @@
   }
 
   .mapa-img {
-    max-width: 95vw;
-    max-height: 75vh;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
     border-radius: 10px;
     border: 2px solid var(--color-boton);
@@ -1850,6 +1866,12 @@
   }
   .mapa-img.mapa-img-pan { cursor: grab; }
   .mapa-img.mapa-img-arrastrando { cursor: grabbing; }
+
+  #pantalla-mapa {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - clamp(24px, 8vw, 48px) * 2);
+  }
 
   .mapa-zoom-controles {
     position: fixed;
@@ -2096,6 +2118,7 @@
       <button class="boton-icono-circular" id="btn-observador-mapa" title="Ver mapa"
               data-mapa-src="data:;base64,"
               data-mapa-nombre="">🗺️</button>
+      <button class="boton-icono-circular" id="btn-notas-evaluador" title="Notas del evaluador">📝</button>
       <div class="columna-pomodoro-observador">
         <div class="fila-iconos-gamificacion" id="fila-pomodoro-boton">
           <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
@@ -2527,6 +2550,14 @@
       </span>
     </div>
     <div class="fila-backup-zona">
+      <span class="zona-nombre">📝 Notas del evaluador</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-exportar-notaseval" title="Descarga las notas del evaluador como JSON">Exportar</button>
+        <button class="boton-mini" id="btn-importar-notaseval" title="Fusiona las notas del evaluador de un JSON (gana la más reciente)">Importar</button>
+        <input type="file" id="input-importar-notaseval" accept=".json,application/json" style="display:none">
+      </span>
+    </div>
+    <div class="fila-backup-zona">
       <span class="zona-nombre">🏷 Razones</span>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-razones">Exportar</button>
@@ -2615,6 +2646,7 @@
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="imagenes" checked> 🖼 Imágenes</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="listas" checked> 📋 Listas</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="sesiones" checked> 🕐 Sesiones</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="notasEvaluador" checked> 📝 Notas del evaluador</label>
     </div>
     <div id="vinc-campo-espacio" style="display:none;">
       <input type="text" class="input-buscador" id="vinc-espacio" list="vinc-espacios" placeholder="Nombre anterior del recordatorio (sin .txt)" autocomplete="off">
@@ -2626,6 +2658,44 @@
     <input type="text" class="input-buscador" id="vinc-confirmar" placeholder="CONFIRMAR" autocomplete="off">
     <button class="boton-reiniciar" id="btn-vinc-aceptar" disabled>Vincular</button>
     <button class="modal-cancelar" id="btn-vinc-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-notas-evaluador">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>📝 Notas del evaluador</h3>
+    <p class="modal-ayuda">Notas generales de este evaluador, independientes de las tarjetas.</p>
+
+    <div class="panel-nota" style="display:block; margin-bottom:14px;">
+      <div class="wrap-dictado">
+        <textarea class="panel-nota-editor" id="notaseval-texto-nueva" style="display:block;" rows="3" placeholder="Escribí una nota nueva (Ctrl+Enter para guardar)"></textarea>
+        <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-notaseval-nueva" data-dictado-target="notaseval-texto-nueva" title="Dictado por voz">🎙</button>
+      </div>
+      <div class="chips-razones" id="notaseval-chips-nueva" style="display:flex;"></div>
+      <div class="panel-nota-acciones">
+        <button class="boton-mini" id="btn-notaseval-agregar">➕ Agregar nota</button>
+      </div>
+    </div>
+
+    <div class="wrap-dictado" id="notaseval-editor-compartido-wrap" style="display:none;">
+      <textarea class="panel-nota-editor" id="notaseval-editor-compartido" style="display:block;" placeholder="Escribí tu nota (Ctrl+Enter para guardar)"></textarea>
+      <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-notaseval-editor" data-dictado-target="notaseval-editor-compartido" title="Dictado por voz">🎙</button>
+    </div>
+
+    <div id="lista-notas-evaluador"></div>
+    <p class="nota-dificiles" id="notaseval-vacio" style="display:none;">Todavía no agregaste notas del evaluador.</p>
+    <div class="historial-paginacion" id="notaseval-paginacion" style="display:none;"></div>
+
+    <details id="det-notaseval-otras" style="display:none">
+      <summary id="suma-notaseval-otras">De otros evaluadores</summary>
+      <div id="lista-notaseval-otras"></div>
+      <button class="boton-mini" id="btn-vincular-notaseval" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
+    </details>
+
+    <div class="panel-razones-acciones" style="margin-top:14px; justify-content: space-between;">
+      <button class="boton-mini boton-mini-peligro" id="btn-vaciar-notaseval" style="display:none;">Vaciar todas</button>
+      <button class="modal-cancelar" id="btn-notaseval-cerrar">Cerrar</button>
+    </div>
   </div>
 </div>
 
@@ -2750,6 +2820,16 @@
     { codigo: 'contexto', texto: 'Contexto / redacción', color: '#8B5CF6' },
   ];
   const MAPA_RAZONES = new Map(RAZONES_DEF.map((r) => [r.codigo, r]));
+
+  const CATEGORIAS_NOTA_EVAL = [
+    { codigo: 'clave', texto: 'Clave', color: '#2563EB' },
+    { codigo: 'relacion', texto: 'Relación', color: '#8B5CF6' },
+    { codigo: 'ejemplo', texto: 'Ejemplo', color: '#059669' },
+    { codigo: 'error', texto: 'Error', color: '#EF4444' },
+    { codigo: 'comparacion', texto: 'Comparación', color: '#F59E0B' },
+    { codigo: 'curioso', texto: 'Curioso', color: '#EC4899' },
+  ];
+  const MAPA_CATEGORIAS_NOTA_EVAL = new Map(CATEGORIAS_NOTA_EVAL.map((c) => [c.codigo, c]));
 
   function hexToRgba(hex, alpha) {
     const v = hex.replace('#', '');
@@ -3056,6 +3136,38 @@
     return (e.base || '') === txt ? 'pendiente' : 'conflicto';
   }
 
+  const CLAVE_NOTAS_EVALUADOR = 'notas_evaluador_v1';
+  let notasEvaluador = cargarNotasEvaluador();
+
+  function cargarNotasEvaluador() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_NOTAS_EVALUADOR);
+      const datos = crudo ? JSON.parse(crudo) : [];
+      return Array.isArray(datos) ? datos.filter((n) => n && typeof n.id === 'string' && typeof n.texto === 'string') : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function guardarNotasEvaluador() {
+    try {
+      localStorage.setItem(CLAVE_NOTAS_EVALUADOR, JSON.stringify(notasEvaluador));
+    } catch (e) {
+    }
+  }
+
+  function generarIdNotaEvaluador() {
+    return 'ne_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  function notasEvaluadorPropias() {
+    return notasEvaluador.filter((n) => !n.espacio || n.espacio === ESPACIO_HASH);
+  }
+
+  function notasEvaluadorDeOtros() {
+    return notasEvaluador.filter((n) => n.espacio && n.espacio !== ESPACIO_HASH);
+  }
+
   function guardarNotaLocal(t, texto) {
     texto = (texto || '').trim();
     const h = hashTarjeta(t);
@@ -3293,7 +3405,7 @@
     elPantallaObservador.style.display = nombre === 'observador' ? 'block' : 'none';
     elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  // NUEVO
     elPantallaHuerfanas.style.display = nombre === 'huerfanas' ? 'block' : 'none';  // NUEVO
-    elPantallaMapa.style.display = nombre === 'mapa' ? 'block' : 'none';  // NUEVO
+    elPantallaMapa.style.display = nombre === 'mapa' ? 'flex' : 'none';  // NUEVO
     elPantallaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';  // NUEVO
     elPantallaHistorial.style.display = nombre === 'historial' ? 'block' : 'none';  // NUEVO
 
@@ -5435,6 +5547,7 @@
     if (Object.keys(razonesGuardadas).some((h) => (razonesGuardadas[h].t || 0) > ultimo)) return true;
     if (Object.keys(datosImagenes).some((h) => (datosImagenes[h].t || 0) > ultimo)) return true;
     if (listas.some((l) => (l.modificada || 0) > ultimo)) return true;
+    if (notasEvaluador.some((n) => (n.modificada || n.creada || 0) > ultimo)) return true;
     if (gamificacion.historial.some((s) => {
       const f = Date.parse(s.fecha);
       return !isNaN(f) && f > ultimo;
@@ -5466,6 +5579,7 @@
       razones: construirExportRazones(),
       imagenes: construirExportImagenes(),
       listas: { version: 1, listas: listas },
+      notasEvaluador: construirExportNotasEvaluador(),
     };
   }
 
@@ -5489,7 +5603,7 @@
     if (typeof datos.version !== 'number') return { error: 'El archivo no tiene el formato esperado (falta "version").' };
     if (datos.version !== 1) return { error: 'Versión de backup desconocida (' + datos.version + ').' };
 
-    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas'];
+    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas', 'notasEvaluador'];
     const presentes = ZONAS.filter((z) => datos[z] !== undefined && datos[z] !== null);
     if (presentes.length === 0) return { error: 'El archivo no tiene ninguna sección reconocida.' };
 
@@ -5524,6 +5638,11 @@
     if (datos.listas) {
       const entrantes = Array.isArray(datos.listas) ? datos.listas : (datos.listas.listas || []);
       const r = fusionarListasEntrantes(entrantes);
+      contar(r.nuevas > 0 || r.actualizadas > 0);
+    }
+    if (datos.notasEvaluador) {
+      const lista = Array.isArray(datos.notasEvaluador) ? datos.notasEvaluador : (datos.notasEvaluador.notasEvaluador || []);
+      const r = fusionarNotasEvaluadorLista(lista);
       contar(r.nuevas > 0 || r.actualizadas > 0);
     }
 
@@ -6088,6 +6207,13 @@
       if (n === 0) return { cantidad: 0, texto: 'No se encontraron tarjetas de listas guardadas bajo «' + viejo + '».' };
       return { cantidad: n, texto: 'Se actualizarían ' + n + ' tarjeta(s) dentro de las listas guardadas.' };
     }
+    if (zona === 'notasEvaluador') {
+      if (!viejo) return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
+      if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
+      const n = notasEvaluador.filter((nt) => nt.espacio === viejo).length;
+      if (n === 0) return { cantidad: 0, texto: 'No se encontraron notas del evaluador bajo «' + viejo + '».' };
+      return { cantidad: n, texto: 'Se vincularían ' + n + ' nota(s) del evaluador.' };
+    }
     const z = ZONAS_VINCULO[zona];
     if (!viejo) {
       return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
@@ -6109,6 +6235,15 @@
 
   function ejecutarVinculo(zona, viejo) {
     if (zona === 'listas') return ejecutarVinculoListas(viejo);
+    if (zona === 'notasEvaluador') {
+      let n = 0;
+      notasEvaluador.forEach((nt) => {
+        if (nt.espacio === viejo) { nt.espacio = ESPACIO_HASH; n++; }
+      });
+      guardarNotasEvaluador();
+      renderListaNotasEvaluador();
+      return { movidas: n, sin: 0 };
+    }
     if (zona === 'sesiones') {
       let n = 0;
       gamificacion.historial.forEach((s) => {
@@ -6133,7 +6268,7 @@
     return { movidas: movs.length, sin: contarOtrasZona(zona) };
   }
 
-  const ICONOS_ZONA_VINCULO = { dificiles: '☆', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐' };
+  const ICONOS_ZONA_VINCULO = { dificiles: '☆', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐', notasEvaluador: '📝' };
   const ZONAS_HASH_PURGABLES = ['dificiles', 'notas', 'razones', 'imagenes'];   // las únicas donde puede quedar un residuo que valga la pena ofrecer borrar
 
   function zonasSeleccionadasTodo() {
@@ -6143,6 +6278,7 @@
   function contarMovimientosZona(zona, viejo) {
     if (zona === 'sesiones') return gamificacion.historial.filter((s) => espacioDeSesion(s) === viejo).length;
     if (zona === 'listas') return movimientosVinculoListas(viejo).length;
+    if (zona === 'notasEvaluador') return notasEvaluador.filter((nt) => nt.espacio === viejo).length;
     return movimientosVinculo(zona, viejo).length;
   }
 
@@ -6279,7 +6415,7 @@
   });
 
   async function borrarEvaluadorCompleto(espacio) {
-    if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes y listas)? ' +
+    if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes, listas y notas del evaluador)? ' +
       'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.'))) return;
 
     gamificacion.historial = gamificacion.historial.filter((s) => espacioDeSesion(s) !== espacio);
@@ -6305,6 +6441,10 @@
       return lista.hashes.length > 0;
     });
     guardarListas();
+
+    notasEvaluador = notasEvaluador.filter((nt) => nt.espacio !== espacio);
+    guardarNotasEvaluador();
+    renderListaNotasEvaluador();
 
     try {
       localStorage.removeItem('ultimo_backup_' + espacio);
@@ -6372,7 +6512,7 @@
       elVincTitulo.textContent = 'Vincular todo a este evaluador';
       document.querySelectorAll('.vinc-zona-chk').forEach((c) => { c.checked = true; });
     } else {
-      const titulo = (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
+      const titulo = zona === 'notasEvaluador' ? 'notas del evaluador' : (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
       elVincTitulo.textContent = 'Vincular ' + titulo + ' a este evaluador';
     }
     if (vincEspacioFijo !== null) {
@@ -6668,6 +6808,7 @@
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
 
     if (elModalConfirmacion.classList.contains('abierto')) { cerrarModalConfirmacion(false); return; }
+    if (elModalNotasEvaluador.classList.contains('abierto')) { cerrarNotasEvaluador(); return; }
     if (elModalSync.classList.contains('abierto')) { elModalSync.classList.remove('abierto'); return; }
     if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
     if (elModalGuardarLista.classList.contains('abierto')) { cerrarModalGuardarLista(); return; }
@@ -7430,6 +7571,408 @@
           iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
       } catch (e) {
         elInfo.textContent = 'El archivo no es un JSON válido de notas.';
+      }
+    };
+    lector.readAsText(archivo);
+  });
+
+  function renderSelectorCategoriaNota(contenedor, categoriaSeleccionada, onSeleccionar) {
+    contenedor.innerHTML = '';
+    CATEGORIAS_NOTA_EVAL.forEach((cat) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip-razon chip-categoria-nota' + (categoriaSeleccionada === cat.codigo ? ' seleccionada' : '');
+      chip.textContent = cat.texto;
+      if (categoriaSeleccionada === cat.codigo) {
+        chip.style.backgroundColor = cat.color;
+        chip.style.borderColor = cat.color;
+        chip.style.color = '#fff';
+      } else {
+        chip.style.backgroundColor = hexToRgba(cat.color, 0.12);
+        chip.style.borderColor = cat.color;
+        chip.style.color = cat.color;
+      }
+      chip.addEventListener('click', () => onSeleccionar(categoriaSeleccionada === cat.codigo ? null : cat.codigo));
+      contenedor.appendChild(chip);
+    });
+  }
+
+  let notaEvalCategoriaNueva = null;
+  let notaEvalEditandoId = null;
+  let notaEvalCategoriaEdicion = null;
+  let notasEvalPaginaActual = 1;
+  const NOTASEVAL_POR_PAGINA = 15;
+
+  const elModalNotasEvaluador = document.getElementById('modal-notas-evaluador');
+  const elNotaEvalTextoNueva = document.getElementById('notaseval-texto-nueva');
+  const elNotaEvalChipsNueva = document.getElementById('notaseval-chips-nueva');
+
+  function refrescarChipsNuevaNotaEvaluador() {
+    renderSelectorCategoriaNota(elNotaEvalChipsNueva, notaEvalCategoriaNueva, (cod) => {
+      notaEvalCategoriaNueva = cod;
+      refrescarChipsNuevaNotaEvaluador();
+    });
+  }
+
+  function agregarNotaEvaluador() {
+    const texto = elNotaEvalTextoNueva.value.trim();
+    if (texto === '') return;
+    notasEvaluador.push({
+      id: generarIdNotaEvaluador(),
+      texto: texto,
+      categoria: notaEvalCategoriaNueva || '',
+      espacio: ESPACIO_HASH,
+      creada: Date.now(),
+      modificada: Date.now(),
+    });
+    guardarNotasEvaluador();
+    elNotaEvalTextoNueva.value = '';
+    notaEvalCategoriaNueva = null;
+    refrescarChipsNuevaNotaEvaluador();
+    notasEvalPaginaActual = 1;
+    renderListaNotasEvaluador();
+  }
+
+  function empezarEdicionNotaEvaluador(id) {
+    const nota = notasEvaluador.find((n) => n.id === id);
+    if (!nota) return;
+    notaEvalEditandoId = id;
+    notaEvalCategoriaEdicion = nota.categoria || null;
+    renderListaNotasEvaluador();
+  }
+
+  function cancelarEdicionNotaEvaluador() {
+    const textarea = document.getElementById('notaseval-editor-compartido');
+    if (textarea && typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(textarea);
+    notaEvalEditandoId = null;
+    notaEvalCategoriaEdicion = null;
+    renderListaNotasEvaluador();
+  }
+
+  function guardarEdicionNotaEvaluador(id) {
+    const nota = notasEvaluador.find((n) => n.id === id);
+    if (!nota) return;
+    const textarea = document.getElementById('notaseval-editor-compartido');
+    if (textarea && typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(textarea);
+    const texto = textarea ? textarea.value.trim() : '';
+    if (texto === '') return;
+    nota.texto = texto;
+    nota.categoria = notaEvalCategoriaEdicion || '';
+    nota.modificada = Date.now();
+    guardarNotasEvaluador();
+    notaEvalEditandoId = null;
+    notaEvalCategoriaEdicion = null;
+    renderListaNotasEvaluador();
+  }
+
+  function borrarNotaEvaluador(id) {
+    notasEvaluador = notasEvaluador.filter((n) => n.id !== id);
+    guardarNotasEvaluador();
+    if (notaEvalEditandoId === id) notaEvalEditandoId = null;
+    renderListaNotasEvaluador();
+  }
+
+  function filaNotaEvaluador(nota) {
+    const div = document.createElement('div');
+    div.className = 'panel-nota item-nota-evaluador';
+    div.style.display = 'block';
+
+    const cab = document.createElement('div');
+    cab.className = 'panel-nota-cabecera';
+    const titulo = document.createElement('div');
+    titulo.className = 'panel-nota-titulo';
+    titulo.textContent = formatearFechaLista(nota.modificada || nota.creada);
+    cab.appendChild(titulo);
+    div.appendChild(cab);
+
+    if (notaEvalEditandoId === nota.id) {
+      const wrapEditor = document.getElementById('notaseval-editor-compartido-wrap');
+      const textarea = document.getElementById('notaseval-editor-compartido');
+      wrapEditor.style.display = 'block';
+      document.getElementById('btn-dictado-notaseval-editor').style.display = 'flex';
+      textarea.value = nota.texto;
+      textarea.onkeydown = (evento) => {
+        if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+          evento.preventDefault();
+          guardarEdicionNotaEvaluador(nota.id);
+        }
+      };
+      div.appendChild(wrapEditor);
+
+      const chips = document.createElement('div');
+      chips.className = 'chips-razones';
+      chips.style.display = 'flex';
+      div.appendChild(chips);
+      const actualizarChipsEdicion = () => {
+        renderSelectorCategoriaNota(chips, notaEvalCategoriaEdicion, (cod) => {
+          notaEvalCategoriaEdicion = cod;
+          actualizarChipsEdicion();
+        });
+      };
+      actualizarChipsEdicion();
+
+      const acc = document.createElement('div');
+      acc.className = 'panel-nota-acciones';
+      acc.appendChild(botonMini('Guardar', () => guardarEdicionNotaEvaluador(nota.id)));
+      acc.appendChild(botonMini('Cancelar', () => cancelarEdicionNotaEvaluador()));
+      div.appendChild(acc);
+
+      setTimeout(() => textarea.focus(), 0);
+    } else {
+      const chipCat = document.createElement('div');
+      chipCat.className = 'fila-chips-mini';
+      const def = MAPA_CATEGORIAS_NOTA_EVAL.get(nota.categoria);
+      const chip = document.createElement('span');
+      if (def) {
+        chip.className = 'chip-razon chico';
+        chip.textContent = def.texto;
+        chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+        chip.style.borderColor = def.color;
+        chip.style.color = def.color;
+      } else {
+        chip.className = 'chip-razon chico vacio';
+        chip.textContent = 'Sin categoría';
+      }
+      chipCat.appendChild(chip);
+      div.appendChild(chipCat);
+
+      const texto = document.createElement('div');
+      texto.className = 'panel-nota-texto';
+      texto.textContent = nota.texto;
+      div.appendChild(texto);
+
+      const acc = document.createElement('div');
+      acc.className = 'panel-nota-acciones';
+      acc.appendChild(botonMini('✎ Editar', () => empezarEdicionNotaEvaluador(nota.id)));
+      acc.appendChild(botonMini('🗑 Borrar', async () => {
+        if (!(await confirmarAccion('¿Borrar esta nota del evaluador? No se puede deshacer.'))) return;
+        borrarNotaEvaluador(nota.id);
+      }));
+      div.appendChild(acc);
+    }
+
+    return div;
+  }
+
+  function filaNotaEvaluadorOtra(nota) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+    const titulo = document.createElement('div');
+    titulo.textContent = '(' + etiquetaEspacio(nota.espacio) + ') ' + (nota.texto || '(sin texto)');
+    div.appendChild(titulo);
+    const def = MAPA_CATEGORIAS_NOTA_EVAL.get(nota.categoria);
+    if (def) {
+      const chips = document.createElement('div');
+      chips.className = 'fila-chips-mini';
+      const chip = document.createElement('span');
+      chip.className = 'chip-razon chico';
+      chip.textContent = def.texto;
+      chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+      chip.style.borderColor = def.color;
+      chip.style.color = def.color;
+      chips.appendChild(chip);
+      div.appendChild(chips);
+    }
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
+      notasEvaluador = notasEvaluador.filter((n) => n.id !== nota.id);
+      guardarNotasEvaluador();
+      renderListaNotasEvaluador();
+    }));
+    div.appendChild(acc);
+    return div;
+  }
+
+  function renderNotasEvaluadorPaginacion(totalPaginas) {
+    const el = document.getElementById('notaseval-paginacion');
+    el.innerHTML = '';
+    el.style.display = 'flex';
+
+    const btnAnterior = document.createElement('button');
+    btnAnterior.type = 'button';
+    btnAnterior.className = 'boton-mini';
+    btnAnterior.textContent = 'Anterior';
+    btnAnterior.disabled = notasEvalPaginaActual <= 1;
+    btnAnterior.addEventListener('click', () => { notasEvalPaginaActual--; renderListaNotasEvaluador(); });
+
+    const texto = document.createElement('span');
+    texto.className = 'historial-paginacion-texto';
+    texto.textContent = 'Página ' + notasEvalPaginaActual + ' de ' + totalPaginas;
+
+    const btnSiguiente = document.createElement('button');
+    btnSiguiente.type = 'button';
+    btnSiguiente.className = 'boton-mini';
+    btnSiguiente.textContent = 'Siguiente';
+    btnSiguiente.disabled = notasEvalPaginaActual >= totalPaginas;
+    btnSiguiente.addEventListener('click', () => { notasEvalPaginaActual++; renderListaNotasEvaluador(); });
+
+    el.appendChild(btnAnterior);
+    el.appendChild(texto);
+    el.appendChild(btnSiguiente);
+  }
+
+  function renderNotasEvaluadorOtras() {
+    const otras = notasEvaluadorDeOtros();
+    const det = document.getElementById('det-notaseval-otras');
+    const elLista = document.getElementById('lista-notaseval-otras');
+    elLista.innerHTML = '';
+    det.style.display = otras.length > 0 ? 'block' : 'none';
+    document.getElementById('suma-notaseval-otras').textContent = 'De otros evaluadores (' + otras.length + ')';
+    if (otras.length === 0) return;
+    otras.slice().sort((a, b) => (b.modificada || b.creada || 0) - (a.modificada || a.creada || 0)).forEach((nota) => {
+      elLista.appendChild(filaNotaEvaluadorOtra(nota));
+    });
+  }
+
+  function renderListaNotasEvaluador() {
+    const propias = notasEvaluadorPropias().slice().sort((a, b) => (b.modificada || b.creada || 0) - (a.modificada || a.creada || 0));
+    const elLista = document.getElementById('lista-notas-evaluador');
+    const elVacio = document.getElementById('notaseval-vacio');
+    const elEditorWrap = document.getElementById('notaseval-editor-compartido-wrap');
+    elLista.parentElement.insertBefore(elEditorWrap, elLista);
+    elEditorWrap.style.display = 'none';
+    document.getElementById('btn-dictado-notaseval-editor').style.display = 'none';
+    elLista.innerHTML = '';
+
+    if (propias.length === 0) {
+      elVacio.style.display = 'block';
+      document.getElementById('notaseval-paginacion').style.display = 'none';
+    } else {
+      elVacio.style.display = 'none';
+      const totalPaginas = Math.max(1, Math.ceil(propias.length / NOTASEVAL_POR_PAGINA));
+      if (notasEvalPaginaActual > totalPaginas) notasEvalPaginaActual = totalPaginas;
+      if (notasEvalPaginaActual < 1) notasEvalPaginaActual = 1;
+      const inicio = (notasEvalPaginaActual - 1) * NOTASEVAL_POR_PAGINA;
+      propias.slice(inicio, inicio + NOTASEVAL_POR_PAGINA).forEach((nota) => {
+        elLista.appendChild(filaNotaEvaluador(nota));
+      });
+      renderNotasEvaluadorPaginacion(totalPaginas);
+    }
+
+    document.getElementById('btn-vaciar-notaseval').style.display = notasEvaluador.length > 0 ? 'inline-block' : 'none';
+    renderNotasEvaluadorOtras();
+  }
+
+  function abrirNotasEvaluador() {
+    notaEvalEditandoId = null;
+    notaEvalCategoriaEdicion = null;
+    notaEvalCategoriaNueva = null;
+    notasEvalPaginaActual = 1;
+    elNotaEvalTextoNueva.value = '';
+    refrescarChipsNuevaNotaEvaluador();
+    renderListaNotasEvaluador();
+    elModalNotasEvaluador.classList.add('abierto');
+  }
+
+  function cerrarNotasEvaluador() {
+    const textareaNueva = document.getElementById('notaseval-texto-nueva');
+    const textareaEditor = document.getElementById('notaseval-editor-compartido');
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') {
+      window.__detenerDictadoSiActivoEn(textareaNueva);
+      window.__detenerDictadoSiActivoEn(textareaEditor);
+    }
+    elModalNotasEvaluador.classList.remove('abierto');
+    notaEvalEditandoId = null;
+  }
+
+  document.getElementById('btn-notas-evaluador').addEventListener('click', () => abrirNotasEvaluador());
+  document.getElementById('btn-notaseval-cerrar').addEventListener('click', () => cerrarNotasEvaluador());
+  document.getElementById('btn-notaseval-agregar').addEventListener('click', () => agregarNotaEvaluador());
+  elNotaEvalTextoNueva.addEventListener('keydown', (evento) => {
+    if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+      evento.preventDefault();
+      agregarNotaEvaluador();
+    }
+  });
+
+  document.getElementById('btn-vaciar-notaseval').addEventListener('click', async () => {
+    if (notasEvaluador.length === 0) return;
+    if (!(await confirmarAccion('¿Vaciar TODAS las notas del evaluador? No se puede deshacer.'))) return;
+    notasEvaluador = [];
+    guardarNotasEvaluador();
+    renderListaNotasEvaluador();
+  });
+
+  document.getElementById('btn-vincular-notaseval').addEventListener('click', () => {
+    elModalNotasEvaluador.classList.remove('abierto');
+    abrirModalVincular('notasEvaluador');
+  });
+
+  function construirExportNotasEvaluador() {
+    return { version: 1, notasEvaluador: notasEvaluador };
+  }
+
+  function fusionarNotasEvaluadorLista(lista) {
+    let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+    lista.forEach((item) => {
+      if (!item || typeof item.id !== 'string' || !item.id || typeof item.texto !== 'string') {
+        invalidas++;
+        return;
+      }
+      const entrante = {
+        id: item.id,
+        texto: item.texto,
+        categoria: typeof item.categoria === 'string' ? item.categoria : '',
+        espacio: typeof item.espacio === 'string' && item.espacio ? item.espacio : ESPACIO_HASH,
+        creada: typeof item.creada === 'number' ? item.creada : Date.now(),
+        modificada: typeof item.modificada === 'number' ? item.modificada : Date.now(),
+      };
+      const local = notasEvaluador.find((n) => n.id === entrante.id);
+      if (!local) {
+        notasEvaluador.push(entrante);
+        nuevas++;
+      } else if (local.texto === entrante.texto && (local.categoria || '') === (entrante.categoria || '')) {
+        iguales++;
+      } else if (entrante.modificada > (local.modificada || 0)) {
+        Object.assign(local, entrante);
+        actualizadas++;
+      } else {
+        conservadas++;
+      }
+    });
+    guardarNotasEvaluador();
+    renderListaNotasEvaluador();
+    return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
+  }
+
+  document.getElementById('btn-exportar-notaseval').addEventListener('click', () => {
+    const contenido = JSON.stringify(construirExportNotasEvaluador(), null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'notas_evaluador.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-notaseval').addEventListener('click', () => {
+    document.getElementById('input-importar-notaseval').click();
+  });
+
+  document.getElementById('input-importar-notaseval').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      try {
+        const obj = JSON.parse(lector.result);
+        const lista = Array.isArray(obj)
+          ? obj
+          : (obj && Array.isArray(obj.notasEvaluador) ? obj.notasEvaluador : null);
+        if (!lista) throw new Error('formato');
+
+        const r = fusionarNotasEvaluadorLista(lista);
+        window.alert('Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
+          ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
+          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : ''));
+      } catch (e) {
+        window.alert('El archivo no es un JSON válido de notas del evaluador.');
       }
     };
     lector.readAsText(archivo);
@@ -9444,7 +9987,6 @@
   })();
 
   const elBtnPomodoro = document.getElementById('btn-pomodoro');
-  const elFilaPomodoroBoton = document.getElementById('fila-pomodoro-boton');
   const elPomodoroBadge = document.getElementById('pomodoro-badge');
   const elPomodoroBadgeInfo = document.getElementById('pomodoro-badge-info');
   const elBtnPomodoroCancelar = document.getElementById('btn-pomodoro-cancelar');
@@ -9551,7 +10093,7 @@
 
     obtenerContextoAudio();   // desbloquea audio en este gesto del usuario
 
-    elFilaPomodoroBoton.style.display = 'none';
+    elBtnPomodoro.disabled = true;
     elPomodoroBadge.style.display = 'flex';
     elBtnObservadorSalir.disabled = true;   // §6: bloqueo de navegación
 
@@ -9624,7 +10166,7 @@
 
   function cerrarModalPomodoroResumen() {
     elModalPomodoroResumen.classList.remove('abierto');
-    elFilaPomodoroBoton.style.display = 'flex';   // vuelve el botón ⏲️
+    elBtnPomodoro.disabled = false;
   }
   document.getElementById('btn-pomodoro-resumen-cerrar').addEventListener('click', () => cerrarModalPomodoroResumen());
 

@@ -1,0 +1,246 @@
+RUTA 1
+DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR
+Supply Chain Operations Reference (SCOR®)
+es una creación del
+Supply Chain Council (SCC)
+
+RUTA 2
+DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR
+Modelo SCOR
+recoge
+visión consensuada del Consejo
+sobre gestión
+cadena suministro
+
+RUTA 3
+DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR
+el modelo SCOR proporciona
+1 marco único
+que vincula
+procesos empresariales, métricas, mejores prácticas y características tecnológicas
+en una estructura unificada
+para facilitar comunicación
+entre socios cadena suministro y
+mejorar eficacia
+gestión cadena suministro y
+actividades relacionadas
+con su mejora
+
+RUTA 4
+ALCANCE Y PROCESOS SCOR
+el modelo SCOR
+describe
+actividades empresariales
+asociadas a todas fases
+del proceso
+satisfacer demanda 1 cliente
+
+RUTA 5
+ALCANCE Y PROCESOS SCOR
+el modelo en sí
+se organiza en torno
+a cinco procesos
+gestión principales
+
+RUTA 6
+ALCANCE Y PROCESOS SCOR
+Mediante estos componentes básicos procesos,
+modelo SCOR
+puede utilizarse
+para describir
+cadenas suministro
+tanto muy sencillas
+como muy complejas
+
+RUTA 7
+ALCANCE Y PROCESOS SCOR
+el modelo está
+diseñado y
+se mantiene
+para dar soporte
+a cadenas suministro
+diversa complejidad y
+en múltiples sectores
+
+RUTA 8
+ESTRUCTURA PROCESOS SCOR (NIVEL 1 Y NIVEL 2)
+Planificar
+Fuente y Abastecer
+Realizar y Fabricar
+Entrega
+Devolución
+Habilitar y Facilitar
+
+RUTA 9
+ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+los atributos rendimiento
+una cadena suministro
+permiten
+analizarla y evaluarla
+en comparación
+con otras cadenas suministro
+que aplican
+estrategias competitivas
+
+RUTA 10
+ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+SCOR identifica
+cinco atributos fundamentales
+del rendimiento cadena suministro:
+fiabilidad,
+capacidad respuesta,
+agilidad,
+costes y
+gestión activos
+
+RUTA 11
+ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+Sin estas características,
+resulta difícil comparar
+una organización
+que opta estratégicamente
+ser proveedor bajo coste
+con una organización
+que opta por competir en
+fiabilidad y
+rendimiento
+
+RUTA 12
+ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+las métricas estratégicas nivel 1
+están directamente relacionadas
+con atributos rendimiento
+
+RUTA 13
+ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+Estas métricas nivel 1
+son cálculos
+mediante los cuales
+una organización
+puede medir su éxito
+a hora alcanzar
+posicionamiento deseado en mercado
+
+RUTA 14
+ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+Muchas métricas del modelo SCOR
+son jerárquicas,
+al igual que son
+elementos proceso
+
+RUTA 15
+ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+las métricas nivel 1
+se crean a partir
+cálculos niveles inferiores
+
+RUTA 16
+ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+las métricas nivel 2
+suelen estar asociadas
+a 1 subconjunto más reducido
+de procesos
+
+RUTA 17
+ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+Además,
+métricas (diagnósticos)
+se utilizan para diagnosticar
+variaciones en rendimiento
+con respecto al plan
+
+RUTA 18
+ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+Métricas Nivel 1
+por Atributo
+Fiabilidad
+Capacidad respuesta
+Agilidad
+Coste
+Eficiencia en gestión activos
+
+RUTA 19
+PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
+la sección dedicada al personal
+proporciona herramientas
+para gestionar talento
+en cadena suministro
+mediante incorporación 1 estándar
+que describe
+conocimientos especializados necesarios
+para
+realizar tareas y
+gestionar procesos
+
+RUTA 20
+PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
+En SCOR,
+una competencia
+es capacidad
+obtener resultados predeterminados
+con 1 mínimo
+tiempo y energía,
+caracterizada
+por una definición estándar con
+experiencia,
+aptitudes y
+formación asociadas
+
+RUTA 21
+PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
+la experiencia es
+conocimiento o capacidad
+adquiridos
+mediante
+observación o participación activa,
+que son
+obtenidos al realizar trabajo
+en 1 entorno real y
+
+RUTA 22
+PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
+al enfrentarse
+a diferentes situaciones
+que requieren distintas acciones
+
+RUTA 23
+PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
+la aptitud
+es una capacidad natural,
+adquirida, aprendida o desarrollada
+para realizar 1 determinado tipo trabajo
+a 1 nivel concreto
+
+RUTA 24
+PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
+la formación
+desarrolla una competencia o 1 tipo comportamiento
+a través instrucción
+
+RUTA 25
+PRÁCTICAS SCOR
+las empresas
+utilizan prácticas
+para identificar formas
+alternativas o deseadas
+operar en sus cadenas suministro
+
+RUTA 26
+PRÁCTICAS SCOR
+las prácticas SCOR
+pueden constituir 1 subconjunto del
+conjunto total prácticas
+que reconoce una empresa
+
+RUTA 27
+PRÁCTICAS SCOR
+el Supply Chain Council
+recomienda a empresas
+interesadas en adoptar SCOR
+que adapten este marco
+mediante
+investigación, revisión y integración prácticas relevantes
+del
+sector y
+propia empresa (internalización)
+

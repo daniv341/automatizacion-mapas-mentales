@@ -710,6 +710,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<script>
+(function() {
+  try {
+    var t = localStorage.getItem('tema_app_v1');
+    document.documentElement.setAttribute('data-tema', t === 'oscuro' ? 'oscuro' : 'claro');
+  } catch (e) {
+    document.documentElement.setAttribute('data-tema', 'claro');
+  }
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tarjetas de Estudio</title>
 <style>
@@ -717,6 +727,52 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     --fill-color: __FILL_COLOR__;
     --stroke-color: __STROKE_COLOR__;
     --color-boton: #4F46E5;
+
+    --bg-pagina-1: #f5f3fa;
+    --bg-pagina-2: #eef1f7;
+    --bg-superficie: #ffffff;
+    --bg-superficie-alt: #fafafa;
+    --bg-superficie-hover: #f7f7fb;
+    --bg-sticky: #eef1f7;
+    --texto-principal: #333333;
+    --texto-fuerte: #222222;
+    --texto-cabecera: #444444;
+    --texto-secundario: #666666;
+    --texto-suave: #888888;
+    --texto-tenue: #999999;
+    --color-borde: #eeeeee;
+    --color-borde-suave: #f1f1f1;
+    --color-borde-medio: #e2e2ea;
+    --color-borde-fuerte: #d8d8e0;
+    --color-sombra: rgba(0,0,0,0.06);
+    --color-sombra-fuerte: rgba(0,0,0,0.15);
+    --color-overlay: rgba(30,30,40,0.55);
+  }
+
+  html[data-tema="oscuro"] {
+    --bg-pagina-1: #15151f;
+    --bg-pagina-2: #1b1f2a;
+    --bg-superficie: #23232f;
+    --bg-superficie-alt: #2a2a38;
+    --bg-superficie-hover: #30303f;
+    --bg-sticky: #1b1f2a;
+    --texto-principal: #e7e7ef;
+    --texto-fuerte: #f1f1f7;
+    --texto-cabecera: #e7e7ef;
+    --texto-secundario: #b7b7c8;
+    --texto-suave: #9c9cb0;
+    --texto-tenue: #8a8aa0;
+    --color-borde: #35354a;
+    --color-borde-suave: #35354a;
+    --color-borde-medio: #3c3c52;
+    --color-borde-fuerte: #46465f;
+    --color-sombra: rgba(0,0,0,0.35);
+    --color-sombra-fuerte: rgba(0,0,0,0.45);
+    --color-overlay: rgba(0,0,0,0.65);
+  }
+
+  html.sin-transiciones, html.sin-transiciones * {
+    transition: none !important;
   }
 
   * { box-sizing: border-box; }
@@ -727,9 +783,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #f5f3fa 0%, #eef1f7 100%);
+    background: linear-gradient(135deg, var(--bg-pagina-1) 0%, var(--bg-pagina-2) 100%);
     font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-    color: #333;
+    color: var(--texto-principal);
   }
 
   .nombre-evaluador {
@@ -754,18 +810,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-size: clamp(18px, 5vw, 22px);
     font-weight: 600;
     margin-bottom: clamp(10px, 3vw, 18px);
-    color: #444;
+    color: var(--texto-cabecera);
   }
 
   .subtitulo {
     font-size: 14px;
-    color: #888;
+    color: var(--texto-suave);
     margin-bottom: clamp(8px, 3vw, 16px);
   }
 
   .lista-temas {
     text-align: left;
-    background: #fff;
+    background: var(--bg-superficie);
     border-radius: 12px;
     padding: 8px 18px;
     box-shadow: 0 6px 18px rgba(0,0,0,0.06);
@@ -777,9 +833,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     align-items: center;
     gap: 10px;
     padding: 12px 0;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--color-borde-suave);
     font-size: 15px;
-    color: #444;
+    color: var(--texto-cabecera);
   }
 
   .item-tema-check:last-child { border-bottom: none; }
@@ -820,7 +876,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .boton-modo {
     padding: 12px 22px;
     border-radius: 24px;
-    background: #ffffff;
+    background: var(--bg-superficie);
     color: var(--color-boton);
     border: 2px solid var(--color-boton);
     font-size: 14px;
@@ -846,7 +902,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .titulo-dificiles {
     font-size: 14px;
     font-weight: 700;
-    color: #444;
+    color: var(--texto-cabecera);
   }
 
   .fila-dificiles-botones {
@@ -857,9 +913,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .boton-mini {
     padding: 6px 12px;
     border-radius: 14px;
-    background: #fff;
-    color: #666;
-    border: 1.5px solid #d8d8e0;
+    background: var(--bg-superficie);
+    color: var(--texto-secundario);
+    border: 1.5px solid var(--color-borde-fuerte);
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
@@ -872,13 +928,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .extra-dificil {
-    color: #999;
+    color: var(--texto-tenue);
     font-size: 12px;
   }
 
   .nota-dificiles {
     font-size: 12px;
-    color: #999;
+    color: var(--texto-tenue);
     margin-top: 8px;
   }
 
@@ -897,7 +953,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gap: 8px;
     font-size: 13px;
     font-weight: 700;
-    color: #666;
+    color: var(--texto-secundario);
   }
 
   .stat-gamificacion { white-space: nowrap; }
@@ -922,12 +978,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .progreso-texto {
     font-size: 14px;
-    color: #888;
+    color: var(--texto-suave);
   }
 
   .cronometro {
     font-size: 14px;
-    color: #888;
+    color: var(--texto-suave);
     font-variant-numeric: tabular-nums;
   }
 
@@ -936,7 +992,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .barra-progreso {
     width: 100%;
     height: 8px;
-    background: #e2e2ea;
+    background: var(--color-borde-medio);
     border-radius: 8px;
     overflow: hidden;
     margin-bottom: clamp(12px, 4vw, 24px);
@@ -956,7 +1012,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-bottom: clamp(10px, 3vw, 18px);
     font-weight: 600;
     font-size: 15px;
-    color: #222;   
+    color: var(--texto-fuerte);   
     letter-spacing: 0.3px;
   }
 
@@ -1178,14 +1234,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .item-nota-dif, .item-nota-otra {
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--color-borde-suave);
     padding: 8px 0;
     font-size: 14px;
     text-align: left;
   }
 
   .item-nota-dif:last-child, .item-nota-otra:last-child { border-bottom: none; }
-  .item-nota-dif summary { cursor: pointer; color: #444; }
+  .item-nota-dif summary { cursor: pointer; color: var(--texto-cabecera); }
 
   .badge-estado {
     font-size: 11px;
@@ -1211,7 +1267,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     overflow-wrap: anywhere;
   }
 
-  .bloque-version.txt { background: #f3f4f8; border-left-color: #b8b8c4; color: #555; }
+  .bloque-version.txt { background: var(--bg-superficie-alt); border-left-color: var(--color-borde-fuerte); color: var(--texto-secundario); }
   .bloque-version.vacio { font-style: italic; opacity: 0.75; }
 
   .bloque-version .etq {
@@ -1223,10 +1279,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-bottom: 3px;
   }
 
-  .bloque-version.txt .etq { color: #888; }
+  .bloque-version.txt .etq { color: var(--texto-suave); }
   .acciones-nota-dif { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 2px; }
 
-  #zona-notas details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: #444; }
+  #zona-notas details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: var(--texto-cabecera); }
 
   .panel-nota-texto {
     font-size: 14px;
@@ -1255,8 +1311,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .zona-eval textarea {
     width: 100%; min-height: 74px; resize: vertical;
     border: 2px solid var(--color-boton); border-radius: 10px;
-    padding: 10px 12px; font-family: inherit; font-size: 14px; color: #333;
-    background: #fff;
+    padding: 10px 12px; font-family: inherit; font-size: 14px; color: var(--texto-principal);
+    background: var(--bg-superficie);
   }
 
   .zona-eval textarea:focus {
@@ -1275,7 +1331,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .resultado-eval.casi { color: #e0a030; }
   .resultado-eval.mal  { color: #e0574c; }
 
-  .item-escrito { display: block; color: #333; font-style: italic; margin-top: 3px; }
+  .item-escrito { display: block; color: var(--texto-principal); font-style: italic; margin-top: 3px; }
   .item-resultado { display: block; font-weight: 700; font-size: 12px; margin-top: 3px; }
   .item-resultado.bien { color: #3aa76d; }
   .item-resultado.casi { color: #e0a030; }
@@ -1288,11 +1344,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .ruta-acordeon {
-    border: 1px solid #eee;
+    border: 1px solid var(--color-borde);
     border-radius: 10px;
     margin-bottom: 10px;
     overflow: hidden;
-    background: #fff;
+    background: var(--bg-superficie);
     box-shadow: 0 3px 10px rgba(0,0,0,0.05);
   }
 
@@ -1305,7 +1361,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #fafafa;
+    background: var(--bg-superficie-alt);
     color: var(--color-boton);
   }
 
@@ -1314,7 +1370,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .ruta-acordeon summary::after {
     content: '\\25BE';
     font-size: 12px;
-    color: #999;
+    color: var(--texto-tenue);
     transition: transform 0.2s ease;
   }
 
@@ -1328,7 +1384,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .ruta-linea {
     font-size: 14px;
-    color: #444;
+    color: var(--texto-cabecera);
     padding: 4px 0;
     line-height: 1.5;
   }
@@ -1345,8 +1401,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     object-fit: contain;
     margin: 10px auto;
     border-radius: 8px;
-    border: 1px solid #e2e2ea;
-    background: #fff;
+    border: 1px solid var(--color-borde-medio);
+    background: var(--bg-superficie);
     cursor: zoom-in;
   }
 
@@ -1369,7 +1425,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     width: auto;
     height: auto;
     border-radius: 8px;
-    background: #fff;
+    background: var(--bg-superficie);
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
   }
 
@@ -1390,12 +1446,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-size: 13px;
     font-weight: 600;
     margin-top: 14px;
-    color: #999;
+    color: var(--texto-tenue);
   }
 
   .estado-marca.si { color: #3aa76d; }
   .estado-marca.no { color: #e0574c; }
-  .estado-marca.saltar { color: #b8b8c4; }
+  .estado-marca.saltar { color: var(--texto-tenue); }
 
   .botonera {
     display: flex;
@@ -1450,17 +1506,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     position: relative;
     padding: clamp(9px, 3vw, 12px) clamp(14px, 4.5vw, 20px);
     border-radius: 24px;
-    background: #ffffff;
-    color: #888;
-    border: 2px solid #d8d8e0;
+    background: var(--bg-superficie);
+    color: var(--texto-suave);
+    border: 2px solid var(--color-borde-fuerte);
   }
 
   .boton-dificil {
     padding: clamp(9px, 3vw, 12px) clamp(13px, 4vw, 18px);
     border-radius: 24px;
-    background: #ffffff;
-    color: #888;
-    border: 2px solid #d8d8e0;
+    background: var(--bg-superficie);
+    color: var(--texto-suave);
+    border: 2px solid var(--color-borde-fuerte);
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
@@ -1485,9 +1541,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .boton-nav {
     padding: 10px 16px;
     border-radius: 20px;
-    background: #ffffff;
-    color: #666;
-    border: 2px solid #e2e2ea;
+    background: var(--bg-superficie);
+    color: var(--texto-secundario);
+    border: 2px solid var(--color-borde-medio);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -1497,7 +1553,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .boton-finalizar {
     padding: 10px 18px;
     border-radius: 20px;
-    background: #ffffff;
+    background: var(--bg-superficie);
     color: var(--color-boton);
     border: 2px solid var(--color-boton);
     font-size: 13px;
@@ -1508,7 +1564,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .pantalla-resumen {
     display: none;
-    background: #ffffff;
+    background: var(--bg-superficie);
     border-radius: 16px;
     padding: clamp(20px, 7vw, 40px) clamp(16px, 5.5vw, 30px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -1516,14 +1572,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .pantalla-resumen h2 {
     margin-top: 0;
-    color: #444;
+    color: var(--texto-cabecera);
   }
 
   .nota-sesion {
     font-size: clamp(21px, 6vw, 26px);
     font-weight: 700;
     margin-bottom: 10px;
-    color: #444;
+    color: var(--texto-cabecera);
   }
 
   .nota-sesion.aprobado { color: #3aa76d; }
@@ -1535,7 +1591,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     justify-content: space-between;
     align-items: center;
     padding: clamp(9px, 3vw, 14px) 6px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-borde);
     font-size: 16px;
   }
 
@@ -1554,7 +1610,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .punto-no { background: #e0574c; }
   .punto-saltar { background: #b8b8c4; }
 
-  .valor-resumen { font-weight: 700; font-size: 18px; color: #333; }
+  .valor-resumen { font-weight: 700; font-size: 18px; color: var(--texto-principal); }
   .valor-resumen.chico { font-size: 15px; }
 
   .acciones-resumen {
@@ -1580,7 +1636,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .boton-secundario {
-    background: #ffffff;
+    background: var(--bg-superficie);
     color: var(--color-boton);
     border: 2px solid var(--color-boton);
   }
@@ -1591,7 +1647,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .lista-desplegable {
-    border: 1px solid #eee;
+    border: 1px solid var(--color-borde);
     border-radius: 10px;
     margin-bottom: 10px;
     overflow: hidden;
@@ -1606,8 +1662,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #fafafa;
-    color: #444;
+    background: var(--bg-superficie-alt);
+    color: var(--texto-cabecera);
   }
 
   .lista-desplegable summary::-webkit-details-marker { display: none; }
@@ -1615,7 +1671,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .lista-desplegable summary::after {
     content: '\\25BE';
     font-size: 12px;
-    color: #999;
+    color: var(--texto-tenue);
     transition: transform 0.2s ease;
   }
 
@@ -1631,7 +1687,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .item-lista {
     padding: 10px 0;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--color-borde-suave);
     font-size: 14px;
   }
 
@@ -1647,12 +1703,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .item-lista .item-renglon {
     display: block;
-    color: #555;
+    color: var(--texto-secundario);
   }
 
   .item-lista .item-tiempo {
     display: block;
-    color: #999;
+    color: var(--texto-tenue);
     font-size: 12px;
     margin-top: 2px;
   }
@@ -1660,10 +1716,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .lista-vacia {
     padding: 10px 0;
     font-size: 14px;
-    color: #aaa;
+    color: var(--texto-tenue);
   }
 
-  .grupo-tema { border-bottom: 1px solid #f1f1f1; }
+  .grupo-tema { border-bottom: 1px solid var(--color-borde-suave); }
   .grupo-tema:last-child { border-bottom: none; }
 
   .grupo-tema > summary {
@@ -1675,7 +1731,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     list-style: none;
     font-size: 15px;
     font-weight: 600;
-    color: #444;
+    color: var(--texto-cabecera);
   }
 
   .grupo-tema > summary::-webkit-details-marker { display: none; }
@@ -1684,7 +1740,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     content: '▾';
     margin-left: auto;
     font-size: 12px;
-    color: #999;
+    color: var(--texto-tenue);
     transition: transform 0.2s ease;
   }
 
@@ -1698,7 +1754,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     flex-shrink: 0;
   }
 
-  .cuenta-grupo { font-size: 12px; font-weight: 600; color: #999; }
+  .cuenta-grupo { font-size: 12px; font-weight: 600; color: var(--texto-tenue); }
   .cuerpo-grupo { padding: 0 0 8px 28px; }
 
   .item-tarjeta-check {
@@ -1708,7 +1764,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     padding: 8px 0;
     border-top: 1px solid #f6f6f6;
     font-size: 14px;
-    color: #555;
+    color: var(--texto-secundario);
     cursor: pointer;
   }
 
@@ -1722,7 +1778,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .tc-textos { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
-  .tc-primero { font-weight: 600; color: #444; }
+  .tc-primero { font-weight: 600; color: var(--texto-cabecera); }
   .tc-segundo { color: #8a8a8a; font-size: 13px; }
   .tc-marcas { margin-left: auto; padding-left: 8px; font-size: 13px; white-space: nowrap; }
 
@@ -1739,11 +1795,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     padding: 9px 6px;
     font-family: inherit;
     font-size: 14px;
-    color: #555;
+    color: var(--texto-secundario);
     cursor: pointer;
   }
 
-  .fila-observador:hover { background: #f7f7fb; }
+  .fila-observador:hover { background: var(--bg-superficie-hover); }
 
   #btn-observador-volver { display: none; }
 
@@ -1759,7 +1815,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   #area-tarjeta.observador #btn-saltar,
   #area-tarjeta.observador #btn-finalizar { display: none !important; }
 
-  .sub-desplegable { border-top: 1px solid #f1f1f1; }
+  .sub-desplegable { border-top: 1px solid var(--color-borde-suave); }
   .sub-desplegable:first-child { border-top: none; }
 
   .sub-desplegable > summary {
@@ -1780,7 +1836,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     content: '▾';
     margin-left: auto;
     font-size: 11px;
-    color: #999;
+    color: var(--texto-tenue);
     transition: transform 0.2s ease;
   }
 
@@ -1793,9 +1849,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .grupo-cronometro { display: flex; align-items: center; gap: 10px; }
 
   .boton-pausa {
-    border: 1.5px solid #d8d8e0;
-    background: #fff;
-    color: #777;
+    border: 1.5px solid var(--color-borde-fuerte);
+    background: var(--bg-superficie);
+    color: var(--texto-secundario);
     border-radius: 14px;
     padding: 2px 10px;
     font-size: 12px;
@@ -1822,7 +1878,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .overlay-pausa.abierto { display: flex; }
   .titulo-pausa { font-size: 26px; font-weight: 700; color: var(--color-boton); }
-  .texto-pausa { font-size: 14px; color: #777; max-width: 340px; }
+  .texto-pausa { font-size: 14px; color: var(--texto-secundario); max-width: 340px; }
 
   .boton-revisar {
     position: absolute;
@@ -1855,7 +1911,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     position: fixed;
     inset: 0;
     z-index: 2500;
-    background: rgba(30,30,40,0.55);
+    background: var(--color-overlay);
     align-items: center;
     justify-content: center;
     padding: 20px;
@@ -1864,7 +1920,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .modal-overlay.abierto { display: flex; }
 
   .modal-caja {
-    background: #fff;
+    background: var(--bg-superficie);
     border-radius: 18px;
     padding: 24px;
     width: min(92vw, 420px);
@@ -1876,13 +1932,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .modal-caja h3 { font-size: 18px; color: var(--color-boton); margin-bottom: 2px; }
-  .modal-caja p { font-size: 14px; color: #666; margin-bottom: 6px; }
-  .modal-ayuda { font-size: 12px; color: #999; margin-bottom: 8px; }
+  .modal-caja p { font-size: 14px; color: var(--texto-secundario); margin-bottom: 6px; }
+  .modal-ayuda { font-size: 12px; color: var(--texto-tenue); margin-bottom: 8px; }
 
   .modal-cancelar {
     background: none;
     border: none;
-    color: #888;
+    color: var(--texto-suave);
     font-family: inherit;
     font-size: 14px;
     cursor: pointer;
@@ -1902,8 +1958,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gap: 12px;
     padding: 12px 16px;
     border-radius: 14px;
-    border: 2px solid #e2e4ec;
-    background: #fafafe;
+    border: 2px solid var(--color-borde-medio);
+    background: var(--bg-superficie-alt);
     cursor: pointer;
     font-family: inherit;
     text-align: left;
@@ -1911,8 +1967,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .opcion-modo.seleccionada { border-color: var(--color-boton); background: #fff3ea; }
   .opcion-modo-icono { font-size: 22px; }
-  .opcion-modo-nombre { font-weight: 700; color: #333; margin-right: auto; }
-  .opcion-modo-detalle { font-size: 12px; color: #888; }
+  .opcion-modo-nombre { font-weight: 700; color: var(--texto-principal); margin-right: auto; }
+  .opcion-modo-detalle { font-size: 12px; color: var(--texto-suave); }
 
   .modal-gameover.abierto { background: rgba(60,0,0,0.75); }
   .modal-caja-gameover { background: #2a1010; }
@@ -1961,6 +2017,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .chip-razon.chico { font-size: 11px; font-weight: 600; padding: 1px 8px; margin: 3px 4px 0 0; }
   .chip-razon.vacio { border-style: dashed; opacity: 0.7; font-style: italic; font-weight: 500; }
+  .chip-categoria-nota { cursor: pointer; user-select: none; }
+  .item-nota-evaluador { display: block; }
   .item-razones { margin-top: 4px; }
   .fila-chips-mini { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
 
@@ -1968,8 +2026,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     display: none;
     margin-top: 14px;
     text-align: left;
-    background: #F8F9FC;
-    border: 1px solid #E2E4EC;
+    background: var(--bg-superficie-alt);
+    border: 1px solid var(--color-borde-medio);
     border-radius: 10px;
     padding: 14px 16px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
@@ -1980,7 +2038,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-weight: 700;
     letter-spacing: 0.4px;
     text-transform: uppercase;
-    color: #666;
+    color: var(--texto-secundario);
     margin-bottom: 10px;
   }
 
@@ -1991,7 +2049,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     align-items: center;
     gap: 9px;
     font-size: 14px;
-    color: #444;
+    color: var(--texto-cabecera);
     cursor: pointer;
   }
 
@@ -2004,22 +2062,29 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .galeria-indicador {
     font-size: 14px;
     font-weight: 700;
-    color: #666;
+    color: var(--texto-secundario);
     margin-bottom: 12px;
   }
 
   .galeria-imagen-wrap { display: flex; justify-content: center; }
+  #mapa-imagen-wrap {
+    overflow: hidden;
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    align-items: center;
+  }
 
   .galeria-img {
     max-width: 100%;
     max-height: 55vh;
     border-radius: 10px;
     border: 2px solid var(--color-boton);
-    background: #fff;
+    background: var(--bg-superficie);
     cursor: zoom-in;
   }
 
-  .galeria-vacia { color: #888; padding: 30px 0; }
+  .galeria-vacia { color: var(--texto-suave); padding: 30px 0; }
 
   .lista-huerfanas-scroll {
     max-height: 65vh;
@@ -2071,7 +2136,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .item-tienda {
-    border: 2px solid #e2e4ec;
+    border: 2px solid var(--color-borde-medio);
     border-radius: 14px;
     padding: 14px;
     text-align: center;
@@ -2082,9 +2147,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .item-tienda-icono { font-size: 30px; }
-  .item-tienda-nombre { font-weight: 700; color: #333; }
-  .item-tienda-precio { font-size: 13px; color: #888; }
-  .item-tienda-descripcion { font-size: 12px; color: #999; min-height: 32px; }
+  .item-tienda-nombre { font-weight: 700; color: var(--texto-principal); }
+  .item-tienda-precio { font-size: 13px; color: var(--texto-suave); }
+  .item-tienda-descripcion { font-size: 12px; color: var(--texto-tenue); min-height: 32px; }
 
   .item-tienda-boton {
     margin-top: 6px;
@@ -2100,9 +2165,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .item-tienda-boton:disabled {
-    background: #eee;
-    border-color: #ddd;
-    color: #aaa;
+    background: var(--color-borde-medio);
+    border-color: var(--color-borde-fuerte);
+    color: var(--texto-tenue);
     cursor: not-allowed;
   }
 
@@ -2129,41 +2194,41 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gap: 14px;
     margin-top: 12px;
   }
-  .historial-paginacion-texto { font-size: 13px; color: #666; font-weight: 600; }
+  .historial-paginacion-texto { font-size: 13px; color: var(--texto-secundario); font-weight: 600; }
 
   .resumen-historico {
     margin-top: 14px;
     padding: 10px 12px;
     border-radius: 10px;
-    background: #f7f7fb;
-    border: 1px solid #ececf4;
+    background: var(--bg-superficie-hover);
+    border: 1px solid var(--color-borde-suave);
     font-size: 12px;
-    color: #666;
+    color: var(--texto-secundario);
     text-align: center;
   }
-  .resumen-historico-titulo { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #999; margin-bottom: 4px; }
+  .resumen-historico-titulo { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--texto-tenue); margin-bottom: 4px; }
 
   .item-historial {
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-borde);
     padding: 10px 4px;
     font-size: 13px;
-    color: #555;
+    color: var(--texto-secundario);
     display: flex;
     flex-direction: column;
     gap: 2px;
   }
 
   .item-historial:last-child { border-bottom: none; }
-  .item-historial-fecha { font-weight: 700; color: #333; }
-  .item-historial-detalle { display: flex; flex-wrap: wrap; gap: 10px; color: #777; }
+  .item-historial-fecha { font-weight: 700; color: var(--texto-principal); }
+  .item-historial-detalle { display: flex; flex-wrap: wrap; gap: 10px; color: var(--texto-secundario); }
 
   .chip-espacio {
     display: inline-block;
     margin-left: 8px;
     padding: 1px 8px;
     border-radius: 10px;
-    background: #eef0f7;
-    color: #555;
+    background: var(--bg-superficie-alt);
+    color: var(--texto-secundario);
     font-size: 11px;
     font-weight: 600;
     vertical-align: middle;
@@ -2185,21 +2250,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .fila-acciones-historial button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  #zona-historial-otros details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: #444; }
+  #zona-historial-otros details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: var(--texto-cabecera); }
   .grupo-historial-otro {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
     padding: 8px 4px 8px 16px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-borde);
     font-size: 13px;
-    color: #555;
+    color: var(--texto-secundario);
     text-align: left;
   }
   .grupo-historial-otro:last-child { border-bottom: none; }
-  .grupo-historial-otro .grupo-titulo { font-weight: 700; color: #333; display: block; overflow-wrap: anywhere; }
-  .grupo-historial-otro .grupo-detalle { color: #777; font-size: 12px; }
+  .grupo-historial-otro .grupo-titulo { font-weight: 700; color: var(--texto-principal); display: block; overflow-wrap: anywhere; }
+  .grupo-historial-otro .grupo-detalle { color: var(--texto-secundario); font-size: 12px; }
 
   .chip-lista-activa {
     display: flex;
@@ -2238,7 +2303,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     top: 14px;
     left: 14px;
   }
-  .analisis-fila { padding: 10px 0; border-bottom: 1px solid #eee; }
+  .analisis-fila { padding: 10px 0; border-bottom: 1px solid var(--color-borde); }
   .analisis-fila:last-child { border-bottom: none; }
   .analisis-nombre { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
   .analisis-badge {
@@ -2252,11 +2317,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .analisis-badge-rojo { background: #fdecea; color: #c0392b; }
   .analisis-badge-naranja { background: #fdf3e3; color: #b36b00; }
   .analisis-badge-verde { background: #e6f6ee; color: #3aa76d; }
-  .analisis-comentarios { margin: 4px 0 0; padding-left: 18px; font-size: 13px; color: #444; }
+  .analisis-comentarios { margin: 4px 0 0; padding-left: 18px; font-size: 13px; color: var(--texto-cabecera); }
   .analisis-comentarios li { margin-bottom: 2px; }
   .analisis-resumen-ejecutivo {
-    background: #f7f8fc;
-    border: 1px solid #e2e4ec;
+    background: var(--bg-superficie-alt);
+    border: 1px solid var(--color-borde-medio);
     border-radius: 8px;
     padding: 10px 12px;
     margin-bottom: 12px;
@@ -2266,10 +2331,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: #999;
+    color: var(--texto-tenue);
     margin-bottom: 6px;
   }
-  .analisis-resumen-linea { font-size: 13px; color: #333; margin: 2px 0; }
+  .analisis-resumen-linea { font-size: 13px; color: var(--texto-principal); margin: 2px 0; }
 
   .wrap-dictado { position: relative; }
   .boton-dictado {
@@ -2280,6 +2345,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     height: 32px;
     font-size: 15px;
     z-index: 2;
+    color: #e0574c;
   }
   .boton-dictado.activo {
     background: #e0574c;
@@ -2305,8 +2371,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .respuesta-usuario-resaltada {
     width: 100%; min-height: 74px;
     border: 2px solid var(--color-boton); border-radius: 10px;
-    padding: 10px 12px; font-family: inherit; font-size: 14px; color: #333;
-    background: #fff; white-space: pre-wrap; box-sizing: border-box;
+    padding: 10px 12px; font-family: inherit; font-size: 14px; color: var(--texto-principal);
+    background: var(--bg-superficie); white-space: pre-wrap; box-sizing: border-box;
   }
   .coincidencia-clave {
     text-decoration: underline;
@@ -2320,23 +2386,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     text-underline-offset: 2px;
   }
 
-  .nota-listado { font-size: 12px; color: #888; margin-top: -4px; margin-bottom: 8px; }
+  .nota-listado { font-size: 12px; color: var(--texto-suave); margin-top: -4px; margin-bottom: 8px; }
 
   .modal-caja-ancha { width: min(92vw, 520px); text-align: left; max-height: 82vh; overflow-y: auto; }
-  .sync-seccion-titulo { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #999; margin: 14px 0 6px; text-align: center; }
+  .sync-seccion-titulo { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--texto-tenue); margin: 14px 0 6px; text-align: center; }
   .fila-borrar-evaluador {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
     padding: 6px 4px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-borde);
   }
   .fila-borrar-evaluador:last-child { border-bottom: none; }
-  .fila-borrar-evaluador .nombre-evaluador-borrar { font-size: 13px; color: #333; font-weight: 600; overflow-wrap: anywhere; }
-  .fila-backup-zona { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 7px 4px; border-bottom: 1px solid #eee; }
+  .fila-borrar-evaluador .nombre-evaluador-borrar { font-size: 13px; color: var(--texto-principal); font-weight: 600; overflow-wrap: anywhere; }
+  .fila-backup-zona { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 7px 4px; border-bottom: 1px solid var(--color-borde); }
   .fila-backup-zona:last-of-type { border-bottom: none; }
-  .fila-backup-zona .zona-nombre { font-size: 13px; font-weight: 700; color: #333; }
+  .fila-backup-zona .zona-nombre { font-size: 13px; font-weight: 700; color: var(--texto-principal); }
   .fila-backup-zona .zona-botones { display: flex; gap: 6px; }
   .modal-caja-ancha h3, .modal-caja-ancha > p.modal-ayuda { text-align: center; }
 
@@ -2349,26 +2415,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     flex-direction: column;
     gap: 4px;
     padding: 10px 4px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-borde);
   }
   .fila-lista-guardada:last-child { border-bottom: none; }
   .lista-fila-cabecera { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .fila-lista-guardada .lista-nombre-btn {
     background: none; border: none; padding: 0; text-align: left; cursor: pointer;
-    font-size: 14px; font-weight: 700; color: #333;
+    font-size: 14px; font-weight: 700; color: var(--texto-principal);
   }
   .fila-lista-guardada .lista-nombre-btn:hover { text-decoration: underline; }
-  .fila-lista-guardada .lista-detalle { font-size: 12px; color: #777; }
+  .fila-lista-guardada .lista-detalle { font-size: 12px; color: var(--texto-secundario); }
   .fila-lista-guardada .lista-aviso { font-size: 12px; color: #a4402f; margin-top: 2px; }
   .fila-lista-guardada .lista-acciones { display: flex; gap: 10px; margin-left: 28px; }
   .fila-lista-guardada .lista-acciones button {
-    background: none; border: none; cursor: pointer; font-size: 12px; color: #555; padding: 2px 4px;
+    background: none; border: none; cursor: pointer; font-size: 12px; color: var(--texto-secundario); padding: 2px 4px;
   }
 
   .lista-srs-btn {
-    border: 1.5px solid #ddd;
+    border: 1.5px solid var(--color-borde-fuerte);
     border-radius: 8px;
-    background: #fff;
+    background: var(--bg-superficie);
     font-size: 15px;
     line-height: 1;
     padding: 4px 7px;
@@ -2383,18 +2449,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .lista-ver-tarjetas {
     max-height: 160px;
     overflow-y: auto;
-    border: 1px solid #eee;
+    border: 1px solid var(--color-borde);
     border-radius: 8px;
     padding: 6px 8px;
     margin-top: 2px;
     margin-left: 28px;
     font-size: 12px;
-    background: #fafafa;
+    background: var(--bg-superficie-alt);
   }
-  .lista-ver-tarjeta-item { padding: 3px 0; border-bottom: 1px solid #f0f0f0; }
+  .lista-ver-tarjeta-item { padding: 3px 0; border-bottom: 1px solid var(--color-borde-suave); }
   .lista-ver-tarjeta-item:last-child { border-bottom: none; }
-  .lista-ver-tarjeta-item.lista-ver-tarjeta-faltante { color: #999; }
-  .lista-ver-tarjeta-nota { margin-top: 4px; font-size: 11px; color: #999; font-style: italic; }
+  .lista-ver-tarjeta-item.lista-ver-tarjeta-faltante { color: var(--texto-tenue); }
+  .lista-ver-tarjeta-nota { margin-top: 4px; font-size: 11px; color: var(--texto-tenue); font-style: italic; }
 
   .badge-srs {
     display: inline-block;
@@ -2408,8 +2474,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   #vinc-zonas { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: center; margin-bottom: 10px; text-align: left; }
-  .vinc-zona-item { font-size: 13px; color: #444; display: flex; align-items: center; gap: 4px; cursor: pointer; }
-  .vinc-resumen { font-weight: 600; color: #444 !important; }
+  .vinc-zona-item { font-size: 13px; color: var(--texto-cabecera); display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  .vinc-resumen { font-weight: 600; color: var(--texto-cabecera) !important; }
   .vinc-aviso {
     background: #fff4f2;
     border: 1.5px solid #f0c4bc;
@@ -2426,7 +2492,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     max-width: 90%;
     text-align: center;
     font-size: 14px;
-    color: #555;
+    color: var(--texto-secundario);
     line-height: 1.4;
     font-style: italic;
   }
@@ -2438,7 +2504,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .sin-tarjetas {
-    color: #888;
+    color: var(--texto-suave);
     font-size: 15px;
   }
 
@@ -2453,8 +2519,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #fff;
-    border: 1.5px solid #e2e4ec;
+    background: var(--bg-superficie);
+    border: 1.5px solid var(--color-borde-medio);
     font-size: 16px;
     display: flex;
     align-items: center;
@@ -2468,19 +2534,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .boton-icono-circular:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-    color: #999;
+    color: var(--texto-tenue);
   }
-  .boton-icono-circular:disabled:hover { border-color: #e2e4ec; }
+  .boton-icono-circular:disabled:hover { border-color: var(--color-borde-medio); }
 
   .fila-mapa-observador {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: flex-start;
     gap: 10px;
+    position: relative;
+  }
+
+  #btn-notas-evaluador {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
   }
   
   .columna-pomodoro-observador { 
-      flex: 1 1 auto; 
       min-width: 0; 
       display: flex; 
       flex-direction: column; 
@@ -2488,12 +2561,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .mapa-img {
-    max-width: 95vw;
-    max-height: 75vh;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
     border-radius: 10px;
     border: 2px solid var(--color-boton);
-    background: #fff;
+    background: var(--bg-superficie);
     display: block;
     transform-origin: center center;
     touch-action: none;   
@@ -2501,6 +2574,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   .mapa-img.mapa-img-pan { cursor: grab; }
   .mapa-img.mapa-img-arrastrando { cursor: grabbing; }
+
+  #pantalla-mapa {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - clamp(24px, 8vw, 48px) * 2);
+  }
 
   .mapa-zoom-controles {
     position: fixed;
@@ -2515,7 +2594,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--bg-superficie);
     border: 1.5px solid var(--color-boton);
     font-size: 18px;
     font-weight: 600;
@@ -2526,16 +2605,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     font-family: inherit;
     padding: 0;
-    color: #333;
+    color: var(--texto-principal);
   }
-  .mapa-zoom-boton:hover { background: #f4f6fb; }
+  .mapa-zoom-boton:hover { background: var(--bg-superficie-hover); }
 
   .pomodoro-badge-slot { margin-bottom: 10px; }
   .pomodoro-badge-slot-sticky:not(:empty) {
     position: sticky;
     top: 0;
     z-index: 499;
-    background: #eef1f7;
+    background: var(--bg-sticky);
     padding: 8px 0 4px;
   }
   .pomodoro-badge {
@@ -2568,10 +2647,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     width: 100%;
     padding: 12px 16px;
     border-radius: 24px;
-    border: 2px solid #E2E4EC;
+    border: 2px solid var(--color-borde-medio);
     font-size: 14px;
     font-family: inherit;
-    color: #333;
+    background: var(--bg-superficie);
+    color: var(--texto-principal);
     outline: none;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     transition: border-color 0.15s;
@@ -2583,7 +2663,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     position: sticky;
     top: 0;
     z-index: 500;
-    background: #eef1f7;
+    background: var(--bg-sticky);
     padding: 10px 0 8px 0;
     margin-bottom: 6px;
   }
@@ -2596,9 +2676,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     right: 0;
     max-height: 300px;
     overflow-y: auto;
-    background: #fff;
+    background: var(--bg-superficie);
     border-radius: 12px;
-    border: 1px solid #E2E4EC;
+    border: 1px solid var(--color-borde-medio);
     box-shadow: 0 10px 30px rgba(0,0,0,0.18);
     z-index: 900;
   }
@@ -2611,10 +2691,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     text-align: left;
     padding: 10px 14px;
     font-size: 13.5px;
-    color: #444;
+    color: var(--texto-cabecera);
     background: none;
     border: none;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--color-borde-suave);
     cursor: pointer;
     font-family: inherit;
     white-space: nowrap;
@@ -2623,11 +2703,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .item-dropdown-buscador:last-child { border-bottom: none; }
-  .item-dropdown-buscador:hover { background: #f7f7fb; }
+  .item-dropdown-buscador:hover { background: var(--bg-superficie-hover); }
   .item-dropdown-buscador strong { color: var(--color-boton); }
 
   .tag-tema-buscador {
-    color: #999;
+    color: var(--texto-tenue);
     font-size: 12px;
     margin-right: 4px;
   }
@@ -2635,7 +2715,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .dropdown-buscador-vacio {
     padding: 14px;
     font-size: 13px;
-    color: #999;
+    color: var(--texto-tenue);
     text-align: center;
   }
 </style>
@@ -2653,6 +2733,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-icono-circular" id="btn-abrir-historial" title="Historial de sesiones">🕐</button>
       <button class="boton-icono-circular" id="btn-abrir-listas" title="Listas guardadas">📋</button>
       <button class="boton-icono-circular" id="btn-abrir-tienda" title="Tienda">🛒</button>
+      <button class="boton-icono-circular" id="btn-tema-oscuro" title="Cambiar tema claro/oscuro">🌙</button>
     </div>
 
     <div class="zona-buscador" id="zona-buscador-temas">
@@ -2745,6 +2826,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-icono-circular" id="btn-observador-mapa" title="Ver mapa"
               data-mapa-src="data:__TIPO_IMAGEN_MAPA__;base64,__IMAGEN_MAPA_BASE64__"
               data-mapa-nombre="__NOMBRE_IMAGEN_MAPA__">🗺️</button>
+      <button class="boton-icono-circular" id="btn-notas-evaluador" title="Notas del evaluador">📝</button>
       <div class="columna-pomodoro-observador">
         <div class="fila-iconos-gamificacion" id="fila-pomodoro-boton">
           <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
@@ -3176,6 +3258,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </span>
     </div>
     <div class="fila-backup-zona">
+      <span class="zona-nombre">📝 Notas del evaluador</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-exportar-notaseval" title="Descarga las notas del evaluador como JSON">Exportar</button>
+        <button class="boton-mini" id="btn-importar-notaseval" title="Fusiona las notas del evaluador de un JSON (gana la más reciente)">Importar</button>
+        <input type="file" id="input-importar-notaseval" accept=".json,application/json" style="display:none">
+      </span>
+    </div>
+    <div class="fila-backup-zona">
       <span class="zona-nombre">🏷 Razones</span>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-razones">Exportar</button>
@@ -3246,7 +3336,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>🧠 Repaso Espaciado</h3>
     <p>Tenés tarjetas pendientes de 🧠 Repaso Espaciado:</p>
-    <ul id="srs-aviso-lista" style="text-align:left; padding-left: 22px; font-size: 13px; color: #444; margin: 0 0 8px;"></ul>
+    <ul id="srs-aviso-lista" style="text-align:left; padding-left: 22px; font-size: 13px; color: var(--texto-cabecera); margin: 0 0 8px;"></ul>
     <button class="boton-reiniciar" id="btn-srs-repasar-ahora">🧠 Repasar ahora</button>
     <button class="boton-secundario" id="btn-srs-omitir-hoy">⏭ Omitir por hoy</button>
     <button class="boton-secundario" id="btn-srs-recordar-luego">⏰ Recordar más tarde</button>
@@ -3264,6 +3354,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="imagenes" checked> 🖼 Imágenes</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="listas" checked> 📋 Listas</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="sesiones" checked> 🕐 Sesiones</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="notasEvaluador" checked> 📝 Notas del evaluador</label>
     </div>
     <div id="vinc-campo-espacio" style="display:none;">
       <input type="text" class="input-buscador" id="vinc-espacio" list="vinc-espacios" placeholder="Nombre anterior del recordatorio (sin .txt)" autocomplete="off">
@@ -3275,6 +3366,44 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <input type="text" class="input-buscador" id="vinc-confirmar" placeholder="CONFIRMAR" autocomplete="off">
     <button class="boton-reiniciar" id="btn-vinc-aceptar" disabled>Vincular</button>
     <button class="modal-cancelar" id="btn-vinc-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-notas-evaluador">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>📝 Notas del evaluador</h3>
+    <p class="modal-ayuda">Notas generales de este evaluador, independientes de las tarjetas.</p>
+
+    <div class="panel-nota" style="display:block; margin-bottom:14px;">
+      <div class="wrap-dictado">
+        <textarea class="panel-nota-editor" id="notaseval-texto-nueva" style="display:block;" rows="3" placeholder="Escribí una nota nueva (Ctrl+Enter para guardar)"></textarea>
+        <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-notaseval-nueva" data-dictado-target="notaseval-texto-nueva" title="Dictado por voz">🎙</button>
+      </div>
+      <div class="chips-razones" id="notaseval-chips-nueva" style="display:flex;"></div>
+      <div class="panel-nota-acciones">
+        <button class="boton-mini" id="btn-notaseval-agregar">➕ Agregar nota</button>
+      </div>
+    </div>
+
+    <div class="wrap-dictado" id="notaseval-editor-compartido-wrap" style="display:none;">
+      <textarea class="panel-nota-editor" id="notaseval-editor-compartido" style="display:block;" placeholder="Escribí tu nota (Ctrl+Enter para guardar)"></textarea>
+      <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-notaseval-editor" data-dictado-target="notaseval-editor-compartido" title="Dictado por voz">🎙</button>
+    </div>
+
+    <div id="lista-notas-evaluador"></div>
+    <p class="nota-dificiles" id="notaseval-vacio" style="display:none;">Todavía no agregaste notas del evaluador.</p>
+    <div class="historial-paginacion" id="notaseval-paginacion" style="display:none;"></div>
+
+    <details id="det-notaseval-otras" style="display:none">
+      <summary id="suma-notaseval-otras">De otros evaluadores</summary>
+      <div id="lista-notaseval-otras"></div>
+      <button class="boton-mini" id="btn-vincular-notaseval" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
+    </details>
+
+    <div class="panel-razones-acciones" style="margin-top:14px; justify-content: space-between;">
+      <button class="boton-mini boton-mini-peligro" id="btn-vaciar-notaseval" style="display:none;">Vaciar todas</button>
+      <button class="modal-cancelar" id="btn-notaseval-cerrar">Cerrar</button>
+    </div>
   </div>
 </div>
 
@@ -3308,6 +3437,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <h3 class="titulo-gameover">💀 Game Over</h3>
     <p>Te quedaste sin vidas.</p>
     <button class="boton-principal" id="btn-gameover-resumen">Ver resumen</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-confirmacion">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <p id="modal-confirmacion-texto"></p>
+    <button class="boton-reiniciar" id="btn-confirmacion-aceptar">Confirmar</button>
+    <button class="modal-cancelar" id="btn-confirmacion-cancelar">Cancelar</button>
   </div>
 </div>
 
@@ -3391,6 +3528,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     { codigo: 'contexto', texto: 'Contexto / redacción', color: '#8B5CF6' },
   ];
   const MAPA_RAZONES = new Map(RAZONES_DEF.map((r) => [r.codigo, r]));
+
+  const CATEGORIAS_NOTA_EVAL = [
+    { codigo: 'clave', texto: 'Clave', color: '#2563EB' },
+    { codigo: 'relacion', texto: 'Relación', color: '#8B5CF6' },
+    { codigo: 'ejemplo', texto: 'Ejemplo', color: '#059669' },
+    { codigo: 'error', texto: 'Error', color: '#EF4444' },
+    { codigo: 'comparacion', texto: 'Comparación', color: '#F59E0B' },
+    { codigo: 'curioso', texto: 'Curioso', color: '#EC4899' },
+  ];
+  const MAPA_CATEGORIAS_NOTA_EVAL = new Map(CATEGORIAS_NOTA_EVAL.map((c) => [c.codigo, c]));
 
   function hexToRgba(hex, alpha) {
     const v = hex.replace('#', '');
@@ -3697,6 +3844,38 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return (e.base || '') === txt ? 'pendiente' : 'conflicto';
   }
 
+  const CLAVE_NOTAS_EVALUADOR = 'notas_evaluador_v1';
+  let notasEvaluador = cargarNotasEvaluador();
+
+  function cargarNotasEvaluador() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_NOTAS_EVALUADOR);
+      const datos = crudo ? JSON.parse(crudo) : [];
+      return Array.isArray(datos) ? datos.filter((n) => n && typeof n.id === 'string' && typeof n.texto === 'string') : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function guardarNotasEvaluador() {
+    try {
+      localStorage.setItem(CLAVE_NOTAS_EVALUADOR, JSON.stringify(notasEvaluador));
+    } catch (e) {
+    }
+  }
+
+  function generarIdNotaEvaluador() {
+    return 'ne_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  function notasEvaluadorPropias() {
+    return notasEvaluador.filter((n) => !n.espacio || n.espacio === ESPACIO_HASH);
+  }
+
+  function notasEvaluadorDeOtros() {
+    return notasEvaluador.filter((n) => n.espacio && n.espacio !== ESPACIO_HASH);
+  }
+
   function guardarNotaLocal(t, texto) {
     texto = (texto || '').trim();
     const h = hashTarjeta(t);
@@ -3774,6 +3953,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elDetHistorialOtros = document.getElementById('det-historial-otros');
   const elModalModo = document.getElementById('modal-modo');
   const elModalGameOver = document.getElementById('modal-gameover');
+  const elModalConfirmacion = document.getElementById('modal-confirmacion');
+  const elModalConfirmacionTexto = document.getElementById('modal-confirmacion-texto');
+  const elBtnConfirmacionAceptar = document.getElementById('btn-confirmacion-aceptar');
+  const elBtnConfirmacionCancelar = document.getElementById('btn-confirmacion-cancelar');
+  let _resolverConfirmacion = null;
+
+  // Reemplazo de window.confirm() por un modal propio (modal-overlay / modal-caja).
+  // Uso: if (!(await confirmarAccion('¿Mensaje?'))) return;
+  function confirmarAccion(mensaje) {
+    return new Promise((resolve) => {
+      elModalConfirmacionTexto.textContent = mensaje;
+      elModalConfirmacion.classList.add('abierto');
+      _resolverConfirmacion = resolve;
+    });
+  }
+
+  function cerrarModalConfirmacion(resultado) {
+    elModalConfirmacion.classList.remove('abierto');
+    if (_resolverConfirmacion) {
+      const resolver = _resolverConfirmacion;
+      _resolverConfirmacion = null;
+      resolver(resultado);
+    }
+  }
+
+  elBtnConfirmacionAceptar.addEventListener('click', () => cerrarModalConfirmacion(true));
+  elBtnConfirmacionCancelar.addEventListener('click', () => cerrarModalConfirmacion(false));
+  elModalConfirmacion.addEventListener('click', (evento) => {
+    if (evento.target === elModalConfirmacion) cerrarModalConfirmacion(false);
+  });
   const elFilaGamificacion = document.getElementById('fila-gamificacion');
   const elStatPuntos = document.getElementById('stat-puntos');
   const elStatRacha = document.getElementById('stat-racha');
@@ -3783,6 +3992,29 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elAvisoJuego = document.getElementById('aviso-juego');
   const elModalSegunda = document.getElementById('modal-segunda');
   const elBtnMute = document.getElementById('btn-mute');
+
+  const CLAVE_TEMA = 'tema_app_v1';
+  const elBtnTemaOscuro = document.getElementById('btn-tema-oscuro');
+
+  function actualizarBotonTema(tema) {
+    elBtnTemaOscuro.textContent = tema === 'oscuro' ? '☀️' : '🌙';
+    elBtnTemaOscuro.title = tema === 'oscuro' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
+  }
+
+  function alternarTema() {
+    const actual = document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'oscuro' : 'claro';
+    const nuevo = actual === 'oscuro' ? 'claro' : 'oscuro';
+    document.documentElement.classList.add('sin-transiciones');
+    document.documentElement.setAttribute('data-tema', nuevo);
+    try { localStorage.setItem(CLAVE_TEMA, nuevo); } catch (e) {}
+    actualizarBotonTema(nuevo);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => document.documentElement.classList.remove('sin-transiciones'));
+    });
+  }
+
+  actualizarBotonTema(document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'oscuro' : 'claro');
+  elBtnTemaOscuro.addEventListener('click', alternarTema);
   const elBadgePistaGratis = document.getElementById('badge-pista-gratis');
   const elBadgeComodines = document.getElementById('badge-comodines');
   const elResumenGamificacion = document.getElementById('resumen-gamificacion');
@@ -3881,7 +4113,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elPantallaObservador.style.display = nombre === 'observador' ? 'block' : 'none';
     elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  // NUEVO
     elPantallaHuerfanas.style.display = nombre === 'huerfanas' ? 'block' : 'none';  // NUEVO
-    elPantallaMapa.style.display = nombre === 'mapa' ? 'block' : 'none';  // NUEVO
+    elPantallaMapa.style.display = nombre === 'mapa' ? 'flex' : 'none';  // NUEVO
     elPantallaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';  // NUEVO
     elPantallaHistorial.style.display = nombre === 'historial' ? 'block' : 'none';  // NUEVO
 
@@ -4210,8 +4442,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     window.scrollTo(0, 0);
   }
 
-  function salirObservador() {
-    if (!confirmarDescartarBorrador()) return;
+  async function salirObservador() {
+    if (!(await confirmarDescartarBorrador())) return;
     const ultimo = indiceActual;
     resetPanelesUI();
     modoObservador = false;
@@ -4334,9 +4566,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return elGaleriaNotaEditor.value.trim() !== notaActualImagen();
   }
 
-  function confirmarDescartarGaleria() {
+  async function confirmarDescartarGaleria() {
     if (!galeriaCambiosSinGuardar()) return true;
-    return confirm('Tenés cambios sin guardar en la nota de esta imagen. ¿Descartarlos?');
+    return await confirmarAccion('Tenés cambios sin guardar en la nota de esta imagen. ¿Descartarlos?');
   }
 
   function resetGaleriaNotaUI() {
@@ -4355,8 +4587,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (galeriaEditando) elGaleriaNotaEditor.focus();
   }
 
-  function cerrarGaleriaNota() {
-    if (!confirmarDescartarGaleria()) return;
+  async function cerrarGaleriaNota() {
+    if (!(await confirmarDescartarGaleria())) return;
     resetGaleriaNotaUI();
     renderGaleria();
   }
@@ -4385,8 +4617,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderGaleria();
   }
 
-  function cancelarEdicionGaleriaNota() {
-    if (!confirmarDescartarGaleria()) return;
+  async function cancelarEdicionGaleriaNota() {
+    if (!(await confirmarDescartarGaleria())) return;
     if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elGaleriaNotaEditor);
     galeriaEditando = false;
     if (notaActualImagen() === '' && notaBaseImagen() === '') {
@@ -4490,8 +4722,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  function navegarGaleria(delta) {
-    if (!confirmarDescartarGaleria()) return;
+  async function navegarGaleria(delta) {
+    if (!(await confirmarDescartarGaleria())) return;
     const total = INDICE_IMAGENES.length;
     if (total === 0) return;
     galeriaPos = (galeriaPos + delta + total) % total;
@@ -4508,8 +4740,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
   }
 
-  function volverListaDesdeGaleria() {
-    if (!confirmarDescartarGaleria()) return;
+  async function volverListaDesdeGaleria() {
+    if (!(await confirmarDescartarGaleria())) return;
     resetGaleriaNotaUI();
     mostrarPantalla('observador');
   }
@@ -4739,8 +4971,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   const ES_DISPOSITIVO_TACTIL = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
   const ZOOM_MAPA_MIN = 0.5;
-  const ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 10 : 5;     // PC: se mantiene igual que antes
-  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 0.5 : 0.25;   // PC: se mantiene igual que antes
+  const ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 20 : 10;     // PC: se mantiene igual que antes
+  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 1 : 0.5;   // PC: se mantiene igual que antes
 
   function aplicarTransformMapa() {
     if (!elMapaImg) return;
@@ -5410,12 +5642,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return cont;
   }
 
-  function alternarSrsLista(nombre) {
+  async function alternarSrsLista(nombre) {
     const lista = buscarListaPropia(nombre);   // NUEVO: nunca una lista ajena con el mismo nombre
     if (!lista) return;
     const srs = obtenerSrsLista(lista);
     if (srs.graduated) {
-      if (!window.confirm('¿Reiniciar el progreso SRS de esta lista?')) return;
+      if (!(await confirmarAccion('¿Reiniciar el progreso SRS de esta lista?'))) return;
       srs.currentLevel = 1;
       srs.lastReviewDate = Date.now();
       srs.graduated = false;
@@ -5589,22 +5821,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     abrirModalRenombrarLista(nombreActual);
   }
 
-  function borrarLista(nombre, espacio) {
+  async function borrarLista(nombre, espacio) {
     const esp = espacio || ESPACIO_HASH;
     const esPropia = esp === ESPACIO_HASH;
     const aviso = esPropia
       ? '¿Borrar la lista «' + nombre + '»? Las sesiones guardadas que la usaron se conservan (mostrarán el nombre tachado).'
       : '¿Borrar la lista «' + nombre + '» (del evaluador «' + etiquetaEspacio(esp) + '»)?';
-    if (!window.confirm(aviso)) return;
+    if (!(await confirmarAccion(aviso))) return;
     listas = listas.filter((l) => !(l.nombre === nombre && (l.espacio || ESPACIO_HASH) === esp));
     guardarListas();
     if (esPropia && listaActivaNombre === nombre) quitarListaActiva();
     renderListasGuardadas();
   }
 
-  document.getElementById('btn-listas-vaciar').addEventListener('click', () => {
+  document.getElementById('btn-listas-vaciar').addEventListener('click', async () => {
     if (listas.length === 0) return;
-    if (!window.confirm('¿Vaciar TODAS las listas guardadas (' + listas.length + ')? No se puede deshacer.')) return;
+    if (!(await confirmarAccion('¿Vaciar TODAS las listas guardadas (' + listas.length + ')? No se puede deshacer.'))) return;
     listas = [];
     guardarListas();
     if (listaActivaNombre) quitarListaActiva();
@@ -6023,6 +6255,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (Object.keys(razonesGuardadas).some((h) => (razonesGuardadas[h].t || 0) > ultimo)) return true;
     if (Object.keys(datosImagenes).some((h) => (datosImagenes[h].t || 0) > ultimo)) return true;
     if (listas.some((l) => (l.modificada || 0) > ultimo)) return true;
+    if (notasEvaluador.some((n) => (n.modificada || n.creada || 0) > ultimo)) return true;
     if (gamificacion.historial.some((s) => {
       const f = Date.parse(s.fecha);
       return !isNaN(f) && f > ultimo;
@@ -6054,6 +6287,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       razones: construirExportRazones(),
       imagenes: construirExportImagenes(),
       listas: { version: 1, listas: listas },
+      notasEvaluador: construirExportNotasEvaluador(),
     };
   }
 
@@ -6077,7 +6311,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (typeof datos.version !== 'number') return { error: 'El archivo no tiene el formato esperado (falta "version").' };
     if (datos.version !== 1) return { error: 'Versión de backup desconocida (' + datos.version + ').' };
 
-    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas'];
+    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas', 'notasEvaluador'];
     const presentes = ZONAS.filter((z) => datos[z] !== undefined && datos[z] !== null);
     if (presentes.length === 0) return { error: 'El archivo no tiene ninguna sección reconocida.' };
 
@@ -6112,6 +6346,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (datos.listas) {
       const entrantes = Array.isArray(datos.listas) ? datos.listas : (datos.listas.listas || []);
       const r = fusionarListasEntrantes(entrantes);
+      contar(r.nuevas > 0 || r.actualizadas > 0);
+    }
+    if (datos.notasEvaluador) {
+      const lista = Array.isArray(datos.notasEvaluador) ? datos.notasEvaluador : (datos.notasEvaluador.notasEvaluador || []);
+      const r = fusionarNotasEvaluadorLista(lista);
       contar(r.nuevas > 0 || r.actualizadas > 0);
     }
 
@@ -6394,19 +6633,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     URL.revokeObjectURL(url);
   }
 
-  function borrarHistorialEste() {
+  async function borrarHistorialEste() {
     const n = gamificacion.historial.filter(esSesionLocal).length;
     if (n === 0) return;
-    if (!window.confirm('¿Borrar las ' + n + ' sesión(es) de ESTE evaluador («' + ESPACIO_HASH + '»)? Las sesiones de otros evaluadores, los puntos y el inventario NO se ven afectados.')) return;
+    if (!(await confirmarAccion('¿Borrar las ' + n + ' sesión(es) de ESTE evaluador («' + ESPACIO_HASH + '»)? Las sesiones de otros evaluadores, los puntos y el inventario NO se ven afectados.'))) return;
     gamificacion.historial = gamificacion.historial.filter((s) => !esSesionLocal(s));
     guardarGamificacion();
     renderHistorial();
   }
 
-  function borrarHistorialGlobal() {
+  async function borrarHistorialGlobal() {
     const n = gamificacion.historial.length;
     if (n === 0) return;
-    if (!window.confirm('¿Borrar el historial GLOBAL (' + n + ' sesión(es) de TODOS los evaluadores, incluidas las sin identificar)? Los puntos y el inventario NO se ven afectados.')) return;
+    if (!(await confirmarAccion('¿Borrar el historial GLOBAL (' + n + ' sesión(es) de TODOS los evaluadores, incluidas las sin identificar)? Los puntos y el inventario NO se ven afectados.'))) return;
     gamificacion.historial = [];
     guardarGamificacion();
     renderHistorial();
@@ -6676,6 +6915,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (n === 0) return { cantidad: 0, texto: 'No se encontraron tarjetas de listas guardadas bajo «' + viejo + '».' };
       return { cantidad: n, texto: 'Se actualizarían ' + n + ' tarjeta(s) dentro de las listas guardadas.' };
     }
+    if (zona === 'notasEvaluador') {
+      if (!viejo) return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
+      if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
+      const n = notasEvaluador.filter((nt) => nt.espacio === viejo).length;
+      if (n === 0) return { cantidad: 0, texto: 'No se encontraron notas del evaluador bajo «' + viejo + '».' };
+      return { cantidad: n, texto: 'Se vincularían ' + n + ' nota(s) del evaluador.' };
+    }
     const z = ZONAS_VINCULO[zona];
     if (!viejo) {
       return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
@@ -6697,6 +6943,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function ejecutarVinculo(zona, viejo) {
     if (zona === 'listas') return ejecutarVinculoListas(viejo);
+    if (zona === 'notasEvaluador') {
+      let n = 0;
+      notasEvaluador.forEach((nt) => {
+        if (nt.espacio === viejo) { nt.espacio = ESPACIO_HASH; n++; }
+      });
+      guardarNotasEvaluador();
+      renderListaNotasEvaluador();
+      return { movidas: n, sin: 0 };
+    }
     if (zona === 'sesiones') {
       let n = 0;
       gamificacion.historial.forEach((s) => {
@@ -6721,7 +6976,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return { movidas: movs.length, sin: contarOtrasZona(zona) };
   }
 
-  const ICONOS_ZONA_VINCULO = { dificiles: '☆', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐' };
+  const ICONOS_ZONA_VINCULO = { dificiles: '☆', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐', notasEvaluador: '📝' };
   const ZONAS_HASH_PURGABLES = ['dificiles', 'notas', 'razones', 'imagenes'];   // las únicas donde puede quedar un residuo que valga la pena ofrecer borrar
 
   function zonasSeleccionadasTodo() {
@@ -6731,6 +6986,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function contarMovimientosZona(zona, viejo) {
     if (zona === 'sesiones') return gamificacion.historial.filter((s) => espacioDeSesion(s) === viejo).length;
     if (zona === 'listas') return movimientosVinculoListas(viejo).length;
+    if (zona === 'notasEvaluador') return notasEvaluador.filter((nt) => nt.espacio === viejo).length;
     return movimientosVinculo(zona, viejo).length;
   }
 
@@ -6800,7 +7056,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return borrados;
   }
 
-  function aceptarVinculoTodo() {
+  async function aceptarVinculoTodo() {
     const zonas = zonasSeleccionadasTodo();
     const viejo = espacioViejoActual();
     const { resultados, errores, residuos, zonasResiduo } = ejecutarVinculoTodo(zonas, viejo);
@@ -6815,7 +7071,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     if (residuos > 0) {
       const zonasTxt = zonasResiduo.map((z) => ICONOS_ZONA_VINCULO[z]).join(' ');
-      if (window.confirm('Quedaron ' + residuos + ' entrada(s) que no corresponden a ninguna tarjeta actual en las zonas vinculadas (' + zonasTxt + '). ¿Borrarlas?')) {
+      if (await confirmarAccion('Quedaron ' + residuos + ' entrada(s) que no corresponden a ninguna tarjeta actual en las zonas vinculadas (' + zonasTxt + '). ¿Borrarlas?')) {
         const n = borrarResiduosZonas(zonasResiduo);
         window.alert('Se borraron ' + n + ' entrada(s).');
       }
@@ -6866,9 +7122,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     el.style.display = 'block';
   });
 
-  function borrarEvaluadorCompleto(espacio) {
-    if (!window.confirm('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes y listas)? ' +
-      'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.')) return;
+  async function borrarEvaluadorCompleto(espacio) {
+    if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes, listas y notas del evaluador)? ' +
+      'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.'))) return;
 
     gamificacion.historial = gamificacion.historial.filter((s) => espacioDeSesion(s) !== espacio);
     guardarGamificacion();
@@ -6893,6 +7149,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return lista.hashes.length > 0;
     });
     guardarListas();
+
+    notasEvaluador = notasEvaluador.filter((nt) => nt.espacio !== espacio);
+    guardarNotasEvaluador();
+    renderListaNotasEvaluador();
 
     try {
       localStorage.removeItem('ultimo_backup_' + espacio);
@@ -6960,7 +7220,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elVincTitulo.textContent = 'Vincular todo a este evaluador';
       document.querySelectorAll('.vinc-zona-chk').forEach((c) => { c.checked = true; });
     } else {
-      const titulo = (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
+      const titulo = zona === 'notasEvaluador' ? 'notas del evaluador' : (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
       elVincTitulo.textContent = 'Vincular ' + titulo + ' a este evaluador';
     }
     if (vincEspacioFijo !== null) {
@@ -7214,8 +7474,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else {
       resultados.forEach((r) => {
         elDropdownBuscadorGaleria.appendChild(
-          crearItemDropdownBuscador(etiquetaResultadoGaleria(r), r.texto, consultaNorm, () => {
-            if (!confirmarDescartarGaleria()) return;
+          crearItemDropdownBuscador(etiquetaResultadoGaleria(r), r.texto, consultaNorm, async () => {
+            if (!(await confirmarDescartarGaleria())) return;
             cerrarDropdownBuscador(elDropdownBuscadorGaleria);
             elInputBuscadorGaleria.value = '';
             galeriaPos = r.posImg;
@@ -7255,6 +7515,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (activo && (activo.tagName === 'INPUT' || activo.tagName === 'TEXTAREA')) return;
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
 
+    if (elModalConfirmacion.classList.contains('abierto')) { cerrarModalConfirmacion(false); return; }
+    if (elModalNotasEvaluador.classList.contains('abierto')) { cerrarNotasEvaluador(); return; }
     if (elModalSync.classList.contains('abierto')) { elModalSync.classList.remove('abierto'); return; }
     if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
     if (elModalGuardarLista.classList.contains('abierto')) { cerrarModalGuardarLista(); return; }
@@ -7272,6 +7534,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (elPantallaGaleria.style.display !== 'none') { volverListaDesdeGaleria(); return; }
     if (elPantallaHuerfanas.style.display !== 'none') { volverDesdeHuerfanas(); return; }
     if (elPantallaMapa.style.display !== 'none') { cerrarPantallaMapa(); return; }
+  });
+
+  document.addEventListener('keydown', (evento) => {
+    if (evento.key !== 'Enter') return;
+    if (evento.target && evento.target.tagName === 'TEXTAREA') return;
+    if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
+
+    if (elModalConfirmacion.classList.contains('abierto')) { evento.preventDefault(); elBtnConfirmacionAceptar.click(); return; }
+    if (elModalPomodoroIniciar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-iniciar-si').click(); return; }
+    if (elModalPomodoroAbandonar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-abandonar-si').click(); return; }
+    if (elModalPomodoroResumen.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-resumen-cerrar').click(); return; }
+    if (elModalContinuar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-modal-sesion').click(); return; }
+    if (elModalSegunda.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-segunda-si').click(); return; }
+    if (elModalGuardarLista.classList.contains('abierto')) { evento.preventDefault(); elBtnGuardarListaAceptar.click(); return; }
+    if (elModalVincular.classList.contains('abierto')) { evento.preventDefault(); elBtnVincAceptar.click(); return; }
+    if (elModalModo.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-modo-confirmar').click(); return; }
+    if (elModalGameOver.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-gameover-resumen').click(); return; }
+    if (elModalAnalisisSesion.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-analisis-sesion-cerrar').click(); return; }
   });
 
   const nodosImagenes = new Map();   // hash -> fila
@@ -7349,8 +7629,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', () => {
-      if (!confirm('¿Borrar la nota y la marca de difícil de esta imagen?')) return;
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar la nota y la marca de difícil de esta imagen?'))) return;
       delete datosImagenes[hash];
       guardarImagenesStorage();
       actualizarFilaImagenIndividual(hash);   // CORREGIDO: solo esta fila, no todo el listado
@@ -7401,9 +7681,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
   }
 
-  document.getElementById('btn-vaciar-imagenes').addEventListener('click', () => {
+  document.getElementById('btn-vaciar-imagenes').addEventListener('click', async () => {
     if (Object.keys(datosImagenes).length === 0) return;
-    if (!confirm('¿Vaciar TODOS los datos de imágenes guardados? No se puede deshacer.')) return;
+    if (!(await confirmarAccion('¿Vaciar TODOS los datos de imágenes guardados? No se puede deshacer.'))) return;
     datosImagenes = {};
     guardarImagenesStorage();
     renderImagenesPreview();
@@ -7723,10 +8003,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return { nuevas: nuevas, repetidas: repetidas, invalidas: invalidas };
   }
 
-  document.getElementById('btn-vaciar-desm').addEventListener('click', () => {
+  document.getElementById('btn-vaciar-desm').addEventListener('click', async () => {
     const hashes = Object.keys(dificiles).filter((h) => !dificiles[h].activa);
     if (hashes.length === 0) return;
-    if (!confirm('¿Borrar ' + hashes.length + ' desmarcada(s)? Esta acción no se puede deshacer.')) return;
+    if (!(await confirmarAccion('¿Borrar ' + hashes.length + ' desmarcada(s)? Esta acción no se puede deshacer.'))) return;
     hashes.forEach((h) => delete dificiles[h]);
     guardarDificiles();
     renderDificilesPreview();
@@ -7871,8 +8151,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         actualizarFilaNotaIndividual(hashTarjeta(t));   // CORREGIDO: solo esta fila, no todo el listado
       }));
     }
-    acc.appendChild(botonMini('Usar la del txt', () => {
-      if (!confirm('Se descarta tu versión y se usa la del txt. ¿Continuar?')) return;
+    acc.appendChild(botonMini('Usar la del txt', async () => {
+      if (!(await confirmarAccion('Se descarta tu versión y se usa la del txt. ¿Continuar?'))) return;
       descartarNotaLocal(t);
       actualizarFilaNotaIndividual(hashTarjeta(t));   // CORREGIDO: solo esta fila, no todo el listado
     }));
@@ -7890,8 +8170,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     div.appendChild(bloqueVersion('Mi nota', nota !== '' ? nota : '(nota borrada)', false, nota === ''));
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', () => {
-      if (!confirm('¿Borrar esta nota guardada? No se puede deshacer.')) return;
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
       delete notasLocales[h];
       guardarNotas();
       actualizarFilaNotaIndividual(h);   // CORREGIDO: solo esta fila, no todo el listado
@@ -7941,9 +8221,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
   }
 
-  document.getElementById('btn-vaciar-notas').addEventListener('click', () => {
+  document.getElementById('btn-vaciar-notas').addEventListener('click', async () => {
     if (Object.keys(notasLocales).length === 0) return;
-    if (!confirm('¿Vaciar TODAS las notas guardadas? No se puede deshacer.')) return;
+    if (!(await confirmarAccion('¿Vaciar TODAS las notas guardadas? No se puede deshacer.'))) return;
     notasLocales = {};
     guardarNotas();
     renderNotasPreview();
@@ -8004,6 +8284,408 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     lector.readAsText(archivo);
   });
 
+  function renderSelectorCategoriaNota(contenedor, categoriaSeleccionada, onSeleccionar) {
+    contenedor.innerHTML = '';
+    CATEGORIAS_NOTA_EVAL.forEach((cat) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip-razon chip-categoria-nota' + (categoriaSeleccionada === cat.codigo ? ' seleccionada' : '');
+      chip.textContent = cat.texto;
+      if (categoriaSeleccionada === cat.codigo) {
+        chip.style.backgroundColor = cat.color;
+        chip.style.borderColor = cat.color;
+        chip.style.color = '#fff';
+      } else {
+        chip.style.backgroundColor = hexToRgba(cat.color, 0.12);
+        chip.style.borderColor = cat.color;
+        chip.style.color = cat.color;
+      }
+      chip.addEventListener('click', () => onSeleccionar(categoriaSeleccionada === cat.codigo ? null : cat.codigo));
+      contenedor.appendChild(chip);
+    });
+  }
+
+  let notaEvalCategoriaNueva = null;
+  let notaEvalEditandoId = null;
+  let notaEvalCategoriaEdicion = null;
+  let notasEvalPaginaActual = 1;
+  const NOTASEVAL_POR_PAGINA = 15;
+
+  const elModalNotasEvaluador = document.getElementById('modal-notas-evaluador');
+  const elNotaEvalTextoNueva = document.getElementById('notaseval-texto-nueva');
+  const elNotaEvalChipsNueva = document.getElementById('notaseval-chips-nueva');
+
+  function refrescarChipsNuevaNotaEvaluador() {
+    renderSelectorCategoriaNota(elNotaEvalChipsNueva, notaEvalCategoriaNueva, (cod) => {
+      notaEvalCategoriaNueva = cod;
+      refrescarChipsNuevaNotaEvaluador();
+    });
+  }
+
+  function agregarNotaEvaluador() {
+    const texto = elNotaEvalTextoNueva.value.trim();
+    if (texto === '') return;
+    notasEvaluador.push({
+      id: generarIdNotaEvaluador(),
+      texto: texto,
+      categoria: notaEvalCategoriaNueva || '',
+      espacio: ESPACIO_HASH,
+      creada: Date.now(),
+      modificada: Date.now(),
+    });
+    guardarNotasEvaluador();
+    elNotaEvalTextoNueva.value = '';
+    notaEvalCategoriaNueva = null;
+    refrescarChipsNuevaNotaEvaluador();
+    notasEvalPaginaActual = 1;
+    renderListaNotasEvaluador();
+  }
+
+  function empezarEdicionNotaEvaluador(id) {
+    const nota = notasEvaluador.find((n) => n.id === id);
+    if (!nota) return;
+    notaEvalEditandoId = id;
+    notaEvalCategoriaEdicion = nota.categoria || null;
+    renderListaNotasEvaluador();
+  }
+
+  function cancelarEdicionNotaEvaluador() {
+    const textarea = document.getElementById('notaseval-editor-compartido');
+    if (textarea && typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(textarea);
+    notaEvalEditandoId = null;
+    notaEvalCategoriaEdicion = null;
+    renderListaNotasEvaluador();
+  }
+
+  function guardarEdicionNotaEvaluador(id) {
+    const nota = notasEvaluador.find((n) => n.id === id);
+    if (!nota) return;
+    const textarea = document.getElementById('notaseval-editor-compartido');
+    if (textarea && typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(textarea);
+    const texto = textarea ? textarea.value.trim() : '';
+    if (texto === '') return;
+    nota.texto = texto;
+    nota.categoria = notaEvalCategoriaEdicion || '';
+    nota.modificada = Date.now();
+    guardarNotasEvaluador();
+    notaEvalEditandoId = null;
+    notaEvalCategoriaEdicion = null;
+    renderListaNotasEvaluador();
+  }
+
+  function borrarNotaEvaluador(id) {
+    notasEvaluador = notasEvaluador.filter((n) => n.id !== id);
+    guardarNotasEvaluador();
+    if (notaEvalEditandoId === id) notaEvalEditandoId = null;
+    renderListaNotasEvaluador();
+  }
+
+  function filaNotaEvaluador(nota) {
+    const div = document.createElement('div');
+    div.className = 'panel-nota item-nota-evaluador';
+    div.style.display = 'block';
+
+    const cab = document.createElement('div');
+    cab.className = 'panel-nota-cabecera';
+    const titulo = document.createElement('div');
+    titulo.className = 'panel-nota-titulo';
+    titulo.textContent = formatearFechaLista(nota.modificada || nota.creada);
+    cab.appendChild(titulo);
+    div.appendChild(cab);
+
+    if (notaEvalEditandoId === nota.id) {
+      const wrapEditor = document.getElementById('notaseval-editor-compartido-wrap');
+      const textarea = document.getElementById('notaseval-editor-compartido');
+      wrapEditor.style.display = 'block';
+      document.getElementById('btn-dictado-notaseval-editor').style.display = 'flex';
+      textarea.value = nota.texto;
+      textarea.onkeydown = (evento) => {
+        if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+          evento.preventDefault();
+          guardarEdicionNotaEvaluador(nota.id);
+        }
+      };
+      div.appendChild(wrapEditor);
+
+      const chips = document.createElement('div');
+      chips.className = 'chips-razones';
+      chips.style.display = 'flex';
+      div.appendChild(chips);
+      const actualizarChipsEdicion = () => {
+        renderSelectorCategoriaNota(chips, notaEvalCategoriaEdicion, (cod) => {
+          notaEvalCategoriaEdicion = cod;
+          actualizarChipsEdicion();
+        });
+      };
+      actualizarChipsEdicion();
+
+      const acc = document.createElement('div');
+      acc.className = 'panel-nota-acciones';
+      acc.appendChild(botonMini('Guardar', () => guardarEdicionNotaEvaluador(nota.id)));
+      acc.appendChild(botonMini('Cancelar', () => cancelarEdicionNotaEvaluador()));
+      div.appendChild(acc);
+
+      setTimeout(() => textarea.focus(), 0);
+    } else {
+      const chipCat = document.createElement('div');
+      chipCat.className = 'fila-chips-mini';
+      const def = MAPA_CATEGORIAS_NOTA_EVAL.get(nota.categoria);
+      const chip = document.createElement('span');
+      if (def) {
+        chip.className = 'chip-razon chico';
+        chip.textContent = def.texto;
+        chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+        chip.style.borderColor = def.color;
+        chip.style.color = def.color;
+      } else {
+        chip.className = 'chip-razon chico vacio';
+        chip.textContent = 'Sin categoría';
+      }
+      chipCat.appendChild(chip);
+      div.appendChild(chipCat);
+
+      const texto = document.createElement('div');
+      texto.className = 'panel-nota-texto';
+      texto.textContent = nota.texto;
+      div.appendChild(texto);
+
+      const acc = document.createElement('div');
+      acc.className = 'panel-nota-acciones';
+      acc.appendChild(botonMini('✎ Editar', () => empezarEdicionNotaEvaluador(nota.id)));
+      acc.appendChild(botonMini('🗑 Borrar', async () => {
+        if (!(await confirmarAccion('¿Borrar esta nota del evaluador? No se puede deshacer.'))) return;
+        borrarNotaEvaluador(nota.id);
+      }));
+      div.appendChild(acc);
+    }
+
+    return div;
+  }
+
+  function filaNotaEvaluadorOtra(nota) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+    const titulo = document.createElement('div');
+    titulo.textContent = '(' + etiquetaEspacio(nota.espacio) + ') ' + (nota.texto || '(sin texto)');
+    div.appendChild(titulo);
+    const def = MAPA_CATEGORIAS_NOTA_EVAL.get(nota.categoria);
+    if (def) {
+      const chips = document.createElement('div');
+      chips.className = 'fila-chips-mini';
+      const chip = document.createElement('span');
+      chip.className = 'chip-razon chico';
+      chip.textContent = def.texto;
+      chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+      chip.style.borderColor = def.color;
+      chip.style.color = def.color;
+      chips.appendChild(chip);
+      div.appendChild(chips);
+    }
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
+      notasEvaluador = notasEvaluador.filter((n) => n.id !== nota.id);
+      guardarNotasEvaluador();
+      renderListaNotasEvaluador();
+    }));
+    div.appendChild(acc);
+    return div;
+  }
+
+  function renderNotasEvaluadorPaginacion(totalPaginas) {
+    const el = document.getElementById('notaseval-paginacion');
+    el.innerHTML = '';
+    el.style.display = 'flex';
+
+    const btnAnterior = document.createElement('button');
+    btnAnterior.type = 'button';
+    btnAnterior.className = 'boton-mini';
+    btnAnterior.textContent = 'Anterior';
+    btnAnterior.disabled = notasEvalPaginaActual <= 1;
+    btnAnterior.addEventListener('click', () => { notasEvalPaginaActual--; renderListaNotasEvaluador(); });
+
+    const texto = document.createElement('span');
+    texto.className = 'historial-paginacion-texto';
+    texto.textContent = 'Página ' + notasEvalPaginaActual + ' de ' + totalPaginas;
+
+    const btnSiguiente = document.createElement('button');
+    btnSiguiente.type = 'button';
+    btnSiguiente.className = 'boton-mini';
+    btnSiguiente.textContent = 'Siguiente';
+    btnSiguiente.disabled = notasEvalPaginaActual >= totalPaginas;
+    btnSiguiente.addEventListener('click', () => { notasEvalPaginaActual++; renderListaNotasEvaluador(); });
+
+    el.appendChild(btnAnterior);
+    el.appendChild(texto);
+    el.appendChild(btnSiguiente);
+  }
+
+  function renderNotasEvaluadorOtras() {
+    const otras = notasEvaluadorDeOtros();
+    const det = document.getElementById('det-notaseval-otras');
+    const elLista = document.getElementById('lista-notaseval-otras');
+    elLista.innerHTML = '';
+    det.style.display = otras.length > 0 ? 'block' : 'none';
+    document.getElementById('suma-notaseval-otras').textContent = 'De otros evaluadores (' + otras.length + ')';
+    if (otras.length === 0) return;
+    otras.slice().sort((a, b) => (b.modificada || b.creada || 0) - (a.modificada || a.creada || 0)).forEach((nota) => {
+      elLista.appendChild(filaNotaEvaluadorOtra(nota));
+    });
+  }
+
+  function renderListaNotasEvaluador() {
+    const propias = notasEvaluadorPropias().slice().sort((a, b) => (b.modificada || b.creada || 0) - (a.modificada || a.creada || 0));
+    const elLista = document.getElementById('lista-notas-evaluador');
+    const elVacio = document.getElementById('notaseval-vacio');
+    const elEditorWrap = document.getElementById('notaseval-editor-compartido-wrap');
+    elLista.parentElement.insertBefore(elEditorWrap, elLista);
+    elEditorWrap.style.display = 'none';
+    document.getElementById('btn-dictado-notaseval-editor').style.display = 'none';
+    elLista.innerHTML = '';
+
+    if (propias.length === 0) {
+      elVacio.style.display = 'block';
+      document.getElementById('notaseval-paginacion').style.display = 'none';
+    } else {
+      elVacio.style.display = 'none';
+      const totalPaginas = Math.max(1, Math.ceil(propias.length / NOTASEVAL_POR_PAGINA));
+      if (notasEvalPaginaActual > totalPaginas) notasEvalPaginaActual = totalPaginas;
+      if (notasEvalPaginaActual < 1) notasEvalPaginaActual = 1;
+      const inicio = (notasEvalPaginaActual - 1) * NOTASEVAL_POR_PAGINA;
+      propias.slice(inicio, inicio + NOTASEVAL_POR_PAGINA).forEach((nota) => {
+        elLista.appendChild(filaNotaEvaluador(nota));
+      });
+      renderNotasEvaluadorPaginacion(totalPaginas);
+    }
+
+    document.getElementById('btn-vaciar-notaseval').style.display = notasEvaluador.length > 0 ? 'inline-block' : 'none';
+    renderNotasEvaluadorOtras();
+  }
+
+  function abrirNotasEvaluador() {
+    notaEvalEditandoId = null;
+    notaEvalCategoriaEdicion = null;
+    notaEvalCategoriaNueva = null;
+    notasEvalPaginaActual = 1;
+    elNotaEvalTextoNueva.value = '';
+    refrescarChipsNuevaNotaEvaluador();
+    renderListaNotasEvaluador();
+    elModalNotasEvaluador.classList.add('abierto');
+  }
+
+  function cerrarNotasEvaluador() {
+    const textareaNueva = document.getElementById('notaseval-texto-nueva');
+    const textareaEditor = document.getElementById('notaseval-editor-compartido');
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') {
+      window.__detenerDictadoSiActivoEn(textareaNueva);
+      window.__detenerDictadoSiActivoEn(textareaEditor);
+    }
+    elModalNotasEvaluador.classList.remove('abierto');
+    notaEvalEditandoId = null;
+  }
+
+  document.getElementById('btn-notas-evaluador').addEventListener('click', () => abrirNotasEvaluador());
+  document.getElementById('btn-notaseval-cerrar').addEventListener('click', () => cerrarNotasEvaluador());
+  document.getElementById('btn-notaseval-agregar').addEventListener('click', () => agregarNotaEvaluador());
+  elNotaEvalTextoNueva.addEventListener('keydown', (evento) => {
+    if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+      evento.preventDefault();
+      agregarNotaEvaluador();
+    }
+  });
+
+  document.getElementById('btn-vaciar-notaseval').addEventListener('click', async () => {
+    if (notasEvaluador.length === 0) return;
+    if (!(await confirmarAccion('¿Vaciar TODAS las notas del evaluador? No se puede deshacer.'))) return;
+    notasEvaluador = [];
+    guardarNotasEvaluador();
+    renderListaNotasEvaluador();
+  });
+
+  document.getElementById('btn-vincular-notaseval').addEventListener('click', () => {
+    elModalNotasEvaluador.classList.remove('abierto');
+    abrirModalVincular('notasEvaluador');
+  });
+
+  function construirExportNotasEvaluador() {
+    return { version: 1, notasEvaluador: notasEvaluador };
+  }
+
+  function fusionarNotasEvaluadorLista(lista) {
+    let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+    lista.forEach((item) => {
+      if (!item || typeof item.id !== 'string' || !item.id || typeof item.texto !== 'string') {
+        invalidas++;
+        return;
+      }
+      const entrante = {
+        id: item.id,
+        texto: item.texto,
+        categoria: typeof item.categoria === 'string' ? item.categoria : '',
+        espacio: typeof item.espacio === 'string' && item.espacio ? item.espacio : ESPACIO_HASH,
+        creada: typeof item.creada === 'number' ? item.creada : Date.now(),
+        modificada: typeof item.modificada === 'number' ? item.modificada : Date.now(),
+      };
+      const local = notasEvaluador.find((n) => n.id === entrante.id);
+      if (!local) {
+        notasEvaluador.push(entrante);
+        nuevas++;
+      } else if (local.texto === entrante.texto && (local.categoria || '') === (entrante.categoria || '')) {
+        iguales++;
+      } else if (entrante.modificada > (local.modificada || 0)) {
+        Object.assign(local, entrante);
+        actualizadas++;
+      } else {
+        conservadas++;
+      }
+    });
+    guardarNotasEvaluador();
+    renderListaNotasEvaluador();
+    return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
+  }
+
+  document.getElementById('btn-exportar-notaseval').addEventListener('click', () => {
+    const contenido = JSON.stringify(construirExportNotasEvaluador(), null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'notas_evaluador.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-notaseval').addEventListener('click', () => {
+    document.getElementById('input-importar-notaseval').click();
+  });
+
+  document.getElementById('input-importar-notaseval').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      try {
+        const obj = JSON.parse(lector.result);
+        const lista = Array.isArray(obj)
+          ? obj
+          : (obj && Array.isArray(obj.notasEvaluador) ? obj.notasEvaluador : null);
+        if (!lista) throw new Error('formato');
+
+        const r = fusionarNotasEvaluadorLista(lista);
+        window.alert('Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
+          ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
+          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : ''));
+      } catch (e) {
+        window.alert('El archivo no es un JSON válido de notas del evaluador.');
+      }
+    };
+    lector.readAsText(archivo);
+  });
+
   function filaRevisarGuardada(hash, entrada) {
     const div = document.createElement('div');
     div.className = 'item-nota-otra';
@@ -8033,9 +8715,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elVaciar.style.display = hashes.length > 0 ? 'inline-block' : 'none';
   }
 
-  document.getElementById('btn-vaciar-revisar').addEventListener('click', () => {
+  document.getElementById('btn-vaciar-revisar').addEventListener('click', async () => {
     if (Object.keys(revisarEnMemoria).length === 0) return;
-    if (!confirm('¿Vaciar todas las tarjetas para revisar? No se puede deshacer.')) return;
+    if (!(await confirmarAccion('¿Vaciar todas las tarjetas para revisar? No se puede deshacer.'))) return;
     revisarEnMemoria = {};
     renderRevisarGuardadoPreview();
   });
@@ -8146,8 +8828,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', () => {
-      if (!confirm('¿Borrar por completo este registro de razones?')) return;
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar por completo este registro de razones?'))) return;
       delete razonesGuardadas[hash];
       guardarRazones();
       actualizarFilaRazonIndividual(hash);   // CORREGIDO: solo esta fila, no todo el listado
@@ -8199,9 +8881,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
   }
 
-  document.getElementById('btn-vaciar-razones').addEventListener('click', () => {
+  document.getElementById('btn-vaciar-razones').addEventListener('click', async () => {
     if (Object.keys(razonesGuardadas).length === 0) return;
-    if (!confirm('¿Vaciar TODAS las razones guardadas? No se puede deshacer.')) return;
+    if (!(await confirmarAccion('¿Vaciar TODAS las razones guardadas? No se puede deshacer.'))) return;
     razonesGuardadas = {};
     guardarRazones();
     renderRazonesPreview();
@@ -8977,10 +9659,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   });
 
-  function marcar(resultado) {
+  async function marcar(resultado) {
     if (pausaManual) return;
     if (resultados[indiceActual] !== null) return;
-    if (!confirmarDescartarBorrador()) return;
+    if (!(await confirmarDescartarBorrador())) return;
 
     if (!cronometroCongelado()) {
       acumularTiempo();
@@ -9090,11 +9772,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     actualizarCronometro();
   }
 
-  function navegar(delta) {
+  async function navegar(delta) {
     if (pausaManual) return;
     const nuevo = indiceActual + delta;
     if (nuevo < 0 || nuevo >= tarjetasSesion.length) return;
-    if (!confirmarDescartarBorrador()) return;
+    if (!(await confirmarDescartarBorrador())) return;
 
     if (!cronometroActivo) {
       indiceActual = nuevo;
@@ -9141,9 +9823,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return guardado !== pendiente;
   }
 
-  function confirmarDescartarBorrador() {
+  async function confirmarDescartarBorrador() {
     if (!borradorSinGuardar() && !razonesSinGuardar()) return true;
-    return confirm('Tenés cambios sin guardar (nota y/o razones). ¿Descartarlos?');
+    return await confirmarAccion('Tenés cambios sin guardar (nota y/o razones). ¿Descartarlos?');
   }
 
   function renderNota(actual) {
@@ -9229,10 +9911,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderTarjeta();
   }
 
-  function toggleNota() {
+  async function toggleNota() {
     if (tarjetasSesion.length === 0) return;
     if (notaAbierta) {
-      if (!confirmarDescartarBorrador()) return;
+      if (!(await confirmarDescartarBorrador())) return;
       cerrarNota();
     } else {
       abrirNota();
@@ -9263,9 +9945,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  function cancelarEdicionNota() {
+  async function cancelarEdicionNota() {
     const actual = tarjetasSesion[indiceActual];
-    if (!confirmarDescartarBorrador()) return;
+    if (!(await confirmarDescartarBorrador())) return;
     if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elNotaEditor);
     editandoNota = false;
     if (actual && notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual') {
@@ -9275,10 +9957,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  function borrarNotaActual() {
+  async function borrarNotaActual() {
     const actual = tarjetasSesion[indiceActual];
     if (!actual) return;
-    if (!confirm('¿Borrar la nota de esta tarjeta?')) return;
+    if (!(await confirmarAccion('¿Borrar la nota de esta tarjeta?'))) return;
     guardarNotaLocal(actual, '');
     editandoNota = false;
     cerrarNota();
@@ -9321,8 +10003,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderTarjeta();
   }
 
-  function cerrarRazones() {
-    if (!confirmarDescartarBorrador()) return;
+  async function cerrarRazones() {
+    if (!(await confirmarDescartarBorrador())) return;
     const siguePorRespuesta = indiceCongelado === indiceActual;
     resetRazonesUI();
     if (cronometroActivo && !siguePorRespuesta && !notaAbierta) tiempoInicioTarjeta = Date.now();
@@ -9528,8 +10210,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  function finalizarSesion() {
-    if (!confirmarDescartarBorrador()) return;
+  async function finalizarSesion() {
+    if (!(await confirmarDescartarBorrador())) return;
     if (cronometroActivo && !cronometroCongelado()) {
       acumularTiempo();
     }
@@ -10013,7 +10695,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   })();
 
   const elBtnPomodoro = document.getElementById('btn-pomodoro');
-  const elFilaPomodoroBoton = document.getElementById('fila-pomodoro-boton');
   const elPomodoroBadge = document.getElementById('pomodoro-badge');
   const elPomodoroBadgeInfo = document.getElementById('pomodoro-badge-info');
   const elBtnPomodoroCancelar = document.getElementById('btn-pomodoro-cancelar');
@@ -10120,7 +10801,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     obtenerContextoAudio();   // desbloquea audio en este gesto del usuario
 
-    elFilaPomodoroBoton.style.display = 'none';
+    elBtnPomodoro.disabled = true;
     elPomodoroBadge.style.display = 'flex';
     elBtnObservadorSalir.disabled = true;   // §6: bloqueo de navegación
 
@@ -10193,7 +10874,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function cerrarModalPomodoroResumen() {
     elModalPomodoroResumen.classList.remove('abierto');
-    elFilaPomodoroBoton.style.display = 'flex';   // vuelve el botón ⏲️
+    elBtnPomodoro.disabled = false;
   }
   document.getElementById('btn-pomodoro-resumen-cerrar').addEventListener('click', () => cerrarModalPomodoroResumen());
 

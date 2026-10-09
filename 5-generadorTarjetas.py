@@ -34,8 +34,6 @@ colores = {
 
 # NUEVO: escapa los caracteres especiales para que el XML no se rompa
 def escapar_texto(texto):
-    """Convierte los símbolos peligrosos en entidades seguras para el XML
-    de draw.io. El '&' se reemplaza primero para no doble-escapar."""
     reemplazos = {
         "&": "&amp;",     # entidad XML (siempre primero)
         "<": "&lt;",      # inicio de etiqueta XML
@@ -52,9 +50,6 @@ def escapar_texto(texto):
 
 # Ventanita para elegir el color
 def elegir_color(root, colores):
-    """Muestra una ventana para elegir el color de las tarjetas.
-    Devuelve el nombre del color, "" si se elige el estilo por defecto,
-    o None si se cierra la ventana sin elegir (se cancela el script)."""
     eleccion = {"color": None}
 
     ventana = Toplevel(root)

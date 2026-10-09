@@ -1,345 +1,273 @@
-temaP GESTIÓN OPERACIONES
+temaP SCOR
 
-temaS 
+temaS
 
-^subT INTRODUCCION
-imP la gestión operaciones
-imP garantiza
-imP que procesos funcionen a perfección
-imP dentro de empresas
+^subT DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR
+deF Supply Chain Operations Reference (SCOR®)
+deF es una creación del 
+deF Supply Chain Council (SCC)
 
-~cuR Imagina a tu empresa
-cuR como 1 aeropuerto
+~cuR Modelo SCOR
+cuR recoge 
+cuR visión consensuada del Consejo
+cuR sobre gestión 
+cuR cadena suministro
 
-~cuR Cada equipo
-cuR es 1 avión que despega
-cuR hacia 1 destino dado
-*cuR con sus 
+~imP el modelo SCOR proporciona 
+imP 1 marco único
+*imP que vincula 
 
-+@cuR proyectos e
++@imP procesos empresariales,
 
-+@cuR ideas 
++@imP métricas,
 
-$cuR a bordo
++@imP mejores prácticas y
 
-~cuR Como director operaciones,
-cuR eres controlador tránsito aéreo
-cuR que debe asegurarse
-cuR que todos y
-cuR todo 
-cuR funcione correctamente
++@imP características tecnológicas 
 
-~imP de 1 modo similar,
-imP gestión operaciones
-imP es responsable supervisar 
-*imP estas siete funciones
+$*imP en una estructura unificada
 
-+imP Planificación operativa
++imP para facilitar comunicación
+imP entre socios cadena suministro y
 
-+imP Finanzas
++imP mejorar eficacia 
+imP gestión cadena suministro y
 
-+imP Diseño productos
++imP actividades relacionadas
+imP con su mejora
 
-+imP Control calidad
+^subT ALCANCE Y PROCESOS SCOR
+imP el modelo SCOR 
+imP describe 
+imP actividades empresariales
+imP asociadas a todas fases 
+imP del proceso 
+imP satisfacer demanda 1 cliente
 
-+imP Pronósticos
+~deF el modelo en sí 
+deF se organiza en torno
+deF a cinco procesos 
+deF gestión principales
 
-+imP Estrategia
+~deF Mediante estos componentes básicos procesos,
+deF modelo SCOR
+deF puede utilizarse
+deF para describir 
+deF cadenas suministro 
+deF tanto muy sencillas
+deF como muy complejas
 
-+imP Gestión cadena suministro
+~imP el modelo está 
+imP diseñado y
+imP se mantiene
+imP para dar soporte 
+imP a cadenas suministro 
+imP diversa complejidad y
+imP en múltiples sectores
 
-~deF las operaciones 
-deF que están involucradas 
-deF en casi todos aspectos 
-deF una empresa
+^subT ESTRUCTURA PROCESOS SCOR (NIVEL 1 Y NIVEL 2)
+caR Planificar
 
-~ejeM Por ejemplo,
-ejeM si 1 gerente proyectos 
-ejeM quiere contratar 
-ejeM a 1 nuevo miembro para equipo,
-ejeM equipo operaciones 
-ejeM deberá realizar primero
-ejeM 1 análisis costocuR beneficio o,
-ejeM si equipo producción 
-ejeM quiere desarrollar
-ejeM 1 producto nuevo,
-ejeM solicitud del cliente deberá
-ejeM ser evaluada primero
-ejeM por equipo operaciones
+~caR Fuente y Abastecer
 
-~imP el rol principal 
-imP gestión operaciones
-imP es mantener eficiencia operativa
+~caR Realizar y Fabricar
 
-~imP Es importante estar siempre atento
-*imP a últimos avances
+~caR Entrega
 
-+imP para eliminar cuellos botella y
+~caR Devolución
 
-+imP mejorar estrategia operativa
+~caR Habilitar y Facilitar
 
+^subT ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+imP los atributos rendimiento 
+imP una cadena suministro
+*imP permiten 
 
-^subT MATERIALES Y RECURSOS
-*imP se debe
++@imP analizarla y
 
-+imP Asignar presupuestos y
++@imP evaluarla 
 
-+imP gestionar recursos
+$imP en comparación
+imP con otras cadenas suministro
+imP que aplican 
+imP estrategias competitivas
 
-~preG ¿Podemos determinar 
-preG costos abastecimiento 
-preG materias primas?
-caR Puedes mantener 
-caR bajos costos producción
-caR al encontrar proveedores
-caR que ofrezcan productos 
-caR gran calidad
-caR a precios competitivos
+~imP SCOR identifica 
+imP cinco atributos fundamentales
+*imP del rendimiento cadena suministro:
 
-~imP lo ideal
-imP es poder desarrollar 
-imP 1 producto primer nivel
-imP que se encuentre
-imP dentro del presupuesto tu cliente
++caR fiabilidad,
 
-^subT INFORMACIÓN
-*deF se debe
++caR capacidad respuesta,
 
-+deF Realizar una investigación mercado y
++caR agilidad,
 
-+deF obtener resultados fáciles procesar
++caR costes y
 
-~deF Compartir resultados
-deF con equipo diseño de productos
++caR gestión activos
 
-~deF Crea 1 plan proyecto central
-deF para dar seguimiento
-*deF a acciones pendientes,
+~cuR Sin estas características,
+cuR resulta difícil comparar 
+cuR una organización
+cuR que opta estratégicamente
+cuR ser proveedor bajo coste
+cuR con una organización
+*cuR que opta por competir en 
 
-+deF a información y
++cuR fiabilidad y
 
-+deF comentarios relevantes
++cuR rendimiento
 
-~caR Luego,
-caR compártelo
-caR con todas partes interesadas 
-caR en una herramienta 
-caR gestión proyectos
-*caR para que todos puedan 
+~imP las métricas estratégicas nivel 1
+imP están directamente relacionadas
+imP con atributos rendimiento
 
-+caR acceder fácilmente y
+~imP Estas métricas nivel 1
+imP son cálculos
+imP mediante los cuales 
+imP una organización
+imP puede medir su éxito 
+imP a hora alcanzar 
+imP posicionamiento deseado en mercado
 
-+caR ver cambios en tiempo real
+~cuR Muchas métricas del modelo SCOR
+cuR son jerárquicas,
+cuR al igual que son 
+cuR elementos proceso
 
-~imP la capacidad interpretar datos
-imP es una habilidad clave 
-imP en gestión operativa
+~caR las métricas nivel 1 
+caR se crean a partir 
+caR cálculos niveles inferiores
 
-~imP Como director operaciones,
-imP es importante
-imP que puedas convertir datos 
-imP en instrucciones concretas,
-imP ya que tu objetivo
-imP debe ser comunicar claramente
-imP cómo deseas
-imP que tu producto cumpla
-imP con estándares del mercado 
-imP o incluso 
-imP supere a productos desarrollados
-imP por competencia
+~caR las métricas nivel 2
+caR suelen estar asociadas 
+caR a 1 subconjunto más reducido 
+caR de procesos
 
-~imP la toma decisiones 
-imP basada en datos 
-imP es una habilidad muy útil
-imP para muchas funciones 
-imP de gestión operaciones
+~deF Además,
+deF métricas (diagnósticos)
+deF se utilizan para diagnosticar 
+deF variaciones en rendimiento
+deF con respecto al plan
 
-~deF la única forma 
-deF realizar pronósticos precisos 
-deF es basar tus predicciones
-deF en hechos
+~imP Métricas Nivel 1
+*imP por Atributo
 
-~cuR Te recomendamos empezar
-cuR por pronosticar 
-cuR demanda del producto
-cuR analizando tendencias pasadas
++caR Fiabilidad
 
-~cuR Luego,
-cuR comparte conclusiones
-cuR con directores cada departamento
-cuR para que puedan 
-cuR ajustar planes futuros 
-cuR en consecuencia
++caR Capacidad respuesta
 
++caR Agilidad
 
-^subT PLANIFICACIÓN
-deF la planificación operativa
-deF es función más importante gestión operaciones
++caR Coste
 
-~imP Tus responsabilidades en este rol
-*imP pueden incluir
++caR Eficiencia en gestión activos
 
-+caR Supervisar producción diaria mercadería
+^subT PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
+deF la sección dedicada al personal
+deF proporciona herramientas
+deF para gestionar talento 
+deF en cadena suministro
+deF mediante incorporación 1 estándar
+deF que describe 
+deF conocimientos especializados necesarios
+*deF para 
 
-+caR Gestionar y
-caR controlar tu inventario
++deF realizar tareas y
 
-+caR Supervisar desempeño y
-caR bienestar miembros del equipo
++deF gestionar procesos
 
-+caR Planificar producción
+~imP En SCOR,
+imP una competencia
+imP es capacidad 
+imP obtener resultados predeterminados
+*imP con 1 mínimo 
 
-~deF la planificación financiera consiste en
-deF determinar
-deF si tu empresa
-deF cuenta
-*deF con presupuesto
++@imP tiempo y
 
-+deF para lograr objetivos y
++@imP energía,
 
-+deF metas estratégicos
+$imP caracterizada
+*imP por una definición estándar con 
 
-~imP Para asegurar éxito financiero del
-imP equipo directivo,
-imP deberás planificar
-imP con anticipación
++imP experiencia,
 
-~preG ¿Qué promociones y
-preG operaciones marketing debemos planificar
-preG para este producto?
++imP aptitudes y
 
-~preG ¿Qué iniciativas venta debemos planificar
-preG para este producto?
++imP formación asociadas
 
-~cuR la estrategia
-cuR es 1 campo muy amplio gestión operaciones
-*cuR que puede incluir varios aspectos
+~*imP la experiencia es
 
-+cuR como planificación operativa,
-
-+cuR supervisión y
-
-+cuR análisis
-
-~imP el objetivo gestión estratégica
-imP es garantizar
-imP que decisiones producción
-imP estén alineadas
-imP con objetivos comerciales empresa
-
-
-^subT PROCESOS
-deF la gestión operaciones
-deF garantiza que procesos 
-deF funcionen a perfección
-deF dentro de empresas
-
-~caR Si tienes creatividad,
-caR te resultará mucho más fácil
-caR mantener eficiencia 
-caR procesos comerciales
-
-~deF Sin embargo,
-deF función del director operaciones 
-deF se limita 
-deF a gestionar operaciones financieras
-deF relacionadas
-deF con proceso producción
-
-~cuR No todos productos 
-cuR alcanzarán mejor calidad 
-cuR en primera ronda 
-cuR del proceso producción
-
-~*cuR Puede tomar varias rondas 
-
-+@cuR rediseños y
-
-+@cuR modificaciones
-
-$cuR para crear 1 producto calidad
-cuR que cumpla
-cuR con estándares deseados
-
-~deF Una de las primeras acciones
-deF que debe tomar equipo 
-deF durante proceso control calidad
-deF es realizar 
-deF una investigación mercado
-deF para determinar qué estándares
-deF se aplican en sector
-
-~imP Mejorar sistema producción
-imP Aumentar productividad
-imP implementando 
-imP 1 proceso entrega producto
-imP más eficiente
-
-~cuR los miembros del equipo 
-cuR tu empresa 
-cuR pueden trabajar más rápido
-cuR cuando optimizas 
-cuR proceso producción
-
-
-^subT CADENA SUMINISTROS (SUPPLY CHAIN)
-deF Como director operaciones,
-deF seguramente dediques 
-deF más tiempo a gestionar 
-deF algunas funciones que otras
-
-~ejeM Por ejemplo,
-ejeM si tu empresa no provee
-ejeM 1 producto físico,
-ejeM es probable
-ejeM que no te centres demasiado
-ejeM en gestión cadena suministro
-
-~imP Sin embargo,
-imP comprender 
-imP cada función operativa 
-*imP una empresa 
-
-+imP es mejor manera 
-imP desarrollar tus habilidades y
-
-+imP prepararte 
-imP para trabajar en cualquier sector
-
-~deF Quizás te preguntes
-deF por qué gestión cadena suministro
-deF es una principales funciones 
-deF gestión operativa
-deF cuando se trata 
-deF 1 departamento independiente
-
-~deF Aunque posiblemente 
-deF haya 1 equipo responsable 
-deF cadena suministro,
-deF problemas cadena suministro 
-deF relacionados con producción interna 
-deF estarán 
-deF bajo tu responsabilidad
-
-~imP Sin embargo,
-imP es importante 
-imP poder mantener intacta 
-imP cadena suministro
-imP ya que si 
-imP se genera 1 cuello botella 
-imP en alguna etapas,
-imP puede causar grandes inconvenientes 
-imP en todo ciclo
-
-~deF Aunque estos dos procesos 
-deF suelen estar estrechamente relacionados,
-deF cada equipo 
-deF se centra en
-deF sus propias prioridades
-
-~cuR Tradicionalmente,
-cuR gestión operativa 
-cuR implica parte interna producción,
-cuR mientras que 
-cuR gestión cadena suministro
-cuR implica parte externa
++@imP conocimiento o
+
++@imP capacidad 
+
+$imP adquiridos
+*imP mediante 
+
++@imP observación o
+
++@imP participación activa,
+
+$*que son
+
++imP obtenidos al realizar trabajo 
+imP en 1 entorno real y
+
++imP al enfrentarse 
+imP a diferentes situaciones
+imP que requieren distintas acciones
+
+~imP la aptitud
+*imP es una capacidad natural,
+
++@imP adquirida,
+
++@imP aprendida o
+
++@imP desarrollada
+
+$imP para realizar 1 determinado tipo trabajo
+imP a 1 nivel concreto
+
+~*imP la formación 
+
++@imP desarrolla una competencia o
+
++@imP 1 tipo comportamiento 
+
+$imP a través instrucción
+
+^subT PRÁCTICAS SCOR
+imP las empresas
+imP utilizan prácticas
+*imP para identificar formas 
+
++@imP alternativas o
+
++@imP deseadas 
+
+$imP operar en sus cadenas suministro
+
+~imP las prácticas SCOR
+imP pueden constituir 1 subconjunto del
+imP conjunto total prácticas
+imP que reconoce una empresa
+
+~cuR el Supply Chain Council 
+cuR recomienda a empresas 
+cuR interesadas en adoptar SCOR
+cuR que adapten este marco
+*cuR mediante 
+
++@cuR investigación,
+
++@cuR revisión y
+
++@cuR integración prácticas relevantes 
+
+$*cuR del 
+
++cuR sector y
+
++cuR propia empresa (internalización)

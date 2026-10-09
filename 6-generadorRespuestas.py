@@ -1,90 +1,4 @@
 #!/usr/bin/env python3
-"""Parsea la Hoja 1 de un archivo .drawio y genera un TXT/JSON con:
-- vertices y aristas validos
-- DFS iterativo raiz -> hoja
-- colapso de cadenas consecutivas de rombos (look-ahead)
-- fusion de convergencias (multiples predecesores al mismo destino)
-- Trie para agrupar prefijos comunes
-- separacion entre arboles principales
-- v4.1: fusion de ramas hoja al bloque actual (INTACTA)
-- v4.2: fusion de ramas 'cabeza + 1 hijo hoja' bajo padre no-rombo (INTACTA)
-- v4.4: rombo contenedor (transparente) cuando su primera rama es otro rombo
-- v4.5: imagenes embebidas como renglones 'IMG:<data:image/...>'
-- v4.6: dato 'ruta' en el diagrama (<object label="..." ruta="N" id="...">)
-- v4.7: la celda anotada nunca es un rombo; el drawio anotado reemplaza
-  al original (idempotente)
-- v4.8: PASO OPCIONAL recordatorio.txt -> sufijos " & N,M"
-- v4.9: correcciones del paso recordatorio (reinicio de rango por subT,
-  IMG excluidas del matching, tema desde renglones, matching tolerante,
-  validacion de anclas con avisos)
-- v4.10: dedup de convergencias (caminos que se bifurcan y se juntan):
-  duplicado puro se elimina; contenido unico se fusiona si la bifurcacion
-  es en NO-rombo; si es en ROMBO se conservan como alternativas
-- v4.11: matching relajado cuando la pista tiene una unica clave
-- v4.12: 4 ajustes del asociador validados contra un ground-truth manual:
-  * FIX 1: los temas detectados en RENGLONES de una ruta REEMPLAZAN al
-    tema del subtitle (el rombo que queda como renglon es el que gobierna
-    la ruta; antes se SUMABAN y la ruta quedaba en dos temas a la vez,
-    ej. ruta 17 pertenecia tambien a 'Diagramas Bloques').
-  * FIX 2: SIMILITUD_CLAVE_UNICA 0.75 -> 0.83 (0.75 dejaba pasar pares
-    tipo derivada~derivativa = 0.78 entre rutas distintas).
-  * FIX 3: normalizar_texto fusiona '/' y '-' ENTRE alfanumericos
-    (A/D->ad, D/A->da, on-off->onoff); MIN_LARGO_CLAVE 3 -> 2 (permite
-    ad/da/KD/Ki) con stopwords de 2 letras ampliados y numeros solos
-    descartados; las claves de menos de 3 letras emparejan SOLO por
-    palabra exacta (evita que 'da' calce dentro de 'entrada').
-  * FIX 4: seleccion por COBERTURA: una ruta calificada se descarta si
-    no aporta NINGUNA clave nueva frente a las ya elegidas (ej. la ruta
-    'transductor entre orden v' coincide con exactamente las mismas
-    claves que la definicion de transductor -> se descarta; en cambio
-    'positiva' aporta frente a 'negativa' -> ambas se conservan).
-  * Los sufijos automaticos se escriben en orden ASCENDENTE de rutas.
-- v4.14: asociador (correcciones + mejoras):
-  * El orden de tarjetas ya no es un muro (ver v4.15 para el comportamiento actual).
-  * Tema: acepta contencion de palabras y, como ultimo recurso, ignora el tema
-    (umbral mas alto + aviso).
-  * Raiz ligera (plural/singular) en claves y rutas; coincidencia por INICIO de
-    palabra en vez de subcadena ('red' ya no calza en 'pared').
-  * Puntaje con pesos IDF, penalizacion suave por longitud de ruta y cobertura
-    calculada solo con claves de la pista.
-  * Velocidad: vocabulario global con cache por clave y SequenceMatcher con
-    prefiltros (resultado identico).
-- v4.15: * Fuera de orden con puntaje >= UMBRAL_FUERA_ORDEN (0.8): se asigna igual y el
-    orden se reancla en esa ruta (queda listada en 'verificar').
-  * Tarjeta que no supera el umbral: se asigna la ruta de mayor puntaje con '~'
-    (" & 23~" = por revisar). Un sufijo con '~' se respeta en corridas siguientes
-    y no fija el orden; si quitas el '~' pasa a ser un sufijo normal (ancla).
-- v4.16: * DETECCION de rutas: si una ruta trae 2-3 subT (subtitulo heredado + rombos que
-    quedaron como renglon), se queda SOLO el ultimo como subtitulo del bloque y los
-    demas se eliminan (afecta TXT, JSON y get_routes_id_map; no cambia la numeracion).
-- v4.19: dato 'primera' (la pregunta del recordatorio, antes del ' + ') en el cuadro de cada ruta,
-    justo antes de 'ruta'. Tarjetas de una misma ruta se unen con ' | ' (orden del recordatorio);
-    las rutas con '~' no lo escriben. Tras elegir el recordatorio se pregunta: No aplicar
-    (deja los 'primera' del drawio), Si aplicar (reemplaza) o Borrar todo. Sin recordatorio no
-    se pregunta. El drawio se vuelve a guardar despues de procesar el recordatorio.
-- v4.18: rutas adicionales por cobertura contigua (solo tarjetas con subT y 2-4 claves;
-    solo rutas del mismo subT y en orden; max 4 rutas): (a) tarjeta firme + ruta vecina
-    que aporta una clave rara de la pista -> se agrega con '~' (" & 3, 4~"); (b) tarjeta
-    bajo el umbral cuyas claves raras se reparten en rutas contiguas -> se asignan todas.
-    El '~' ahora es por ruta; un sufijo mixto ('3, 4~') se respeta y solo '3' fija el orden.
-- v4.17: el dato 'ruta' del .drawio ya no se anota en los temaS (hexagono que es raiz del
-    arbol): se anota la primera celda de contenido. Los hexagonos que no son raiz
-    (ej. 'Entre estos se encuentran') siguen siendo celdas de contenido y se anotan.
-  * La contencion de palabras en temas pasa a ultimo recurso: solo si el subT de la
-    tarjeta no coincide con ningun tema del diagrama.
-  * Tarjetas que no superan el umbral (antes siempre '~'): (a) cobertura complementaria:
-    la vecina N+-1 cubre las claves que le faltan a la mejor -> se asignan ambas;
-    (b) margen: mejor >= 0.5 y >= 0.2 por encima de la segunda -> se asigna sin '~'.
-    Ambos solo para candidatas de su tema y en orden; el resto sigue con '~'.
-    Estas asignaciones se listan en 'verificar' y NO fijan el orden.
-- v4.20: las lineas del recordatorio admiten nota personal tras el PRIMER '|'
-  ("primero + segundo & N,M | nota"). La nota se corta ANTES de cualquier otro
-  analisis (subT, sufijo de rutas, split por '+'), no participa en la asociacion
-  (ni en claves ni en temas) y se reemite tal cual al reescribir la linea, de
-  modo que el sufijo queda ANTES de la nota ("primera + segunda & 1, 2 | nota").
-  Una linea que empieza con '|' (sin cuerpo) se ignora; '|' ya no puede usarse
-  dentro de 'primero'/'segundo'.
-"""
 from __future__ import annotations
 
 import difflib
@@ -403,15 +317,6 @@ def deduplicar_convergencias(
     values: dict[str, str],
     is_rhombus_key,
 ) -> tuple[list[list[str]], int, int]:
-    """v4.10: fusiona caminos que se bifurcan y vuelven a juntar.
-
-    (a) DUPLICADO PURO: el camino no aportaria ningun texto nuevo -> se
-        elimina, sin importar donde se bifurque.
-    (b) APORTA CONTENIDO UNICO -> se fusiona SOLO si se separan en un
-        NO-rombo; el texto unico se inserta antes del punto de union.
-    (c) SE SEPARAN EN UN ROMBO -> alternativas de una decision: se
-        conservan como ruta propia.
-    """
     nuevos: list[list[str]] = []
     colas: dict[tuple[str, ...], tuple[int, list[str]]] = {}
     fusionados = 0
@@ -518,9 +423,6 @@ def make_is_rhombus_lookup(styles: dict[str, str]):
 
 
 def make_is_tema_lookup(styles: dict[str, str], roots: list[str]):
-    """v4.17: un temaS es un hexagono que es RAIZ del arbol (el padre de los subT).
-    Los hexagonos que no son raiz (p. ej. 'Entre estos se encuentran') son celdas
-    de contenido y SI reciben el dato 'ruta'."""
     raices = set(roots)
 
     def _is_tema_key(key: str) -> bool:
@@ -588,12 +490,6 @@ def _split_into_blocks(
 
 
 def conservar_ultimo_subt(bloque: RouteBlock, is_rhombus_key) -> None:
-    """v4.16 (deteccion de rutas): cuando una ruta trae 2 o 3 subT, el correcto
-    es SIEMPRE el ultimo. Los subT de una ruta son: el subtitulo (rombo activo
-    heredado del padre) y los rombos que quedaron como renglon dentro del
-    bloque. Se conserva solo el ultimo, que pasa a ser el subtitulo del bloque;
-    los demas se eliminan (subtitulo anterior y renglones-rombo), manteniendo
-    items y lines sincronizados. Con 0 o 1 subT no se toca nada."""
     pos = [i for i, (key, _l) in enumerate(bloque.items) if is_rhombus_key(key)]
     n_subt = (1 if bloque.subtitle else 0) + len(pos)
     if n_subt < 2 or not pos:
@@ -960,11 +856,6 @@ def indexar_ruta(bloque: RouteBlock) -> RutaIndexada:
 
 
 def _palabras_que_calzan(clave: str, palabras, por_largo: dict, umbral: float):
-    """Genera las palabras que calzan con la clave: palabra exacta, INICIO de
-    palabra (v4.14 FIX 6: hasta MAX_EXTRA_PREFIJO letras extra, 'red' ~ 'redes'
-    pero NO 'pared' ni 'reducir') o palabra similar. Las claves de menos de 3
-    letras solo por palabra exacta o similitud. 'umbral' relaja la similitud
-    (y el guardia de longitud) para pistas de una sola clave."""
     if clave in palabras:                            # palabra exacta
         yield clave
     largo = len(clave)
@@ -990,12 +881,6 @@ def _tokens_tema(tema: str) -> frozenset[str]:
 
 def temas_compatibles(tema_a: Optional[str], tema_b: Optional[str],
                       contencion: bool = False) -> bool:
-    """Comparacion tolerante de temas normalizados: igualdad o similitud.
-    v4.16: la CONTENCION de palabras ('sensores' dentro de 'sensores y
-    transductores') solo se usa si se pide (contencion=True), es decir, como
-    ultimo recurso cuando el subT de la tarjeta no coincide con ningun tema
-    del diagrama. Asi 'Diagramas Bloques' no se cuela en 'DIAGRAMA BLOQUES
-    SIN RETROALIMENTACION' cuando ambos son subT reales."""
     if not tema_a or not tema_b:
         return False
     if tema_a == tema_b:
@@ -1013,14 +898,6 @@ def temas_compatibles(tema_a: Optional[str], tema_b: Optional[str],
 
 def construir_temas_rutas(route_blocks: list[RouteBlock],
                           temas_subt: list[str]) -> dict[int, frozenset[str]]:
-    """Numero de ruta -> CONJUNTO de temas normalizados.
-    v4.13 FIX: el orden era la causa de un bug — la herencia (para rutas
-    sin tema propio) corria ANTES del reemplazo por renglones y usaba los
-    subtítulos crudos, asi que una ruta sin subtitle heredaba el tema del
-    rombo ANTERIOR aunque el vecino ya hubiera recuperado (via renglones)
-    el tema del rombo nuevo. Ahora: (1) temas del subtitle, (2) temas por
-    renglones REEMPLAZAN (FIX 1), (3) herencia adelante/atrás usando los
-    temas FINALES de los vecinos."""
     def temas_de_subtitle(subtitle: Optional[str]) -> list[str]:
         out: list[str] = []
         for linea in (subtitle or "").splitlines():
@@ -1087,11 +964,6 @@ class Tarjeta:
 
 
 def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str]]:
-    """Clasifica cada linea. Las vacias y las subT se conservan tal cual.
-    v4.20: todo lo que sigue al PRIMER '|' es nota personal: se corta ANTES de
-    cualquier otro analisis (subT, sufijo de rutas, split por '+'), no participa
-    en la asociacion (ni en claves ni en temas) y se conserva tal cual al
-    reescribir la linea. Una linea que empieza con '|' (sin cuerpo) se ignora."""
     lineas = texto.split("\n")
     tarjetas: list[Tarjeta] = []
     temas_subt: list[str] = []
@@ -1148,16 +1020,6 @@ def parsear_recordatorio(texto: str) -> tuple[list[str], list[Tarjeta], list[str
 
 
 class Puntuador:
-    """v4.14: puntaje de una ruta para una tarjeta.
-    - IDF: cada clave pesa entre PESO_IDF_MIN (aparece en todas las rutas) y
-      1.0 (aparece en una sola). Una clave que no aparece en ninguna ruta
-      pesa el punto medio (no se sabe cuanto discrimina).
-    - Longitud: las rutas mas largas que la mediana reciben una penalizacion
-      suave (max PENALIZACION_LONGITUD_MAX, siempre menor que MARGEN para no
-      sacar del margen a una ruta larga que coincide igual de bien).
-    - El puntaje sigue en la escala de antes: fraccion ponderada de la pista
-      + PESO_PREGUNTA * fraccion ponderada de la pregunta."""
-
     def __init__(self, route_blocks: list[RouteBlock]) -> None:
         self.rutas: dict[int, RutaIndexada] = {b.number: indexar_ruta(b) for b in route_blocks}
         self.n_rutas = len(self.rutas)
@@ -1233,9 +1095,6 @@ class Puntuador:
 
     def evaluar(self, claves_pista: list[str], claves_pregunta: list[str],
                 numero: int) -> tuple[float, frozenset[str]]:
-        """Devuelve (puntaje, claves_de_la_PISTA_coincidentes). v4.14: el
-        conjunto ya no incluye claves de la pregunta (senal debil) para que
-        la seleccion por cobertura se decida solo con la pista."""
         ruta = self.rutas[numero]
         umbral_pista = SIMILITUD_CLAVE_UNICA if len(claves_pista) == 1 else SIMILITUD_CLAVE
         mp = {c for c in claves_pista if self.presente(c, ruta, umbral_pista)}
@@ -1259,9 +1118,6 @@ def _puntuar_rutas(puntuador: Puntuador, claves_pista: list[str],
 
 def _buscar_vecina(puntuador: Puntuador, claves_pista: list[str], claves_pregunta: list[str],
                    n0: int, mp0: frozenset[str], permitidas: set[int]) -> Optional[int]:
-    """v4.16 (cobertura complementaria): la mejor ruta n0 cubre solo parte de la
-    pista; devuelve la ruta VECINA (n0+1 o n0-1) que cubre TODAS las claves que
-    faltan (ignorando las que no aparecen en ninguna ruta), o None."""
     if len(claves_pista) < 2 or not mp0:
         return None
     faltan = {c for c in claves_pista if c not in mp0 and puntuador.existe(c)}
@@ -1280,11 +1136,6 @@ def _buscar_vecina(puntuador: Puntuador, claves_pista: list[str], claves_pregunt
 def _extender_contiguas(puntuador: Puntuador, claves_pista: list[str], claves_pregunta: list[str],
                         base: list[int], permitidas: set[int], max_rutas: int
                         ) -> tuple[list[int], set[str]]:
-    """v4.18: partiendo de las rutas 'base', agrega rutas CONTIGUAS (N+-1 de alguna ya
-    elegida) mientras aporten al menos una clave RARA de la pista (aparece en a lo sumo
-    DF_MAX_EXTRA rutas) que las elegidas aun no cubran. Solo se consideran rutas
-    'permitidas' (mismo subT y en orden). Devuelve (cadena ordenada, claves raras que
-    siguen sin cubrir)."""
     raras = {c for c in claves_pista if puntuador.existe(c) and puntuador.df(c) <= DF_MAX_EXTRA}
     memo: dict[int, frozenset[str]] = {}
 
@@ -1318,9 +1169,6 @@ def _extender_contiguas(puntuador: Puntuador, claves_pista: list[str], claves_pr
 
 def _mejor_ventana(puntuador: Puntuador, claves_pista: list[str], claves_pregunta: list[str],
                    semillas: list[tuple[int, float]], permitidas: set[int]) -> Optional[list[int]]:
-    """v4.18 (tarjeta que NO supera el umbral): busca una cadena de rutas contiguas
-    (2 a MAX_RUTAS_EXTRA) que cubra TODAS las claves raras de la pista, aportando cada
-    ruta al menos una. Gana la cadena mas corta; luego la semilla de mayor puntaje."""
     mejor: Optional[tuple[tuple[int, float, int], list[int]]] = None
     for n0, p0 in semillas:
         cadena, faltan = _extender_contiguas(puntuador, claves_pista, claves_pregunta,
@@ -1334,7 +1182,6 @@ def _mejor_ventana(puntuador: Puntuador, claves_pista: list[str], claves_pregunt
 
 
 def _calificar(puntajes: list[tuple[int, float]], umbral: float) -> list[tuple[int, float]]:
-    """Rutas con puntaje >= umbral y dentro de MARGEN del mejor, mejor primero."""
     if not puntajes:
         return []
     mejor = max(p for _n, p in puntajes)
@@ -1345,11 +1192,6 @@ def _calificar(puntajes: list[tuple[int, float]], umbral: float) -> list[tuple[i
 
 def procesar_recordatorio(recordatorio_path: Path,
                           route_blocks: list[RouteBlock]) -> Optional[dict[int, list[str]]]:
-    """Asocia tarjetas del recordatorio con route_blocks en memoria y
-    escribe el sufijo " & N,M" (orden ascendente). Sobreescribe SOLO si
-    hay cambios. Sin .bak. En consola solo se listan las pendientes.
-    v4.19: devuelve el mapa ruta -> textos 'primera' (ver primeras_por_ruta), o None
-    si el recordatorio no se pudo procesar (ilegible, sin rutas o sin tarjetas)."""
     try:
         texto = recordatorio_path.read_bytes().decode("utf-8-sig")
     except (OSError, UnicodeDecodeError) as exc:
@@ -1374,7 +1216,6 @@ def procesar_recordatorio(recordatorio_path: Path,
     _conocidos: dict[str, bool] = {}
 
     def tema_conocido(tema: str) -> bool:
-        """El subT de la tarjeta coincide (igual/similar) con algun tema del diagrama."""
         r = _conocidos.get(tema)
         if r is None:
             r = any(temas_compatibles(tema, t) for t in todos_temas)
@@ -1642,9 +1483,6 @@ def procesar_recordatorio(recordatorio_path: Path,
 
 
 def primeras_por_ruta(tarjetas: list[Tarjeta]) -> dict[int, list[str]]:
-    """v4.19: ruta -> textos 'primera' (la parte de la linea antes del ' + ', o sea la
-    pregunta) de las tarjetas asociadas a esa ruta, en el orden del recordatorio y sin
-    repetidos. Solo cuentan las rutas firmes: las que llevan '~' (por revisar) no."""
     mapa: dict[int, list[str]] = {}
     for tar in tarjetas:
         if tar.rutas_asignadas:
@@ -1665,12 +1503,6 @@ def primeras_por_ruta(tarjetas: list[Tarjeta]) -> dict[int, list[str]]:
 
 def aplicar_primera_al_drawio(drawio_path: Path, primeras: dict[int, list[str]],
                               accion: str) -> tuple[int, int]:
-    """v4.19: reescribe el .drawio en su lugar segun la accion elegida.
-      'aplicar': borra los 'primera' existentes y escribe el dato 'primera' (textos unidos
-                 por ' | ') en cada celda que tenga dato 'ruta' con tarjetas asociadas;
-                 'primera' queda justo ANTES de 'ruta' dentro del elemento.
-      'borrar' : elimina todos los 'primera' (solo quedan los datos 'ruta').
-    Devuelve (celdas con 'primera' escrita, 'primera' eliminados)."""
     tree = ET.parse(drawio_path)
     diagrams = tree.getroot().findall("./diagram")
     if not diagrams:
