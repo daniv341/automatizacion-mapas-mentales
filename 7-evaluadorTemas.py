@@ -1,3 +1,4 @@
+# ---------------- IMPORTS Y DEPENDENCIAS ----------------
 import argparse
 import base64
 import json
@@ -30,6 +31,8 @@ FACTOR_RECOMPENSA_REINTENTO = 0.5
 DURACION_LECTURA_SEG = 25 * 60
 DURACION_DESCANSO_SEG = 5 * 60
 
+# ---------------- PROCESAMIENTO DE TEXTO Y SÍMBOLOS ----------------
+
 STOPWORDS_ES = {
     "el", "la", "los", "las",
     "a", "con", "de", "del", "en", "para", "por", "sin", "so", "tras", "via",
@@ -38,7 +41,7 @@ STOPWORDS_ES = {
     "esto", "eso", "aquello",
 }
 
-# ============================================================
+# ---------------- NORMALIZACIÓN DE TEXTO Y MAPEO DE SÍMBOLOS ----------------
 
 def normalizar_palabra(palabra):
     """Minúsculas y sin acentos, para comparar 'ANALÓGICA' con 'analogica'."""
@@ -88,6 +91,8 @@ NOMBRES_A_SIMBOLOS = {v: k for k, v in SIMBOLOS_ESPECIALES.items()}
 
 PATRON_PALABRA_CON_SIMBOLOS = re.compile(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+')
 
+# ---------------- EXTRACCIÓN DE PALABRAS CLAVE (STOPWORDS Y SÍMBOLOS) ----------------
+
 def extraer_claves(segundo):
     if not segundo:
         return []
@@ -105,7 +110,7 @@ def extraer_claves(segundo):
                 claves.append(nombre)
     return claves
 
-# ============================================================
+# ---------------- PARSING DE ARCHIVOS TXT ----------------
 
 PATRON_CABECERA_RUTA = re.compile(r'^ruta\s+(\d+)\s*$', re.IGNORECASE)
 
@@ -166,7 +171,7 @@ def parsear_respuestas(txt):
     cerrar_bloque()
     return rutas
 
-# ============================================================
+# ---------------- PARSING DE ARCHIVO DE RESPUESTAS (RUTAS Y CONTENIDO) ----------------
 
 PATRON_RUTAS_TARJETA = re.compile(r'&\s*([0-9]+(?:\s*,\s*[0-9]+)*)\s*[.,;]*\s*$')
 PATRON_AMPERSAND_SUELTO = re.compile(r'&[\s,;]*$')
@@ -241,6 +246,8 @@ def parsear_recordatorio(txt):
 
     return tarjetas
 
+# ---------------- DIAGNÓSTICO DE ASOCIACIONES (TARJETAS VS RUTAS) ----------------
+
 def reportar_asociaciones(tarjetas, rutas):
     """Diagnóstico por consola: cuántas tarjetas tienen botón y rutas faltantes."""
     con_rutas = [t for t in tarjetas if t["rutas"]]
@@ -255,7 +262,7 @@ def reportar_asociaciones(tarjetas, rutas):
     else:
         print("Todas las rutas citadas existen en respuestas.txt.")
 
-# ============================================================
+# ---------------- CONFIGURACIÓN DE RESALTADO Y PARSING DE DRAWIO ----------------
 
 PALETA_RESALTADO = [
     "#FFFF00",
@@ -383,6 +390,8 @@ def activar_html_en_celda(elem):
         if not style_tiene_html1(style):
             elem.set("style", style_agregar_html1(style))
 
+# ---------------- CÁLCULO DE CONTRASTE WCAG Y SELECCIÓN DE COLORES ----------------
+
 def _expandir_hex(valor):
     """'#abc' -> '#aabbcc'. Devuelve None si no es un hex válido."""
     if not valor:
@@ -470,6 +479,8 @@ def resaltar_texto(texto, claves, color):
         return texto, False
     partes.append(texto[ultimo:])
     return "".join(partes), True
+
+# ---------------- APLICACIÓN DE RESALTADO AL XML DEL DRAWIO ----------------
 
 def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
     mapa_rutas = get_routes_id_map(Path(ruta_drawio))
@@ -574,6 +585,8 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
         print("AVISO: rutas citadas que no aparecen en el mapa del drawio: "
               + ", ".join(map(str, ausentes)))
 
+# ---------------- EXTRACCIÓN DE DESCRIPCIONES E IMÁGENES DEL DRAWIO ----------------
+
 def extraer_descripciones_drawio(ruta_drawio):
     descripciones = {}
     con_ruta = 0
@@ -623,6 +636,8 @@ def extraer_descripciones_drawio(ruta_drawio):
 
     return descripciones
 
+# ---------------- MANEJO DE IMAGEN DEL MAPA ----------------
+
 _FIRMAS_IMAGEN_MAPA = {
     ".png": b"\x89PNG\r\n\x1a\n",
     ".jpg": b"\xff\xd8\xff",
@@ -666,6 +681,8 @@ def _escapar_atributo_html(texto):
         .replace(">", "&gt;")
     )
 
+# ---------------- GENERACIÓN DEL ARCHIVO HTML (PYTHON) ----------------
+
 def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash, descripciones_rutas=None, imagen_mapa=None):
     datos = {"tarjetas": tarjetas, "rutas": rutas, "descripciones_rutas": descripciones_rutas or {}}
     datos_json = json.dumps(datos, ensure_ascii=False)
@@ -706,7 +723,11 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     print(f"  Tarjetas: {len(tarjetas)}")
     print(f"  Rutas cargadas: {len(rutas)}")
 
+# ---------------- INICIO DE PLANTILLA HTML ----------------
+
 HTML_TEMPLATE = """<!DOCTYPE html>
+<!-- ---------------- PLANTILLA HTML: ESTRUCTURA BASE Y META TAGS ---------------- -->
+
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -723,6 +744,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tarjetas de Estudio</title>
 <style>
+/* ---------------- PLANTILLA HTML: ESTILOS CSS ---------------- */
+
+/* ---------------- CSS: VARIABLES DE TEMA (CLARO/OSCURO) Y RESET ---------------- */
+
   :root {
     --fill-color: __FILL_COLOR__;
     --stroke-color: __STROKE_COLOR__;
@@ -798,6 +823,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     opacity: 0.75;
     margin-bottom: 2px;
   }
+
+  /* ---------------- CSS: LAYOUT PRINCIPAL, TARJETAS Y BOTONES ---------------- */
 
   .contenedor {
     width: 100%;
@@ -944,6 +971,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gap: 6px;
     margin-bottom: 8px;
   }
+
+  /* ---------------- CSS: GAMIFICACIÓN, TIENDA Y ESTADÍSTICAS ---------------- */
 
   .fila-gamificacion {
     display: flex;
@@ -1848,6 +1877,41 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .grupo-cronometro { display: flex; align-items: center; gap: 10px; }
 
+  .badge-nota-actual {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    color: #fff;
+    background: var(--texto-suave);
+    flex-shrink: 0;
+  }
+  .badge-nota-actual.nota-verde { background: #2e7d32; }
+  .badge-nota-actual.nota-amarilla { background: #b8860b; }
+  .badge-nota-actual.nota-roja { background: #c0392b; }
+
+  .indicador-storage {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--texto-suave);
+    margin: 4px 0 10px;
+  }
+  .indicador-storage-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+    background: #2e7d32;
+  }
+  .indicador-storage-dot.storage-naranja { background: #e07b00; }
+  .indicador-storage-dot.storage-rojo { background: #c0392b; }
+
   .boton-pausa {
     border: 1.5px solid var(--color-borde-fuerte);
     background: var(--bg-superficie);
@@ -1905,6 +1969,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     padding: 12px 18px;
     font-size: 14px;
   }
+
+  /* ---------------- CSS: MODALES, OVERLAYS Y PANTALLAS SECUNDARIAS ---------------- */
 
   .modal-overlay {
     display: none;
@@ -2780,6 +2846,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 </style>
 </head>
+
+<!-- ---------------- PLANTILLA HTML: ESTRUCTURA DOM Y PANTALLAS ---------------- -->
+
 <body>
 
 <div class="contenedor">
@@ -3024,6 +3093,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   <div id="pantalla-historial" style="display:none;">
     <p class="subtitulo">Historial de sesiones</p>
+    <div class="indicador-storage" id="indicador-storage">
+      <span class="indicador-storage-dot" id="indicador-storage-dot"></span>
+      <span id="indicador-storage-texto"></span>
+    </div>
     <div class="fila-acciones-historial">
       <button class="boton-secundario" id="btn-abrir-sync" title="Backup completo y respaldos individuales">🔄 Sincronización</button>
       <button class="boton-secundario" id="btn-historial-borrar-este" title="Quita solo las sesiones de este evaluador">Borrar historial de este evaluador</button>
@@ -3060,6 +3133,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="grupo-cronometro">
           <div class="cronometro" id="cronometro">⏱ 00:00</div>
           <button class="boton-pausa" id="btn-pausa" title="Pausar el cronómetro">⏸ Pausar</button>
+          <div class="badge-nota-actual" id="badge-nota-actual" title="Nota actual de la sesión">—</div>
         </div>
       </div>
     </div>
@@ -3226,6 +3300,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>¿Empezar a estudiar?</h3>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-si">Sí, empezar</button>
+    <button class="boton-mini" id="btn-pomodoro-iniciar-historial">🧠 Ver historial de retención</button>
     <button class="modal-cancelar" id="btn-pomodoro-iniciar-cancelar">Cancelar</button>
   </div>
 </div>
@@ -3535,13 +3610,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="estadisticas-tabs">
       <button class="boton-mini estadisticas-tab activa" id="tab-estadisticas-diagramas" type="button">Diagramas</button>
       <button class="boton-mini estadisticas-tab" id="tab-estadisticas-subt" type="button">subT a repasar</button>
+      <button class="boton-mini estadisticas-tab" id="tab-estadisticas-srs" type="button">SRS</button>
     </div>
     <div id="estadisticas-pane-diagramas">
       <div id="estadisticas-contenido"></div>
     </div>
+    <div id="estadisticas-pane-srs" style="display:none;">
+      <div id="srs-tab-contenido"></div>
+    </div>
     <div id="estadisticas-pane-subt" style="display:none;">
       <div id="subt-repasar-lista"></div>
       <div class="sync-seccion-titulo">Análisis de Sesion</div>
+      <p class="modal-ayuda" style="margin-top:0; margin-bottom:10px;">
+        Solo se analizan subtemas con más de 3 tarjetas evaluadas. Los subT con 3 o menos no aparecen aquí ni tampoco su indicador de repaso se movera de 50 puntos.
+      </p>
       <div id="analisis-guardados-lista"></div>
       <p class="nota-dificiles" id="analisis-guardados-vacio" style="display:none;">Todavía no guardaste ningún análisis de sesión.</p>
       <details id="det-analisis-otros" style="display:none">
@@ -3599,8 +3681,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <button class="lightbox-cerrar" title="Cerrar">&times;</button>
   <img id="lightbox-img" src="" alt="Imagen ampliada">
 </div>
-
 <script>
+  // ---------------- JS: INICIALIZACIÓN, CONSTANTES Y ESTADO GLOBAL ----------------
+
   const datos = __DATOS_JSON__;
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
@@ -3617,6 +3700,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const SIM_SIN_PISTA = __SIM_SIN_PISTA__;   // NUEVO: todas las claves, sin pista
   const SIM_CON_PISTA = __SIM_CON_PISTA__;   // NUEVO: todas las claves, con pista (debe ser MAYOR)
   const STOPWORDS = new Set(__STOPWORDS__);  // NUEVO: palabras vacías (solo para evaluar)
+  const PESO_NO_RET = 0.40;
+  const PESO_FALLOS = 0.40;
+  const PESO_CASI = 0.20;
 
   const SIMBOLOS_ESPECIALES = __SIMBOLOS_ESPECIALES__;
   const NOMBRES_A_SIMBOLOS = {};
@@ -3625,7 +3711,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
   const PATRON_PALABRA_CON_SIMBOLOS = new RegExp(
     '[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+|[' +
-    Object.keys(SIMBOLOS_ESPECIALES).map((s) => s.replace(/[\\\]^-]/g, '\\$&')).join('') +
+    Object.keys(SIMBOLOS_ESPECIALES).map((s) => s.replace(/[\\\\]^-]/g, '\\$&')).join('') +
     ']',
     'g'
   );
@@ -3693,6 +3779,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   let tiempoInicioTarjeta = 0;
   let cronometroIntervalId = null;
+
+  // ---------------- JAVASCRIPT: ESTADO, STORAGE Y GAMIFICACIÓN ----------------  
 
   const CLAVE_GAMIFICACION = 'gamificacion_v1';
 
@@ -3846,6 +3934,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function buscarListaPropia(nombre) {
     return buscarListaEnEspacio(nombre, ESPACIO_HASH);
   }
+
+  // ---------------- JS: LÓGICA DE REPASO ESPACIADO (SRS) Y LISTAS ----------------
 
   const SRS_DEFAULT = { activated: false, startDate: 0, currentLevel: 1, lastReviewDate: 0, graduated: false, snoozeUntil: 0 };
   const SRS_INTERVALOS_DIAS = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30, 6: 60 };
@@ -4254,6 +4344,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return (tarjeta.rutas || []).filter((id) => rutasDisp.hasOwnProperty(id));
   }
 
+  // ---------------- JAVASCRIPT: RENDERIZADO DE UI Y NAVEGACIÓN ----------------
+
   function mostrarPantalla(nombre) {
     elPantallaTemas.style.display = nombre === 'temas' ? 'block' : 'none';
     elAreaTarjeta.style.display = nombre === 'estudio' ? 'block' : 'none';
@@ -4611,6 +4703,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
   }
 
+  // ---------------- JS: GALERÍA DE IMÁGENES, RUTAS HUÉRFANAS Y MAPA ----------------
+
   const CLAVE_IMAGENES = 'datos_imagenes_v1';
   let datosImagenes = cargarImagenes();
   let galeriaPos = 0;            // posición actual dentro de INDICE_IMAGENES
@@ -4926,7 +5020,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function candidatosPorIndice(indice, consultaNorm) {
-    const palabras = consultaNorm.split(/\s+/).filter(Boolean);
+    const palabras = consultaNorm.split(/\\s+/).filter(Boolean);
     if (palabras.length === 0) return null;
     let resultado = null;
     for (let i = 0; i < palabras.length; i++) {
@@ -5607,11 +5701,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       puntos_ganados: modoJuego === 'light' ? 0 : puntosSesion,
       espacio: ESPACIO_HASH,   // NUEVO: de que evaluador es esta sesion
       tarjetas: tarjetasSesion.map((t) => hashTarjeta(t)),
-      conteos: conteos ? { si: conteos.si || 0, casi: conteos.casi || 0, no: conteos.no || 0 } : { si: 0, casi: 0, no: 0 },
+      conteos: conteos
+        ? { si: conteos.si || 0, casi: conteos.casi || 0, no: conteos.no || 0, pista: conteos.pista || 0, resp: conteos.resp || 0, evaluadas: conteos.evaluadas || 0 }
+        : { si: 0, casi: 0, no: 0, pista: 0, resp: 0, evaluadas: 0 },
       listado: srsSesionActiva
         ? (srsSesionActiva.nombres.length === 1 ? srsSesionActiva.nombres[0] : 'SRS Múltiple')
         : (listaActivaNombre || ''),
     });
+
+    if (srsSesionActiva) {
+      const entradaNueva = gamificacion.historial[gamificacion.historial.length - 1];
+      if (srsSesionActiva.nombres.length === 1) {
+        const lista = buscarListaPropia(srsSesionActiva.nombres[0]);
+        if (lista) entradaNueva.nivel_srs = obtenerSrsLista(lista).currentLevel;
+      } else {
+        const niveles = {};
+        srsSesionActiva.nombres.forEach((nombre) => {
+          const lista = buscarListaPropia(nombre);
+          if (lista) niveles[nombre] = obtenerSrsLista(lista).currentLevel;
+        });
+        entradaNueva.niveles_srs = niveles;
+      }
+    }
     podarHistorialPorEvaluador();   // NUEVO: justo después de agregar la entrada, antes de persistir
     if (modoJuego !== 'light') {
       gamificacion.puntosTotales += puntosSesion;
@@ -5619,6 +5730,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     guardarGamificacion();
     actualizarBarraGamificacion();
     estadisticasConstruidas = false;
+    srsConstruido = false;
   }
 
   function renderResumenGamificacion(nota) {
@@ -7171,10 +7283,34 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let historialPaginaActual = 1;   // NUEVO: página actual del historial (1-indexado)
   const HISTORIAL_POR_PAGINA = 15;
 
+  const LIMITE_STORAGE_BYTES = 5242880;
+
+  // ---------------- JS: HISTORIAL, SINCRONIZACIÓN Y BACKUPS (JSON) ----------------
+
+  function calcularUsoStorage() {
+    let bytes = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const clave = localStorage.key(i);
+      const valor = localStorage.getItem(clave) || '';
+      bytes += (clave.length + valor.length) * 2;
+    }
+    return bytes;
+  }
+
+  function renderIndicadorStorage() {
+    const bytes = calcularUsoStorage();
+    const mb = bytes / (1024 * 1024);
+    const pct = (bytes / LIMITE_STORAGE_BYTES) * 100;
+    document.getElementById('indicador-storage-texto').textContent = '💾 ' + mb.toFixed(1) + ' MB / 5 MB';
+    const dot = document.getElementById('indicador-storage-dot');
+    dot.className = 'indicador-storage-dot' + (pct > 80 ? ' storage-rojo' : (pct >= 60 ? ' storage-naranja' : ''));
+  }
+
   function abrirHistorial() {
     historialPaginaActual = 1;
     mostrarPantalla('historial');
     renderHistorial();
+    renderIndicadorStorage();
   }
 
   elBtnAbrirHistorial.addEventListener('click', () => abrirHistorial());
@@ -7184,6 +7320,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnHistorialBorrarGlobal.addEventListener('click', () => borrarHistorialGlobal());
 
   function tieneClave(obj, k) { return Object.prototype.hasOwnProperty.call(obj, k); }
+
+  // ---------------- JS: VINCULACIÓN DE ESPACIOS Y EVALUADORES ----------------
 
   const ZONAS_VINCULO = {
     dificiles: {
@@ -7348,14 +7486,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (!viejo) return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
       if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
       const n = retencionRutas.filter((r) => r.espacio === viejo).length;
-      if (n === 0) return { cantidad: 0, texto: 'No se encontraron entradas de retención de rutas guardadas bajo «' + viejo + '».' };
+      if (n === 0) return { cantidad: 0, texto: 'No se encontraron entradas de retención de rutas bajo «' + viejo + '».' };
       return { cantidad: n, texto: 'Se vincularían ' + n + ' entrada(s) de retención de rutas.' };
     }
     if (zona === 'analisisSesion') {
       if (!viejo) return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
       if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
       const n = analisisGuardados.filter((a) => a.espacio === viejo).length;
-      if (n === 0) return { cantidad: 0, texto: 'No se encontraron análisis de sesion guardados bajo «' + viejo + '».' };
+      if (n === 0) return { cantidad: 0, texto: 'No se encontraron análisis de sesion bajo «' + viejo + '».' };
       return { cantidad: n, texto: 'Se vincularían ' + n + ' análisis guardado(s).' };
     }
     const z = ZONAS_VINCULO[zona];
@@ -7959,6 +8097,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elInputBuscadorObservador.addEventListener('input', debounce(() => renderDropdownBuscadorObservador(elInputBuscadorObservador.value), 200));
   elInputBuscadorGaleria.addEventListener('input', debounce(() => renderDropdownBuscadorGaleria(elInputBuscadorGaleria.value), 200));
   elInputBuscadorHuerfanas.addEventListener('input', debounce(() => renderDropdownBuscadorHuerfanas(elInputBuscadorHuerfanas.value), 200));
+
+  // ---------------- JS: EVENTOS GLOBALES, ATAJOS DE TECLADO Y CIERRE DE MODALES ----------------
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#zona-buscador-temas')) cerrarDropdownBuscador(elDropdownBuscadorTemas);
@@ -9580,6 +9720,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     document.getElementById('pomodoro-resumen-dificiles-lista').textContent = dificilesIds.length > 0 ? dificilesIds.map((id) => '#' + id).join(', ') : '—';
   }
 
+  // ---------------- JS: ESTADÍSTICAS, GRÁFICOS SVG Y ANÁLISIS DE SESIÓN ----------------
+
   const NS_SVG = 'http://www.w3.org/2000/svg';
   function elSvg(tag, attrs) {
     const el = document.createElementNS(NS_SVG, tag);
@@ -9718,28 +9860,83 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     tit.className = 'grafico-titulo';
     tit.textContent = titulo;
     wrap.appendChild(tit);
-    wrap.appendChild(elementoGrafico);
-    if (elementoLeyenda) wrap.appendChild(elementoLeyenda);
+    if (!elementoGrafico) {
+      const p = document.createElement('p');
+      p.className = 'grafico-vacio';
+      p.textContent = 'Sin datos aún';
+      wrap.appendChild(p);
+    } else {
+      wrap.appendChild(elementoGrafico);
+      if (elementoLeyenda) wrap.appendChild(elementoLeyenda);
+    }
     contenedor.appendChild(wrap);
   }
 
   let estadisticasConstruidas = false;
 
+  function construirGraficoStackedBarras(entradas, series, etiquetasX) {
+    const w = 600, h = 240, padL = 16, padR = 16, padT = 10, padB = 30;
+    const innerW = w - padL - padR, innerH = h - padT - padB;
+    const anchoBarra = (innerW / entradas.length) * 0.55;
+    const svg = elSvg('svg', { viewBox: '0 0 ' + w + ' ' + h, class: 'grafico-svg', preserveAspectRatio: 'xMidYMid meet' });
+
+    entradas.forEach((entrada, i) => {
+      const total = series.reduce((a, s) => a + (entrada[s.campo] || 0), 0);
+      const cx = padL + (innerW / entradas.length) * (i + 0.5);
+      const x = cx - anchoBarra / 2;
+
+      if (total > 0) {
+        let yAcum = padT + innerH;
+        series.forEach((s) => {
+          const valor = entrada[s.campo] || 0;
+          if (valor <= 0) return;
+          const altura = (valor / total) * innerH;
+          const y = yAcum - altura;
+          svg.appendChild(elSvg('rect', { x: x.toFixed(1), y: y.toFixed(1), width: anchoBarra.toFixed(1), height: altura.toFixed(1), fill: s.color }));
+          yAcum = y;
+        });
+      } else {
+        svg.appendChild(elSvg('rect', { x: x.toFixed(1), y: padT, width: anchoBarra.toFixed(1), height: innerH, fill: 'var(--color-borde-suave)' }));
+      }
+
+      const etqX = elSvg('text', { x: cx.toFixed(1), y: h - 10, 'text-anchor': 'middle', 'font-size': 9.5, fill: 'var(--texto-suave)' });
+      etqX.textContent = (etiquetasX && etiquetasX[i]) || String(i + 1);
+      svg.appendChild(etqX);
+    });
+
+    svg.appendChild(elSvg('line', { x1: padL, y1: padT + innerH, x2: w - padR, y2: padT + innerH, stroke: 'var(--color-borde-medio)', 'stroke-width': 1.5 }));
+    return svg;
+  }
+
+  function leyendaSeries(series) {
+    const div = document.createElement('div');
+    div.className = 'grafico-leyenda';
+    series.forEach((s) => {
+      const item = document.createElement('span');
+      item.className = 'grafico-leyenda-item';
+      const punto = document.createElement('span');
+      punto.className = 'grafico-leyenda-punto';
+      punto.style.background = s.color;
+      item.appendChild(punto);
+      item.appendChild(document.createTextNode(s.nombre));
+      div.appendChild(item);
+    });
+    return div;
+  }
+
   function construirEstadisticas() {
     const cont = document.getElementById('estadisticas-contenido');
     cont.innerHTML = '';
 
-    const historialPropio = gamificacion.historial.filter((s) => espacioDeSesion(s) === ESPACIO_HASH);
-
-    const ultimasNotas = historialPropio
+    const historialPropio = gamificacion.historial
+      .filter((s) => espacioDeSesion(s) === ESPACIO_HASH)
       .slice()
-      .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)))
-      .slice(-10)
-      .map((s) => ({ fecha: s.fecha, nota: typeof s.nota === 'number' ? s.nota : 0 }));
+      .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+    const ultimasSesiones = historialPropio.slice(-10);
+    const etiquetasSesiones = ultimasSesiones.map((s) => formatearFechaCortaGrafico(s.fecha));
 
-    if (ultimasNotas.length > 0) {
-      agregarSeccionGrafico(cont, '📈 Evolución de la nota', construirGraficoLineaNotas(ultimasNotas));
-    }
+    const ultimasNotas = ultimasSesiones.map((s) => ({ fecha: s.fecha, nota: typeof s.nota === 'number' ? s.nota : 0 }));
+    agregarSeccionGrafico(cont, '📈 Evolución de la nota', ultimasNotas.length > 0 ? construirGraficoLineaNotas(ultimasNotas) : null);
 
     const conteosTotales = { si: 0, casi: 0, no: 0 };
     historialPropio.forEach((s) => {
@@ -9749,39 +9946,176 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       conteosTotales.no += c.no || 0;
     });
     const totalConteos = conteosTotales.si + conteosTotales.casi + conteosTotales.no;
+    agregarSeccionGrafico(cont, '📊 Resultados acumulados (últimas 10 sesiones)', totalConteos > 0 ? construirGraficoBarras(conteosTotales) : null);
 
-    if (totalConteos > 0) {
-      agregarSeccionGrafico(cont, '📊 Resultados de sesiones', construirGraficoBarras(conteosTotales));
-    }
+    const seriesResultado = [
+      { campo: 'si', color: '#2e7d32', nombre: 'Entendidas' },
+      { campo: 'casi', color: '#b8860b', nombre: 'Casi' },
+      { campo: 'no', color: '#c0392b', nombre: 'No entendidas' },
+    ];
+    const hayResultadoPorSesion = ultimasSesiones.some((s) => s.conteos && (s.conteos.si + s.conteos.casi + s.conteos.no) > 0);
+    agregarSeccionGrafico(cont, '📊 Resultado por sesión',
+      hayResultadoPorSesion ? construirGraficoStackedBarras(ultimasSesiones.map((s) => s.conteos || {}), seriesResultado, etiquetasSesiones) : null,
+      hayResultadoPorSesion ? leyendaSeries(seriesResultado) : null);
 
-    const propiasRetencion = retencionPropias();
-    let ultimaRetencion = null;
-    propiasRetencion.forEach((r) => {
-      if (!ultimaRetencion || (r.timestamp || 0) > (ultimaRetencion.timestamp || 0)) ultimaRetencion = r;
+    const sesionesConPista = ultimasSesiones.map((s) => {
+      const c = s.conteos || {};
+      const ev = c.evaluadas || 0;
+      return { conPista: c.pista || 0, sinPista: Math.max(0, ev - (c.pista || 0)) };
+    });
+    const hayPista = sesionesConPista.some((s) => (s.conPista + s.sinPista) > 0);
+    const seriesPista = [
+      { campo: 'conPista', color: '#b8860b', nombre: 'Con pista' },
+      { campo: 'sinPista', color: '#2e7d32', nombre: 'Sin pista' },
+    ];
+    agregarSeccionGrafico(cont, '💡 Uso de pistas por sesión',
+      hayPista ? construirGraficoStackedBarras(sesionesConPista, seriesPista, etiquetasSesiones) : null,
+      hayPista ? leyendaSeries(seriesPista) : null);
+
+    const sesionesConResp = ultimasSesiones.map((s) => {
+      const c = s.conteos || {};
+      const ev = c.evaluadas || 0;
+      return { conResp: c.resp || 0, sinResp: Math.max(0, ev - (c.resp || 0)) };
+    });
+    const hayResp = sesionesConResp.some((s) => (s.conResp + s.sinResp) > 0);
+    const seriesResp = [
+      { campo: 'conResp', color: '#c0392b', nombre: 'Mostró respuesta' },
+      { campo: 'sinResp', color: '#2e7d32', nombre: 'No mostró' },
+    ];
+    agregarSeccionGrafico(cont, '👁 Uso de "Mostrar respuesta" por sesión',
+      hayResp ? construirGraficoStackedBarras(sesionesConResp, seriesResp, etiquetasSesiones) : null,
+      hayResp ? leyendaSeries(seriesResp) : null);
+
+    const ultimosPomodoros = retencionPropias().slice().sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)).slice(-10);
+    const etiquetasPomodoros = ultimosPomodoros.map((r) => formatearFechaCortaGrafico(new Date(r.timestamp || 0).toISOString()));
+
+    const hayRetencion = ultimosPomodoros.some((r) => (r.retenidas + r.noRetenidas) > 0);
+    const seriesRetencion = [
+      { campo: 'retenidas', color: '#2e7d32', nombre: 'Retenidas' },
+      { campo: 'noRetenidas', color: '#c0392b', nombre: 'No retenidas' },
+    ];
+    agregarSeccionGrafico(cont, '🧠 Retención de rutas (últimos 10 Pomodoros)',
+      hayRetencion ? construirGraficoStackedBarras(ultimosPomodoros, seriesRetencion, etiquetasPomodoros) : null,
+      hayRetencion ? leyendaSeries(seriesRetencion) : null);
+
+    const pomodorosDificiles = ultimosPomodoros.map((r) => ({ dificiles: r.dificiles || 0, noDificiles: Math.max(0, (r.totalRutas || 0) - (r.dificiles || 0)) }));
+    const hayDificiles = pomodorosDificiles.some((r) => (r.dificiles + r.noDificiles) > 0);
+    const seriesDificiles = [
+      { campo: 'dificiles', color: '#e07b00', nombre: 'Difíciles' },
+      { campo: 'noDificiles', color: '#9e9e9e', nombre: 'No difíciles' },
+    ];
+    agregarSeccionGrafico(cont, '⚠️ Dificultad de rutas (últimos 10 Pomodoros)',
+      hayDificiles ? construirGraficoStackedBarras(pomodorosDificiles, seriesDificiles, etiquetasPomodoros) : null,
+      hayDificiles ? leyendaSeries(seriesDificiles) : null);
+  }
+
+  function nivelDeSesionSrs(s, nombre) {
+    if (typeof s.nivel_srs === 'number') return s.nivel_srs;
+    if (s.niveles_srs && typeof s.niveles_srs[nombre] === 'number') return s.niveles_srs[nombre];
+    return null;
+  }
+
+  function construirGraficoLineaSrs(sesiones, nombre) {
+    const w = 600, h = 240, padL = 32, padR = 14, padT = 26, padB = 30;
+    const innerW = w - padL - padR, innerH = h - padT - padB;
+    const svg = elSvg('svg', { viewBox: '0 0 ' + w + ' ' + h, class: 'grafico-svg', preserveAspectRatio: 'xMidYMid meet' });
+
+    [0, 2.5, 5, 7.5, 10].forEach((v) => {
+      const y = padT + innerH - (v / 10) * innerH;
+      svg.appendChild(elSvg('line', { x1: padL, y1: y.toFixed(1), x2: w - padR, y2: y.toFixed(1), stroke: 'var(--color-borde-suave)', 'stroke-width': 1 }));
+      const txt = elSvg('text', { x: padL - 6, y: (y + 3.5).toFixed(1), 'text-anchor': 'end', 'font-size': 10, fill: 'var(--texto-suave)' });
+      txt.textContent = String(v);
+      svg.appendChild(txt);
     });
 
-    if (ultimaRetencion && (ultimaRetencion.retenidas + ultimaRetencion.noRetenidas) > 0) {
-      const segmentos = [
-        { etiqueta: 'Retenidas', valor: ultimaRetencion.retenidas, color: '#2e7d32' },
-        { etiqueta: 'No retenidas', valor: ultimaRetencion.noRetenidas, color: '#c0392b' },
-      ];
-      agregarSeccionGrafico(cont, '🧠 Retención de rutas (último Pomodoro)', construirGraficoTorta(segmentos), leyendaGrafico(segmentos, ultimaRetencion.retenidas + ultimaRetencion.noRetenidas));
+    const n = sesiones.length;
+    const paso = n > 1 ? innerW / (n - 1) : 0;
+    const coords = sesiones.map((s, i) => ({
+      x: padL + (n > 1 ? i * paso : innerW / 2),
+      y: padT + innerH - (Math.max(0, Math.min(10, s.nota || 0)) / 10) * innerH,
+    }));
+
+    if (coords.length > 1) {
+      const d = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+      svg.appendChild(elSvg('path', { d: d, fill: 'none', stroke: 'var(--color-boton)', 'stroke-width': 2.5 }));
     }
 
-    if (ultimaRetencion && ultimaRetencion.totalRutas > 0) {
-      const noDificiles = Math.max(0, ultimaRetencion.totalRutas - ultimaRetencion.dificiles);
-      const segmentos = [
-        { etiqueta: 'Difíciles', valor: ultimaRetencion.dificiles, color: '#e07b00' },
-        { etiqueta: 'No difíciles', valor: noDificiles, color: '#9e9e9e' },
-      ];
-      agregarSeccionGrafico(cont, '⚠️ Dificultad de rutas (último Pomodoro)', construirGraficoTorta(segmentos), leyendaGrafico(segmentos, ultimaRetencion.totalRutas));
-    }
+    coords.forEach((c, i) => {
+      svg.appendChild(elSvg('circle', { cx: c.x.toFixed(1), cy: c.y.toFixed(1), r: 4, fill: 'var(--color-boton)' }));
+      const nivel = nivelDeSesionSrs(sesiones[i], nombre);
+      const etqNivel = elSvg('text', { x: c.x.toFixed(1), y: (c.y - 10).toFixed(1), 'text-anchor': 'middle', 'font-size': 9, fill: 'var(--texto-cabecera)', 'font-weight': 700 });
+      etqNivel.textContent = 'N' + (nivel === null ? '?' : nivel);
+      svg.appendChild(etqNivel);
+      const etqX = elSvg('text', { x: c.x.toFixed(1), y: h - 10, 'text-anchor': 'middle', 'font-size': 9, fill: 'var(--texto-suave)' });
+      etqX.textContent = String(i + 1);
+      svg.appendChild(etqX);
+    });
+
+    return svg;
+  }
+
+  function estadoActualSrsTexto(srs) {
+    if (srs.graduated) return '🎓 Graduado';
+    if (srs.activated) return 'Nivel ' + srs.currentLevel + ' · Próximo: ' + srsTextoProximoRepaso(srs);
+    return 'Desactivado';
+  }
+
+  function sesionesSrsDeLista(nombre) {
+    return gamificacion.historial
+      .filter((s) => espacioDeSesion(s) === ESPACIO_HASH && s.modo === 'srs' && s.listado === nombre)
+      .slice()
+      .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)))
+      .slice(-10);
+  }
+
+  let srsConstruido = false;
+  let srsDiagramasOcultos = new Set();
+
+  function construirPestanaSrs() {
+    const cont = document.getElementById('srs-tab-contenido');
+    cont.innerHTML = '';
+
+    const nombresConHistoria = new Set();
+    gamificacion.historial.forEach((s) => {
+      if (espacioDeSesion(s) === ESPACIO_HASH && s.modo === 'srs' && s.listado && s.listado !== 'SRS Múltiple') {
+        nombresConHistoria.add(s.listado);
+      }
+    });
+
+    Array.from(nombresConHistoria).sort((a, b) => a.localeCompare(b)).forEach((nombre) => {
+      if (srsDiagramasOcultos.has(nombre)) return;
+      const sesiones = sesionesSrsDeLista(nombre);
+      if (sesiones.length === 0) return;
+
+      const lista = buscarListaPropia(nombre);
+      const srs = lista ? obtenerSrsLista(lista) : Object.assign({}, SRS_DEFAULT);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'grafico-wrap';
+      const tit = document.createElement('div');
+      tit.className = 'grafico-titulo';
+      tit.textContent = nombre + ' — ' + estadoActualSrsTexto(srs);
+      wrap.appendChild(tit);
+      wrap.appendChild(construirGraficoLineaSrs(sesiones, nombre));
+
+      const esActivaVigente = srs.activated && !srs.graduated;
+      if (!esActivaVigente) {
+        const btn = botonMini('🗑 Borrar diagrama', () => {
+          srsDiagramasOcultos.add(nombre);
+          construirPestanaSrs();
+        });
+        btn.style.marginTop = '8px';
+        wrap.appendChild(btn);
+      }
+
+      cont.appendChild(wrap);
+    });
 
     if (cont.children.length === 0) {
-      const vacio = document.createElement('p');
-      vacio.className = 'grafico-vacio';
-      vacio.textContent = 'Todavía no hay datos suficientes para mostrar estadísticas.';
-      cont.appendChild(vacio);
+      const p = document.createElement('p');
+      p.className = 'grafico-vacio';
+      p.textContent = 'No hay listas con Repaso Espaciado activado';
+      cont.appendChild(p);
     }
   }
 
@@ -9821,7 +10155,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const pctCasi = promedioCampoAnalisis(nombreSubtema, 'pctCasi') || 0;
     const pctPista = promedioCampoAnalisis(nombreSubtema, 'pctPista') || 0;
     const pctResp = promedioCampoAnalisis(nombreSubtema, 'pctResp') || 0;
-    const score = pctNoRet * 0.3 + pctFallos * 0.3 + pctCasi * 0.2 + pctPista * 0.1 + pctResp * 0.1;
+    const base = pctNoRet * PESO_NO_RET + pctFallos * PESO_FALLOS + pctCasi * PESO_CASI;
+    const dependencia = 1 + (pctPista + pctResp) / 200;
+    const score = Math.min(100, base * dependencia);
     return Math.round(score);
   }
 
@@ -9874,22 +10210,29 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elModalEstadisticas = document.getElementById('modal-estadisticas');
 
   function mostrarTabEstadisticas(tab) {
-    const esDiagramas = tab === 'diagramas';
-    document.getElementById('estadisticas-pane-diagramas').style.display = esDiagramas ? 'block' : 'none';
-    document.getElementById('estadisticas-pane-subt').style.display = esDiagramas ? 'none' : 'block';
-    document.getElementById('tab-estadisticas-diagramas').classList.toggle('activa', esDiagramas);
-    document.getElementById('tab-estadisticas-subt').classList.toggle('activa', !esDiagramas);
-    if (esDiagramas) {
+    document.getElementById('estadisticas-pane-diagramas').style.display = tab === 'diagramas' ? 'block' : 'none';
+    document.getElementById('estadisticas-pane-subt').style.display = tab === 'subt' ? 'block' : 'none';
+    document.getElementById('estadisticas-pane-srs').style.display = tab === 'srs' ? 'block' : 'none';
+    document.getElementById('tab-estadisticas-diagramas').classList.toggle('activa', tab === 'diagramas');
+    document.getElementById('tab-estadisticas-subt').classList.toggle('activa', tab === 'subt');
+    document.getElementById('tab-estadisticas-srs').classList.toggle('activa', tab === 'srs');
+
+    if (tab === 'diagramas') {
       if (!estadisticasConstruidas) {
         construirEstadisticas();
         estadisticasConstruidas = true;
       }
-    } else {
+    } else if (tab === 'subt') {
       if (!subtRepasarConstruido) {
         construirListaSubtRepasar();
         subtRepasarConstruido = true;
       }
       renderAnalisisGuardadosLista();
+    } else if (tab === 'srs') {
+      if (!srsConstruido) {
+        construirPestanaSrs();
+        srsConstruido = true;
+      }
     }
   }
 
@@ -9905,6 +10248,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('btn-estadisticas-cerrar').addEventListener('click', () => cerrarModalEstadisticas());
   document.getElementById('tab-estadisticas-diagramas').addEventListener('click', () => mostrarTabEstadisticas('diagramas'));
   document.getElementById('tab-estadisticas-subt').addEventListener('click', () => mostrarTabEstadisticas('subt'));
+  document.getElementById('tab-estadisticas-srs').addEventListener('click', () => mostrarTabEstadisticas('srs'));
 
   function filaRevisarGuardada(hash, entrada) {
     const div = document.createElement('div');
@@ -10198,6 +10542,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     analisisGuardadoEstaSesion = false;
     elBtnAnalisisSesionGuardar.disabled = false;
     elBtnAnalisisSesionGuardar.textContent = '💾 Guardar análisis';
+    actualizarBadgeNotaActual();
     modoZombie = false;   // NUEVO: una sesión nueva nunca arranca en modo zombie
     reintentadasSesion = new Set();
     primerIntentoFallido = new Set();
@@ -10226,6 +10571,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function cronometroCongelado() {
     return pausaManual || notaAbierta || razonesAbierto || indiceCongelado === indiceActual;
   }
+
+  // ---------------- JS: NAVEGACIÓN ENTRE PANTALLAS Y RENDERIZADO DE TEMAS ----------------
 
   function renderTarjeta() {
     if (tarjetasSesion.length === 0) {
@@ -10449,6 +10796,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elRutasContenedor.appendChild(det);
     });
   }
+
+  // ---------------- JS: EXTRACCIÓN DE RAÍCES Y VARIANTES DE PALABRAS ----------------
 
   const SUFIJOS_RAIZ = [
     'imientos','imiento',
@@ -10760,6 +11109,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       (modoJuego !== 'light' ? ' (+' + pts + ' pts)' : '') + '. Tu racha crece normal.');
   }
 
+  // ---------------- JAVASCRIPT: LÓGICA DE EVALUACIÓN Y RESPUESTAS ----------------
+
+  // ---------------- JS: EVALUACIÓN DE RESPUESTAS ESCRITAS (RAÍCES Y COINCIDENCIAS) ----------------
+
   function evaluarRespuesta() {
     if (pausaManual || segundaPendiente) return;
     if (resultados[indiceActual] !== null) return;
@@ -10857,6 +11210,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (reintentoExitoso.has(indiceActual)) avisoReintentoAcertado(indiceActual);
     }
 
+    actualizarBadgeNotaActual();
     renderTarjeta();
   }
 
@@ -10919,6 +11273,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       tiempoInicioTarjeta = Date.now();
     }
 
+    actualizarBadgeNotaActual();
     renderTarjeta();
   }
 
@@ -10950,6 +11305,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
 
     actualizarCronometro();
+    actualizarBadgeNotaActual();
     renderTarjeta();
   }
 
@@ -10973,6 +11329,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     reproducirSonido('bien');
     actualizarBarraGamificacion();
+    actualizarBadgeNotaActual();
 
     renderTarjeta();
   }
@@ -11050,6 +11407,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!borradorSinGuardar() && !razonesSinGuardar()) return true;
     return await confirmarAccion('Tenés cambios sin guardar (nota y/o razones). ¿Descartarlos?');
   }
+
+  // ---------------- JS: GESTIÓN DE NOTAS, RAZONES Y PANEL DE AYUDA ----------------
 
   function renderNota(actual) {
     const efectiva = notaEfectivaDe(actual);
@@ -11453,6 +11812,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return tarjetasSesion.length > 0 ? (10 * puntos) / tarjetasSesion.length : 0;
   }
 
+  function actualizarBadgeNotaActual() {
+    if (modoObservador) return;
+    const hayEvaluadas = resultados.some((r) => r === 'si' || r === 'no' || r === 'casi');
+    const elBadge = document.getElementById('badge-nota-actual');
+    if (!hayEvaluadas) {
+      elBadge.textContent = '—';
+      elBadge.className = 'badge-nota-actual';
+      return;
+    }
+    const nota = calcularNota();
+    elBadge.textContent = nota.toFixed(1);
+    elBadge.className = 'badge-nota-actual ' + (nota >= 7 ? 'nota-verde' : (nota >= 5 ? 'nota-amarilla' : 'nota-roja'));
+  }
+
   function crearItemResultado(i, conTema, mostrarRazones) {
     const tarjeta = tarjetasSesion[i];
     const item = document.createElement('div');
@@ -11584,12 +11957,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function mostrarResumen() {
-    const conteos = { si: 0, casi: 0, no: 0, saltar: 0 };
+    const conteos = { si: 0, casi: 0, no: 0, saltar: 0, pista: 0, resp: 0, evaluadas: 0 };
     const indices = { si: [], casi: [], no: [], saltar: [] };
 
     resultados.forEach((r, i) => {
       conteos[r]++;
       indices[r].push(i);
+      if (r === 'si' || r === 'no' || r === 'casi') {
+        conteos.evaluadas++;
+        if (pistaMostrada[i]) conteos.pista++;
+        if (respuestaMostrada[i]) conteos.resp++;
+      }
     });
 
     const nota = calcularNota();
@@ -11801,6 +12179,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     document.getElementById('modal-srs-aviso').classList.remove('abierto');
   });
 
+  // ---------------- JAVASCRIPT: POMODORO, DICTADO Y HERRAMIENTAS EXTRA ----------------
+
   (function () {
     const RecognitionCtor = window.webkitSpeechRecognition || window.SpeechRecognition;
     const soportado = !!RecognitionCtor;
@@ -11857,7 +12237,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         textoNuevo = textoNuevo.trim();
         if (textoNuevo === '') return;
         const actual = textareaDictadoActivo.value;
-        textareaDictadoActivo.value = (actual && !/\s$/.test(actual)) ? actual + ' ' + textoNuevo : actual + textoNuevo;
+        textareaDictadoActivo.value = (actual && !/\\s$/.test(actual)) ? actual + ' ' + textoNuevo : actual + textoNuevo;
         textareaDictadoActivo.dispatchEvent(new Event('input', { bubbles: true }));
       };
 
@@ -11916,6 +12296,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (textareaDictadoActivo === textarea) detenerDictado();
     };
   })();
+
+  // ---------------- JS: POMODORO, TEMPORIZADORES Y DICTADO POR VOZ ----------------
 
   const elBtnPomodoro = document.getElementById('btn-pomodoro');
   const elPomodoroBadge = document.getElementById('pomodoro-badge');
@@ -12042,6 +12424,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   document.getElementById('btn-pomodoro-iniciar-si').addEventListener('click', () => iniciarPomodoro());
   document.getElementById('btn-pomodoro-iniciar-cancelar').addEventListener('click', () => cerrarModalPomodoroIniciar());
+  document.getElementById('btn-pomodoro-iniciar-historial').addEventListener('click', () => {
+    cerrarModalPomodoroIniciar();
+    abrirModalRetencionRutas();
+  });
 
   elBtnPomodoroRetencion.addEventListener('click', () => {
     if (pomodoroFase !== 'lectura') return;
@@ -12130,6 +12516,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </body>
 </html>
 """
+# ---------------- FIN DE PLANTILLA HTML ----------------
+
 
 # ---------------- CONFIGURACIÓN ----------------
 
@@ -12137,6 +12525,8 @@ try:
     from tkinter import Toplevel, Label, Frame, Button
 except ImportError:
     Toplevel = Label = Frame = Button = None
+
+# ---------------- INTERFAZ GRÁFICA (TKINTER) Y PALETA DE COLORES ----------------
 
 COLOR_DEFAULT = "rosadoClaro"
 
@@ -12190,6 +12580,8 @@ def elegir_color(raiz, colores, default):
     raiz.wait_window(vent)
     return eleccion["clave"] if eleccion["clave"] else default
 
+# ---------------- PROCESAMIENTO Y RESALTADO DE DRAWIO ----------------
+
 PALETA_COLORES = {
     "amarillo": ["#DEDE00", "#5C5C5C"],
     "celeste": ["#00CCCC", "#5C5C5C"],
@@ -12219,6 +12611,8 @@ PALETA_COLORES = {
     "amarilloClaro": ["#FFFF80", "#5C5C5C"],
     "azulOscuro": ["#000096", "#D0D0D0"],
 }
+
+# ---------------- INTERFAZ GRÁFICA: DIÁLOGO DE RESALTADO (TKINTER) ----------------
 
 def preguntar_resaltado(raiz):
     eleccion = {"aplicar": False}
@@ -12269,7 +12663,7 @@ def preguntar_resaltado(raiz):
     
     return eleccion["aplicar"]
 
-# ---------------- PIPELINE (compartido por el modo interactivo y --config) ----------------
+# ---------------- PIPELINE PRINCIPAL DE GENERACIÓN ----------------
 
 def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_imagen_mapa=None, propagar=False):
     try:
@@ -12322,7 +12716,7 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
         return False, f"{type(error).__name__}: {error}"
     return True, ""
 
-# ---------------- MODO --config (sin ninguna UI) ----------------
+# ---------------- MODO POR LOTE (--config) Y VALIDACIÓN ----------------
 
 CAMPOS_CONFIG = {
     "recordatorio": str,
@@ -12471,15 +12865,15 @@ def validar_entrada(entrada, carpeta_config):
     return valores, errores, avisos
 
 def _etiqueta_entrada(entrada, numero):
-    """Nombre para la consola: stem de su respuestas.txt, o 'entrada N' si no se puede saber."""
     if isinstance(entrada, dict):
         resp = entrada.get("respuestas")
         if isinstance(resp, str) and resp.strip():
             return Path(resp).stem or f"entrada {numero}"
     return f"entrada {numero}"
 
+# ---------------- MODO POR LOTE: LECTURA Y VALIDACIÓN DE CONFIG.JSON ----------------
+
 def ejecutar_config(ruta_config):
-    """Procesa TODAS las entradas aunque alguna falle. Devuelve el código de salida (0 = todo OK)."""
     try:
         entradas, avisos_globales = leer_config(ruta_config)
     except ErrorConfig as error:
@@ -12546,7 +12940,7 @@ def ejecutar_config(ruta_config):
     print(f"{total - fallos} de {total} evaluadores generados.")
     return 1 if fallos else 0
 
-# ---------------- MODO INTERACTIVO (el flujo de siempre) ----------------
+# ---------------- MODO INTERACTIVO Y PUNTO DE ENTRADA (MAIN) ----------------
 
 def main_interactivo():
     if Tk is None or filedialog is None:
@@ -12602,6 +12996,8 @@ def main_interactivo():
 
     generar_evaluador(txt, txt_respuestas, ruta_drawio, aplicar_resaltado, opciones,
                        ruta_imagen_mapa=ruta_imagen_mapa or None, propagar=True)
+
+# ---------------- PUNTO DE ENTRADA: ARGUMENTOS DE LÍNEA DE COMANDOS ----------------    
 
 def main():
     parser = argparse.ArgumentParser(

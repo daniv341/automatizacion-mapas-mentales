@@ -1,75 +1,10 @@
 {
   "entradas": [
     {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U1.txt",
-      "respuestas": "../guardados/rutas/1 - Sistemas de Control.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\1 - Sistemas de Control.drawio",
-      "resaltar": false,
-      "colores": "amarilloClaro",
-      "imagen_mapa": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\1 - Sistemas de Control-Página-1.jpg"
-    },
-    {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U2.txt",
-      "respuestas": "../guardados/rutas/2 - Terminologia de los Sistemas de Control.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\2 - Terminologia de los Sistemas de Control.drawio",
-      "resaltar": false,
-      "colores": "verdeClaro"
-    },
-    {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U3.txt",
-      "respuestas": "../guardados/rutas/3 - Estrategias de Control.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\3 - Estrategias de Control.drawio",
-      "resaltar": false,
-      "colores": "naranja"
-    },
-    {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U4.txt",
-      "respuestas": "../guardados/rutas/4 - Funcion de Transferencia.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\4 - Funcion de Transferencia.drawio",
-      "resaltar": false,
-      "colores": "verdeOscuro"
-    },
-    {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U5.txt",
-      "respuestas": "../guardados/rutas/5 - Parametros que caracterizan a Respuesta Transitoria.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\5 - Parametros que caracterizan a Respuesta Transitoria.drawio",
-      "resaltar": false,
-      "colores": "rosadoClaro"
-    },
-    {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U6.txt",
-      "respuestas": "../guardados/rutas/6 - Estabilidad.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\6 - Estabilidad.drawio",
-      "resaltar": false,
-      "colores": "rojo"
-    },
-    {
-      "recordatorio": "../guardados/recordatorios/recordatorio-U7.txt",
-      "respuestas": "../guardados/rutas/7 - Lugar de las Raices.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\7 - Lugar de las Raices.drawio",
-      "resaltar": false,
-      "colores": "amarilloClaro"
-    },
-    {
-      "recordatorio": "../guardados/antiguos/recordatorios/recordatorio Gestion desempeño.txt",
-      "respuestas": "../guardados/antiguos/rutas/Gestion de Desempeño.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Desempeño.drawio",
-      "resaltar": false,
-      "colores": "grisClaro"
-    },
-    {
-      "recordatorio": "../guardados/antiguos/recordatorios/recordatorio Gestion de Operaciones.txt",
-      "respuestas": "../guardados/antiguos/rutas/Gestion de Operaciones.txt",
-      "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Operaciones.drawio",
-      "resaltar": false,
-      "colores": "azul",
-      "imagen_mapa":"E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Operaciones.jpg"
-    },
-    {
       "recordatorio": "../guardados/recordatorios/recordatorio SCOR.txt",
       "respuestas": "../guardados/rutas/SCOR.txt",
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\SCOR.drawio",
-      "resaltar": true,
+      "resaltar": false,
       "colores": "rojoClaro",
       "imagen_mapa":"E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\SCOR.jpg"
     }
