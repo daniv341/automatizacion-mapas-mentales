@@ -5,9 +5,11 @@ import difflib
 import html
 import json
 import math
+import os
 import re
-# import shutil  # desactivado: ya no se crea copia de seguridad .bak
+import shutil  # v4.21: reactivado; se usa shutil.which para buscar draw.io en el PATH
 import statistics
+import subprocess  # v4.21: export de la Pagina 1 a jpg por linea de comandos
 import unicodedata
 import xml.etree.ElementTree as ET
 from collections import defaultdict
@@ -1574,6 +1576,127 @@ def preguntar_accion_primera(root) -> str:
     return eleccion["valor"]
 
 
+# ======================================================================
+# v4.21: PASO OPCIONAL - exportar la Pagina 1 del drawio a JPG
+# ======================================================================
+
+DRAWIO_EJECUTABLES = (
+    r"C:\Program Files\draw.io\draw.io.exe",
+    r"C:\Program Files (x86)\draw.io\draw.io.exe",
+)
+DRAWIO_TIMEOUT_SEG = 120   # segundos maximos de espera del export
+
+
+def encontrar_drawio() -> Optional[str]:
+    """v4.21: ruta del ejecutable de draw.io, o None si no esta instalado.
+    Orden: Program Files -> Program Files (x86) -> LOCALAPPDATA (instalacion
+    de usuario) -> 'draw.io' en el PATH."""
+    for candidato in DRAWIO_EJECUTABLES:
+        if Path(candidato).is_file():
+            return candidato
+    local = os.environ.get("LOCALAPPDATA")
+    if local:
+        candidato_local = Path(local) / "Programs" / "draw.io" / "draw.io.exe"
+        if candidato_local.is_file():
+            return str(candidato_local)
+    return shutil.which("draw.io")
+
+
+def preguntar_export_jpg(root) -> bool:
+    """v4.21: ventana con 2 botones (mismo estilo que preguntar_accion_primera).
+    Devuelve True si el usuario quiere exportar la Pagina 1 a jpg.
+    Cerrar la ventana equivale a No (no se toca nada)."""
+    eleccion = {"valor": False}
+    ventana = tk.Toplevel(root)
+    ventana.title("Exportar mapa a JPG")
+    ventana.resizable(False, False)
+
+    def elegir(valor: bool) -> None:
+        eleccion["valor"] = valor
+        ventana.destroy()
+
+    tk.Label(
+        ventana, justify="left", anchor="w", padx=16, pady=12,
+        text=("¿Obtener la imagen en JPG del mapa (Página 1) del drawio?\n\n"
+              "  Se guardará en la misma carpeta que el archivo .drawio,\n"
+              "  con el mismo nombre y extensión .jpg\n"
+              "  (si ya existe un jpg con ese nombre, se sobrescribe)."),
+    ).pack()
+    marco = tk.Frame(ventana, padx=12, pady=10)
+    marco.pack()
+    tk.Button(marco, text="Sí, exportar", width=14,
+              command=lambda: elegir(True)).pack(side="left", padx=6)
+    tk.Button(marco, text="No", width=14,
+              command=lambda: elegir(False)).pack(side="left", padx=6)
+
+    ventana.protocol("WM_DELETE_WINDOW", lambda: elegir(False))
+    ventana.attributes("-topmost", True)
+    ventana.lift()
+    ventana.focus_force()
+    ventana.grab_set()
+    ventana.wait_window()
+    return eleccion["valor"]
+
+
+def _ejecutar_export_drawio(ejecutable: str, salida: Path, drawio_path: Path,
+                            indice_pagina: int):
+    """v4.21.1: corre el comando de export con el indice de pagina dado.
+    -o recibe la ruta COMPLETA del jpg (misma carpeta que el drawio, mismo
+    nombre): draw.io no acepta una carpeta sola como destino."""
+    comando = [
+        ejecutable,
+        "-x", "-f", "jpg", "-q", "100", "-p", str(indice_pagina),
+        "-o", str(salida),
+        str(drawio_path),
+    ]
+    return subprocess.run(
+        comando, capture_output=True, text=True,
+        encoding="utf-8", errors="replace",
+        timeout=DRAWIO_TIMEOUT_SEG,
+    )
+
+
+def exportar_mapa_jpg(root, drawio_path: Path) -> None:
+    """v4.21: pregunta al usuario y, si acepta, exporta la Pagina 1 del
+    .drawio a .jpg (misma carpeta, mismo nombre) llamando a draw.io por
+    linea de comandos. El resultado se reporta solo por consola.
+    v4.21.1: draw.io v27.0.2+ numera las paginas desde 1 ('-p 1'); las
+    versiones anteriores lo hacian desde 0 ('-p 0'). Se prueba con -p 1 y,
+    si falla, se reintenta con -p 0."""
+    ejecutable = encontrar_drawio()
+    if ejecutable is None:
+        print("exportar jpg: no se encontro draw.io instalado "
+              "(ni en Program Files, ni en LOCALAPPDATA, ni en el PATH); paso omitido.")
+        return
+    if not preguntar_export_jpg(root):
+        print("exportar jpg: no se solicito el mapa (paso omitido).")
+        return
+    salida = drawio_path.with_suffix(".jpg")   # misma carpeta, mismo nombre, .jpg
+    print(f"exportando mapa a jpg (misma carpeta que el drawio): {salida}")
+    resultado = None
+    try:
+        resultado = _ejecutar_export_drawio(ejecutable, salida, drawio_path, 1)   # v27.0.2+
+        if resultado.returncode != 0 or not salida.is_file():
+            # reintento con numeracion 0-based (draw.io anterior a v27.0.2)
+            resultado = _ejecutar_export_drawio(ejecutable, salida, drawio_path, 0)
+    except subprocess.TimeoutExpired:
+        print(f"exportar jpg: draw.io no termino en {DRAWIO_TIMEOUT_SEG} s; se cancelo.")
+        return
+    except OSError as exc:
+        print(f"exportar jpg: no se pudo ejecutar draw.io ({exc}).")
+        return
+    if resultado is not None and resultado.returncode == 0 and salida.is_file():
+        print(f"mapa exportado: {salida}")
+    else:
+        codigo = resultado.returncode if resultado is not None else "?"
+        print(f"exportar jpg: draw.io termino con codigo {codigo}; "
+              f"no se genero {salida.name}.")
+        detalle = ((resultado.stderr or resultado.stdout) if resultado is not None else "") or ""
+        detalle = detalle.strip()
+        if detalle:
+            print(f"  detalle: {detalle.splitlines()[-1]}")
+
+
 OUTPUT_DIR = Path(__file__).resolve().parent / "guardados" / "rutas"
 def main() -> None:
     root = tk.Tk()
@@ -1687,6 +1810,11 @@ def main() -> None:
                           f"({eliminados} anterior(es) reemplazado(s))")
     else:
         print("sin recordatorio seleccionado: paso omitido.")
+
+    # --- paso OPCIONAL: exportar la Pagina 1 del drawio a JPG (v4.21) ---
+    # Solo se llega aca si se selecciono un drawio (si no, main() retorno antes),
+    # asi que el modal nunca aparece sin un drawio seleccionado.
+    exportar_mapa_jpg(root, input_path)
 
 
 if __name__ == "__main__":

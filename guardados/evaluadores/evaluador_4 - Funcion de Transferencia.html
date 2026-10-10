@@ -1830,37 +1830,6 @@
   }
   .boton-icono-circular:disabled:hover { border-color: var(--color-borde-medio); }
 
-  .fila-mapa-observador {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: flex-start;
-    gap: 10px;
-    position: relative;
-  }
-
-  #btn-notas-evaluador {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-  }
-  
-  .columna-pomodoro-observador {
-    display: contents;
-  }
-
-  #fila-pomodoro-boton {
-    grid-column: 3;
-    grid-row: 1;
-    justify-self: end;
-  }
-
-  #pomodoro-badge-slot-observador {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    width: 100%;
-  }
-
   .mapa-img {
     max-width: 100%;
     max-height: 100%;
@@ -1937,6 +1906,88 @@
   @keyframes parpadeoPomodoro { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
   .pomodoro-badge-botones { display: flex; gap: 6px; flex-wrap: wrap; }
   .boton-secundario:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .retencion-lista-scroll { max-height: 65vh; overflow-y: auto; padding-right: 4px; }
+
+  .fila-retencion-ruta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--color-borde-suave);
+  }
+  .fila-retencion-ruta:last-child { border-bottom: none; }
+  .retencion-ruta-numero { font-weight: 700; min-width: 42px; }
+  .retencion-ruta-toggles { display: flex; gap: 8px; margin-left: auto; }
+
+  .toggle-retencion {
+    padding: 5px 12px;
+    border-radius: 16px;
+    background: var(--bg-superficie);
+    color: var(--texto-suave);
+    border: 1.5px solid var(--color-borde-fuerte);
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .toggle-retencion.activa-retenida { background: #d4edda; color: #155724; border-color: #8fcf9f; }
+  .toggle-retencion.activa-dificil { background: #ffe3cc; color: #8a4b00; border-color: #e0a860; }
+
+  .retencion-entrada {
+    border: 1.5px solid var(--color-borde-suave);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .retencion-entrada-cabecera { font-weight: 700; margin-bottom: 4px; }
+  .retencion-entrada-linea { font-size: 13px; color: var(--texto-cabecera); margin: 2px 0; }
+  .retencion-entrada-acciones { margin-top: 8px; }
+
+  .fila-mapa-observador {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .grafico-wrap { margin: 18px 0; }
+  .grafico-titulo { font-weight: 700; margin-bottom: 8px; font-size: 14px; }
+  .grafico-svg { width: 100%; height: auto; display: block; }
+  .grafico-vacio { color: var(--texto-suave); font-size: 13px; padding: 6px 0; }
+  .grafico-leyenda { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 12.5px; }
+  .grafico-leyenda-item { display: flex; align-items: center; gap: 6px; }
+  .grafico-leyenda-punto { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+  .retencion-subt-lista { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .retencion-subt-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 14px;
+    border: 1.5px solid var(--color-borde-suave);
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+
+  .estadisticas-tabs { display: flex; gap: 8px; margin: 10px 0 14px; }
+  .estadisticas-tab { opacity: 0.6; }
+  .estadisticas-tab.activa { opacity: 1; font-weight: 700; }
+
+  .subt-repasar-fila {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--color-borde-suave);
+  }
+  .subt-repasar-fila:last-child { border-bottom: none; }
+  .subt-repasar-badge { font-size: 12px; white-space: nowrap; }
+  .subt-repasar-nombre { flex: 1; font-weight: 600; }
+  .subt-repasar-score { font-weight: 700; font-variant-numeric: tabular-nums; }
 
   .zona-buscador {
     position: relative;
@@ -2124,24 +2175,21 @@
     <p class="subtitulo">Modo observador: tocá una tarjeta para verla (sin evaluarte)</p>
 
     <div class="fila-mapa-observador">
+      <button class="boton-icono-circular" id="btn-notas-evaluador" title="Notas del evaluador">📝</button>
+      <button class="boton-icono-circular" id="btn-estadisticas" title="Estadísticas">📊</button>
       <button class="boton-icono-circular" id="btn-observador-mapa" title="Ver mapa"
               data-mapa-src="data:;base64,"
               data-mapa-nombre="">🗺️</button>
-      <button class="boton-icono-circular" id="btn-notas-evaluador" title="Notas del evaluador">📝</button>
-      <div class="columna-pomodoro-observador">
-        <div class="fila-iconos-gamificacion" id="fila-pomodoro-boton">
-          <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
-        </div>
-        <div class="pomodoro-badge-slot" id="pomodoro-badge-slot-observador">
-          <div class="pomodoro-badge" id="pomodoro-badge" style="display:none;">
-            <span class="pomodoro-badge-info" id="pomodoro-badge-info"></span>
-            <span class="pomodoro-badge-botones">
-              <button class="boton-mini" id="btn-pomodoro-cancelar">Cancelar</button>
-              <button class="boton-mini" id="btn-pomodoro-pausar">⏸ Pausar</button>
-              <button class="boton-mini" id="btn-pomodoro-retencion">🧠 Retención</button>
-            </span>
-          </div>
-        </div>
+      <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
+    </div>
+    <div class="pomodoro-badge-slot" id="pomodoro-badge-slot-observador">
+      <div class="pomodoro-badge" id="pomodoro-badge" style="display:none;">
+        <span class="pomodoro-badge-info" id="pomodoro-badge-info"></span>
+        <span class="pomodoro-badge-botones">
+          <button class="boton-mini" id="btn-pomodoro-cancelar">Cancelar</button>
+          <button class="boton-mini" id="btn-pomodoro-pausar">⏸ Pausar</button>
+          <button class="boton-mini" id="btn-pomodoro-retencion">🧠 Retención</button>
+        </span>
       </div>
     </div>
 
@@ -2490,6 +2538,20 @@
     <p>🧠 Tiempo en retención: <strong id="pomodoro-resumen-retencion"></strong></p>
     <p>⏱ Tiempo total: <strong id="pomodoro-resumen-total"></strong></p>
     <p>⏲️ Ciclos completados: <strong id="pomodoro-resumen-ciclos"></strong></p>
+    <div id="pomodoro-resumen-retencion-rutas" style="display:none;">
+      <details>
+        <summary>✅ Retenidas (<span id="pomodoro-resumen-retenidas-n"></span> · <span id="pomodoro-resumen-retenidas-pct"></span>%)</summary>
+        <div id="pomodoro-resumen-retenidas-lista"></div>
+      </details>
+      <details>
+        <summary>❌ No retenidas (<span id="pomodoro-resumen-no-retenidas-n"></span> · <span id="pomodoro-resumen-no-retenidas-pct"></span>%)</summary>
+        <div id="pomodoro-resumen-no-retenidas-lista"></div>
+      </details>
+      <details>
+        <summary>⚠️ Difíciles (<span id="pomodoro-resumen-dificiles-n"></span> · <span id="pomodoro-resumen-dificiles-pct"></span>%)</summary>
+        <div id="pomodoro-resumen-dificiles-lista"></div>
+      </details>
+    </div>
     <button class="modal-cancelar" id="btn-pomodoro-resumen-cerrar">Cerrar</button>
   </div>
 </div>
@@ -2567,6 +2629,22 @@
       </span>
     </div>
     <div class="fila-backup-zona">
+      <span class="zona-nombre">📑 Análisis de Sesion</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-exportar-analisis" title="Descarga los análisis de sesión guardados como JSON">Exportar</button>
+        <button class="boton-mini" id="btn-importar-analisis" title="Fusiona los análisis de sesión guardados de un JSON">Importar</button>
+        <input type="file" id="input-importar-analisis" accept=".json,application/json" style="display:none">
+      </span>
+    </div>
+    <div class="fila-backup-zona">
+      <span class="zona-nombre">🧠 Retención de rutas</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-exportar-retencion" title="Descarga el registro de retención de rutas como JSON">Exportar</button>
+        <button class="boton-mini" id="btn-importar-retencion" title="Fusiona el registro de retención de rutas de un JSON">Importar</button>
+        <input type="file" id="input-importar-retencion" accept=".json,application/json" style="display:none">
+      </span>
+    </div>
+    <div class="fila-backup-zona">
       <span class="zona-nombre">🏷 Razones</span>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-razones">Exportar</button>
@@ -2618,7 +2696,10 @@
   <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
     <h3>📊 Análisis de la sesión</h3>
     <div id="analisis-sesion-contenido"></div>
-    <button class="modal-cancelar" id="btn-analisis-sesion-cerrar">Cerrar</button>
+    <div class="panel-razones-acciones" style="margin-top:14px; justify-content: space-between;">
+      <button class="boton-mini" id="btn-analisis-sesion-guardar">💾 Guardar análisis</button>
+      <button class="modal-cancelar" id="btn-analisis-sesion-cerrar">Cerrar</button>
+    </div>
   </div>
 </div>
 
@@ -2656,6 +2737,8 @@
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="listas" checked> 📋 Listas</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="sesiones" checked> 🕐 Sesiones</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="notasEvaluador" checked> 📝 Notas del evaluador</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="retencionRutas" checked> 🧠 Retención de rutas</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="analisisSesion" checked> 📑 Análisis de Sesion</label>
     </div>
     <div id="vinc-campo-espacio" style="display:none;">
       <input type="text" class="input-buscador" id="vinc-espacio" list="vinc-espacios" placeholder="Nombre anterior del recordatorio (sin .txt)" autocomplete="off">
@@ -2705,6 +2788,61 @@
       <button class="boton-mini boton-mini-peligro" id="btn-vaciar-notaseval" style="display:none;">Vaciar todas</button>
       <button class="modal-cancelar" id="btn-notaseval-cerrar">Cerrar</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-retencion-rutas">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>🧠 Retención de rutas</h3>
+
+    <div id="retencion-sesion-seccion" style="display:none;">
+      <p class="modal-ayuda">Marcá qué rutas retuviste en esta sesión de Pomodoro.</p>
+      <div id="retencion-subt-lista"></div>
+      <div class="retencion-lista-scroll" id="retencion-sesion-lista"></div>
+      <p class="galeria-vacia" id="retencion-sesion-vacia" style="display:none;">No hay rutas citadas en las tarjetas de este evaluador.</p>
+    </div>
+
+    <div class="sync-seccion-titulo">Registro histórico</div>
+    <div id="retencion-historial-lista"></div>
+    <p class="nota-dificiles" id="retencion-historial-vacio" style="display:none;">Todavía no hay sesiones de retención guardadas.</p>
+    <div class="historial-paginacion" id="retencion-historial-paginacion" style="display:none;"></div>
+
+    <details id="det-retencion-otras" style="display:none">
+      <summary id="suma-retencion-otras">De otros evaluadores</summary>
+      <div id="lista-retencion-otras"></div>
+      <button class="boton-mini" id="btn-vincular-retencion" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
+    </details>
+
+    <div class="panel-razones-acciones" style="margin-top:14px; justify-content: space-between;">
+      <button class="boton-mini boton-mini-peligro" id="btn-vaciar-retencion" style="display:none;">Vaciar todas</button>
+      <button class="modal-cancelar" id="btn-retencion-cerrar">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-estadisticas">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>📊 Estadísticas</h3>
+    <p class="modal-ayuda">Datos de este evaluador («<span id="estadisticas-espacio"></span>»).</p>
+    <div class="estadisticas-tabs">
+      <button class="boton-mini estadisticas-tab activa" id="tab-estadisticas-diagramas" type="button">Diagramas</button>
+      <button class="boton-mini estadisticas-tab" id="tab-estadisticas-subt" type="button">subT a repasar</button>
+    </div>
+    <div id="estadisticas-pane-diagramas">
+      <div id="estadisticas-contenido"></div>
+    </div>
+    <div id="estadisticas-pane-subt" style="display:none;">
+      <div id="subt-repasar-lista"></div>
+      <div class="sync-seccion-titulo">Análisis de Sesion</div>
+      <div id="analisis-guardados-lista"></div>
+      <p class="nota-dificiles" id="analisis-guardados-vacio" style="display:none;">Todavía no guardaste ningún análisis de sesión.</p>
+      <details id="det-analisis-otros" style="display:none">
+        <summary id="suma-analisis-otros">De otros evaluadores</summary>
+        <div id="lista-analisis-otros"></div>
+      </details>
+      <button class="boton-mini boton-mini-peligro" id="btn-vaciar-analisis" style="display:none; margin-top:10px;">Vaciar todas</button>
+    </div>
+    <button class="modal-cancelar" id="btn-estadisticas-cerrar">Cerrar</button>
   </div>
 </div>
 
@@ -2897,6 +3035,7 @@
   let pistaGratisUsadaPorTarjeta = [];    // paralelo a resultados
   let gameOverDisparado = false;
   let historialGuardadoEstaSesion = false;
+  let analisisGuardadoEstaSesion = false;
   let reintentadasSesion = new Set();      // tarjetas (objeto) que ya usaron su reintento en esta sesión
   let primerIntentoFallido = new Set();    // índices que fallaron el primer intento y usaron segunda oportunidad (quedan para repaso)
   let reintentoExitoso = new Set();        // subconjunto: el reintento salió bien (recompensa reducida)
@@ -4746,7 +4885,7 @@
     }
   }
 
-  function guardarHistorialSesion(nota) {
+  function guardarHistorialSesion(nota, conteos) {
     if (modoObservador) return;
     if (historialGuardadoEstaSesion) return;   // evita duplicar si mostrarResumen() se llama 2 veces
     historialGuardadoEstaSesion = true;
@@ -4760,6 +4899,7 @@
       puntos_ganados: modoJuego === 'light' ? 0 : puntosSesion,
       espacio: ESPACIO_HASH,   // NUEVO: de que evaluador es esta sesion
       tarjetas: tarjetasSesion.map((t) => hashTarjeta(t)),
+      conteos: conteos ? { si: conteos.si || 0, casi: conteos.casi || 0, no: conteos.no || 0 } : { si: 0, casi: 0, no: 0 },
       listado: srsSesionActiva
         ? (srsSesionActiva.nombres.length === 1 ? srsSesionActiva.nombres[0] : 'SRS Múltiple')
         : (listaActivaNombre || ''),
@@ -4770,6 +4910,7 @@
     }
     guardarGamificacion();
     actualizarBarraGamificacion();
+    estadisticasConstruidas = false;
   }
 
   function renderResumenGamificacion(nota) {
@@ -5261,6 +5402,7 @@
   const elBtnAnalisisSesion = document.getElementById('btn-analisis-sesion');
   const elModalAnalisisSesion = document.getElementById('modal-analisis-sesion');
   const elAnalisisSesionContenido = document.getElementById('analisis-sesion-contenido');
+  let ultimoAnalisisFilas = [];
 
   function agruparSesionPorTema() {
     const grupos = new Map();   // nombre -> indices[]
@@ -5329,6 +5471,10 @@
 
     return {
       pctAciertos: pctAciertos,
+      pctFallos: pctFallos,
+      pctCasi: pctCasi,
+      pctPista: pctPista,
+      pctResp: pctResp,
       nAciertos: aciertos.length,
       nEvaluadas: nEval,
       comentarios: comentarios,
@@ -5391,6 +5537,8 @@
       if (info) filas.push({ nombre: nombre, info: info });
     });
 
+    ultimoAnalisisFilas = filas;
+
     if (filas.length === 0) {
       elAnalisisSesionContenido.innerHTML = '<p class="galeria-vacia">No hay comentarios</p>';
       return;
@@ -5447,6 +5595,257 @@
   }
   elBtnAnalisisSesion.addEventListener('click', () => abrirModalAnalisisSesion());
   document.getElementById('btn-analisis-sesion-cerrar').addEventListener('click', () => cerrarModalAnalisisSesion());
+
+  const CLAVE_ANALISIS_GUARDADOS = 'analisis_sesion_guardados_v1';
+  const MAX_ANALISIS_GUARDADOS = 10;
+
+  function cargarAnalisisGuardados() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_ANALISIS_GUARDADOS);
+      const datos = crudo ? JSON.parse(crudo) : [];
+      return Array.isArray(datos) ? datos : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  let analisisGuardados = cargarAnalisisGuardados();
+
+  function guardarAnalisisGuardadosYa() {
+    try {
+      localStorage.setItem(CLAVE_ANALISIS_GUARDADOS, JSON.stringify(analisisGuardados));
+    } catch (e) {
+    }
+  }
+  const guardarAnalisisGuardados = crearGuardadoDebounced(guardarAnalisisGuardadosYa, 250);
+
+  function analisisPropios() { return analisisGuardados.filter((a) => !a.espacio || a.espacio === ESPACIO_HASH); }
+  function analisisDeOtros() { return analisisGuardados.filter((a) => a.espacio && a.espacio !== ESPACIO_HASH); }
+
+  function construirEntradaAnalisisGuardado() {
+    if (!ultimoAnalisisFilas || ultimoAnalisisFilas.length === 0) return null;
+    const timestamp = Date.now();
+    return {
+      id: ESPACIO_HASH + '_' + timestamp,
+      espacio: ESPACIO_HASH,
+      fecha: new Date(timestamp).toISOString(),
+      subT: ultimoAnalisisFilas.map((f) => ({
+        nombre: f.nombre,
+        pctAciertos: f.info.pctAciertos,
+        pctFallos: f.info.pctFallos,
+        pctCasi: f.info.pctCasi,
+        pctPista: f.info.pctPista,
+        pctResp: f.info.pctResp,
+        nAciertos: f.info.nAciertos,
+        nEvaluadas: f.info.nEvaluadas,
+        comentarios: f.info.comentarios.map((c) => c.texto),
+        color: f.info.color,
+      })),
+    };
+  }
+
+  const elBtnAnalisisSesionGuardar = document.getElementById('btn-analisis-sesion-guardar');
+  elBtnAnalisisSesionGuardar.addEventListener('click', () => {
+    if (analisisGuardadoEstaSesion) return;
+    const entrada = construirEntradaAnalisisGuardado();
+    if (!entrada) return;
+    analisisGuardados.push(entrada);
+    analisisGuardados.sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+    while (analisisGuardados.length > MAX_ANALISIS_GUARDADOS) analisisGuardados.shift();
+    guardarAnalisisGuardados();
+    subtRepasarConstruido = false;
+    analisisGuardadoEstaSesion = true;
+    elBtnAnalisisSesionGuardar.disabled = true;
+    elBtnAnalisisSesionGuardar.textContent = '✓ Guardado';
+  });
+
+  function construirExportAnalisis() {
+    return { version: 1, analisisGuardados: analisisGuardados };
+  }
+
+  function fusionarAnalisisLista(lista) {
+    let nuevas = 0, conservadas = 0, invalidas = 0;
+    lista.forEach((item) => {
+      if (!item || typeof item.id !== 'string' || !item.id) { invalidas++; return; }
+      if (analisisGuardados.some((a) => a.id === item.id)) { conservadas++; return; }
+      analisisGuardados.push(Object.assign({}, item, {
+        espacio: typeof item.espacio === 'string' && item.espacio ? item.espacio : ESPACIO_HASH,
+      }));
+      nuevas++;
+    });
+    analisisGuardados.sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+    while (analisisGuardados.length > MAX_ANALISIS_GUARDADOS) analisisGuardados.shift();
+    guardarAnalisisGuardados();
+    subtRepasarConstruido = false;
+    renderAnalisisGuardadosLista();
+    return { nuevas: nuevas, actualizadas: 0, conservadas: conservadas, iguales: 0, invalidas: invalidas };
+  }
+
+  function construirDetalleAnalisisGuardado(entrada, contenedor) {
+    (entrada.subT || []).forEach((s) => {
+      const fila = document.createElement('div');
+      fila.className = 'analisis-fila';
+
+      const titulo = document.createElement('div');
+      titulo.className = 'analisis-nombre';
+      titulo.textContent = s.nombre;
+      fila.appendChild(titulo);
+
+      const badge = document.createElement('span');
+      badge.className = 'analisis-badge analisis-badge-' + s.color;
+      badge.textContent = Math.round(s.pctAciertos) + '% de aciertos (' + s.nAciertos + ' de ' + s.nEvaluadas + ')';
+      fila.appendChild(badge);
+
+      if ((s.comentarios || []).length > 0) {
+        const ul = document.createElement('ul');
+        ul.className = 'analisis-comentarios';
+        s.comentarios.forEach((texto) => {
+          const li = document.createElement('li');
+          li.textContent = texto;
+          ul.appendChild(li);
+        });
+        fila.appendChild(ul);
+      }
+
+      contenedor.appendChild(fila);
+    });
+
+    const acc = document.createElement('div');
+    acc.className = 'retencion-entrada-acciones';
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar este análisis guardado? No se puede deshacer.'))) return;
+      analisisGuardados = analisisGuardados.filter((a) => a.id !== entrada.id);
+      guardarAnalisisGuardados();
+      subtRepasarConstruido = false;
+      renderAnalisisGuardadosLista();
+    }));
+    contenedor.appendChild(acc);
+  }
+
+  function filaAnalisisGuardado(entrada) {
+    const det = document.createElement('details');
+    det.className = 'retencion-entrada';
+    const sum = document.createElement('summary');
+    sum.textContent = formatearFechaLista(Date.parse(entrada.fecha) || 0) + ' — ' + (entrada.subT || []).length + ' subT analizado(s)';
+    det.appendChild(sum);
+    const cont = document.createElement('div');
+    det.appendChild(cont);
+    prepararDetallesLazy(det, () => construirDetalleAnalisisGuardado(entrada, cont));
+    return det;
+  }
+
+  let _otrosAnalisisPendientes = [];
+
+  function construirAnalisisOtrosLazy() {
+    const otras = _otrosAnalisisPendientes;
+    const elLista = document.getElementById('lista-analisis-otros');
+    elLista.innerHTML = '';
+    if (otras.length === 0) return;
+    const mapa = new Map();
+    otras.forEach((a) => {
+      if (!mapa.has(a.espacio)) mapa.set(a.espacio, []);
+      mapa.get(a.espacio).push(a);
+    });
+    const grupos = Array.from(mapa.entries()).map(([esp, lista]) => {
+      let ultima = '';
+      lista.forEach((a) => { const f = String(a.fecha || ''); if (f > ultima) ultima = f; });
+      return { esp: esp, cantidad: lista.length, ultima: ultima };
+    });
+    grupos.sort((a, b) => (a.ultima < b.ultima ? 1 : (a.ultima > b.ultima ? -1 : 0)));
+
+    grupos.forEach((g) => {
+      const fila = document.createElement('div');
+      fila.className = 'grupo-historial-otro';
+
+      const info = document.createElement('div');
+      const titulo = document.createElement('span');
+      titulo.className = 'grupo-titulo';
+      titulo.textContent = etiquetaEspacio(g.esp);
+      const detalle = document.createElement('span');
+      detalle.className = 'grupo-detalle';
+      detalle.textContent = g.cantidad + ' análisis(s) · último: ' + (g.ultima ? formatearFechaLista(Date.parse(g.ultima) || 0) : '—');
+      info.appendChild(titulo);
+      info.appendChild(detalle);
+
+      const btn = document.createElement('button');
+      btn.className = 'boton-mini';
+      btn.textContent = 'Vincular a este evaluador';
+      btn.addEventListener('click', () => abrirModalVincular('analisisSesion', g.esp));
+
+      fila.appendChild(info);
+      fila.appendChild(btn);
+      elLista.appendChild(fila);
+    });
+  }
+  const lazyAnalisisOtros = prepararDetallesLazy(document.getElementById('det-analisis-otros'), construirAnalisisOtrosLazy);
+
+  function renderAnalisisOtros() {
+    const otras = analisisDeOtros();
+    _otrosAnalisisPendientes = otras;
+    const det = document.getElementById('det-analisis-otros');
+    if (otras.length === 0) {
+      det.style.display = 'none';
+      return;
+    }
+    document.getElementById('suma-analisis-otros').textContent = 'De otros evaluadores (' + otras.length + ')';
+    det.style.display = 'block';
+    lazyAnalisisOtros.refrescar();
+  }
+
+  function renderAnalisisGuardadosLista() {
+    const propios = analisisPropios().slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+    const elLista = document.getElementById('analisis-guardados-lista');
+    elLista.innerHTML = '';
+    propios.forEach((e) => elLista.appendChild(filaAnalisisGuardado(e)));
+    document.getElementById('analisis-guardados-vacio').style.display = propios.length === 0 ? 'block' : 'none';
+    document.getElementById('btn-vaciar-analisis').style.display = analisisGuardados.length > 0 ? 'inline-block' : 'none';
+    renderAnalisisOtros();
+  }
+
+  document.getElementById('btn-vaciar-analisis').addEventListener('click', async () => {
+    if (analisisGuardados.length === 0) return;
+    if (!(await confirmarAccion('¿Vaciar TODOS los análisis de sesion? No se puede deshacer.'))) return;
+    analisisGuardados = [];
+    guardarAnalisisGuardados();
+    subtRepasarConstruido = false;
+    renderAnalisisGuardadosLista();
+  });
+
+  document.getElementById('btn-exportar-analisis').addEventListener('click', () => {
+    const contenido = JSON.stringify(construirExportAnalisis(), null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'analisis_sesion.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-analisis').addEventListener('click', () => {
+    document.getElementById('input-importar-analisis').click();
+  });
+
+  document.getElementById('input-importar-analisis').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+      try {
+        const obj = JSON.parse(lector.result);
+        const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.analisisGuardados) ? obj.analisisGuardados : null);
+        if (!lista) throw new Error('formato');
+        const r = fusionarAnalisisLista(lista);
+        window.alert('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
+      } catch (e) {
+        window.alert('El archivo no es un JSON válido de análisis de sesión.');
+      }
+    };
+    lector.readAsText(archivo);
+  });
 
   function asociarRetroactivamente(lista) {
     let n = 0;
@@ -5557,6 +5956,8 @@
     if (Object.keys(datosImagenes).some((h) => (datosImagenes[h].t || 0) > ultimo)) return true;
     if (listas.some((l) => (l.modificada || 0) > ultimo)) return true;
     if (notasEvaluador.some((n) => (n.modificada || n.creada || 0) > ultimo)) return true;
+    if (retencionRutas.some((r) => (r.timestamp || 0) > ultimo)) return true;
+    if (analisisGuardados.some((a) => (Date.parse(a.fecha) || 0) > ultimo)) return true;
     if (gamificacion.historial.some((s) => {
       const f = Date.parse(s.fecha);
       return !isNaN(f) && f > ultimo;
@@ -5589,6 +5990,8 @@
       imagenes: construirExportImagenes(),
       listas: { version: 1, listas: listas },
       notasEvaluador: construirExportNotasEvaluador(),
+      retencionRutas: construirExportRetencion(),
+      analisisSesion: construirExportAnalisis(),
     };
   }
 
@@ -5612,7 +6015,7 @@
     if (typeof datos.version !== 'number') return { error: 'El archivo no tiene el formato esperado (falta "version").' };
     if (datos.version !== 1) return { error: 'Versión de backup desconocida (' + datos.version + ').' };
 
-    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas', 'notasEvaluador'];
+    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas', 'notasEvaluador', 'retencionRutas', 'analisisSesion'];
     const presentes = ZONAS.filter((z) => datos[z] !== undefined && datos[z] !== null);
     if (presentes.length === 0) return { error: 'El archivo no tiene ninguna sección reconocida.' };
 
@@ -5653,6 +6056,16 @@
       const lista = Array.isArray(datos.notasEvaluador) ? datos.notasEvaluador : (datos.notasEvaluador.notasEvaluador || []);
       const r = fusionarNotasEvaluadorLista(lista);
       contar(r.nuevas > 0 || r.actualizadas > 0);
+    }
+    if (datos.retencionRutas) {
+      const lista = Array.isArray(datos.retencionRutas) ? datos.retencionRutas : (datos.retencionRutas.retencionRutas || []);
+      const r = fusionarRetencionLista(lista);
+      contar(r.nuevas > 0);
+    }
+    if (datos.analisisSesion) {
+      const lista = Array.isArray(datos.analisisSesion) ? datos.analisisSesion : (datos.analisisSesion.analisisGuardados || []);
+      const r = fusionarAnalisisLista(lista);
+      contar(r.nuevas > 0);
     }
 
     marcarUltimoBackup();
@@ -6223,6 +6636,20 @@
       if (n === 0) return { cantidad: 0, texto: 'No se encontraron notas del evaluador bajo «' + viejo + '».' };
       return { cantidad: n, texto: 'Se vincularían ' + n + ' nota(s) del evaluador.' };
     }
+    if (zona === 'retencionRutas') {
+      if (!viejo) return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
+      if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
+      const n = retencionRutas.filter((r) => r.espacio === viejo).length;
+      if (n === 0) return { cantidad: 0, texto: 'No se encontraron entradas de retención de rutas guardadas bajo «' + viejo + '».' };
+      return { cantidad: n, texto: 'Se vincularían ' + n + ' entrada(s) de retención de rutas.' };
+    }
+    if (zona === 'analisisSesion') {
+      if (!viejo) return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
+      if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
+      const n = analisisGuardados.filter((a) => a.espacio === viejo).length;
+      if (n === 0) return { cantidad: 0, texto: 'No se encontraron análisis de sesion guardados bajo «' + viejo + '».' };
+      return { cantidad: n, texto: 'Se vincularían ' + n + ' análisis guardado(s).' };
+    }
     const z = ZONAS_VINCULO[zona];
     if (!viejo) {
       return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
@@ -6262,6 +6689,25 @@
       renderHistorial();
       return { movidas: n, sin: 0 };
     }
+    if (zona === 'retencionRutas') {
+      let n = 0;
+      retencionRutas.forEach((r) => {
+        if (r.espacio === viejo) { r.espacio = ESPACIO_HASH; n++; }
+      });
+      guardarRetencionRutas();
+      renderRetencionHistorial();
+      return { movidas: n, sin: 0 };
+    }
+    if (zona === 'analisisSesion') {
+      let n = 0;
+      analisisGuardados.forEach((a) => {
+        if (a.espacio === viejo) { a.espacio = ESPACIO_HASH; n++; }
+      });
+      guardarAnalisisGuardados();
+      subtRepasarConstruido = false;
+      renderAnalisisGuardadosLista();
+      return { movidas: n, sin: 0 };
+    }
     const z = ZONAS_VINCULO[zona];
     const almacen = z.almacen();
     const movs = movimientosVinculo(zona, viejo);
@@ -6277,7 +6723,7 @@
     return { movidas: movs.length, sin: contarOtrasZona(zona) };
   }
 
-  const ICONOS_ZONA_VINCULO = { dificiles: '☆', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐', notasEvaluador: '📝' };
+  const ICONOS_ZONA_VINCULO = { dificiles: '☆', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐', notasEvaluador: '📝', retencionRutas: '🧠', analisisSesion: '📑' };
   const ZONAS_HASH_PURGABLES = ['dificiles', 'notas', 'razones', 'imagenes'];   // las únicas donde puede quedar un residuo que valga la pena ofrecer borrar
 
   function zonasSeleccionadasTodo() {
@@ -6288,6 +6734,8 @@
     if (zona === 'sesiones') return gamificacion.historial.filter((s) => espacioDeSesion(s) === viejo).length;
     if (zona === 'listas') return movimientosVinculoListas(viejo).length;
     if (zona === 'notasEvaluador') return notasEvaluador.filter((nt) => nt.espacio === viejo).length;
+    if (zona === 'retencionRutas') return retencionRutas.filter((r) => r.espacio === viejo).length;
+    if (zona === 'analisisSesion') return analisisGuardados.filter((a) => a.espacio === viejo).length;
     return movimientosVinculo(zona, viejo).length;
   }
 
@@ -6424,7 +6872,7 @@
   });
 
   async function borrarEvaluadorCompleto(espacio) {
-    if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes, listas y notas del evaluador)? ' +
+    if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes, listas, notas del evaluador, retención de rutas y análisis de sesion)? ' +
       'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.'))) return;
 
     gamificacion.historial = gamificacion.historial.filter((s) => espacioDeSesion(s) !== espacio);
@@ -6454,6 +6902,15 @@
     notasEvaluador = notasEvaluador.filter((nt) => nt.espacio !== espacio);
     guardarNotasEvaluador();
     renderListaNotasEvaluador();
+
+    retencionRutas = retencionRutas.filter((r) => r.espacio !== espacio);
+    guardarRetencionRutas();
+    renderRetencionHistorial();
+
+    analisisGuardados = analisisGuardados.filter((a) => a.espacio !== espacio);
+    guardarAnalisisGuardados();
+    subtRepasarConstruido = false;
+    renderAnalisisGuardadosLista();
 
     try {
       localStorage.removeItem('ultimo_backup_' + espacio);
@@ -6521,7 +6978,7 @@
       elVincTitulo.textContent = 'Vincular todo a este evaluador';
       document.querySelectorAll('.vinc-zona-chk').forEach((c) => { c.checked = true; });
     } else {
-      const titulo = zona === 'notasEvaluador' ? 'notas del evaluador' : (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
+      const titulo = zona === 'notasEvaluador' ? 'notas del evaluador' : zona === 'retencionRutas' ? 'retención de rutas' : zona === 'analisisSesion' ? 'análisis de sesion' : (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
       elVincTitulo.textContent = 'Vincular ' + titulo + ' a este evaluador';
     }
     if (vincEspacioFijo !== null) {
@@ -6827,6 +7284,8 @@
     if (elModalPomodoroIniciar.classList.contains('abierto')) { cerrarModalPomodoroIniciar(); return; }
     if (elModalPomodoroAbandonar.classList.contains('abierto')) { cerrarModalPomodoroAbandonar(); return; }
     if (elModalPomodoroResumen.classList.contains('abierto')) { cerrarModalPomodoroResumen(); return; }
+    if (elModalRetencionRutas.classList.contains('abierto')) { cerrarModalRetencionRutas(); return; }
+    if (elModalEstadisticas.classList.contains('abierto')) { cerrarModalEstadisticas(); return; }
 
     if (elAreaTarjeta.style.display !== 'none' && elAreaTarjeta.classList.contains('observador')) { salirObservador(); return; }
     if (elPantallaHistorial.style.display !== 'none') { mostrarPantalla('temas'); return; }
@@ -7987,6 +8446,758 @@
     lector.readAsText(archivo);
   });
 
+  const CLAVE_RETENCION_RUTAS = 'retencion_rutas_v1';
+
+  function cargarRetencionRutas() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_RETENCION_RUTAS);
+      const datos = crudo ? JSON.parse(crudo) : [];
+      return Array.isArray(datos) ? datos : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  let retencionRutas = cargarRetencionRutas();
+
+  function guardarRetencionRutasYa() {
+    try {
+      localStorage.setItem(CLAVE_RETENCION_RUTAS, JSON.stringify(retencionRutas));
+    } catch (e) {
+    }
+  }
+  const guardarRetencionRutas = crearGuardadoDebounced(guardarRetencionRutasYa, 250);
+
+  function hashRetencion(espacio, timestamp) { return espacio + '_' + timestamp; }
+
+  function retencionPropias() { return retencionRutas.filter((r) => !r.espacio || r.espacio === ESPACIO_HASH); }
+  function retencionDeOtros() { return retencionRutas.filter((r) => r.espacio && r.espacio !== ESPACIO_HASH); }
+
+  function todasLasRutasCitadas() {
+    const set = new Set();
+    tarjetasCompletas.forEach((t) => {
+      (t.rutas || []).forEach((id) => { if (rutasDisp.hasOwnProperty(id)) set.add(id); });
+    });
+    return Array.from(set).sort((a, b) => Number(a) - Number(b));
+  }
+
+  function agruparRutasPorSubtema() {
+    const mapa = new Map();
+    tarjetasCompletas.forEach((t) => {
+      const nombre = nombreTema(t);
+      (t.rutas || []).forEach((id) => {
+        if (!rutasDisp.hasOwnProperty(id)) return;
+        if (!mapa.has(nombre)) mapa.set(nombre, new Set());
+        mapa.get(nombre).add(id);
+      });
+    });
+    const resultado = Array.from(mapa.entries()).map(([nombre, set]) => ({
+      nombre: nombre,
+      rutas: Array.from(set).sort((a, b) => Number(a) - Number(b)),
+    }));
+    resultado.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    return resultado;
+  }
+
+  function mapaRutaASubtema() {
+    const mapa = {};
+    agruparRutasPorSubtema().forEach((s) => {
+      s.rutas.forEach((id) => { if (!(id in mapa)) mapa[id] = s.nombre; });
+    });
+    return mapa;
+  }
+
+  let retencionSubtemasActivos = {};
+
+  function rutasCitadasActivas() {
+    const rutaSubt = mapaRutaASubtema();
+    return todasLasRutasCitadas().filter((id) => retencionSubtemasActivos[rutaSubt[id]] !== false);
+  }
+
+  function filaRetencionSesion(id) {
+    const estado = retencionSesionToggles[id] || { retenida: false, dificil: false };
+    const div = document.createElement('div');
+    div.className = 'fila-retencion-ruta';
+
+    const num = document.createElement('span');
+    num.className = 'retencion-ruta-numero';
+    num.textContent = '#' + id;
+    div.appendChild(num);
+
+    const toggles = document.createElement('span');
+    toggles.className = 'retencion-ruta-toggles';
+
+    const btnRet = document.createElement('button');
+    btnRet.type = 'button';
+    btnRet.className = 'toggle-retencion' + (estado.retenida ? ' activa-retenida' : '');
+    btnRet.textContent = estado.retenida ? '✓ Retenida' : 'Retenida';
+    btnRet.addEventListener('click', () => {
+      const e = retencionSesionToggles[id] || (retencionSesionToggles[id] = { retenida: false, dificil: false });
+      e.retenida = !e.retenida;
+      renderRetencionSesionLista();
+    });
+
+    const btnDif = document.createElement('button');
+    btnDif.type = 'button';
+    btnDif.className = 'toggle-retencion' + (estado.dificil ? ' activa-dificil' : '');
+    btnDif.textContent = estado.dificil ? '⚠ Difícil' : 'Difícil';
+    btnDif.addEventListener('click', () => {
+      const e = retencionSesionToggles[id] || (retencionSesionToggles[id] = { retenida: false, dificil: false });
+      e.dificil = !e.dificil;
+      renderRetencionSesionLista();
+    });
+
+    toggles.appendChild(btnRet);
+    toggles.appendChild(btnDif);
+    div.appendChild(toggles);
+    return div;
+  }
+
+  function filaRetencionSubtema(nombre) {
+    const label = document.createElement('label');
+    label.className = 'retencion-subt-item';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.checked = retencionSubtemasActivos[nombre] !== false;
+    chk.addEventListener('change', () => {
+      retencionSubtemasActivos[nombre] = chk.checked;
+      renderRetencionSesionLista();
+    });
+    label.appendChild(chk);
+    label.appendChild(document.createTextNode(nombre));
+    return label;
+  }
+
+  function renderRetencionSubtemas(subtemas) {
+    const el = document.getElementById('retencion-subt-lista');
+    el.className = 'retencion-subt-lista';
+    el.innerHTML = '';
+    subtemas.forEach((s) => el.appendChild(filaRetencionSubtema(s.nombre)));
+  }
+
+  function renderRetencionSesionLista() {
+    const seccion = document.getElementById('retencion-sesion-seccion');
+    const visible = pomodoroActivo && pomodoroRetencionPresionada;
+    seccion.style.display = visible ? 'block' : 'none';
+    if (!visible) return;
+
+    const subtemas = agruparRutasPorSubtema();
+    renderRetencionSubtemas(subtemas);
+
+    const ids = rutasCitadasActivas();
+    const el = document.getElementById('retencion-sesion-lista');
+    const elVacio = document.getElementById('retencion-sesion-vacia');
+    el.innerHTML = '';
+    if (ids.length === 0) {
+      elVacio.style.display = 'block';
+      return;
+    }
+    elVacio.style.display = 'none';
+    ids.forEach((id) => el.appendChild(filaRetencionSesion(id)));
+  }
+
+  const RETENCION_POR_PAGINA = 15;
+  let retencionHistorialPaginaActual = 1;
+
+  function filaRetencionHistorial(entrada) {
+    const div = document.createElement('div');
+    div.className = 'retencion-entrada';
+
+    const cab = document.createElement('div');
+    cab.className = 'retencion-entrada-cabecera';
+    cab.textContent = formatearFechaLista(entrada.timestamp || 0);
+    div.appendChild(cab);
+
+    const l1 = document.createElement('div');
+    l1.className = 'retencion-entrada-linea';
+    l1.textContent = '⏲️ Ciclos: ' + entrada.ciclos;
+    div.appendChild(l1);
+
+    const l2 = document.createElement('div');
+    l2.className = 'retencion-entrada-linea';
+    l2.textContent = '📖 Lectura: ' + formatoMMSS(entrada.tiempoLecturaSeg) + ' · 🧠 Retención: ' + formatoMMSS(entrada.tiempoRetencionSeg) + ' · ⏱ Total: ' + formatoMMSS(entrada.tiempoTotalSeg);
+    div.appendChild(l2);
+
+    const l3 = document.createElement('div');
+    l3.className = 'retencion-entrada-linea';
+    l3.textContent = '✅ Retenidas: ' + entrada.retenidas + ' (' + entrada.pctRetenidas + '%) · ❌ No retenidas: ' + entrada.noRetenidas + ' (' + entrada.pctNoRetenidas + '%) · ⚠️ Difíciles: ' + entrada.dificiles + ' (' + entrada.pctDificiles + '%)';
+    div.appendChild(l3);
+
+    const acc = document.createElement('div');
+    acc.className = 'retencion-entrada-acciones';
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar esta entrada del registro de retención? No se puede deshacer.'))) return;
+      retencionRutas = retencionRutas.filter((r) => r.id !== entrada.id);
+      guardarRetencionRutas();
+      renderRetencionHistorial();
+    }));
+    div.appendChild(acc);
+
+    return div;
+  }
+
+  function filaRetencionHistorialOtra(entrada) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+    const titulo = document.createElement('div');
+    titulo.textContent = '(' + etiquetaEspacio(entrada.espacio) + ') ' + formatearFechaLista(entrada.timestamp || 0) +
+      ' — ✅' + entrada.pctRetenidas + '% ❌' + entrada.pctNoRetenidas + '% ⚠️' + entrada.pctDificiles + '%';
+    div.appendChild(titulo);
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar esta entrada guardada? No se puede deshacer.'))) return;
+      retencionRutas = retencionRutas.filter((r) => r.id !== entrada.id);
+      guardarRetencionRutas();
+      renderRetencionHistorial();
+    }));
+    div.appendChild(acc);
+    return div;
+  }
+
+  function renderRetencionHistorialPaginacion(totalPaginas) {
+    const el = document.getElementById('retencion-historial-paginacion');
+    el.innerHTML = '';
+    el.style.display = 'flex';
+
+    const btnAnterior = document.createElement('button');
+    btnAnterior.type = 'button';
+    btnAnterior.className = 'boton-mini';
+    btnAnterior.textContent = 'Anterior';
+    btnAnterior.disabled = retencionHistorialPaginaActual <= 1;
+    btnAnterior.addEventListener('click', () => { retencionHistorialPaginaActual--; renderRetencionHistorial(); });
+
+    const texto = document.createElement('span');
+    texto.className = 'historial-paginacion-texto';
+    texto.textContent = 'Página ' + retencionHistorialPaginaActual + ' de ' + totalPaginas;
+
+    const btnSiguiente = document.createElement('button');
+    btnSiguiente.type = 'button';
+    btnSiguiente.className = 'boton-mini';
+    btnSiguiente.textContent = 'Siguiente';
+    btnSiguiente.disabled = retencionHistorialPaginaActual >= totalPaginas;
+    btnSiguiente.addEventListener('click', () => { retencionHistorialPaginaActual++; renderRetencionHistorial(); });
+
+    el.appendChild(btnAnterior);
+    el.appendChild(texto);
+    el.appendChild(btnSiguiente);
+  }
+
+  let _retencionOtrasPendientes = [];
+
+  function construirRetencionOtrasLazy() {
+    const otras = _retencionOtrasPendientes;
+    const elLista = document.getElementById('lista-retencion-otras');
+    elLista.innerHTML = '';
+    otras.slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).forEach((entrada) => {
+      elLista.appendChild(filaRetencionHistorialOtra(entrada));
+    });
+  }
+  const lazyRetencionOtras = prepararDetallesLazy(document.getElementById('det-retencion-otras'), construirRetencionOtrasLazy);
+
+  function renderRetencionOtras() {
+    const otras = retencionDeOtros();
+    _retencionOtrasPendientes = otras;
+    const det = document.getElementById('det-retencion-otras');
+    det.style.display = otras.length > 0 ? 'block' : 'none';
+    if (otras.length === 0) {
+      document.getElementById('lista-retencion-otras').innerHTML = '';
+      return;
+    }
+    document.getElementById('suma-retencion-otras').textContent = 'De otros evaluadores (' + otras.length + ')';
+    lazyRetencionOtras.refrescar();
+  }
+
+  function renderRetencionHistorial() {
+    const propias = retencionPropias().slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    const elLista = document.getElementById('retencion-historial-lista');
+    const elVacio = document.getElementById('retencion-historial-vacio');
+    elLista.innerHTML = '';
+
+    if (propias.length === 0) {
+      elVacio.style.display = 'block';
+      document.getElementById('retencion-historial-paginacion').style.display = 'none';
+    } else {
+      elVacio.style.display = 'none';
+      const totalPaginas = Math.max(1, Math.ceil(propias.length / RETENCION_POR_PAGINA));
+      if (retencionHistorialPaginaActual > totalPaginas) retencionHistorialPaginaActual = totalPaginas;
+      if (retencionHistorialPaginaActual < 1) retencionHistorialPaginaActual = 1;
+      const inicio = (retencionHistorialPaginaActual - 1) * RETENCION_POR_PAGINA;
+      propias.slice(inicio, inicio + RETENCION_POR_PAGINA).forEach((entrada) => {
+        elLista.appendChild(filaRetencionHistorial(entrada));
+      });
+      renderRetencionHistorialPaginacion(totalPaginas);
+    }
+
+    document.getElementById('btn-vaciar-retencion').style.display = retencionRutas.length > 0 ? 'inline-block' : 'none';
+    renderRetencionOtras();
+  }
+
+  const elModalRetencionRutas = document.getElementById('modal-retencion-rutas');
+
+  function abrirModalRetencionRutas() {
+    renderRetencionSesionLista();
+    retencionHistorialPaginaActual = 1;
+    renderRetencionHistorial();
+    elModalRetencionRutas.classList.add('abierto');
+  }
+  function cerrarModalRetencionRutas() {
+    elModalRetencionRutas.classList.remove('abierto');
+  }
+  document.getElementById('btn-retencion-cerrar').addEventListener('click', () => cerrarModalRetencionRutas());
+
+  document.getElementById('btn-vaciar-retencion').addEventListener('click', async () => {
+    if (retencionRutas.length === 0) return;
+    if (!(await confirmarAccion('¿Vaciar TODO el registro de retención de rutas? No se puede deshacer.'))) return;
+    retencionRutas = [];
+    guardarRetencionRutas();
+    renderRetencionHistorial();
+  });
+
+  document.getElementById('btn-vincular-retencion').addEventListener('click', () => {
+    cerrarModalRetencionRutas();
+    abrirModalVincular('retencionRutas');
+  });
+
+  function construirExportRetencion() {
+    return { version: 1, retencionRutas: retencionRutas };
+  }
+
+  function fusionarRetencionLista(lista) {
+    let nuevas = 0, conservadas = 0, invalidas = 0;
+    lista.forEach((item) => {
+      if (!item || typeof item.id !== 'string' || !item.id) { invalidas++; return; }
+      if (retencionRutas.some((r) => r.id === item.id)) { conservadas++; return; }
+      retencionRutas.push(Object.assign({}, item, {
+        espacio: typeof item.espacio === 'string' && item.espacio ? item.espacio : ESPACIO_HASH,
+      }));
+      nuevas++;
+    });
+    guardarRetencionRutas();
+    renderRetencionHistorial();
+    return { nuevas: nuevas, actualizadas: 0, conservadas: conservadas, iguales: 0, invalidas: invalidas };
+  }
+
+  document.getElementById('btn-exportar-retencion').addEventListener('click', () => {
+    const contenido = JSON.stringify(construirExportRetencion(), null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'retencion_rutas.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-retencion').addEventListener('click', () => {
+    document.getElementById('input-importar-retencion').click();
+  });
+
+  document.getElementById('input-importar-retencion').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+      try {
+        const obj = JSON.parse(lector.result);
+        const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.retencionRutas) ? obj.retencionRutas : null);
+        if (!lista) throw new Error('formato');
+        const r = fusionarRetencionLista(lista);
+        window.alert('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
+      } catch (e) {
+        window.alert('El archivo no es un JSON válido de retención de rutas.');
+      }
+    };
+    lector.readAsText(archivo);
+  });
+
+  function construirEntradaRetencion(totalSeg) {
+    const ids = rutasCitadasActivas();
+    if (ids.length === 0) return null;
+    const rutaSubt = mapaRutaASubtema();
+    let retenidas = 0, dificiles = 0;
+    const detalle = ids.map((id) => {
+      const e = retencionSesionToggles[id] || { retenida: false, dificil: false };
+      if (e.retenida) retenidas++;
+      if (e.dificil) dificiles++;
+      return { hash: 'r_' + id, ruta: id, subtema: rutaSubt[id] || '(Sin tema)', retenida: !!e.retenida, dificil: !!e.dificil };
+    });
+    const total = ids.length;
+    const noRetenidas = total - retenidas;
+    const timestamp = Date.now();
+    const pctRetenidas = Math.round((retenidas / total) * 100);
+    return {
+      id: hashRetencion(ESPACIO_HASH, timestamp),
+      espacio: ESPACIO_HASH,
+      timestamp: timestamp,
+      ciclos: Math.max(0, pomodoroCiclo - 1),
+      tiempoLecturaSeg: pomodoroAcumulado.lectura,
+      tiempoRetencionSeg: pomodoroAcumulado.retencion,
+      tiempoTotalSeg: totalSeg,
+      totalRutas: total,
+      retenidas: retenidas,
+      noRetenidas: noRetenidas,
+      dificiles: dificiles,
+      pctRetenidas: pctRetenidas,
+      pctNoRetenidas: 100 - pctRetenidas,
+      pctDificiles: Math.round((dificiles / total) * 100),
+      rutas: detalle,
+    };
+  }
+
+  function poblarResumenRetencionRutas(entrada) {
+    const seccion = document.getElementById('pomodoro-resumen-retencion-rutas');
+    if (!entrada) { seccion.style.display = 'none'; return; }
+    seccion.style.display = 'block';
+
+    const retenidasIds = [], noRetenidasIds = [], dificilesIds = [];
+    (entrada.rutas || []).forEach((r) => {
+      if (r.retenida) retenidasIds.push(r.ruta); else noRetenidasIds.push(r.ruta);
+      if (r.dificil) dificilesIds.push(r.ruta);
+    });
+
+    document.getElementById('pomodoro-resumen-retenidas-n').textContent = String(retenidasIds.length);
+    document.getElementById('pomodoro-resumen-retenidas-pct').textContent = String(entrada.pctRetenidas);
+    document.getElementById('pomodoro-resumen-retenidas-lista').textContent = retenidasIds.length > 0 ? retenidasIds.map((id) => '#' + id).join(', ') : '—';
+
+    document.getElementById('pomodoro-resumen-no-retenidas-n').textContent = String(noRetenidasIds.length);
+    document.getElementById('pomodoro-resumen-no-retenidas-pct').textContent = String(entrada.pctNoRetenidas);
+    document.getElementById('pomodoro-resumen-no-retenidas-lista').textContent = noRetenidasIds.length > 0 ? noRetenidasIds.map((id) => '#' + id).join(', ') : '—';
+
+    document.getElementById('pomodoro-resumen-dificiles-n').textContent = String(dificilesIds.length);
+    document.getElementById('pomodoro-resumen-dificiles-pct').textContent = String(entrada.pctDificiles);
+    document.getElementById('pomodoro-resumen-dificiles-lista').textContent = dificilesIds.length > 0 ? dificilesIds.map((id) => '#' + id).join(', ') : '—';
+  }
+
+  const NS_SVG = 'http://www.w3.org/2000/svg';
+  function elSvg(tag, attrs) {
+    const el = document.createElementNS(NS_SVG, tag);
+    if (attrs) Object.keys(attrs).forEach((k) => el.setAttribute(k, attrs[k]));
+    return el;
+  }
+
+  function formatearFechaCortaGrafico(iso) {
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function construirGraficoLineaNotas(puntos) {
+    const w = 600, h = 220, padL = 32, padR = 14, padT = 16, padB = 30;
+    const innerW = w - padL - padR, innerH = h - padT - padB;
+    const svg = elSvg('svg', { viewBox: '0 0 ' + w + ' ' + h, class: 'grafico-svg', preserveAspectRatio: 'xMidYMid meet' });
+
+    [0, 2.5, 5, 7.5, 10].forEach((v) => {
+      const y = padT + innerH - (v / 10) * innerH;
+      svg.appendChild(elSvg('line', { x1: padL, y1: y.toFixed(1), x2: w - padR, y2: y.toFixed(1), stroke: 'var(--color-borde-suave)', 'stroke-width': 1 }));
+      const txt = elSvg('text', { x: padL - 6, y: (y + 3.5).toFixed(1), 'text-anchor': 'end', 'font-size': 10, fill: 'var(--texto-suave)' });
+      txt.textContent = String(v);
+      svg.appendChild(txt);
+    });
+
+    const n = puntos.length;
+    const paso = n > 1 ? innerW / (n - 1) : 0;
+    const coords = puntos.map((p, i) => ({
+      x: padL + (n > 1 ? i * paso : innerW / 2),
+      y: padT + innerH - (Math.max(0, Math.min(10, p.nota)) / 10) * innerH,
+    }));
+
+    if (coords.length > 1) {
+      const d = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+      svg.appendChild(elSvg('path', { d: d, fill: 'none', stroke: 'var(--color-boton)', 'stroke-width': 2.5 }));
+    }
+
+    coords.forEach((c, i) => {
+      svg.appendChild(elSvg('circle', { cx: c.x.toFixed(1), cy: c.y.toFixed(1), r: 4, fill: 'var(--color-boton)' }));
+      const etqX = elSvg('text', { x: c.x.toFixed(1), y: h - 10, 'text-anchor': 'middle', 'font-size': 9, fill: 'var(--texto-suave)' });
+      etqX.textContent = formatearFechaCortaGrafico(puntos[i].fecha);
+      svg.appendChild(etqX);
+    });
+
+    return svg;
+  }
+
+  function construirGraficoBarras(conteos) {
+    const total = conteos.si + conteos.casi + conteos.no;
+    const datos = [
+      { etiqueta: 'Entendidas', valor: conteos.si, color: '#2e7d32' },
+      { etiqueta: 'Casi', valor: conteos.casi, color: '#b8860b' },
+      { etiqueta: 'No entendidas', valor: conteos.no, color: '#c0392b' },
+    ];
+    const w = 600, h = 220, padL = 16, padR = 16, padT = 26, padB = 36;
+    const innerW = w - padL - padR, innerH = h - padT - padB;
+    const anchoBarra = (innerW / datos.length) * 0.5;
+    const svg = elSvg('svg', { viewBox: '0 0 ' + w + ' ' + h, class: 'grafico-svg', preserveAspectRatio: 'xMidYMid meet' });
+
+    datos.forEach((d, i) => {
+      const pct = total > 0 ? Math.round((d.valor / total) * 100) : 0;
+      const altura = (pct / 100) * innerH;
+      const cx = padL + (innerW / datos.length) * (i + 0.5);
+      const x = cx - anchoBarra / 2;
+      const y = padT + innerH - altura;
+
+      svg.appendChild(elSvg('rect', { x: x.toFixed(1), y: y.toFixed(1), width: anchoBarra.toFixed(1), height: Math.max(altura, 0).toFixed(1), fill: d.color, rx: 4 }));
+
+      const txtPct = elSvg('text', { x: cx.toFixed(1), y: (y - 6).toFixed(1), 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: 'var(--texto-principal)' });
+      txtPct.textContent = pct + '%';
+      svg.appendChild(txtPct);
+
+      const txtEtq = elSvg('text', { x: cx.toFixed(1), y: h - 14, 'text-anchor': 'middle', 'font-size': 10.5, fill: 'var(--texto-suave)' });
+      txtEtq.textContent = d.etiqueta + ' (' + d.valor + ')';
+      svg.appendChild(txtEtq);
+    });
+
+    svg.appendChild(elSvg('line', { x1: padL, y1: padT + innerH, x2: w - padR, y2: padT + innerH, stroke: 'var(--color-borde-medio)', 'stroke-width': 1.5 }));
+
+    return svg;
+  }
+
+  function construirGraficoTorta(segmentos) {
+    const total = segmentos.reduce((a, s) => a + s.valor, 0);
+    const w = 260, h = 220, cx = 110, cy = 110, r = 85;
+    const svg = elSvg('svg', { viewBox: '0 0 ' + w + ' ' + h, class: 'grafico-svg', preserveAspectRatio: 'xMidYMid meet' });
+    if (total <= 0) return svg;
+
+    let anguloInicio = -Math.PI / 2;
+    segmentos.forEach((s) => {
+      const frac = s.valor / total;
+      if (frac <= 0) return;
+      const anguloFin = anguloInicio + frac * Math.PI * 2;
+      if (frac >= 0.9999) {
+        svg.appendChild(elSvg('circle', { cx: cx, cy: cy, r: r, fill: s.color }));
+      } else {
+        const x1 = cx + r * Math.cos(anguloInicio), y1 = cy + r * Math.sin(anguloInicio);
+        const x2 = cx + r * Math.cos(anguloFin), y2 = cy + r * Math.sin(anguloFin);
+        const grandeArco = (anguloFin - anguloInicio) > Math.PI ? 1 : 0;
+        const d = 'M' + cx + ',' + cy + ' L' + x1.toFixed(2) + ',' + y1.toFixed(2) +
+          ' A' + r + ',' + r + ' 0 ' + grandeArco + ' 1 ' + x2.toFixed(2) + ',' + y2.toFixed(2) + ' Z';
+        svg.appendChild(elSvg('path', { d: d, fill: s.color }));
+      }
+      anguloInicio = anguloFin;
+    });
+
+    return svg;
+  }
+
+  function leyendaGrafico(segmentos, total) {
+    const div = document.createElement('div');
+    div.className = 'grafico-leyenda';
+    segmentos.forEach((s) => {
+      const pct = total > 0 ? Math.round((s.valor / total) * 100) : 0;
+      const item = document.createElement('span');
+      item.className = 'grafico-leyenda-item';
+      const punto = document.createElement('span');
+      punto.className = 'grafico-leyenda-punto';
+      punto.style.background = s.color;
+      item.appendChild(punto);
+      item.appendChild(document.createTextNode(s.etiqueta + ': ' + s.valor + ' (' + pct + '%)'));
+      div.appendChild(item);
+    });
+    return div;
+  }
+
+  function agregarSeccionGrafico(contenedor, titulo, elementoGrafico, elementoLeyenda) {
+    const wrap = document.createElement('div');
+    wrap.className = 'grafico-wrap';
+    const tit = document.createElement('div');
+    tit.className = 'grafico-titulo';
+    tit.textContent = titulo;
+    wrap.appendChild(tit);
+    wrap.appendChild(elementoGrafico);
+    if (elementoLeyenda) wrap.appendChild(elementoLeyenda);
+    contenedor.appendChild(wrap);
+  }
+
+  let estadisticasConstruidas = false;
+
+  function construirEstadisticas() {
+    const cont = document.getElementById('estadisticas-contenido');
+    cont.innerHTML = '';
+
+    const historialPropio = gamificacion.historial.filter((s) => espacioDeSesion(s) === ESPACIO_HASH);
+
+    const ultimasNotas = historialPropio
+      .slice()
+      .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)))
+      .slice(-10)
+      .map((s) => ({ fecha: s.fecha, nota: typeof s.nota === 'number' ? s.nota : 0 }));
+
+    if (ultimasNotas.length > 0) {
+      agregarSeccionGrafico(cont, '📈 Evolución de la nota', construirGraficoLineaNotas(ultimasNotas));
+    }
+
+    const conteosTotales = { si: 0, casi: 0, no: 0 };
+    historialPropio.forEach((s) => {
+      const c = s.conteos || {};
+      conteosTotales.si += c.si || 0;
+      conteosTotales.casi += c.casi || 0;
+      conteosTotales.no += c.no || 0;
+    });
+    const totalConteos = conteosTotales.si + conteosTotales.casi + conteosTotales.no;
+
+    if (totalConteos > 0) {
+      agregarSeccionGrafico(cont, '📊 Resultados de sesiones', construirGraficoBarras(conteosTotales));
+    }
+
+    const propiasRetencion = retencionPropias();
+    let ultimaRetencion = null;
+    propiasRetencion.forEach((r) => {
+      if (!ultimaRetencion || (r.timestamp || 0) > (ultimaRetencion.timestamp || 0)) ultimaRetencion = r;
+    });
+
+    if (ultimaRetencion && (ultimaRetencion.retenidas + ultimaRetencion.noRetenidas) > 0) {
+      const segmentos = [
+        { etiqueta: 'Retenidas', valor: ultimaRetencion.retenidas, color: '#2e7d32' },
+        { etiqueta: 'No retenidas', valor: ultimaRetencion.noRetenidas, color: '#c0392b' },
+      ];
+      agregarSeccionGrafico(cont, '🧠 Retención de rutas (último Pomodoro)', construirGraficoTorta(segmentos), leyendaGrafico(segmentos, ultimaRetencion.retenidas + ultimaRetencion.noRetenidas));
+    }
+
+    if (ultimaRetencion && ultimaRetencion.totalRutas > 0) {
+      const noDificiles = Math.max(0, ultimaRetencion.totalRutas - ultimaRetencion.dificiles);
+      const segmentos = [
+        { etiqueta: 'Difíciles', valor: ultimaRetencion.dificiles, color: '#e07b00' },
+        { etiqueta: 'No difíciles', valor: noDificiles, color: '#9e9e9e' },
+      ];
+      agregarSeccionGrafico(cont, '⚠️ Dificultad de rutas (último Pomodoro)', construirGraficoTorta(segmentos), leyendaGrafico(segmentos, ultimaRetencion.totalRutas));
+    }
+
+    if (cont.children.length === 0) {
+      const vacio = document.createElement('p');
+      vacio.className = 'grafico-vacio';
+      vacio.textContent = 'Todavía no hay datos suficientes para mostrar estadísticas.';
+      cont.appendChild(vacio);
+    }
+  }
+
+  function promedioCampoAnalisis(nombreSubtema, campo) {
+    const propios = analisisPropios().slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 10);
+    const valores = [];
+    propios.forEach((entrada) => {
+      (entrada.subT || []).forEach((s) => {
+        if (s.nombre === nombreSubtema && typeof s[campo] === 'number') valores.push(s[campo]);
+      });
+    });
+    if (valores.length === 0) return null;
+    return valores.reduce((a, b) => a + b, 0) / valores.length;
+  }
+
+  function tieneAnalisisGuardado(nombreSubtema) {
+    return analisisPropios().some((entrada) => (entrada.subT || []).some((s) => s.nombre === nombreSubtema));
+  }
+
+  function pctNoRetenidaPorSubtema(nombreSubtema) {
+    let total = 0, noRet = 0;
+    retencionPropias().forEach((entrada) => {
+      (entrada.rutas || []).forEach((r) => {
+        if (r.subtema !== nombreSubtema) return;
+        total++;
+        if (!r.retenida) noRet++;
+      });
+    });
+    if (total === 0) return null;
+    return (noRet / total) * 100;
+  }
+
+  function calcularScoreSubtema(nombreSubtema) {
+    if (!tieneAnalisisGuardado(nombreSubtema)) return 50;
+    const pctNoRet = pctNoRetenidaPorSubtema(nombreSubtema) || 0;
+    const pctFallos = promedioCampoAnalisis(nombreSubtema, 'pctFallos') || 0;
+    const pctCasi = promedioCampoAnalisis(nombreSubtema, 'pctCasi') || 0;
+    const pctPista = promedioCampoAnalisis(nombreSubtema, 'pctPista') || 0;
+    const pctResp = promedioCampoAnalisis(nombreSubtema, 'pctResp') || 0;
+    const score = pctNoRet * 0.3 + pctFallos * 0.3 + pctCasi * 0.2 + pctPista * 0.1 + pctResp * 0.1;
+    return Math.round(score);
+  }
+
+  function nivelPrioridad(score) {
+    if (score >= 75) return { emoji: '🔴', texto: 'Urgente' };
+    if (score >= 50) return { emoji: '🟠', texto: 'Recomendado' };
+    if (score >= 25) return { emoji: '🟡', texto: 'Opcional' };
+    return { emoji: '✅', texto: 'Dominado' };
+  }
+
+  let subtRepasarConstruido = false;
+
+  function construirListaSubtRepasar() {
+    const cont = document.getElementById('subt-repasar-lista');
+    cont.innerHTML = '';
+    const subtemas = agruparRutasPorSubtema();
+    if (subtemas.length === 0) {
+      const p = document.createElement('p');
+      p.className = 'grafico-vacio';
+      p.textContent = 'No hay subtemas con rutas citadas.';
+      cont.appendChild(p);
+      return;
+    }
+    const filas = subtemas.map((s) => ({ nombre: s.nombre, score: calcularScoreSubtema(s.nombre) }));
+    filas.sort((a, b) => b.score - a.score);
+    filas.forEach((f) => {
+      const nivel = nivelPrioridad(f.score);
+      const div = document.createElement('div');
+      div.className = 'subt-repasar-fila';
+
+      const badge = document.createElement('span');
+      badge.className = 'subt-repasar-badge';
+      badge.textContent = nivel.emoji + ' ' + nivel.texto;
+      div.appendChild(badge);
+
+      const nombre = document.createElement('span');
+      nombre.className = 'subt-repasar-nombre';
+      nombre.textContent = f.nombre;
+      div.appendChild(nombre);
+
+      const score = document.createElement('span');
+      score.className = 'subt-repasar-score';
+      score.textContent = String(f.score);
+      div.appendChild(score);
+
+      cont.appendChild(div);
+    });
+  }
+
+  const elModalEstadisticas = document.getElementById('modal-estadisticas');
+
+  function mostrarTabEstadisticas(tab) {
+    const esDiagramas = tab === 'diagramas';
+    document.getElementById('estadisticas-pane-diagramas').style.display = esDiagramas ? 'block' : 'none';
+    document.getElementById('estadisticas-pane-subt').style.display = esDiagramas ? 'none' : 'block';
+    document.getElementById('tab-estadisticas-diagramas').classList.toggle('activa', esDiagramas);
+    document.getElementById('tab-estadisticas-subt').classList.toggle('activa', !esDiagramas);
+    if (esDiagramas) {
+      if (!estadisticasConstruidas) {
+        construirEstadisticas();
+        estadisticasConstruidas = true;
+      }
+    } else {
+      if (!subtRepasarConstruido) {
+        construirListaSubtRepasar();
+        subtRepasarConstruido = true;
+      }
+      renderAnalisisGuardadosLista();
+    }
+  }
+
+  function abrirModalEstadisticas() {
+    document.getElementById('estadisticas-espacio').textContent = ESPACIO_HASH;
+    mostrarTabEstadisticas('diagramas');
+    elModalEstadisticas.classList.add('abierto');
+  }
+  function cerrarModalEstadisticas() {
+    elModalEstadisticas.classList.remove('abierto');
+  }
+  document.getElementById('btn-estadisticas').addEventListener('click', () => abrirModalEstadisticas());
+  document.getElementById('btn-estadisticas-cerrar').addEventListener('click', () => cerrarModalEstadisticas());
+  document.getElementById('tab-estadisticas-diagramas').addEventListener('click', () => mostrarTabEstadisticas('diagramas'));
+  document.getElementById('tab-estadisticas-subt').addEventListener('click', () => mostrarTabEstadisticas('subt'));
+
   function filaRevisarGuardada(hash, entrada) {
     const div = document.createElement('div');
     div.className = 'item-nota-otra';
@@ -8276,6 +9487,9 @@
     pistaGratisUsadaPorTarjeta = new Array(lista.length).fill(false);
     gameOverDisparado = false;
     historialGuardadoEstaSesion = false;
+    analisisGuardadoEstaSesion = false;
+    elBtnAnalisisSesionGuardar.disabled = false;
+    elBtnAnalisisSesionGuardar.textContent = '💾 Guardar análisis';
     modoZombie = false;   // NUEVO: una sesión nueva nunca arranca en modo zombie
     reintentadasSesion = new Set();
     primerIntentoFallido = new Set();
@@ -9715,7 +10929,7 @@
     };
 
     renderResumenGamificacion(nota);
-    guardarHistorialSesion(nota);
+    guardarHistorialSesion(nota, conteos);
 
     const fueSesionSRS = !!srsSesionActiva;
     actualizarProgresionSRS();
@@ -10020,6 +11234,8 @@
   let pomodoroPausado = false;
   let pomodoroHoraInicio = 0;           // Date.now() al empezar (para el tiempo total del resumen)
   let pomodoroAcumulado = { lectura: 0, retencion: 0 };   // segundos transcurridos, para el resumen
+  let pomodoroRetencionPresionada = false;
+  let retencionSesionToggles = {};
 
   function formatoMMSS(segundos) {
     const s = Math.max(0, Math.round(segundos));
@@ -10088,7 +11304,10 @@
   function cerrarModalPomodoroIniciar() {
     elModalPomodoroIniciar.classList.remove('abierto');
   }
-  elBtnPomodoro.addEventListener('click', () => abrirModalPomodoroIniciar());
+  elBtnPomodoro.addEventListener('click', () => {
+    if (!pomodoroActivo) { abrirModalPomodoroIniciar(); return; }
+    if (pomodoroRetencionPresionada) { abrirModalRetencionRutas(); }
+  });
 
   function iniciarPomodoro() {
     cerrarModalPomodoroIniciar();
@@ -10099,6 +11318,9 @@
     pomodoroPausado = false;
     pomodoroHoraInicio = Date.now();
     pomodoroAcumulado = { lectura: 0, retencion: 0 };
+    pomodoroRetencionPresionada = false;
+    retencionSesionToggles = {};
+    retencionSubtemasActivos = {};
 
     obtenerContextoAudio();   // desbloquea audio en este gesto del usuario
 
@@ -10116,6 +11338,8 @@
   elBtnPomodoroRetencion.addEventListener('click', () => {
     if (pomodoroFase !== 'lectura') return;
     pomodoroFase = 'retencion';   // el contador NO se reinicia
+    pomodoroRetencionPresionada = true;
+    elBtnPomodoro.disabled = false;
     actualizarBadgePomodoro();
   });
 
@@ -10165,7 +11389,19 @@
     document.getElementById('pomodoro-resumen-total').textContent = formatoMMSS(totalSeg);
     document.getElementById('pomodoro-resumen-ciclos').textContent = String(pomodoroCiclo - 1 >= 0 ? pomodoroCiclo - 1 : 0);
 
+    const entradaRetencion = construirEntradaRetencion(totalSeg);
+    if (entradaRetencion) {
+      retencionRutas.push(entradaRetencion);
+      guardarRetencionRutas();
+      estadisticasConstruidas = false;
+    }
+    poblarResumenRetencionRutas(entradaRetencion);
+
     pomodoroActivo = false;
+    pomodoroRetencionPresionada = false;
+    retencionSesionToggles = {};
+    retencionSubtemasActivos = {};
+    cerrarModalRetencionRutas();
     elPomodoroBadge.style.display = 'none';
     elBtnObservadorSalir.disabled = false;
     if (elPomodoroBadge.parentElement !== elSlotPomodoroObservador) elSlotPomodoroObservador.appendChild(elPomodoroBadge);
