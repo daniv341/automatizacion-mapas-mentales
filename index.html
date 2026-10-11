@@ -929,11 +929,11 @@
   const elVistaSrs = document.getElementById('vista-srs');
   const elVistaTienda = document.getElementById('vista-tienda');
 
-  /* FIX 1: antes se usaba '' (que borra el estilo inline y deja que el CSS
-     .vista-secundaria { display: none } vuelva a ocultar la vista).
-     Ahora se usa 'block' explícito y siempre se refrescan los datos
-     al entrar a la vista (sin flags "inicializado"). */
+  /* NUEVO: guardamos la vista actual para saber si ESC debe volver atrás. */
+  let vistaActual = 'principal';
+
   function mostrarVista(nombre) {
+    vistaActual = nombre; /* NUEVO */
     elVistaPrincipal.style.display = nombre === 'principal' ? 'block' : 'none';
     elVistaSrs.style.display = nombre === 'srs' ? 'block' : 'none';
     elVistaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';
@@ -955,6 +955,15 @@
     .addEventListener('click', () => mostrarVista('principal'));
   document.getElementById('btn-tienda-volver')
     .addEventListener('click', () => mostrarVista('principal'));
+
+  /* NUEVO: atajo de teclado — ESC vuelve a la vista principal desde SRS o Tienda. */
+  document.addEventListener('keydown', (evento) => {
+    const esEscape = evento.key === 'Escape' || evento.key === 'Esc';
+    if (esEscape && (vistaActual === 'srs' || vistaActual === 'tienda')) {
+      evento.preventDefault();
+      mostrarVista('principal');
+    }
+  });
 
   const CLAVE_LISTAS_SRS = 'listas_guardadas_v1';
   const SRS_DEFAULT_IDX = { activated: false, startDate: 0, currentLevel: 1, lastReviewDate: 0, graduated: false, snoozeUntil: 0 };
@@ -1170,9 +1179,6 @@
     renderizarSrsConLazyLoading(grupos, contenedor);
   }
 
-  /* FIX 3: se eliminó el listener duplicado de 'btn-abrir-srs' que estaba acá.
-     Ahora mostrarVista() se encarga de refrescar el SRS cada vez que entrás. */
-
   const CLAVE_GAMIFICACION_IDX = 'gamificacion_v1';
 
   const PRECIO_COMODIN_IDX = 100;
@@ -1292,9 +1298,6 @@
     gamificacionIdx = cargarGamificacionIdx();
     renderTiendaIdx();
   }
-
-  /* FIX 3: se eliminó el listener duplicado de 'btn-abrir-tienda' que estaba acá.
-     Ahora mostrarVista() se encarga de refrescar la tienda cada vez que entrás. */
 
   document.getElementById('btn-tienda-resetear').addEventListener('click', () => {
     const ok = window.confirm(
