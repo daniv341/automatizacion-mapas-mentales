@@ -1,4 +1,3 @@
-# ---------------- IMPORTS Y DEPENDENCIAS ----------------
 import argparse
 import base64
 import json
@@ -31,8 +30,6 @@ FACTOR_RECOMPENSA_REINTENTO = 0.5
 DURACION_LECTURA_SEG = 25 * 60
 DURACION_DESCANSO_SEG = 5 * 60
 
-# ---------------- PROCESAMIENTO DE TEXTO Y SÍMBOLOS ----------------
-
 STOPWORDS_ES = {
     "el", "la", "los", "las",
     "a", "con", "de", "del", "en", "para", "por", "sin", "so", "tras", "via",
@@ -41,7 +38,7 @@ STOPWORDS_ES = {
     "esto", "eso", "aquello",
 }
 
-# ---------------- NORMALIZACIÓN DE TEXTO Y MAPEO DE SÍMBOLOS ----------------
+# ============================================================
 
 def normalizar_palabra(palabra):
     """Minúsculas y sin acentos, para comparar 'ANALÓGICA' con 'analogica'."""
@@ -91,8 +88,6 @@ NOMBRES_A_SIMBOLOS = {v: k for k, v in SIMBOLOS_ESPECIALES.items()}
 
 PATRON_PALABRA_CON_SIMBOLOS = re.compile(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+')
 
-# ---------------- EXTRACCIÓN DE PALABRAS CLAVE (STOPWORDS Y SÍMBOLOS) ----------------
-
 def extraer_claves(segundo):
     if not segundo:
         return []
@@ -110,7 +105,7 @@ def extraer_claves(segundo):
                 claves.append(nombre)
     return claves
 
-# ---------------- PARSING DE ARCHIVOS TXT ----------------
+# ============================================================
 
 PATRON_CABECERA_RUTA = re.compile(r'^ruta\s+(\d+)\s*$', re.IGNORECASE)
 
@@ -171,7 +166,7 @@ def parsear_respuestas(txt):
     cerrar_bloque()
     return rutas
 
-# ---------------- PARSING DE ARCHIVO DE RESPUESTAS (RUTAS Y CONTENIDO) ----------------
+# ============================================================
 
 PATRON_RUTAS_TARJETA = re.compile(r'&\s*([0-9]+(?:\s*,\s*[0-9]+)*)\s*[.,;]*\s*$')
 PATRON_AMPERSAND_SUELTO = re.compile(r'&[\s,;]*$')
@@ -246,8 +241,6 @@ def parsear_recordatorio(txt):
 
     return tarjetas
 
-# ---------------- DIAGNÓSTICO DE ASOCIACIONES (TARJETAS VS RUTAS) ----------------
-
 def reportar_asociaciones(tarjetas, rutas):
     """Diagnóstico por consola: cuántas tarjetas tienen botón y rutas faltantes."""
     con_rutas = [t for t in tarjetas if t["rutas"]]
@@ -262,7 +255,7 @@ def reportar_asociaciones(tarjetas, rutas):
     else:
         print("Todas las rutas citadas existen en respuestas.txt.")
 
-# ---------------- CONFIGURACIÓN DE RESALTADO Y PARSING DE DRAWIO ----------------
+# ============================================================
 
 PALETA_RESALTADO = [
     "#FFFF00",
@@ -390,8 +383,6 @@ def activar_html_en_celda(elem):
         if not style_tiene_html1(style):
             elem.set("style", style_agregar_html1(style))
 
-# ---------------- CÁLCULO DE CONTRASTE WCAG Y SELECCIÓN DE COLORES ----------------
-
 def _expandir_hex(valor):
     """'#abc' -> '#aabbcc'. Devuelve None si no es un hex válido."""
     if not valor:
@@ -479,8 +470,6 @@ def resaltar_texto(texto, claves, color):
         return texto, False
     partes.append(texto[ultimo:])
     return "".join(partes), True
-
-# ---------------- APLICACIÓN DE RESALTADO AL XML DEL DRAWIO ----------------
 
 def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
     mapa_rutas = get_routes_id_map(Path(ruta_drawio))
@@ -585,8 +574,6 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
         print("AVISO: rutas citadas que no aparecen en el mapa del drawio: "
               + ", ".join(map(str, ausentes)))
 
-# ---------------- EXTRACCIÓN DE DESCRIPCIONES E IMÁGENES DEL DRAWIO ----------------
-
 def extraer_descripciones_drawio(ruta_drawio):
     descripciones = {}
     con_ruta = 0
@@ -636,8 +623,6 @@ def extraer_descripciones_drawio(ruta_drawio):
 
     return descripciones
 
-# ---------------- MANEJO DE IMAGEN DEL MAPA ----------------
-
 _FIRMAS_IMAGEN_MAPA = {
     ".png": b"\x89PNG\r\n\x1a\n",
     ".jpg": b"\xff\xd8\xff",
@@ -681,8 +666,6 @@ def _escapar_atributo_html(texto):
         .replace(">", "&gt;")
     )
 
-# ---------------- GENERACIÓN DEL ARCHIVO HTML (PYTHON) ----------------
-
 def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash, descripciones_rutas=None, imagen_mapa=None):
     datos = {"tarjetas": tarjetas, "rutas": rutas, "descripciones_rutas": descripciones_rutas or {}}
     datos_json = json.dumps(datos, ensure_ascii=False)
@@ -723,11 +706,7 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     print(f"  Tarjetas: {len(tarjetas)}")
     print(f"  Rutas cargadas: {len(rutas)}")
 
-# ---------------- INICIO DE PLANTILLA HTML ----------------
-
 HTML_TEMPLATE = """<!DOCTYPE html>
-<!-- ---------------- PLANTILLA HTML: ESTRUCTURA BASE Y META TAGS ---------------- -->
-
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -744,10 +723,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tarjetas de Estudio</title>
 <style>
-/* ---------------- PLANTILLA HTML: ESTILOS CSS ---------------- */
-
-/* ---------------- CSS: VARIABLES DE TEMA (CLARO/OSCURO) Y RESET ---------------- */
-
   :root {
     --fill-color: __FILL_COLOR__;
     --stroke-color: __STROKE_COLOR__;
@@ -823,8 +798,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     opacity: 0.75;
     margin-bottom: 2px;
   }
-
-  /* ---------------- CSS: LAYOUT PRINCIPAL, TARJETAS Y BOTONES ---------------- */
 
   .contenedor {
     width: 100%;
@@ -971,8 +944,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gap: 6px;
     margin-bottom: 8px;
   }
-
-  /* ---------------- CSS: GAMIFICACIÓN, TIENDA Y ESTADÍSTICAS ---------------- */
 
   .fila-gamificacion {
     display: flex;
@@ -1970,8 +1941,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-size: 14px;
   }
 
-  /* ---------------- CSS: MODALES, OVERLAYS Y PANTALLAS SECUNDARIAS ---------------- */
-
   .modal-overlay {
     display: none;
     position: fixed;
@@ -2846,9 +2815,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 </style>
 </head>
-
-<!-- ---------------- PLANTILLA HTML: ESTRUCTURA DOM Y PANTALLAS ---------------- -->
-
 <body>
 
 <div class="contenedor">
@@ -3088,6 +3054,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="grid-tienda" id="grid-tienda"></div>
     <div class="navegacion" style="margin-top:20px;">
       <button class="boton-secundario" id="btn-tienda-volver">← Volver</button>
+      <button class="boton-mini boton-mini-peligro" id="btn-tienda-resetear">♻️ Resetear puntos e inventario</button>
     </div>
   </div>
 
@@ -3412,7 +3379,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </span>
     </div>
     <div class="fila-backup-zona">
-      <span class="zona-nombre">📑 Análisis de Sesion</span>
+      <span class="zona-nombre">📑 Análisis de Sesión</span>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-analisis" title="Descarga los análisis de sesión guardados como JSON">Exportar</button>
         <button class="boton-mini" id="btn-importar-analisis" title="Fusiona los análisis de sesión guardados de un JSON">Importar</button>
@@ -3521,7 +3488,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="sesiones" checked> 🕐 Sesiones</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="notasEvaluador" checked> 📝 Notas del evaluador</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="retencionRutas" checked> 🧠 Retención de rutas</label>
-      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="analisisSesion" checked> 📑 Análisis de Sesion</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="analisisSesion" checked> 📑 Análisis de Sesión</label>
     </div>
     <div id="vinc-campo-espacio" style="display:none;">
       <input type="text" class="input-buscador" id="vinc-espacio" list="vinc-espacios" placeholder="Nombre anterior del recordatorio (sin .txt)" autocomplete="off">
@@ -3620,10 +3587,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
     <div id="estadisticas-pane-subt" style="display:none;">
       <div id="subt-repasar-lista"></div>
-      <div class="sync-seccion-titulo">Análisis de Sesion</div>
-      <p class="modal-ayuda" style="margin-top:0; margin-bottom:10px;">
-        Solo se analizan subtemas con más de 3 tarjetas evaluadas. Los subT con 3 o menos no aparecen aquí ni tampoco su indicador de repaso se movera de 50 puntos.
-      </p>
+      <div class="sync-seccion-titulo">Análisis de Sesión</div>
       <div id="analisis-guardados-lista"></div>
       <p class="nota-dificiles" id="analisis-guardados-vacio" style="display:none;">Todavía no guardaste ningún análisis de sesión.</p>
       <details id="det-analisis-otros" style="display:none">
@@ -3677,13 +3641,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-aviso">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <p id="modal-aviso-texto" style="white-space: pre-line;"></p>
+    <button class="boton-reiniciar" id="btn-aviso-aceptar">Aceptar</button>
+  </div>
+</div>
+
 <div class="lightbox" id="lightbox">
   <button class="lightbox-cerrar" title="Cerrar">&times;</button>
   <img id="lightbox-img" src="" alt="Imagen ampliada">
 </div>
-<script>
-  // ---------------- JS: INICIALIZACIÓN, CONSTANTES Y ESTADO GLOBAL ----------------
 
+<script>
   const datos = __DATOS_JSON__;
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
@@ -3711,7 +3681,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
   const PATRON_PALABRA_CON_SIMBOLOS = new RegExp(
     '[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+|[' +
-    Object.keys(SIMBOLOS_ESPECIALES).map((s) => s.replace(/[\\\\]^-]/g, '\\$&')).join('') +
+    Object.keys(SIMBOLOS_ESPECIALES).map((s) => s.replace(/[\\\\\\]^-]/g, '\\\\$&')).join('') +
     ']',
     'g'
   );
@@ -3769,6 +3739,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     { codigo: 'error', texto: 'Error', color: '#EF4444' },
     { codigo: 'comparacion', texto: 'Comparación', color: '#F59E0B' },
     { codigo: 'curioso', texto: 'Curioso', color: '#EC4899' },
+    { codigo: 'duda', texto: 'Duda', color: '#64748B' },
   ];
   const MAPA_CATEGORIAS_NOTA_EVAL = new Map(CATEGORIAS_NOTA_EVAL.map((c) => [c.codigo, c]));
 
@@ -3779,8 +3750,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   let tiempoInicioTarjeta = 0;
   let cronometroIntervalId = null;
-
-  // ---------------- JAVASCRIPT: ESTADO, STORAGE Y GAMIFICACIÓN ----------------  
 
   const CLAVE_GAMIFICACION = 'gamificacion_v1';
 
@@ -3934,8 +3903,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function buscarListaPropia(nombre) {
     return buscarListaEnEspacio(nombre, ESPACIO_HASH);
   }
-
-  // ---------------- JS: LÓGICA DE REPASO ESPACIADO (SRS) Y LISTAS ----------------
 
   const SRS_DEFAULT = { activated: false, startDate: 0, currentLevel: 1, lastReviewDate: 0, graduated: false, snoozeUntil: 0 };
   const SRS_INTERVALOS_DIAS = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30, 6: 60 };
@@ -4221,6 +4188,33 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elModalConfirmacion.addEventListener('click', (evento) => {
     if (evento.target === elModalConfirmacion) cerrarModalConfirmacion(false);
   });
+
+  const elModalAviso = document.getElementById('modal-aviso');
+  const elModalAvisoTexto = document.getElementById('modal-aviso-texto');
+  const elBtnAvisoAceptar = document.getElementById('btn-aviso-aceptar');
+  let _resolverAviso = null;
+
+  function avisar(mensaje) {
+    return new Promise((resolve) => {
+      elModalAvisoTexto.textContent = mensaje;
+      elModalAviso.classList.add('abierto');
+      _resolverAviso = resolve;
+    });
+  }
+
+  function cerrarModalAviso() {
+    elModalAviso.classList.remove('abierto');
+    if (_resolverAviso) {
+      const resolver = _resolverAviso;
+      _resolverAviso = null;
+      resolver();
+    }
+  }
+
+  elBtnAvisoAceptar.addEventListener('click', () => cerrarModalAviso());
+  elModalAviso.addEventListener('click', (evento) => {
+    if (evento.target === elModalAviso) cerrarModalAviso();
+  });
   const elFilaGamificacion = document.getElementById('fila-gamificacion');
   const elStatPuntos = document.getElementById('stat-puntos');
   const elStatRacha = document.getElementById('stat-racha');
@@ -4343,8 +4337,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function rutasValidasDe(tarjeta) {
     return (tarjeta.rutas || []).filter((id) => rutasDisp.hasOwnProperty(id));
   }
-
-  // ---------------- JAVASCRIPT: RENDERIZADO DE UI Y NAVEGACIÓN ----------------
 
   function mostrarPantalla(nombre) {
     elPantallaTemas.style.display = nombre === 'temas' ? 'block' : 'none';
@@ -4702,8 +4694,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     });
   }
-
-  // ---------------- JS: GALERÍA DE IMÁGENES, RUTAS HUÉRFANAS Y MAPA ----------------
 
   const CLAVE_IMAGENES = 'datos_imagenes_v1';
   let datosImagenes = cargarImagenes();
@@ -5824,6 +5814,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   elBtnAbrirTienda.addEventListener('click', () => abrirTienda());
   document.getElementById('btn-tienda-volver').addEventListener('click', () => mostrarPantalla('temas'));
+  document.getElementById('btn-tienda-resetear').addEventListener('click', async () => {
+    if (!(await confirmarAccion('¿Resetear tus puntos y todo tu inventario a 0? Esto no afecta tus sesiones, difíciles, notas ni otros datos. No se puede deshacer.'))) return;
+    gamificacion.puntosTotales = 0;
+    Object.keys(gamificacion.inventario).forEach((clave) => { gamificacion.inventario[clave] = 0; });
+    guardarGamificacion();
+    renderTienda();
+    actualizarBarraGamificacion();
+  });
 
   const elModalListas = document.getElementById('modal-listas');
   const elListaListasGuardadas = document.getElementById('lista-listas-guardadas');
@@ -6127,11 +6125,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const lector = new FileReader();
     lector.onload = () => {
       let datos;
-      try { datos = JSON.parse(lector.result); } catch (e) { window.alert('El archivo no es un JSON válido.'); return; }
+      try { datos = JSON.parse(lector.result); } catch (e) { avisar('El archivo no es un JSON válido.'); return; }
       const entrantes = (datos && Array.isArray(datos.listas)) ? datos.listas : null;
-      if (!entrantes) { window.alert('El archivo no tiene el formato esperado ({ "listas": [...] }).'); return; }
+      if (!entrantes) { avisar('El archivo no tiene el formato esperado ({ "listas": [...] }).'); return; }
       const r = fusionarListasEntrantes(entrantes);
-      window.alert('Importación de listas: ' + r.nuevas + ' nueva(s), ' + r.actualizadas + ' actualizada(s), ' + r.conservadas + ' conservada(s).');
+      avisar('Importación de listas: ' + r.nuevas + ' nueva(s), ' + r.actualizadas + ' actualizada(s), ' + r.conservadas + ' conservada(s).');
     };
     lector.readAsText(archivo);
   });
@@ -6533,7 +6531,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const acc = document.createElement('div');
     acc.className = 'retencion-entrada-acciones';
     acc.appendChild(botonMini('🗑 Borrar', async () => {
-      if (!(await confirmarAccion('¿Borrar este análisis guardado? No se puede deshacer.'))) return;
+      if (!(await confirmarAccion('¿Borrar este análisis de sesión? No se puede deshacer.'))) return;
       analisisGuardados = analisisGuardados.filter((a) => a.id !== entrada.id);
       guardarAnalisisGuardados();
       subtRepasarConstruido = false;
@@ -6624,7 +6622,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   document.getElementById('btn-vaciar-analisis').addEventListener('click', async () => {
     if (analisisGuardados.length === 0) return;
-    if (!(await confirmarAccion('¿Vaciar TODOS los análisis de sesion? No se puede deshacer.'))) return;
+    if (!(await confirmarAccion('¿Vaciar TODOS los análisis de sesión? No se puede deshacer.'))) return;
     analisisGuardados = [];
     guardarAnalisisGuardados();
     subtRepasarConstruido = false;
@@ -6659,9 +6657,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.analisisGuardados) ? obj.analisisGuardados : null);
         if (!lista) throw new Error('formato');
         const r = fusionarAnalisisLista(lista);
-        window.alert('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
+        avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
       } catch (e) {
-        window.alert('El archivo no es un JSON válido de análisis de sesión.');
+        avisar('El archivo no es un JSON válido de análisis de sesión.');
       }
     };
     lector.readAsText(archivo);
@@ -7257,17 +7255,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       try {
         importado = JSON.parse(lector.result);
       } catch (e) {
-        window.alert('No se pudo leer el archivo: el JSON no es válido.');
+        avisar('No se pudo leer el archivo: el JSON no es válido.');
         return;
       }
       if (!importado || typeof importado !== 'object') {
-        window.alert('El archivo no tiene el formato esperado.');
+        avisar('El archivo no tiene el formato esperado.');
         return;
       }
       fusionarGamificacionImportada(importado);
-      window.alert('Historial importado y fusionado correctamente.');
+      avisar('Historial importado y fusionado correctamente.');
     };
-    lector.onerror = () => window.alert('No se pudo leer el archivo.');
+    lector.onerror = () => avisar('No se pudo leer el archivo.');
     lector.readAsText(archivo);
   }
 
@@ -7284,8 +7282,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const HISTORIAL_POR_PAGINA = 15;
 
   const LIMITE_STORAGE_BYTES = 5242880;
-
-  // ---------------- JS: HISTORIAL, SINCRONIZACIÓN Y BACKUPS (JSON) ----------------
 
   function calcularUsoStorage() {
     let bytes = 0;
@@ -7320,8 +7316,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnHistorialBorrarGlobal.addEventListener('click', () => borrarHistorialGlobal());
 
   function tieneClave(obj, k) { return Object.prototype.hasOwnProperty.call(obj, k); }
-
-  // ---------------- JS: VINCULACIÓN DE ESPACIOS Y EVALUADORES ----------------
 
   const ZONAS_VINCULO = {
     dificiles: {
@@ -7493,8 +7487,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (!viejo) return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
       if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
       const n = analisisGuardados.filter((a) => a.espacio === viejo).length;
-      if (n === 0) return { cantidad: 0, texto: 'No se encontraron análisis de sesion bajo «' + viejo + '».' };
-      return { cantidad: n, texto: 'Se vincularían ' + n + ' análisis guardado(s).' };
+      if (n === 0) return { cantidad: 0, texto: 'No se encontraron análisis de sesión bajo «' + viejo + '».' };
+      return { cantidad: n, texto: 'Se vincularían ' + n + ' análisis de sesión.' };
     }
     const z = ZONAS_VINCULO[zona];
     if (!viejo) {
@@ -7662,13 +7656,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       : ICONOS_ZONA_VINCULO[z] + ' ' + z + ': ERROR');
     let msg = 'Vinculación terminada.\\n' + lineas.join('\\n');
     if (errores.length > 0) msg += '\\n\\nErrores:\\n' + errores.join('\\n');
-    window.alert(msg);
+    avisar(msg);
 
     if (residuos > 0) {
       const zonasTxt = zonasResiduo.map((z) => ICONOS_ZONA_VINCULO[z]).join(' ');
       if (await confirmarAccion('Quedaron ' + residuos + ' entrada(s) que no corresponden a ninguna tarjeta actual en las zonas vinculadas (' + zonasTxt + '). ¿Borrarlas?')) {
         const n = borrarResiduosZonas(zonasResiduo);
-        window.alert('Se borraron ' + n + ' entrada(s).');
+        avisar('Se borraron ' + n + ' entrada(s).');
       }
     }
   }
@@ -7679,6 +7673,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const esp = espacioDeSesion(s);
       if (esp && esp !== ESPACIO_HASH) set.add(esp);
     });
+    notasEvaluador.forEach((n) => { if (n.espacio && n.espacio !== ESPACIO_HASH) set.add(n.espacio); });
+    retencionRutas.forEach((r) => { if (r.espacio && r.espacio !== ESPACIO_HASH) set.add(r.espacio); });
+    analisisGuardados.forEach((a) => { if (a.espacio && a.espacio !== ESPACIO_HASH) set.add(a.espacio); });
     return Array.from(set).sort();
   }
 
@@ -7718,7 +7715,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
 
   async function borrarEvaluadorCompleto(espacio) {
-    if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes, listas, notas del evaluador, retención de rutas y análisis de sesion)? ' +
+    if (!espacio || espacio === ESPACIO_HASH) {
+      avisar('No podés borrar los datos de este mismo evaluador desde acá. Entrá como otro evaluador para borrar éste.');
+      return;
+    }
+    if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes, listas, notas del evaluador, retención de rutas y análisis de sesión)? ' +
       'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.'))) return;
 
     gamificacion.historial = gamificacion.historial.filter((s) => espacioDeSesion(s) !== espacio);
@@ -7772,7 +7773,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderImagenesPreview();
     renderListasGuardadas();
     actualizarIndicadorSync();
-    window.alert('Se borraron los datos de «' + espacio + '».');
+    avisar('Se borraron los datos de «' + espacio + '».');
   }
 
   document.getElementById('btn-vincular-todo').addEventListener('click', () => {
@@ -7824,7 +7825,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elVincTitulo.textContent = 'Vincular todo a este evaluador';
       document.querySelectorAll('.vinc-zona-chk').forEach((c) => { c.checked = true; });
     } else {
-      const titulo = zona === 'notasEvaluador' ? 'notas del evaluador' : zona === 'retencionRutas' ? 'retención de rutas' : zona === 'analisisSesion' ? 'análisis de sesion' : (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
+      const titulo = zona === 'notasEvaluador' ? 'notas del evaluador' : zona === 'retencionRutas' ? 'retención de rutas' : zona === 'analisisSesion' ? 'análisis de sesión' : (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
       elVincTitulo.textContent = 'Vincular ' + titulo + ' a este evaluador';
     }
     if (vincEspacioFijo !== null) {
@@ -7871,11 +7872,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       r = ejecutarVinculo(zona, viejo);
     } catch (e) {
       cerrarModalVincular();
-      window.alert('No se pudo completar la vinculación: ' + e.message);
+      avisar('No se pudo completar la vinculación: ' + e.message);
       return;
     }
     cerrarModalVincular();
-    window.alert('Vinculación terminada: movidas ' + r.movidas + ', sin corresponder ' + r.sin + '.' +
+    avisar('Vinculación terminada: movidas ' + r.movidas + ', sin corresponder ' + r.sin + '.' +
       (r.sin > 0 ? ' Las ' + r.sin + ' sin corresponder quedan sin mover (en «De otros evaluadores»).' : ''));
   }
 
@@ -8098,8 +8099,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elInputBuscadorGaleria.addEventListener('input', debounce(() => renderDropdownBuscadorGaleria(elInputBuscadorGaleria.value), 200));
   elInputBuscadorHuerfanas.addEventListener('input', debounce(() => renderDropdownBuscadorHuerfanas(elInputBuscadorHuerfanas.value), 200));
 
-  // ---------------- JS: EVENTOS GLOBALES, ATAJOS DE TECLADO Y CIERRE DE MODALES ----------------
-
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#zona-buscador-temas')) cerrarDropdownBuscador(elDropdownBuscadorTemas);
     if (!e.target.closest('#zona-buscador-observador')) cerrarDropdownBuscador(elDropdownBuscadorObservador);
@@ -8122,6 +8121,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
 
     if (elModalConfirmacion.classList.contains('abierto')) { cerrarModalConfirmacion(false); return; }
+    if (elModalAviso.classList.contains('abierto')) { cerrarModalAviso(); return; }
     if (elModalNotasEvaluador.classList.contains('abierto')) { cerrarNotasEvaluador(); return; }
     if (elModalSync.classList.contains('abierto')) { elModalSync.classList.remove('abierto'); return; }
     if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
@@ -8150,6 +8150,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
 
     if (elModalConfirmacion.classList.contains('abierto')) { evento.preventDefault(); elBtnConfirmacionAceptar.click(); return; }
+    if (elModalAviso.classList.contains('abierto')) { evento.preventDefault(); elBtnAvisoAceptar.click(); return; }
     if (elModalPomodoroIniciar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-iniciar-si').click(); return; }
     if (elModalPomodoroAbandonar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-abandonar-si').click(); return; }
     if (elModalPomodoroResumen.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-resumen-cerrar').click(); return; }
@@ -9284,11 +9285,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         if (!lista) throw new Error('formato');
 
         const r = fusionarNotasEvaluadorLista(lista);
-        window.alert('Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
+        avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
           ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
           r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : ''));
       } catch (e) {
-        window.alert('El archivo no es un JSON válido de notas del evaluador.');
+        avisar('El archivo no es un JSON válido de notas del evaluador.');
       }
     };
     lector.readAsText(archivo);
@@ -9654,9 +9655,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.retencionRutas) ? obj.retencionRutas : null);
         if (!lista) throw new Error('formato');
         const r = fusionarRetencionLista(lista);
-        window.alert('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
+        avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
       } catch (e) {
-        window.alert('El archivo no es un JSON válido de retención de rutas.');
+        avisar('El archivo no es un JSON válido de retención de rutas.');
       }
     };
     lector.readAsText(archivo);
@@ -9719,8 +9720,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     document.getElementById('pomodoro-resumen-dificiles-pct').textContent = String(entrada.pctDificiles);
     document.getElementById('pomodoro-resumen-dificiles-lista').textContent = dificilesIds.length > 0 ? dificilesIds.map((id) => '#' + id).join(', ') : '—';
   }
-
-  // ---------------- JS: ESTADÍSTICAS, GRÁFICOS SVG Y ANÁLISIS DE SESIÓN ----------------
 
   const NS_SVG = 'http://www.w3.org/2000/svg';
   function elSvg(tag, attrs) {
@@ -10572,8 +10571,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return pausaManual || notaAbierta || razonesAbierto || indiceCongelado === indiceActual;
   }
 
-  // ---------------- JS: NAVEGACIÓN ENTRE PANTALLAS Y RENDERIZADO DE TEMAS ----------------
-
   function renderTarjeta() {
     if (tarjetasSesion.length === 0) {
       elAreaTarjeta.innerHTML = '<p class="sin-tarjetas">No hay tarjetas para estudiar con los temas elegidos.</p>';
@@ -10796,8 +10793,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elRutasContenedor.appendChild(det);
     });
   }
-
-  // ---------------- JS: EXTRACCIÓN DE RAÍCES Y VARIANTES DE PALABRAS ----------------
 
   const SUFIJOS_RAIZ = [
     'imientos','imiento',
@@ -11109,10 +11104,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       (modoJuego !== 'light' ? ' (+' + pts + ' pts)' : '') + '. Tu racha crece normal.');
   }
 
-  // ---------------- JAVASCRIPT: LÓGICA DE EVALUACIÓN Y RESPUESTAS ----------------
-
-  // ---------------- JS: EVALUACIÓN DE RESPUESTAS ESCRITAS (RAÍCES Y COINCIDENCIAS) ----------------
-
   function evaluarRespuesta() {
     if (pausaManual || segundaPendiente) return;
     if (resultados[indiceActual] !== null) return;
@@ -11407,8 +11398,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!borradorSinGuardar() && !razonesSinGuardar()) return true;
     return await confirmarAccion('Tenés cambios sin guardar (nota y/o razones). ¿Descartarlos?');
   }
-
-  // ---------------- JS: GESTIÓN DE NOTAS, RAZONES Y PANEL DE AYUDA ----------------
 
   function renderNota(actual) {
     const efectiva = notaEfectivaDe(actual);
@@ -12179,8 +12168,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     document.getElementById('modal-srs-aviso').classList.remove('abierto');
   });
 
-  // ---------------- JAVASCRIPT: POMODORO, DICTADO Y HERRAMIENTAS EXTRA ----------------
-
   (function () {
     const RecognitionCtor = window.webkitSpeechRecognition || window.SpeechRecognition;
     const soportado = !!RecognitionCtor;
@@ -12296,8 +12283,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (textareaDictadoActivo === textarea) detenerDictado();
     };
   })();
-
-  // ---------------- JS: POMODORO, TEMPORIZADORES Y DICTADO POR VOZ ----------------
 
   const elBtnPomodoro = document.getElementById('btn-pomodoro');
   const elPomodoroBadge = document.getElementById('pomodoro-badge');
@@ -12516,8 +12501,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </body>
 </html>
 """
-# ---------------- FIN DE PLANTILLA HTML ----------------
-
 
 # ---------------- CONFIGURACIÓN ----------------
 
@@ -12525,8 +12508,6 @@ try:
     from tkinter import Toplevel, Label, Frame, Button
 except ImportError:
     Toplevel = Label = Frame = Button = None
-
-# ---------------- INTERFAZ GRÁFICA (TKINTER) Y PALETA DE COLORES ----------------
 
 COLOR_DEFAULT = "rosadoClaro"
 
@@ -12580,8 +12561,6 @@ def elegir_color(raiz, colores, default):
     raiz.wait_window(vent)
     return eleccion["clave"] if eleccion["clave"] else default
 
-# ---------------- PROCESAMIENTO Y RESALTADO DE DRAWIO ----------------
-
 PALETA_COLORES = {
     "amarillo": ["#DEDE00", "#5C5C5C"],
     "celeste": ["#00CCCC", "#5C5C5C"],
@@ -12611,8 +12590,6 @@ PALETA_COLORES = {
     "amarilloClaro": ["#FFFF80", "#5C5C5C"],
     "azulOscuro": ["#000096", "#D0D0D0"],
 }
-
-# ---------------- INTERFAZ GRÁFICA: DIÁLOGO DE RESALTADO (TKINTER) ----------------
 
 def preguntar_resaltado(raiz):
     eleccion = {"aplicar": False}
@@ -12663,7 +12640,7 @@ def preguntar_resaltado(raiz):
     
     return eleccion["aplicar"]
 
-# ---------------- PIPELINE PRINCIPAL DE GENERACIÓN ----------------
+# ---------------- PIPELINE (compartido por el modo interactivo y --config) ----------------
 
 def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_imagen_mapa=None, propagar=False):
     try:
@@ -12716,7 +12693,7 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
         return False, f"{type(error).__name__}: {error}"
     return True, ""
 
-# ---------------- MODO POR LOTE (--config) Y VALIDACIÓN ----------------
+# ---------------- MODO --config (sin ninguna UI) ----------------
 
 CAMPOS_CONFIG = {
     "recordatorio": str,
@@ -12865,15 +12842,15 @@ def validar_entrada(entrada, carpeta_config):
     return valores, errores, avisos
 
 def _etiqueta_entrada(entrada, numero):
+    """Nombre para la consola: stem de su respuestas.txt, o 'entrada N' si no se puede saber."""
     if isinstance(entrada, dict):
         resp = entrada.get("respuestas")
         if isinstance(resp, str) and resp.strip():
             return Path(resp).stem or f"entrada {numero}"
     return f"entrada {numero}"
 
-# ---------------- MODO POR LOTE: LECTURA Y VALIDACIÓN DE CONFIG.JSON ----------------
-
 def ejecutar_config(ruta_config):
+    """Procesa TODAS las entradas aunque alguna falle. Devuelve el código de salida (0 = todo OK)."""
     try:
         entradas, avisos_globales = leer_config(ruta_config)
     except ErrorConfig as error:
@@ -12940,7 +12917,7 @@ def ejecutar_config(ruta_config):
     print(f"{total - fallos} de {total} evaluadores generados.")
     return 1 if fallos else 0
 
-# ---------------- MODO INTERACTIVO Y PUNTO DE ENTRADA (MAIN) ----------------
+# ---------------- MODO INTERACTIVO (el flujo de siempre) ----------------
 
 def main_interactivo():
     if Tk is None or filedialog is None:
@@ -12996,8 +12973,6 @@ def main_interactivo():
 
     generar_evaluador(txt, txt_respuestas, ruta_drawio, aplicar_resaltado, opciones,
                        ruta_imagen_mapa=ruta_imagen_mapa or None, propagar=True)
-
-# ---------------- PUNTO DE ENTRADA: ARGUMENTOS DE LÍNEA DE COMANDOS ----------------    
 
 def main():
     parser = argparse.ArgumentParser(

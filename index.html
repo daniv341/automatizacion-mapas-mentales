@@ -303,6 +303,232 @@
       font-size: 11px;
     }
   }
+
+  /* ---------------- VISTAS (SRS / TIENDA) ---------------- */
+  .barra-botones-vistas {
+    display: flex;
+    gap: 8px;
+  }
+
+  .vista-secundaria {
+    display: none;
+  }
+
+  .vista-secundaria .encabezado {
+    margin-bottom: 4px;
+  }
+
+  .btn-volver {
+    background: none;
+    border: none;
+    color: var(--color-boton);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 2px 14px;
+    display: inline-block;
+  }
+
+  .btn-volver:hover {
+    text-decoration: underline;
+  }
+
+  /* ---- SRS ---- */
+  .grupo-evaluador {
+    margin-top: 22px;
+  }
+
+  .grupo-evaluador:first-of-type {
+    margin-top: 4px;
+  }
+
+  .grupo-evaluador-titulo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--texto-cabecera);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--color-borde-medio);
+  }
+
+  .grupo-evaluador-contador {
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--color-boton);
+    border-radius: 10px;
+    padding: 2px 8px;
+  }
+
+  .fila-srs {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--color-borde-suave);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s;
+  }
+
+  .fila-srs:hover {
+    background: var(--bg-superficie-hover);
+  }
+
+  .fila-srs:last-child {
+    border-bottom: none;
+  }
+
+  .fila-srs-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .fila-srs-nombre {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--texto-principal);
+    overflow-wrap: anywhere;
+  }
+
+  .fila-srs-detalle {
+    font-size: 12px;
+    color: var(--texto-suave);
+    margin-top: 2px;
+  }
+
+  .fila-srs-nivel {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 4px 9px;
+    white-space: nowrap;
+    border: 1.5px solid var(--color-borde-fuerte);
+    color: var(--texto-principal);
+  }
+
+  .fila-srs-estado {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 4px 9px;
+    white-space: nowrap;
+  }
+
+  .fila-srs-estado.estado-vencido { background: #ff8c1a; color: #fff; }
+  .fila-srs-estado.estado-proximo { background: var(--color-borde-medio); color: var(--texto-cabecera); }
+  .fila-srs-estado.estado-graduado { background: #2b6fe0; color: #fff; }
+
+  @media (max-width: 400px) {
+    .fila-srs {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .fila-srs-nombre {
+      font-size: 13px;
+    }
+  }
+
+  #srs-sentinela {
+    height: 1px;
+  }
+
+  .srs-cargando-mas {
+    text-align: center;
+    padding: 14px 0;
+    font-size: 12px;
+    color: var(--texto-tenue);
+  }
+
+  /* ---- TIENDA ---- */
+  .saldo-tienda {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-boton);
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  .grid-tienda {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .item-tienda {
+    border: 2px solid var(--color-borde-medio);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .item-tienda-icono { font-size: 30px; }
+  .item-tienda-nombre { font-weight: 700; color: var(--texto-principal); }
+  .item-tienda-precio { font-size: 13px; color: var(--texto-suave); }
+  .item-tienda-descripcion { font-size: 12px; color: var(--texto-tenue); min-height: 32px; }
+
+  .item-tienda-boton {
+    margin-top: 6px;
+    padding: 8px 14px;
+    border-radius: 18px;
+    border: 2px solid var(--color-boton);
+    background: var(--color-boton);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .item-tienda-boton:disabled {
+    background: var(--color-borde-medio);
+    border-color: var(--color-borde-fuerte, var(--color-borde-medio));
+    color: var(--texto-tenue);
+    cursor: not-allowed;
+  }
+
+  .item-tienda-inventario { font-size: 12px; color: var(--color-boton); font-weight: 700; }
+
+  .acciones-tienda {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 22px;
+  }
+
+  .boton-secundario {
+    padding: 11px 22px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    background: var(--bg-superficie);
+    color: var(--color-boton);
+    border: 2px solid var(--color-boton);
+  }
+
+  .boton-mini-peligro {
+    padding: 10px 18px;
+    border-radius: 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    background: var(--bg-superficie);
+    color: #a4402f;
+    border: 1.5px solid #f0c4bc;
+  }
 </style>
 </head>
 
@@ -311,42 +537,83 @@
 
   <div class="encabezado">
     <h1>📚 Mis Evaluadores</h1>
-    <button
-      class="boton-icono-circular"
-      id="btn-tema-oscuro"
-      title="Cambiar tema claro/oscuro"
-    >🌙</button>
+    <div class="barra-botones-vistas">
+      <button
+        class="boton-icono-circular"
+        id="btn-abrir-srs"
+        title="Repasos pendientes (SRS)"
+      >🧠</button>
+      <button
+        class="boton-icono-circular"
+        id="btn-abrir-tienda"
+        title="Tienda"
+      >🛒</button>
+      <button
+        class="boton-icono-circular"
+        id="btn-tema-oscuro"
+        title="Cambiar tema claro/oscuro"
+      >🌙</button>
+    </div>
   </div>
+
+  <!-- ==================== VISTA: LISTADO DE EVALUADORES ==================== -->
+  <div id="vista-principal">
 
     <!-- INDICADOR DE ALMACENAMIENTO -->
-  <div class="indicador-storage" id="indicador-storage">
-      <span class="indicador-storage-dot" id="indicador-storage-dot"></span>
-      <span id="indicador-storage-texto">Calculando...</span>
+    <div class="indicador-storage" id="indicador-storage">
+        <span class="indicador-storage-dot" id="indicador-storage-dot"></span>
+        <span id="indicador-storage-texto">Calculando...</span>
+    </div>
+
+    <p class="subtitulo">Listado automático desde el repositorio</p>
+
+    <input
+      type="text"
+      class="input-buscador"
+      id="buscador"
+      placeholder="Buscar evaluador..."
+      autocomplete="off"
+    >
+
+    <div id="contenido">
+      <p class="cargando">Cargando evaluadores...</p>
+    </div>
+
+    <!-- BOTÓN DE GITHUB -->
+    <a href="https://github.com/daniv341/automatizacion-mapas-mentales" target="_blank" class="btn-github">
+        <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+        </svg>
+        Ver repositorio en GitHub
+    </a>
+
+    <div class="footer" id="footer"></div>
   </div>
 
-  <p class="subtitulo">Listado automático desde el repositorio</p>
-
-  <input
-    type="text"
-    class="input-buscador"
-    id="buscador"
-    placeholder="Buscar evaluador..."
-    autocomplete="off"
-  >
-
-  <div id="contenido">
-    <p class="cargando">Cargando evaluadores...</p>
+  <!-- ==================== VISTA: SRS PENDIENTES ==================== -->
+  <div id="vista-srs" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-srs-volver">← Volver</button>
+    <p class="subtitulo">
+      🧠 Repasos espaciados (SRS), agrupados por evaluador. Solo se muestran
+      las listas que ya fueron activadas para SRS desde cada evaluador —
+      desde aquí no se pueden activar ni desactivar.
+    </p>
+    <div id="srs-contenido">
+      <p class="cargando">Cargando repasos...</p>
+    </div>
   </div>
 
-  <!-- BOTÓN DE GITHUB -->
-  <a href="https://github.com/daniv341/automatizacion-mapas-mentales" target="_blank" class="btn-github">
-      <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-      </svg>
-      Ver repositorio en GitHub
-  </a>
+  <!-- ==================== VISTA: TIENDA ==================== -->
+  <div id="vista-tienda" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-tienda-volver">← Volver</button>
+    <p class="subtitulo">🛒 Tienda compartida por todos los evaluadores</p>
+    <div class="saldo-tienda" id="saldo-tienda">Puntos disponibles: 0</div>
+    <div class="grid-tienda" id="grid-tienda"></div>
+    <div class="acciones-tienda">
+      <button class="boton-mini-peligro" id="btn-tienda-resetear">♻️ Resetear puntos e inventario</button>
+    </div>
+  </div>
 
-  <div class="footer" id="footer"></div>
 </div>
 
 <script>
@@ -654,8 +921,397 @@
       }
   }
 
-  // Ejecutar apenas cargue el documento
   document.addEventListener('DOMContentLoaded', renderIndicadorStorage);
+
+  const elVistaPrincipal = document.getElementById('vista-principal');
+  const elVistaSrs = document.getElementById('vista-srs');
+  const elVistaTienda = document.getElementById('vista-tienda');
+
+  let srsInicializado = false;
+  let tiendaInicializada = false;
+
+  function mostrarVista(nombre) {
+    elVistaPrincipal.style.display = nombre === 'principal' ? '' : 'none';
+    elVistaSrs.style.display = nombre === 'srs' ? '' : 'none';
+    elVistaTienda.style.display = nombre === 'tienda' ? '' : 'none';
+    window.scrollTo(0, 0);
+
+    if (nombre === 'srs' && !srsInicializado) {
+      srsInicializado = true;
+      inicializarVistaSrs();
+    }
+    if (nombre === 'tienda' && !tiendaInicializada) {
+      tiendaInicializada = true;
+      inicializarVistaTienda();
+    }
+  }
+
+  document.getElementById('btn-abrir-srs')
+    .addEventListener('click', () => mostrarVista('srs'));
+  document.getElementById('btn-abrir-tienda')
+    .addEventListener('click', () => mostrarVista('tienda'));
+  document.getElementById('btn-srs-volver')
+    .addEventListener('click', () => mostrarVista('principal'));
+  document.getElementById('btn-tienda-volver')
+    .addEventListener('click', () => mostrarVista('principal'));
+
+  const CLAVE_LISTAS_SRS = 'listas_guardadas_v1';
+  const SRS_DEFAULT_IDX = { activated: false, startDate: 0, currentLevel: 1, lastReviewDate: 0, graduated: false, snoozeUntil: 0 };
+  const SRS_INTERVALOS_DIAS_IDX = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30, 6: 60 };
+  const SRS_MS_DIA_IDX = 86400000;
+
+  function calcularIntervaloDiasIdx(level) {
+    return SRS_INTERVALOS_DIAS_IDX[level] || SRS_INTERVALOS_DIAS_IDX[6];
+  }
+
+  function obtenerSrsListaIdx(lista) {
+    return Object.assign({}, SRS_DEFAULT_IDX, (lista.srs && typeof lista.srs === 'object') ? lista.srs : {});
+  }
+
+  function etiquetaEspacioIdx(esp) {
+    return esp ? esp : 'Sin identificar';
+  }
+
+  function srsTextoProximoRepasoIdx(srs) {
+    const objetivo = srs.lastReviewDate + calcularIntervaloDiasIdx(srs.currentLevel) * SRS_MS_DIA_IDX;
+    const diasRestantes = (objetivo - Date.now()) / SRS_MS_DIA_IDX;
+    if (diasRestantes < 0) return 'Vencido';
+    if (diasRestantes < 1) {
+      const horas = Math.max(1, Math.round(diasRestantes * 24));
+      return 'en ' + horas + ' hora' + (horas === 1 ? '' : 's');
+    }
+    const dias = Math.round(diasRestantes);
+    return 'en ' + dias + ' día' + (dias === 1 ? '' : 's');
+  }
+
+  function cargarListasDesdeStorage() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_LISTAS_SRS);
+      if (!crudo) return [];
+      const arr = JSON.parse(crudo);
+      return Array.isArray(arr)
+        ? arr.filter((l) => l && typeof l.nombre === 'string' && Array.isArray(l.hashes))
+        : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function construirDatosSrs() {
+    const listas = cargarListasDesdeStorage();
+
+    const items = listas
+      .map((lista) => ({ lista: lista, srs: obtenerSrsListaIdx(lista) }))
+      .filter((x) => x.srs.activated);
+
+    items.forEach((x) => {
+      const objetivo = x.srs.lastReviewDate + calcularIntervaloDiasIdx(x.srs.currentLevel) * SRS_MS_DIA_IDX;
+      x.objetivo = objetivo;
+      x.vencido = !x.srs.graduated && Date.now() >= objetivo;
+      x.textoEstado = x.srs.graduated
+        ? 'Graduado'
+        : (x.vencido ? 'Vencido' : srsTextoProximoRepasoIdx(x.srs));
+      x.prioridad = x.srs.graduated ? 2 : (x.vencido ? 0 : 1);
+    });
+
+    const grupos = new Map();
+    items.forEach((x) => {
+      const clave = etiquetaEspacioIdx(x.lista.espacio);
+      if (!grupos.has(clave)) grupos.set(clave, []);
+      grupos.get(clave).push(x);
+    });
+
+    grupos.forEach((lista) => {
+      lista.sort((a, b) => {
+        if (a.prioridad !== b.prioridad) return a.prioridad - b.prioridad;
+        if (a.prioridad === 2) return a.lista.nombre.localeCompare(b.lista.nombre);
+        return a.objetivo - b.objetivo;
+      });
+    });
+
+    const nombresGrupos = Array.from(grupos.keys()).sort((a, b) => a.localeCompare(b));
+
+    return nombresGrupos.map((nombre) => ({ nombre: nombre, items: grupos.get(nombre) }));
+  }
+
+  function crearFilaSrs(x) {
+    const li = document.createElement('div');
+    li.className = 'fila-srs';
+
+    const info = document.createElement('div');
+    info.className = 'fila-srs-info';
+
+    const nombre = document.createElement('div');
+    nombre.className = 'fila-srs-nombre';
+    nombre.textContent = x.lista.nombre;
+    info.appendChild(nombre);
+
+    const detalle = document.createElement('div');
+    detalle.className = 'fila-srs-detalle';
+    const cantidad = Array.isArray(x.lista.hashes) ? x.lista.hashes.length : 0;
+    detalle.textContent = cantidad + ' tarjeta' + (cantidad === 1 ? '' : 's');
+    info.appendChild(detalle);
+
+    li.appendChild(info);
+
+    const nivel = document.createElement('span');
+    nivel.className = 'fila-srs-nivel';
+    nivel.textContent = x.srs.graduated ? 'Nivel máx.' : ('Nivel ' + x.srs.currentLevel);
+    li.appendChild(nivel);
+
+    const estado = document.createElement('span');
+    estado.className = 'fila-srs-estado ' +
+      (x.srs.graduated ? 'estado-graduado' : (x.vencido ? 'estado-vencido' : 'estado-proximo'));
+    estado.textContent = x.srs.graduated ? '🎓 Graduado' : (x.vencido ? '⏰ Vencido' : x.textoEstado);
+    li.appendChild(estado);
+
+    return li;
+  }
+
+  function renderizarSrsConLazyLoading(grupos, contenedor) {
+    contenedor.innerHTML = '';
+
+    const totalItems = grupos.reduce((acc, g) => acc + g.items.length, 0);
+    if (totalItems === 0) {
+      const p = document.createElement('p');
+      p.className = 'vacio';
+      p.textContent = 'No hay listas activadas para Repaso Espaciado todavía.';
+      contenedor.appendChild(p);
+      return;
+    }
+
+    const cola = [];
+    grupos.forEach((g) => {
+      cola.push({ tipo: 'grupo', nombre: g.nombre, cantidad: g.items.length });
+      g.items.forEach((x) => cola.push({ tipo: 'item', x: x }));
+    });
+
+    const TAMANIO_TANDA = 18;
+    let cursor = 0;
+    let grupoActualEl = null;
+
+    const sentinela = document.createElement('div');
+    sentinela.id = 'srs-sentinela';
+
+    const indicadorCarga = document.createElement('div');
+    indicadorCarga.className = 'srs-cargando-mas';
+    indicadorCarga.textContent = 'Cargando más…';
+    indicadorCarga.style.display = 'none';
+
+    function renderizarSiguienteTanda() {
+      const fin = Math.min(cursor + TAMANIO_TANDA, cola.length);
+
+      for (let i = cursor; i < fin; i++) {
+        const fila = cola[i];
+        if (fila.tipo === 'grupo') {
+          const bloque = document.createElement('div');
+          bloque.className = 'grupo-evaluador';
+
+          const titulo = document.createElement('div');
+          titulo.className = 'grupo-evaluador-titulo';
+
+          const span = document.createElement('span');
+          span.textContent = '📂 ' + fila.nombre;
+          titulo.appendChild(span);
+
+          const contador = document.createElement('span');
+          contador.className = 'grupo-evaluador-contador';
+          contador.textContent = String(fila.cantidad);
+          titulo.appendChild(contador);
+
+          bloque.appendChild(titulo);
+          contenedor.insertBefore(bloque, sentinela);
+          grupoActualEl = bloque;
+        } else {
+          if (!grupoActualEl) {
+            grupoActualEl = document.createElement('div');
+            grupoActualEl.className = 'grupo-evaluador';
+            contenedor.insertBefore(grupoActualEl, sentinela);
+          }
+          grupoActualEl.appendChild(crearFilaSrs(fila.x));
+        }
+      }
+
+      cursor = fin;
+      indicadorCarga.style.display = cursor < cola.length ? 'block' : 'none';
+
+      if (cursor >= cola.length && observer) {
+        observer.disconnect();
+      }
+    }
+
+    contenedor.appendChild(sentinela);
+    contenedor.appendChild(indicadorCarga);
+
+    let observer = null;
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver((entradas) => {
+        entradas.forEach((entrada) => {
+          if (entrada.isIntersecting && cursor < cola.length) {
+            renderizarSiguienteTanda();
+          }
+        });
+      }, { rootMargin: '200px' });
+      observer.observe(sentinela);
+    }
+
+    renderizarSiguienteTanda();
+
+    if (!observer) {
+      while (cursor < cola.length) renderizarSiguienteTanda();
+      indicadorCarga.style.display = 'none';
+    }
+  }
+
+  function inicializarVistaSrs() {
+    const contenedor = document.getElementById('srs-contenido');
+    const grupos = construirDatosSrs();
+    renderizarSrsConLazyLoading(grupos, contenedor);
+  }
+
+  document.getElementById('btn-abrir-srs').addEventListener('click', () => {
+    const contenedor = document.getElementById('srs-contenido');
+    const grupos = construirDatosSrs();
+    renderizarSrsConLazyLoading(grupos, contenedor);
+  });
+
+  const CLAVE_GAMIFICACION_IDX = 'gamificacion_v1';
+
+  const PRECIO_COMODIN_IDX = 100;
+  const PRECIO_PISTA_GRATIS_IDX = 50;
+  const PRECIO_ESCUDO_RACHA_IDX = 90;
+  const PRECIO_SEGUNDA_OPORTUNIDAD_IDX = 70;
+  const FACTOR_RECOMPENSA_REINTENTO_IDX = 0.5;
+
+  const ITEMS_TIENDA_IDX = [
+    { id: 'comodines', icono: '🃏', nombre: 'Comodín', precio: PRECIO_COMODIN_IDX,
+      descripcion: 'Salta una tarjeta sin perder vida ni puntos.' },
+    { id: 'pistasGratis', icono: '💡', nombre: 'Pista Gratis', precio: PRECIO_PISTA_GRATIS_IDX,
+      descripcion: 'Revela la pista manteniendo el puntaje máximo si aciertas.' },
+    { id: 'segundasOportunidades', icono: '🔁', nombre: 'Segunda oportunidad', precio: PRECIO_SEGUNDA_OPORTUNIDAD_IDX,
+      descripcion: 'Si fallás una respuesta escrita, te deja reintentar esa tarjeta una vez. Si acertás cobrás el ' +
+        Math.round(FACTOR_RECOMPENSA_REINTENTO_IDX * 100) + ' % de los puntos.' },
+    { id: 'escudosRacha', icono: '🛡', nombre: 'Escudo de racha', precio: PRECIO_ESCUDO_RACHA_IDX,
+      descripcion: 'Al fallar conserva tu racha y su multiplicador (la penitencia se cobra igual). No se gasta si tu racha es 0.' },
+  ];
+
+  function valoresPorDefectoGamificacionIdx() {
+    return { puntosTotales: 0, inventario: { comodines: 0, pistasGratis: 0, escudosRacha: 0, segundasOportunidades: 0 }, historial: [], resumenPorEvaluador: {} };
+  }
+
+  function cargarGamificacionIdx() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_GAMIFICACION_IDX);
+      if (!crudo) return valoresPorDefectoGamificacionIdx();
+      const obj = JSON.parse(crudo);
+      if (!obj || typeof obj !== 'object') return valoresPorDefectoGamificacionIdx();
+      const base = valoresPorDefectoGamificacionIdx();
+      return {
+        puntosTotales: typeof obj.puntosTotales === 'number' ? obj.puntosTotales : base.puntosTotales,
+        inventario: {
+          comodines: (obj.inventario && typeof obj.inventario.comodines === 'number') ? obj.inventario.comodines : base.inventario.comodines,
+          pistasGratis: (obj.inventario && typeof obj.inventario.pistasGratis === 'number') ? obj.inventario.pistasGratis : base.inventario.pistasGratis,
+          escudosRacha: (obj.inventario && typeof obj.inventario.escudosRacha === 'number') ? obj.inventario.escudosRacha : base.inventario.escudosRacha,
+          segundasOportunidades: (obj.inventario && typeof obj.inventario.segundasOportunidades === 'number') ? obj.inventario.segundasOportunidades : base.inventario.segundasOportunidades,
+        },
+        historial: Array.isArray(obj.historial) ? obj.historial : base.historial,
+        resumenPorEvaluador: (obj.resumenPorEvaluador && typeof obj.resumenPorEvaluador === 'object') ? obj.resumenPorEvaluador : base.resumenPorEvaluador,
+      };
+    } catch (e) {
+      return valoresPorDefectoGamificacionIdx();
+    }
+  }
+
+  function guardarGamificacionIdx(g) {
+    try {
+      localStorage.setItem(CLAVE_GAMIFICACION_IDX, JSON.stringify(g));
+    } catch (e) {}
+  }
+
+  let gamificacionIdx = null;
+  const elSaldoTiendaIdx = document.getElementById('saldo-tienda');
+  const elGridTiendaIdx = document.getElementById('grid-tienda');
+
+  function renderTiendaIdx() {
+    elSaldoTiendaIdx.textContent = 'Puntos disponibles: ' + gamificacionIdx.puntosTotales;
+    elGridTiendaIdx.innerHTML = '';
+
+    ITEMS_TIENDA_IDX.forEach((item) => {
+      const cont = document.createElement('div');
+      cont.className = 'item-tienda';
+
+      const icono = document.createElement('div');
+      icono.className = 'item-tienda-icono';
+      icono.textContent = item.icono;
+      cont.appendChild(icono);
+
+      const nombre = document.createElement('div');
+      nombre.className = 'item-tienda-nombre';
+      nombre.textContent = item.nombre;
+      cont.appendChild(nombre);
+
+      const precio = document.createElement('div');
+      precio.className = 'item-tienda-precio';
+      precio.textContent = item.precio + ' pts';
+      cont.appendChild(precio);
+
+      const desc = document.createElement('div');
+      desc.className = 'item-tienda-descripcion';
+      desc.textContent = item.descripcion;
+      cont.appendChild(desc);
+
+      const cantidad = gamificacionIdx.inventario[item.id] || 0;
+      if (cantidad > 0) {
+        const inv = document.createElement('div');
+        inv.className = 'item-tienda-inventario';
+        inv.textContent = 'Tenés: ' + cantidad;
+        cont.appendChild(inv);
+      }
+
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'item-tienda-boton';
+      boton.textContent = 'Comprar';
+      boton.disabled = gamificacionIdx.puntosTotales < item.precio;
+      boton.addEventListener('click', () => comprarItemIdx(item.id));
+      cont.appendChild(boton);
+
+      elGridTiendaIdx.appendChild(cont);
+    });
+  }
+
+  function comprarItemIdx(idItem) {
+    const item = ITEMS_TIENDA_IDX.find((i) => i.id === idItem);
+    if (!item) return;
+    if (gamificacionIdx.puntosTotales < item.precio) return;
+    gamificacionIdx.puntosTotales -= item.precio;
+    gamificacionIdx.inventario[idItem] = (gamificacionIdx.inventario[idItem] || 0) + 1;
+    guardarGamificacionIdx(gamificacionIdx);
+    renderTiendaIdx();
+  }
+
+  function inicializarVistaTienda() {
+    gamificacionIdx = cargarGamificacionIdx();
+    renderTiendaIdx();
+  }
+
+  document.getElementById('btn-abrir-tienda').addEventListener('click', () => {
+    gamificacionIdx = cargarGamificacionIdx();
+    renderTiendaIdx();
+  });
+
+  document.getElementById('btn-tienda-resetear').addEventListener('click', () => {
+    const ok = window.confirm(
+      '¿Resetear tus puntos y todo tu inventario a 0? Esto no afecta tus sesiones, ' +
+      'difíciles, notas, listas ni otros datos. No se puede deshacer.'
+    );
+    if (!ok) return;
+
+    gamificacionIdx.puntosTotales = 0;
+    Object.keys(gamificacionIdx.inventario).forEach((clave) => { gamificacionIdx.inventario[clave] = 0; });
+    guardarGamificacionIdx(gamificacionIdx);
+    renderTiendaIdx();
+  });
 </script>
 </body>
 </html>

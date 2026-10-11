@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-<!-- ---------------- PLANTILLA HTML: ESTRUCTURA BASE Y META TAGS ---------------- -->
-
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -17,10 +15,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tarjetas de Estudio</title>
 <style>
-/* ---------------- PLANTILLA HTML: ESTILOS CSS ---------------- */
-
-/* ---------------- CSS: VARIABLES DE TEMA (CLARO/OSCURO) Y RESET ---------------- */
-
   :root {
     --fill-color: #FF6347;
     --stroke-color: #5C5C5C;
@@ -96,8 +90,6 @@
     opacity: 0.75;
     margin-bottom: 2px;
   }
-
-  /* ---------------- CSS: LAYOUT PRINCIPAL, TARJETAS Y BOTONES ---------------- */
 
   .contenedor {
     width: 100%;
@@ -244,8 +236,6 @@
     gap: 6px;
     margin-bottom: 8px;
   }
-
-  /* ---------------- CSS: GAMIFICACIÓN, TIENDA Y ESTADÍSTICAS ---------------- */
 
   .fila-gamificacion {
     display: flex;
@@ -1243,8 +1233,6 @@
     font-size: 14px;
   }
 
-  /* ---------------- CSS: MODALES, OVERLAYS Y PANTALLAS SECUNDARIAS ---------------- */
-
   .modal-overlay {
     display: none;
     position: fixed;
@@ -2119,9 +2107,6 @@
   }
 </style>
 </head>
-
-<!-- ---------------- PLANTILLA HTML: ESTRUCTURA DOM Y PANTALLAS ---------------- -->
-
 <body>
 
 <div class="contenedor">
@@ -2361,6 +2346,7 @@
     <div class="grid-tienda" id="grid-tienda"></div>
     <div class="navegacion" style="margin-top:20px;">
       <button class="boton-secundario" id="btn-tienda-volver">← Volver</button>
+      <button class="boton-mini boton-mini-peligro" id="btn-tienda-resetear">♻️ Resetear puntos e inventario</button>
     </div>
   </div>
 
@@ -2685,7 +2671,7 @@
       </span>
     </div>
     <div class="fila-backup-zona">
-      <span class="zona-nombre">📑 Análisis de Sesion</span>
+      <span class="zona-nombre">📑 Análisis de Sesión</span>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-analisis" title="Descarga los análisis de sesión guardados como JSON">Exportar</button>
         <button class="boton-mini" id="btn-importar-analisis" title="Fusiona los análisis de sesión guardados de un JSON">Importar</button>
@@ -2794,7 +2780,7 @@
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="sesiones" checked> 🕐 Sesiones</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="notasEvaluador" checked> 📝 Notas del evaluador</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="retencionRutas" checked> 🧠 Retención de rutas</label>
-      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="analisisSesion" checked> 📑 Análisis de Sesion</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="analisisSesion" checked> 📑 Análisis de Sesión</label>
     </div>
     <div id="vinc-campo-espacio" style="display:none;">
       <input type="text" class="input-buscador" id="vinc-espacio" list="vinc-espacios" placeholder="Nombre anterior del recordatorio (sin .txt)" autocomplete="off">
@@ -2893,10 +2879,7 @@
     </div>
     <div id="estadisticas-pane-subt" style="display:none;">
       <div id="subt-repasar-lista"></div>
-      <div class="sync-seccion-titulo">Análisis de Sesion</div>
-      <p class="modal-ayuda" style="margin-top:0; margin-bottom:10px;">
-        Solo se analizan subtemas con más de 3 tarjetas evaluadas. Los subT con 3 o menos no aparecen aquí ni tampoco su indicador de repaso se movera de 50 puntos.
-      </p>
+      <div class="sync-seccion-titulo">Análisis de Sesión</div>
       <div id="analisis-guardados-lista"></div>
       <p class="nota-dificiles" id="analisis-guardados-vacio" style="display:none;">Todavía no guardaste ningún análisis de sesión.</p>
       <details id="det-analisis-otros" style="display:none">
@@ -2950,13 +2933,19 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-aviso">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <p id="modal-aviso-texto" style="white-space: pre-line;"></p>
+    <button class="boton-reiniciar" id="btn-aviso-aceptar">Aceptar</button>
+  </div>
+</div>
+
 <div class="lightbox" id="lightbox">
   <button class="lightbox-cerrar" title="Cerrar">&times;</button>
   <img id="lightbox-img" src="" alt="Imagen ampliada">
 </div>
-<script>
-  // ---------------- JS: INICIALIZACIÓN, CONSTANTES Y ESTADO GLOBAL ----------------
 
+<script>
   const datos = {"tarjetas": [{"tema": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR", "primero": "quien creo SCOR?", "segundo": "Supply Chain Council", "rutas": [1], "claves": ["supply", "chain", "council"], "nota": ""}, {"tema": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR", "primero": "que nos proporciona este marco?", "segundo": "vincula, unificada", "rutas": [3], "claves": ["vincula", "unificada"], "nota": ""}, {"tema": "ALCANCE Y PROCESOS SCOR", "primero": "que describe este modelo?", "segundo": "empresariales, demanda", "rutas": [4], "claves": ["empresariales", "demanda"], "nota": ""}, {"tema": "ALCANCE Y PROCESOS SCOR", "primero": "se organiza en torno a que?", "segundo": "cinco procesos, sencillas", "rutas": [5, 6], "claves": ["cinco", "procesos", "sencillas"], "nota": ""}, {"tema": "ALCANCE Y PROCESOS SCOR", "primero": "esta diseñado y mantenido para que?", "segundo": "soporte, diversa", "rutas": [7], "claves": ["soporte", "diversa"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "que permiten los atributos de rendimiento?", "segundo": "analizarla, comparacion", "rutas": [9], "claves": ["analizarla", "comparacion"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "que atributos identifica SCOR?", "segundo": "cinco, agilidad, dificil", "rutas": [10, 11], "claves": ["cinco", "agilidad", "dificil"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "que son las metricas nivel 1?", "segundo": "rendimiento, calculos", "rutas": [12, 13], "claves": ["rendimiento", "calculos"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "las metricas en SCOR como son?", "segundo": "jerarquicas", "rutas": [14], "claves": ["jerarquicas"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "a partir de que se crean las metricas nivel 1?", "segundo": "inferiores", "rutas": [15], "claves": ["inferiores"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "que son las metricas nivel 2?", "segundo": "reducido", "rutas": [16], "claves": ["reducido"], "nota": ""}, {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "primero": "que proporciona la seccion dedicada a personal?", "segundo": "herramientas, conocimientos", "rutas": [19], "claves": ["herramientas", "conocimientos"], "nota": ""}, {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "primero": "que es una competencia?", "segundo": "capacidad, caracterizada", "rutas": [20], "claves": ["capacidad", "caracterizada"], "nota": ""}, {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "primero": "que es la experiencia?", "segundo": "conocimiento, mediante", "rutas": [21, 22], "claves": ["conocimiento", "mediante"], "nota": ""}, {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "primero": "que es un aptitud?", "segundo": "natural, adquirida", "rutas": [23], "claves": ["natural", "adquirida"], "nota": ""}, {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "primero": "que es la formacion?", "segundo": "competencia, comportamiento", "rutas": [24], "claves": ["competencia", "comportamiento"], "nota": ""}, {"tema": "PRÁCTICAS SCOR", "primero": "para que las empresas utilizan estas practicas?", "segundo": "identificar, operar", "rutas": [25], "claves": ["identificar", "operar"], "nota": ""}, {"tema": "PRÁCTICAS SCOR", "primero": "que recomienda SCC para adoptar SCOR?", "segundo": "adapten, investigacion", "rutas": [27], "claves": ["adapten", "investigacion"], "nota": ""}], "rutas": {"1": {"tema": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR", "lineas": ["Supply Chain Operations Reference (SCOR®)", "es una creación del", "Supply Chain Council (SCC)"]}, "2": {"tema": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR", "lineas": ["Modelo SCOR", "recoge", "visión consensuada del Consejo", "sobre gestión", "cadena suministro"]}, "3": {"tema": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR", "lineas": ["el modelo SCOR proporciona", "1 marco único", "que vincula", "procesos empresariales, métricas, mejores prácticas y características tecnológicas", "en una estructura unificada", "para facilitar comunicación", "entre socios cadena suministro y", "mejorar eficacia", "gestión cadena suministro y", "actividades relacionadas", "con su mejora"]}, "4": {"tema": "ALCANCE Y PROCESOS SCOR", "lineas": ["el modelo SCOR", "describe", "actividades empresariales", "asociadas a todas fases", "del proceso", "satisfacer demanda 1 cliente"]}, "5": {"tema": "ALCANCE Y PROCESOS SCOR", "lineas": ["el modelo en sí", "se organiza en torno", "a cinco procesos", "gestión principales"]}, "6": {"tema": "ALCANCE Y PROCESOS SCOR", "lineas": ["Mediante estos componentes básicos procesos,", "modelo SCOR", "puede utilizarse", "para describir", "cadenas suministro", "tanto muy sencillas", "como muy complejas"]}, "7": {"tema": "ALCANCE Y PROCESOS SCOR", "lineas": ["el modelo está", "diseñado y", "se mantiene", "para dar soporte", "a cadenas suministro", "diversa complejidad y", "en múltiples sectores"]}, "8": {"tema": "ESTRUCTURA PROCESOS SCOR (NIVEL 1 Y NIVEL 2)", "lineas": ["Planificar", "Fuente y Abastecer", "Realizar y Fabricar", "Entrega", "Devolución", "Habilitar y Facilitar"]}, "9": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["los atributos rendimiento", "una cadena suministro", "permiten", "analizarla y evaluarla", "en comparación", "con otras cadenas suministro", "que aplican", "estrategias competitivas"]}, "10": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["SCOR identifica", "cinco atributos fundamentales", "del rendimiento cadena suministro:", "fiabilidad,", "capacidad respuesta,", "agilidad,", "costes y", "gestión activos"]}, "11": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["Sin estas características,", "resulta difícil comparar", "una organización", "que opta estratégicamente", "ser proveedor bajo coste", "con una organización", "que opta por competir en", "fiabilidad y", "rendimiento"]}, "12": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["las métricas estratégicas nivel 1", "están directamente relacionadas", "con atributos rendimiento"]}, "13": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["Estas métricas nivel 1", "son cálculos", "mediante los cuales", "una organización", "puede medir su éxito", "a hora alcanzar", "posicionamiento deseado en mercado"]}, "14": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["Muchas métricas del modelo SCOR", "son jerárquicas,", "al igual que son", "elementos proceso"]}, "15": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["las métricas nivel 1", "se crean a partir", "cálculos niveles inferiores"]}, "16": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["las métricas nivel 2", "suelen estar asociadas", "a 1 subconjunto más reducido", "de procesos"]}, "17": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["Además,", "métricas (diagnósticos)", "se utilizan para diagnosticar", "variaciones en rendimiento", "con respecto al plan"]}, "18": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["Métricas Nivel 1", "por Atributo", "Fiabilidad", "Capacidad respuesta", "Agilidad", "Coste", "Eficiencia en gestión activos"]}, "19": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["la sección dedicada al personal", "proporciona herramientas", "para gestionar talento", "en cadena suministro", "mediante incorporación 1 estándar", "que describe", "conocimientos especializados necesarios", "para", "realizar tareas y", "gestionar procesos"]}, "20": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["En SCOR,", "una competencia", "es capacidad", "obtener resultados predeterminados", "con 1 mínimo", "tiempo y energía,", "caracterizada", "por una definición estándar con", "experiencia,", "aptitudes y", "formación asociadas"]}, "21": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["la experiencia es", "conocimiento o capacidad", "adquiridos", "mediante", "observación o participación activa,", "que son", "obtenidos al realizar trabajo", "en 1 entorno real y"]}, "22": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["al enfrentarse", "a diferentes situaciones", "que requieren distintas acciones"]}, "23": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["la aptitud", "es una capacidad natural,", "adquirida, aprendida o desarrollada", "para realizar 1 determinado tipo trabajo", "a 1 nivel concreto"]}, "24": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["la formación", "desarrolla una competencia o 1 tipo comportamiento", "a través instrucción"]}, "25": {"tema": "PRÁCTICAS SCOR", "lineas": ["las empresas", "utilizan prácticas", "para identificar formas", "alternativas o deseadas", "operar en sus cadenas suministro"]}, "26": {"tema": "PRÁCTICAS SCOR", "lineas": ["las prácticas SCOR", "pueden constituir 1 subconjunto del", "conjunto total prácticas", "que reconoce una empresa"]}, "27": {"tema": "PRÁCTICAS SCOR", "lineas": ["el Supply Chain Council", "recomienda a empresas", "interesadas en adoptar SCOR", "que adapten este marco", "mediante", "investigación, revisión y integración prácticas relevantes", "del", "sector y", "propia empresa (internalización)"]}}, "descripciones_rutas": {}};
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
@@ -2984,7 +2973,7 @@
   });
   const PATRON_PALABRA_CON_SIMBOLOS = new RegExp(
     '[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+|[' +
-    Object.keys(SIMBOLOS_ESPECIALES).map((s) => s.replace(/[\\]^-]/g, '\$&')).join('') +
+    Object.keys(SIMBOLOS_ESPECIALES).map((s) => s.replace(/[\\\]^-]/g, '\\$&')).join('') +
     ']',
     'g'
   );
@@ -3042,6 +3031,7 @@
     { codigo: 'error', texto: 'Error', color: '#EF4444' },
     { codigo: 'comparacion', texto: 'Comparación', color: '#F59E0B' },
     { codigo: 'curioso', texto: 'Curioso', color: '#EC4899' },
+    { codigo: 'duda', texto: 'Duda', color: '#64748B' },
   ];
   const MAPA_CATEGORIAS_NOTA_EVAL = new Map(CATEGORIAS_NOTA_EVAL.map((c) => [c.codigo, c]));
 
@@ -3052,8 +3042,6 @@
   }
   let tiempoInicioTarjeta = 0;
   let cronometroIntervalId = null;
-
-  // ---------------- JAVASCRIPT: ESTADO, STORAGE Y GAMIFICACIÓN ----------------  
 
   const CLAVE_GAMIFICACION = 'gamificacion_v1';
 
@@ -3207,8 +3195,6 @@
   function buscarListaPropia(nombre) {
     return buscarListaEnEspacio(nombre, ESPACIO_HASH);
   }
-
-  // ---------------- JS: LÓGICA DE REPASO ESPACIADO (SRS) Y LISTAS ----------------
 
   const SRS_DEFAULT = { activated: false, startDate: 0, currentLevel: 1, lastReviewDate: 0, graduated: false, snoozeUntil: 0 };
   const SRS_INTERVALOS_DIAS = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30, 6: 60 };
@@ -3494,6 +3480,33 @@
   elModalConfirmacion.addEventListener('click', (evento) => {
     if (evento.target === elModalConfirmacion) cerrarModalConfirmacion(false);
   });
+
+  const elModalAviso = document.getElementById('modal-aviso');
+  const elModalAvisoTexto = document.getElementById('modal-aviso-texto');
+  const elBtnAvisoAceptar = document.getElementById('btn-aviso-aceptar');
+  let _resolverAviso = null;
+
+  function avisar(mensaje) {
+    return new Promise((resolve) => {
+      elModalAvisoTexto.textContent = mensaje;
+      elModalAviso.classList.add('abierto');
+      _resolverAviso = resolve;
+    });
+  }
+
+  function cerrarModalAviso() {
+    elModalAviso.classList.remove('abierto');
+    if (_resolverAviso) {
+      const resolver = _resolverAviso;
+      _resolverAviso = null;
+      resolver();
+    }
+  }
+
+  elBtnAvisoAceptar.addEventListener('click', () => cerrarModalAviso());
+  elModalAviso.addEventListener('click', (evento) => {
+    if (evento.target === elModalAviso) cerrarModalAviso();
+  });
   const elFilaGamificacion = document.getElementById('fila-gamificacion');
   const elStatPuntos = document.getElementById('stat-puntos');
   const elStatRacha = document.getElementById('stat-racha');
@@ -3616,8 +3629,6 @@
   function rutasValidasDe(tarjeta) {
     return (tarjeta.rutas || []).filter((id) => rutasDisp.hasOwnProperty(id));
   }
-
-  // ---------------- JAVASCRIPT: RENDERIZADO DE UI Y NAVEGACIÓN ----------------
 
   function mostrarPantalla(nombre) {
     elPantallaTemas.style.display = nombre === 'temas' ? 'block' : 'none';
@@ -3975,8 +3986,6 @@
       }
     });
   }
-
-  // ---------------- JS: GALERÍA DE IMÁGENES, RUTAS HUÉRFANAS Y MAPA ----------------
 
   const CLAVE_IMAGENES = 'datos_imagenes_v1';
   let datosImagenes = cargarImagenes();
@@ -5097,6 +5106,14 @@
 
   elBtnAbrirTienda.addEventListener('click', () => abrirTienda());
   document.getElementById('btn-tienda-volver').addEventListener('click', () => mostrarPantalla('temas'));
+  document.getElementById('btn-tienda-resetear').addEventListener('click', async () => {
+    if (!(await confirmarAccion('¿Resetear tus puntos y todo tu inventario a 0? Esto no afecta tus sesiones, difíciles, notas ni otros datos. No se puede deshacer.'))) return;
+    gamificacion.puntosTotales = 0;
+    Object.keys(gamificacion.inventario).forEach((clave) => { gamificacion.inventario[clave] = 0; });
+    guardarGamificacion();
+    renderTienda();
+    actualizarBarraGamificacion();
+  });
 
   const elModalListas = document.getElementById('modal-listas');
   const elListaListasGuardadas = document.getElementById('lista-listas-guardadas');
@@ -5400,11 +5417,11 @@
     const lector = new FileReader();
     lector.onload = () => {
       let datos;
-      try { datos = JSON.parse(lector.result); } catch (e) { window.alert('El archivo no es un JSON válido.'); return; }
+      try { datos = JSON.parse(lector.result); } catch (e) { avisar('El archivo no es un JSON válido.'); return; }
       const entrantes = (datos && Array.isArray(datos.listas)) ? datos.listas : null;
-      if (!entrantes) { window.alert('El archivo no tiene el formato esperado ({ "listas": [...] }).'); return; }
+      if (!entrantes) { avisar('El archivo no tiene el formato esperado ({ "listas": [...] }).'); return; }
       const r = fusionarListasEntrantes(entrantes);
-      window.alert('Importación de listas: ' + r.nuevas + ' nueva(s), ' + r.actualizadas + ' actualizada(s), ' + r.conservadas + ' conservada(s).');
+      avisar('Importación de listas: ' + r.nuevas + ' nueva(s), ' + r.actualizadas + ' actualizada(s), ' + r.conservadas + ' conservada(s).');
     };
     lector.readAsText(archivo);
   });
@@ -5806,7 +5823,7 @@
     const acc = document.createElement('div');
     acc.className = 'retencion-entrada-acciones';
     acc.appendChild(botonMini('🗑 Borrar', async () => {
-      if (!(await confirmarAccion('¿Borrar este análisis guardado? No se puede deshacer.'))) return;
+      if (!(await confirmarAccion('¿Borrar este análisis de sesión? No se puede deshacer.'))) return;
       analisisGuardados = analisisGuardados.filter((a) => a.id !== entrada.id);
       guardarAnalisisGuardados();
       subtRepasarConstruido = false;
@@ -5897,7 +5914,7 @@
 
   document.getElementById('btn-vaciar-analisis').addEventListener('click', async () => {
     if (analisisGuardados.length === 0) return;
-    if (!(await confirmarAccion('¿Vaciar TODOS los análisis de sesion? No se puede deshacer.'))) return;
+    if (!(await confirmarAccion('¿Vaciar TODOS los análisis de sesión? No se puede deshacer.'))) return;
     analisisGuardados = [];
     guardarAnalisisGuardados();
     subtRepasarConstruido = false;
@@ -5932,9 +5949,9 @@
         const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.analisisGuardados) ? obj.analisisGuardados : null);
         if (!lista) throw new Error('formato');
         const r = fusionarAnalisisLista(lista);
-        window.alert('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
+        avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
       } catch (e) {
-        window.alert('El archivo no es un JSON válido de análisis de sesión.');
+        avisar('El archivo no es un JSON válido de análisis de sesión.');
       }
     };
     lector.readAsText(archivo);
@@ -6530,17 +6547,17 @@
       try {
         importado = JSON.parse(lector.result);
       } catch (e) {
-        window.alert('No se pudo leer el archivo: el JSON no es válido.');
+        avisar('No se pudo leer el archivo: el JSON no es válido.');
         return;
       }
       if (!importado || typeof importado !== 'object') {
-        window.alert('El archivo no tiene el formato esperado.');
+        avisar('El archivo no tiene el formato esperado.');
         return;
       }
       fusionarGamificacionImportada(importado);
-      window.alert('Historial importado y fusionado correctamente.');
+      avisar('Historial importado y fusionado correctamente.');
     };
-    lector.onerror = () => window.alert('No se pudo leer el archivo.');
+    lector.onerror = () => avisar('No se pudo leer el archivo.');
     lector.readAsText(archivo);
   }
 
@@ -6557,8 +6574,6 @@
   const HISTORIAL_POR_PAGINA = 15;
 
   const LIMITE_STORAGE_BYTES = 5242880;
-
-  // ---------------- JS: HISTORIAL, SINCRONIZACIÓN Y BACKUPS (JSON) ----------------
 
   function calcularUsoStorage() {
     let bytes = 0;
@@ -6593,8 +6608,6 @@
   elBtnHistorialBorrarGlobal.addEventListener('click', () => borrarHistorialGlobal());
 
   function tieneClave(obj, k) { return Object.prototype.hasOwnProperty.call(obj, k); }
-
-  // ---------------- JS: VINCULACIÓN DE ESPACIOS Y EVALUADORES ----------------
 
   const ZONAS_VINCULO = {
     dificiles: {
@@ -6766,8 +6779,8 @@
       if (!viejo) return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
       if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
       const n = analisisGuardados.filter((a) => a.espacio === viejo).length;
-      if (n === 0) return { cantidad: 0, texto: 'No se encontraron análisis de sesion bajo «' + viejo + '».' };
-      return { cantidad: n, texto: 'Se vincularían ' + n + ' análisis guardado(s).' };
+      if (n === 0) return { cantidad: 0, texto: 'No se encontraron análisis de sesión bajo «' + viejo + '».' };
+      return { cantidad: n, texto: 'Se vincularían ' + n + ' análisis de sesión.' };
     }
     const z = ZONAS_VINCULO[zona];
     if (!viejo) {
@@ -6935,13 +6948,13 @@
       : ICONOS_ZONA_VINCULO[z] + ' ' + z + ': ERROR');
     let msg = 'Vinculación terminada.\n' + lineas.join('\n');
     if (errores.length > 0) msg += '\n\nErrores:\n' + errores.join('\n');
-    window.alert(msg);
+    avisar(msg);
 
     if (residuos > 0) {
       const zonasTxt = zonasResiduo.map((z) => ICONOS_ZONA_VINCULO[z]).join(' ');
       if (await confirmarAccion('Quedaron ' + residuos + ' entrada(s) que no corresponden a ninguna tarjeta actual en las zonas vinculadas (' + zonasTxt + '). ¿Borrarlas?')) {
         const n = borrarResiduosZonas(zonasResiduo);
-        window.alert('Se borraron ' + n + ' entrada(s).');
+        avisar('Se borraron ' + n + ' entrada(s).');
       }
     }
   }
@@ -6952,6 +6965,9 @@
       const esp = espacioDeSesion(s);
       if (esp && esp !== ESPACIO_HASH) set.add(esp);
     });
+    notasEvaluador.forEach((n) => { if (n.espacio && n.espacio !== ESPACIO_HASH) set.add(n.espacio); });
+    retencionRutas.forEach((r) => { if (r.espacio && r.espacio !== ESPACIO_HASH) set.add(r.espacio); });
+    analisisGuardados.forEach((a) => { if (a.espacio && a.espacio !== ESPACIO_HASH) set.add(a.espacio); });
     return Array.from(set).sort();
   }
 
@@ -6991,7 +7007,11 @@
   });
 
   async function borrarEvaluadorCompleto(espacio) {
-    if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes, listas, notas del evaluador, retención de rutas y análisis de sesion)? ' +
+    if (!espacio || espacio === ESPACIO_HASH) {
+      avisar('No podés borrar los datos de este mismo evaluador desde acá. Entrá como otro evaluador para borrar éste.');
+      return;
+    }
+    if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes, listas, notas del evaluador, retención de rutas y análisis de sesión)? ' +
       'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.'))) return;
 
     gamificacion.historial = gamificacion.historial.filter((s) => espacioDeSesion(s) !== espacio);
@@ -7045,7 +7065,7 @@
     renderImagenesPreview();
     renderListasGuardadas();
     actualizarIndicadorSync();
-    window.alert('Se borraron los datos de «' + espacio + '».');
+    avisar('Se borraron los datos de «' + espacio + '».');
   }
 
   document.getElementById('btn-vincular-todo').addEventListener('click', () => {
@@ -7097,7 +7117,7 @@
       elVincTitulo.textContent = 'Vincular todo a este evaluador';
       document.querySelectorAll('.vinc-zona-chk').forEach((c) => { c.checked = true; });
     } else {
-      const titulo = zona === 'notasEvaluador' ? 'notas del evaluador' : zona === 'retencionRutas' ? 'retención de rutas' : zona === 'analisisSesion' ? 'análisis de sesion' : (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
+      const titulo = zona === 'notasEvaluador' ? 'notas del evaluador' : zona === 'retencionRutas' ? 'retención de rutas' : zona === 'analisisSesion' ? 'análisis de sesión' : (zona === 'sesiones' || zona === 'listas') ? zona : ZONAS_VINCULO[zona].titulo;
       elVincTitulo.textContent = 'Vincular ' + titulo + ' a este evaluador';
     }
     if (vincEspacioFijo !== null) {
@@ -7144,11 +7164,11 @@
       r = ejecutarVinculo(zona, viejo);
     } catch (e) {
       cerrarModalVincular();
-      window.alert('No se pudo completar la vinculación: ' + e.message);
+      avisar('No se pudo completar la vinculación: ' + e.message);
       return;
     }
     cerrarModalVincular();
-    window.alert('Vinculación terminada: movidas ' + r.movidas + ', sin corresponder ' + r.sin + '.' +
+    avisar('Vinculación terminada: movidas ' + r.movidas + ', sin corresponder ' + r.sin + '.' +
       (r.sin > 0 ? ' Las ' + r.sin + ' sin corresponder quedan sin mover (en «De otros evaluadores»).' : ''));
   }
 
@@ -7371,8 +7391,6 @@
   elInputBuscadorGaleria.addEventListener('input', debounce(() => renderDropdownBuscadorGaleria(elInputBuscadorGaleria.value), 200));
   elInputBuscadorHuerfanas.addEventListener('input', debounce(() => renderDropdownBuscadorHuerfanas(elInputBuscadorHuerfanas.value), 200));
 
-  // ---------------- JS: EVENTOS GLOBALES, ATAJOS DE TECLADO Y CIERRE DE MODALES ----------------
-
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#zona-buscador-temas')) cerrarDropdownBuscador(elDropdownBuscadorTemas);
     if (!e.target.closest('#zona-buscador-observador')) cerrarDropdownBuscador(elDropdownBuscadorObservador);
@@ -7395,6 +7413,7 @@
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
 
     if (elModalConfirmacion.classList.contains('abierto')) { cerrarModalConfirmacion(false); return; }
+    if (elModalAviso.classList.contains('abierto')) { cerrarModalAviso(); return; }
     if (elModalNotasEvaluador.classList.contains('abierto')) { cerrarNotasEvaluador(); return; }
     if (elModalSync.classList.contains('abierto')) { elModalSync.classList.remove('abierto'); return; }
     if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
@@ -7423,6 +7442,7 @@
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
 
     if (elModalConfirmacion.classList.contains('abierto')) { evento.preventDefault(); elBtnConfirmacionAceptar.click(); return; }
+    if (elModalAviso.classList.contains('abierto')) { evento.preventDefault(); elBtnAvisoAceptar.click(); return; }
     if (elModalPomodoroIniciar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-iniciar-si').click(); return; }
     if (elModalPomodoroAbandonar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-abandonar-si').click(); return; }
     if (elModalPomodoroResumen.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-resumen-cerrar').click(); return; }
@@ -8557,11 +8577,11 @@
         if (!lista) throw new Error('formato');
 
         const r = fusionarNotasEvaluadorLista(lista);
-        window.alert('Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
+        avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
           ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
           r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : ''));
       } catch (e) {
-        window.alert('El archivo no es un JSON válido de notas del evaluador.');
+        avisar('El archivo no es un JSON válido de notas del evaluador.');
       }
     };
     lector.readAsText(archivo);
@@ -8927,9 +8947,9 @@
         const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.retencionRutas) ? obj.retencionRutas : null);
         if (!lista) throw new Error('formato');
         const r = fusionarRetencionLista(lista);
-        window.alert('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
+        avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
       } catch (e) {
-        window.alert('El archivo no es un JSON válido de retención de rutas.');
+        avisar('El archivo no es un JSON válido de retención de rutas.');
       }
     };
     lector.readAsText(archivo);
@@ -8992,8 +9012,6 @@
     document.getElementById('pomodoro-resumen-dificiles-pct').textContent = String(entrada.pctDificiles);
     document.getElementById('pomodoro-resumen-dificiles-lista').textContent = dificilesIds.length > 0 ? dificilesIds.map((id) => '#' + id).join(', ') : '—';
   }
-
-  // ---------------- JS: ESTADÍSTICAS, GRÁFICOS SVG Y ANÁLISIS DE SESIÓN ----------------
 
   const NS_SVG = 'http://www.w3.org/2000/svg';
   function elSvg(tag, attrs) {
@@ -9845,8 +9863,6 @@
     return pausaManual || notaAbierta || razonesAbierto || indiceCongelado === indiceActual;
   }
 
-  // ---------------- JS: NAVEGACIÓN ENTRE PANTALLAS Y RENDERIZADO DE TEMAS ----------------
-
   function renderTarjeta() {
     if (tarjetasSesion.length === 0) {
       elAreaTarjeta.innerHTML = '<p class="sin-tarjetas">No hay tarjetas para estudiar con los temas elegidos.</p>';
@@ -10069,8 +10085,6 @@
       elRutasContenedor.appendChild(det);
     });
   }
-
-  // ---------------- JS: EXTRACCIÓN DE RAÍCES Y VARIANTES DE PALABRAS ----------------
 
   const SUFIJOS_RAIZ = [
     'imientos','imiento',
@@ -10382,10 +10396,6 @@
       (modoJuego !== 'light' ? ' (+' + pts + ' pts)' : '') + '. Tu racha crece normal.');
   }
 
-  // ---------------- JAVASCRIPT: LÓGICA DE EVALUACIÓN Y RESPUESTAS ----------------
-
-  // ---------------- JS: EVALUACIÓN DE RESPUESTAS ESCRITAS (RAÍCES Y COINCIDENCIAS) ----------------
-
   function evaluarRespuesta() {
     if (pausaManual || segundaPendiente) return;
     if (resultados[indiceActual] !== null) return;
@@ -10680,8 +10690,6 @@
     if (!borradorSinGuardar() && !razonesSinGuardar()) return true;
     return await confirmarAccion('Tenés cambios sin guardar (nota y/o razones). ¿Descartarlos?');
   }
-
-  // ---------------- JS: GESTIÓN DE NOTAS, RAZONES Y PANEL DE AYUDA ----------------
 
   function renderNota(actual) {
     const efectiva = notaEfectivaDe(actual);
@@ -11452,8 +11460,6 @@
     document.getElementById('modal-srs-aviso').classList.remove('abierto');
   });
 
-  // ---------------- JAVASCRIPT: POMODORO, DICTADO Y HERRAMIENTAS EXTRA ----------------
-
   (function () {
     const RecognitionCtor = window.webkitSpeechRecognition || window.SpeechRecognition;
     const soportado = !!RecognitionCtor;
@@ -11569,8 +11575,6 @@
       if (textareaDictadoActivo === textarea) detenerDictado();
     };
   })();
-
-  // ---------------- JS: POMODORO, TEMPORIZADORES Y DICTADO POR VOZ ----------------
 
   const elBtnPomodoro = document.getElementById('btn-pomodoro');
   const elPomodoroBadge = document.getElementById('pomodoro-badge');
