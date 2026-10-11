@@ -33,6 +33,7 @@
     --texto-tenue: #999999;
     --color-borde-suave: #f1f1f1;
     --color-borde-medio: #e2e2ea;
+    --color-borde-fuerte: #c9c9d8; /* FIX 2: variable que faltaba */
     --color-sombra: rgba(0,0,0,0.1);
   }
 
@@ -47,6 +48,7 @@
     --texto-tenue: #8a8aa0;
     --color-borde-suave: #35354a;
     --color-borde-medio: #3c3c52;
+    --color-borde-fuerte: #55556e; /* FIX 2: variable que faltaba */
     --color-sombra: rgba(0,0,0,0.35);
   }
 
@@ -927,21 +929,20 @@
   const elVistaSrs = document.getElementById('vista-srs');
   const elVistaTienda = document.getElementById('vista-tienda');
 
-  let srsInicializado = false;
-  let tiendaInicializada = false;
-
+  /* FIX 1: antes se usaba '' (que borra el estilo inline y deja que el CSS
+     .vista-secundaria { display: none } vuelva a ocultar la vista).
+     Ahora se usa 'block' explícito y siempre se refrescan los datos
+     al entrar a la vista (sin flags "inicializado"). */
   function mostrarVista(nombre) {
-    elVistaPrincipal.style.display = nombre === 'principal' ? '' : 'none';
-    elVistaSrs.style.display = nombre === 'srs' ? '' : 'none';
-    elVistaTienda.style.display = nombre === 'tienda' ? '' : 'none';
+    elVistaPrincipal.style.display = nombre === 'principal' ? 'block' : 'none';
+    elVistaSrs.style.display = nombre === 'srs' ? 'block' : 'none';
+    elVistaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';
     window.scrollTo(0, 0);
 
-    if (nombre === 'srs' && !srsInicializado) {
-      srsInicializado = true;
+    if (nombre === 'srs') {
       inicializarVistaSrs();
     }
-    if (nombre === 'tienda' && !tiendaInicializada) {
-      tiendaInicializada = true;
+    if (nombre === 'tienda') {
       inicializarVistaTienda();
     }
   }
@@ -1169,11 +1170,8 @@
     renderizarSrsConLazyLoading(grupos, contenedor);
   }
 
-  document.getElementById('btn-abrir-srs').addEventListener('click', () => {
-    const contenedor = document.getElementById('srs-contenido');
-    const grupos = construirDatosSrs();
-    renderizarSrsConLazyLoading(grupos, contenedor);
-  });
+  /* FIX 3: se eliminó el listener duplicado de 'btn-abrir-srs' que estaba acá.
+     Ahora mostrarVista() se encarga de refrescar el SRS cada vez que entrás. */
 
   const CLAVE_GAMIFICACION_IDX = 'gamificacion_v1';
 
@@ -1295,10 +1293,8 @@
     renderTiendaIdx();
   }
 
-  document.getElementById('btn-abrir-tienda').addEventListener('click', () => {
-    gamificacionIdx = cargarGamificacionIdx();
-    renderTiendaIdx();
-  });
+  /* FIX 3: se eliminó el listener duplicado de 'btn-abrir-tienda' que estaba acá.
+     Ahora mostrarVista() se encarga de refrescar la tienda cada vez que entrás. */
 
   document.getElementById('btn-tienda-resetear').addEventListener('click', () => {
     const ok = window.confirm(
