@@ -8,14 +8,15 @@ setlocal EnableExtensions EnableDelayedExpansion
 :: Este .bat SOLO commitea y pushea cambios dentro de:
 ::
 ::     guardados/evaluadores/
+::     guardados/antiguos/evaluadores/
 ::
 :: NO ejecuta ningun script Python.
 :: Se asume que los evaluadores ya fueron generados/modificados.
 ::
 :: IMPORTANTE:
 :: Los demas cambios del repositorio NO seran incluidos.
-:: Si modificaste archivos fuera de guardados/evaluadores/,
-:: deberas hacer un commit normal por separado.
+:: Si modificaste archivos fuera de esas dos carpetas, deberas
+:: hacer un commit normal por separado.
 ::
 :: USO:
 ::
@@ -23,13 +24,14 @@ setlocal EnableExtensions EnableDelayedExpansion
 ::
 :: 2) Verifica que los archivos esten dentro de:
 ::        guardados/evaluadores/
+::    o    guardados/antiguos/evaluadores/
 ::
 :: 3) Desde la raiz del repositorio, ejecuta:
 ::
 ::        .\deploy-evaluadores.bat
 ::
 :: 4) El script:
-::        - Agrega solamente guardados/evaluadores/
+::        - Agrega solamente las carpetas de evaluadores
 ::        - Detecta archivos nuevos, modificados y eliminados
 ::        - Prioriza creados, luego modificados y finalmente eliminados
 ::        - Genera automaticamente el mensaje del commit
@@ -73,9 +75,13 @@ if errorlevel 1 (
 
 :: ------------------------------------------------------------
 :: Verificar si hay cambios preparados
+::
+:: [FIX 1] Acotado a las dos carpetas de evaluadores.
+:: Antes revisaba TODO el indice y podia seguir adelante
+:: (y commitear) cambios ajenos preparados fuera de estas rutas.
 :: ------------------------------------------------------------
 
-git diff --cached --quiet
+git diff --cached --quiet -- guardados/evaluadores/ guardados/antiguos/evaluadores/
 
 if not errorlevel 1 (
     echo.
@@ -120,16 +126,24 @@ type nul > "%TEMP_AD%"
 
 :: ------------------------------------------------------------
 :: Obtener cambios de las dos carpetas
+::
+:: [FIX 2] --no-renames:
+:: Sin esta opcion, git detecta renombres y genera lineas
+:: "R100	ruta_vieja	ruta_nueva" que no calzan en A/M/D:
+:: el archivo nunca se mostraba en el mensaje pero SI sumaba
+:: en el total, inflando el "+N mas".
+:: Con --no-renames, un archivo movido entre carpetas aparece
+:: como eliminado en una y creado en la otra.
 :: ------------------------------------------------------------
 
-git -c core.quotepath=false diff --cached --name-status -- guardados/evaluadores/ > "%TEMP_COMUNES%"
+git -c core.quotepath=false diff --cached --name-status --no-renames -- guardados/evaluadores/ > "%TEMP_COMUNES%"
 
 if errorlevel 1 (
     echo ERROR: No se pudieron obtener los cambios de evaluadores.
     goto ERROR_TEMP
 )
 
-git -c core.quotepath=false diff --cached --name-status -- guardados/antiguos/evaluadores/ > "%TEMP_ANTIGUOS%"
+git -c core.quotepath=false diff --cached --name-status --no-renames -- guardados/antiguos/evaluadores/ > "%TEMP_ANTIGUOS%"
 
 if errorlevel 1 (
     echo ERROR: No se pudieron obtener los cambios de antiguos.
@@ -139,6 +153,9 @@ if errorlevel 1 (
 
 :: ------------------------------------------------------------
 :: Clasificar los archivos sin dividir los nombres por espacios
+::
+:: OJO: en delims= hay un TAB literal, no un espacio.
+:: Si tu editor lo convierte a espacios, el script se rompe.
 :: ------------------------------------------------------------
 
 set "TOTAL_COMUNES=0"
@@ -177,6 +194,16 @@ for /f "usebackq tokens=1,* delims=	" %%A in ("%TEMP_ANTIGUOS%") do (
         >>"%TEMP_AD%" echo(!ARCHIVO!
     )
 )
+
+
+:: ------------------------------------------------------------
+:: [FIX 1] Red de seguridad:
+:: Si tras clasificar no quedo ningun archivo A/M/D
+:: (caso raro: el unico cambio era de otro tipo), no hay
+:: nada de las carpetas objetivo que commitear. Salir limpio.
+:: ------------------------------------------------------------
+
+if !TOTAL_COMUNES! equ 0 if !TOTAL_ANTIGUOS! equ 0 goto SIN_CAMBIOS
 
 
 :: ------------------------------------------------------------
@@ -302,9 +329,15 @@ del "%TEMP_AD%" 2>nul
 
 :: ------------------------------------------------------------
 :: Commit
+::
+:: [FIX 1] El pathspec garantiza que NUNCA se incluya contenido
+:: preparado fuera de las carpetas de evaluadores, aunque el
+:: usuario haya hecho "git add" de otros archivos antes de
+:: ejecutar este script. Esos cambios ajenos quedan staged,
+:: intactos, para que los commitee por separado.
 :: ------------------------------------------------------------
 
-git commit -m "!PREFIJO! %FECHA% - !MSG!"
+git commit -m "!PREFIJO! %FECHA% - !MSG!" -- guardados/evaluadores guardados/antiguos/evaluadores
 
 if errorlevel 1 (
     echo.
@@ -346,6 +379,26 @@ echo.
 pause
 
 endlocal
+exit /b 0
+
+
+:: ------------------------------------------------------------
+:: Sin cambios tras clasificar: limpiar temporales y salir
+:: ------------------------------------------------------------
+
+:SIN_CAMBIOS
+del "%TEMP_COMUNES%" 2>nul
+del "%TEMP_ANTIGUOS%" 2>nul
+del "%TEMP_CA%" 2>nul
+del "%TEMP_CM%" 2>nul
+del "%TEMP_CD%" 2>nul
+del "%TEMP_AA%" 2>nul
+del "%TEMP_AM%" 2>nul
+del "%TEMP_AD%" 2>nul
+echo.
+echo No hay cambios en las carpetas de evaluadores.
+echo.
+pause
 exit /b 0
 
 

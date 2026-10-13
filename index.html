@@ -35,6 +35,10 @@
     --color-borde-medio: #e2e2ea;
     --color-borde-fuerte: #c9c9d8; /* FIX 2: variable que faltaba */
     --color-sombra: rgba(0,0,0,0.1);
+    --hm-n1: rgba(79, 70, 229, 0.30); /* NUEVO: HEATMAP */
+    --hm-n2: rgba(79, 70, 229, 0.55);
+    --hm-n3: #4F46E5;
+    --hm-venc: #e0574c;
   }
 
   html[data-tema="oscuro"] {
@@ -50,6 +54,10 @@
     --color-borde-medio: #3c3c52;
     --color-borde-fuerte: #55556e; /* FIX 2: variable que faltaba */
     --color-sombra: rgba(0,0,0,0.35);
+    --hm-n1: rgba(79, 70, 229, 0.45); /* NUEVO: HEATMAP (alphas mayores para contraste) */
+    --hm-n2: rgba(79, 70, 229, 0.70);
+    --hm-n3: #4F46E5;
+    --hm-venc: #e0574c;
   }
 
   html {
@@ -437,7 +445,8 @@
     }
   }
 
-  #srs-sentinela {
+  #srs-sentinela,
+  #heatmap-sentinela {
     height: 1px;
   }
 
@@ -446,6 +455,210 @@
     padding: 14px 0;
     font-size: 12px;
     color: var(--texto-tenue);
+  }
+
+  /* ---- HEATMAP DE REPASOS (NUEVO) ---- */
+  .heatmap-bloque {
+    border: 1px solid var(--color-borde-medio);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 22px;
+  }
+
+  .heatmap-titulo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--texto-cabecera);
+    margin-bottom: 2px;
+  }
+
+  .heatmap-ayuda {
+    font-size: 11px;
+    color: var(--texto-tenue);
+    margin-bottom: 12px;
+  }
+
+  .heatmap-mes {
+    margin-bottom: 16px;
+  }
+
+  .heatmap-mes:last-of-type {
+    margin-bottom: 4px;
+  }
+
+  .heatmap-mes-nombre {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: capitalize;
+    color: var(--texto-cabecera);
+    margin-bottom: 6px;
+  }
+
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .heatmap-dia-cab {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--texto-tenue);
+    text-align: center;
+  }
+
+  .heatmap-celda {
+    aspect-ratio: 1 / 1;
+    min-height: 34px;
+    border-radius: 6px;
+    background: var(--bg-superficie-hover);
+    border: 1px solid var(--color-borde-suave);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--texto-suave);
+    user-select: none;
+  }
+
+  .heatmap-celda.hm-vacia {
+    background: transparent;
+    border-color: transparent;
+  }
+
+  .heatmap-celda.hm-pasado {
+    opacity: 0.45;
+  }
+
+  .heatmap-celda.hm-con-datos {
+    cursor: pointer;
+    border-color: transparent;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .heatmap-celda.hm-con-datos:focus-visible {
+    outline: 2px solid var(--color-boton);
+    outline-offset: 1px;
+  }
+
+  .heatmap-celda.hm-n1 { background: var(--hm-n1); color: var(--texto-principal); }
+  .heatmap-celda.hm-n2 { background: var(--hm-n2); }
+  .heatmap-celda.hm-n3 { background: var(--hm-n3); }
+
+  .heatmap-celda.hm-estimado {
+    opacity: 0.55;
+  }
+
+  /* Después de .hm-nX para que pise el color cuando hay vencidas */
+  .heatmap-celda.hm-vencidas {
+    background: var(--hm-venc);
+    color: #fff;
+  }
+
+  .heatmap-celda.hm-hoy {
+    outline: 2px solid var(--color-boton);
+    outline-offset: 1px;
+  }
+
+  .heatmap-leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    font-size: 10px;
+    color: var(--texto-tenue);
+    margin-top: 8px;
+  }
+
+  .leyenda-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .hm-chip {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .hm-chip-n1 { background: var(--hm-n1); }
+  .hm-chip-n2 { background: var(--hm-n2); }
+  .hm-chip-n3 { background: var(--hm-n3); }
+  .hm-chip-est { background: var(--hm-n2); opacity: 0.55; }
+  .hm-chip-venc { background: var(--hm-venc); }
+
+  .heatmap-detalle {
+    margin-top: 12px;
+    border-top: 1px solid var(--color-borde-medio);
+    padding-top: 10px;
+  }
+
+  .heatmap-detalle-titulo {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: capitalize;
+    color: var(--texto-cabecera);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .heatmap-detalle-cerrar {
+    background: none;
+    border: none;
+    color: var(--texto-tenue);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    font-family: inherit;
+  }
+
+  .heatmap-detalle-cerrar:hover {
+    color: var(--texto-principal);
+  }
+
+  .heatmap-detalle-item {
+    font-size: 12px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--color-borde-suave);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .heatmap-detalle-item:last-child {
+    border-bottom: none;
+  }
+
+  .hm-badge {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 2px 7px;
+    white-space: nowrap;
+  }
+
+  .hm-badge-vencida { background: #e0574c; color: #fff; }
+  .hm-badge-real { background: var(--color-boton); color: #fff; }
+  .hm-badge-estimado { background: var(--color-borde-medio); color: var(--texto-cabecera); }
+  .hm-badge-gradua { background: #2b6fe0; color: #fff; }
+
+  .heatmap-detalle-espacio { color: var(--texto-suave); }
+  .heatmap-detalle-nombre { font-weight: 600; color: var(--texto-principal); overflow-wrap: anywhere; }
+  .heatmap-detalle-nivel { color: var(--texto-tenue); }
+
+  @media (max-width: 400px) {
+    .heatmap-grid { gap: 3px; }
+    .heatmap-celda { min-height: 30px; font-size: 9px; }
+    .heatmap-leyenda { gap: 7px; }
   }
 
   /* ---- TIENDA ---- */
@@ -594,12 +807,31 @@
 
   <!-- ==================== VISTA: SRS PENDIENTES ==================== -->
   <div id="vista-srs" class="vista-secundaria">
-    <button type="button" class="btn-volver" id="btn-srs-volver">← Volver</button>
+    <button type="button" class="btn-volver" id="btn-srs-volver">← Volver (Esc)</button>
     <p class="subtitulo">
       🧠 Repasos espaciados (SRS), agrupados por evaluador. Solo se muestran
       las listas que ya fueron activadas para SRS desde cada evaluador —
       desde aquí no se pueden activar ni desactivar.
     </p>
+
+    <!-- NUEVO: HEATMAP DE REPASOS -->
+    <div class="heatmap-bloque" id="heatmap-bloque">
+      <div class="heatmap-titulo">📅 Calendario de repasos</div>
+      <div class="heatmap-ayuda">
+        Los días tenues (≈) son proyecciones que asumen que repasás puntual.
+        Tocá un día para ver el detalle.
+      </div>
+      <div id="heatmap-meses"></div>
+      <div class="heatmap-leyenda">
+        <span class="leyenda-item"><span class="hm-chip hm-chip-n1"></span>1 lista</span>
+        <span class="leyenda-item"><span class="hm-chip hm-chip-n2"></span>2-3</span>
+        <span class="leyenda-item"><span class="hm-chip hm-chip-n3"></span>4+</span>
+        <span class="leyenda-item"><span class="hm-chip hm-chip-est"></span>≈ estimado</span>
+        <span class="leyenda-item"><span class="hm-chip hm-chip-venc"></span>con vencidas</span>
+      </div>
+      <div class="heatmap-detalle" id="heatmap-detalle" hidden></div>
+    </div>
+
     <div id="srs-contenido">
       <p class="cargando">Cargando repasos...</p>
     </div>
@@ -607,7 +839,7 @@
 
   <!-- ==================== VISTA: TIENDA ==================== -->
   <div id="vista-tienda" class="vista-secundaria">
-    <button type="button" class="btn-volver" id="btn-tienda-volver">← Volver</button>
+    <button type="button" class="btn-volver" id="btn-tienda-volver">← Volver (Esc)</button>
     <p class="subtitulo">🛒 Tienda compartida por todos los evaluadores</p>
     <div class="saldo-tienda" id="saldo-tienda">Puntos disponibles: 0</div>
     <div class="grid-tienda" id="grid-tienda"></div>
@@ -929,11 +1161,11 @@
   const elVistaSrs = document.getElementById('vista-srs');
   const elVistaTienda = document.getElementById('vista-tienda');
 
-  /* NUEVO: guardamos la vista actual para saber si ESC debe volver atrás. */
+  /* Guardamos la vista actual para saber si ESC debe volver atrás. */
   let vistaActual = 'principal';
 
   function mostrarVista(nombre) {
-    vistaActual = nombre; /* NUEVO */
+    vistaActual = nombre;
     elVistaPrincipal.style.display = nombre === 'principal' ? 'block' : 'none';
     elVistaSrs.style.display = nombre === 'srs' ? 'block' : 'none';
     elVistaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';
@@ -956,7 +1188,7 @@
   document.getElementById('btn-tienda-volver')
     .addEventListener('click', () => mostrarVista('principal'));
 
-  /* NUEVO: atajo de teclado — ESC vuelve a la vista principal desde SRS o Tienda. */
+  /* Atajo de teclado — ESC vuelve a la vista principal desde SRS o Tienda. */
   document.addEventListener('keydown', (evento) => {
     const esEscape = evento.key === 'Escape' || evento.key === 'Esc';
     if (esEscape && (vistaActual === 'srs' || vistaActual === 'tienda')) {
@@ -982,8 +1214,11 @@
     return esp ? esp : 'Sin identificar';
   }
 
-  function srsTextoProximoRepasoIdx(srs) {
-    const objetivo = srs.lastReviewDate + calcularIntervaloDiasIdx(srs.currentLevel) * SRS_MS_DIA_IDX;
+  /* NUEVO: acepta un vencimiento efectivo opcional (con snooze aplicado). */
+  function srsTextoProximoRepasoIdx(srs, objetivoEfectivo) {
+    const objetivo = (typeof objetivoEfectivo === 'number')
+      ? objetivoEfectivo
+      : srs.lastReviewDate + calcularIntervaloDiasIdx(srs.currentLevel) * SRS_MS_DIA_IDX;
     const diasRestantes = (objetivo - Date.now()) / SRS_MS_DIA_IDX;
     if (diasRestantes < 0) return 'Vencido';
     if (diasRestantes < 1) {
@@ -1015,12 +1250,17 @@
       .filter((x) => x.srs.activated);
 
     items.forEach((x) => {
-      const objetivo = x.srs.lastReviewDate + calcularIntervaloDiasIdx(x.srs.currentLevel) * SRS_MS_DIA_IDX;
-      x.objetivo = objetivo;
-      x.vencido = !x.srs.graduated && Date.now() >= objetivo;
+      const objetivoBase = x.srs.lastReviewDate + calcularIntervaloDiasIdx(x.srs.currentLevel) * SRS_MS_DIA_IDX;
+      /* NUEVO: se respeta snoozeUntil — si la lista está pospuesta a una fecha
+         posterior al vencimiento, el vencimiento efectivo es esa fecha. */
+      const snooze = (typeof x.srs.snoozeUntil === 'number' && x.srs.snoozeUntil > objetivoBase)
+        ? x.srs.snoozeUntil
+        : objetivoBase;
+      x.objetivo = snooze;
+      x.vencido = !x.srs.graduated && Date.now() >= snooze;
       x.textoEstado = x.srs.graduated
         ? 'Graduado'
-        : (x.vencido ? 'Vencido' : srsTextoProximoRepasoIdx(x.srs));
+        : (x.vencido ? 'Vencido' : srsTextoProximoRepasoIdx(x.srs, snooze));
       x.prioridad = x.srs.graduated ? 2 : (x.vencido ? 0 : 1);
     });
 
@@ -1173,10 +1413,329 @@
     }
   }
 
+  /* ==================== NUEVO: HEATMAP DE REPASOS ==================== */
+
+  const NOMBRES_MESES_HEATMAP = [
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+  ];
+  const DIAS_CORTOS_HEATMAP = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+  function claveDiaLocal(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + dd;
+  }
+
+  /* Construye un Map 'YYYY-MM-DD' -> [entradas] con:
+     - vencidas (asignadas al día de hoy, es donde te esperan)
+     - próximo repaso real de cada lista no graduada
+     - proyección encadenada (asumiendo repaso puntual) hasta graduar */
+  function construirMapaHeatmap(grupos) {
+    const porDia = new Map();
+
+    function agregar(ts, entrada) {
+      const clave = claveDiaLocal(new Date(ts));
+      if (!porDia.has(clave)) porDia.set(clave, []);
+      porDia.get(clave).push(entrada);
+    }
+
+    grupos.forEach((g) => {
+      g.items.forEach((x) => {
+        if (x.srs.graduated) return;
+
+        const base = {
+          nombre: x.lista.nombre,
+          espacio: etiquetaEspacioIdx(x.lista.espacio),
+          nivel: x.srs.currentLevel
+        };
+
+        if (x.vencido) {
+          agregar(Date.now(), Object.assign(
+            { tipo: 'vencida', gradua: x.srs.currentLevel >= 6 }, base
+          ));
+          return;
+        }
+
+        // Próximo repaso real (ya respeta snooze via x.objetivo).
+        agregar(x.objetivo, Object.assign(
+          { tipo: 'real', gradua: x.srs.currentLevel >= 6 }, base
+        ));
+
+        // Proyección: repaso puntual -> sube de nivel -> próximo intervalo.
+        let nivel = x.srs.currentLevel;
+        let fecha = x.objetivo;
+        while (nivel < 6) {
+          nivel += 1;
+          fecha = fecha + calcularIntervaloDiasIdx(nivel) * SRS_MS_DIA_IDX;
+          agregar(fecha, Object.assign(
+            { tipo: 'estimado', gradua: nivel >= 6, nivel: nivel }, base
+          ));
+        }
+      });
+    });
+
+    return porDia;
+  }
+
+  function etiquetaBadgeHeatmap(e) {
+    if (e.tipo === 'vencida') return { txt: '⏰ Vencida', cls: 'hm-badge-vencida' };
+    if (e.gradua) {
+      return {
+        txt: e.tipo === 'estimado' ? '🎓 Gradúa (≈)' : '🎓 Gradúa',
+        cls: 'hm-badge-gradua'
+      };
+    }
+    if (e.tipo === 'estimado') return { txt: '≈ Estimado', cls: 'hm-badge-estimado' };
+    return { txt: '📅 Vence', cls: 'hm-badge-real' };
+  }
+
+  function crearCeldaDia(dia, anio, mes, porDia, hoyTs, claveHoy, alClick) {
+    const fecha = new Date(anio, mes, dia);
+    const clave = claveDiaLocal(fecha);
+    const entradas = porDia.get(clave) || [];
+
+    const celda = document.createElement('div');
+    celda.className = 'heatmap-celda';
+    celda.textContent = String(dia);
+
+    if (fecha.getTime() < hoyTs) {
+      celda.classList.add('hm-pasado');
+      return celda;
+    }
+
+    if (entradas.length === 0) {
+      // Día futuro sin datos: celda apagada, sin interacción.
+    } else {
+      const reales = entradas.filter((e) => e.tipo !== 'estimado').length;
+      const total = entradas.length;
+      const tieneVencidas = entradas.some((e) => e.tipo === 'vencida');
+
+      if (total >= 4) celda.classList.add('hm-n3');
+      else if (total >= 2) celda.classList.add('hm-n2');
+      else celda.classList.add('hm-n1');
+
+      if (reales === 0) celda.classList.add('hm-estimado');
+      if (tieneVencidas) celda.classList.add('hm-vencidas');
+
+      celda.classList.add('hm-con-datos');
+      celda.tabIndex = 0;
+      celda.setAttribute('role', 'button');
+
+      const resumen = dia + ' de ' + NOMBRES_MESES_HEATMAP[mes] + ': ' +
+        total + ' lista' + (total === 1 ? '' : 's');
+      celda.setAttribute('aria-label', resumen);
+      celda.title = resumen;
+
+      const seleccionar = () => alClick(clave, fecha);
+      celda.addEventListener('click', seleccionar);
+      celda.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          seleccionar();
+        }
+      });
+    }
+
+    if (clave === claveHoy) celda.classList.add('hm-hoy');
+
+    return celda;
+  }
+
+  function crearMesHeatmap(anio, mes, porDia, hoyTs, claveHoy, alClick) {
+    const bloque = document.createElement('div');
+    bloque.className = 'heatmap-mes';
+
+    const nombre = document.createElement('div');
+    nombre.className = 'heatmap-mes-nombre';
+    nombre.textContent = NOMBRES_MESES_HEATMAP[mes] + ' ' + anio;
+    bloque.appendChild(nombre);
+
+    const grid = document.createElement('div');
+    grid.className = 'heatmap-grid';
+
+    DIAS_CORTOS_HEATMAP.forEach((d) => {
+      const c = document.createElement('div');
+      c.className = 'heatmap-dia-cab';
+      c.textContent = d;
+      grid.appendChild(c);
+    });
+
+    const offset = (new Date(anio, mes, 1).getDay() + 6) % 7; // semana empieza lunes
+    const totalDias = new Date(anio, mes + 1, 0).getDate();
+    const relleno = (7 - ((offset + totalDias) % 7)) % 7;
+
+    for (let i = 0; i < offset; i++) {
+      const vacia = document.createElement('div');
+      vacia.className = 'heatmap-celda hm-vacia';
+      grid.appendChild(vacia);
+    }
+
+    for (let dia = 1; dia <= totalDias; dia++) {
+      grid.appendChild(crearCeldaDia(dia, anio, mes, porDia, hoyTs, claveHoy, alClick));
+    }
+
+    for (let i = 0; i < relleno; i++) {
+      const vacia = document.createElement('div');
+      vacia.className = 'heatmap-celda hm-vacia';
+      grid.appendChild(vacia);
+    }
+
+    bloque.appendChild(grid);
+    return bloque;
+  }
+
+  function mostrarDetalleHeatmap(clave, fecha, porDia, panel) {
+    // Toggle: si el mismo día ya está abierto, cerrar.
+    if (!panel.hidden && panel.dataset.clave === clave) {
+      panel.hidden = true;
+      panel.dataset.clave = '';
+      return;
+    }
+
+    const entradas = (porDia.get(clave) || []).slice().sort((a, b) => {
+      const peso = { vencida: 0, real: 1, estimado: 2 };
+      if (peso[a.tipo] !== peso[b.tipo]) return peso[a.tipo] - peso[b.tipo];
+      return a.nombre.localeCompare(b.nombre);
+    });
+
+    panel.innerHTML = '';
+
+    const titulo = document.createElement('div');
+    titulo.className = 'heatmap-detalle-titulo';
+
+    const texto = document.createElement('span');
+    texto.textContent =
+      fecha.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }) +
+      ' — ' + entradas.length + ' lista' + (entradas.length === 1 ? '' : 's');
+    titulo.appendChild(texto);
+
+    const cerrar = document.createElement('button');
+    cerrar.type = 'button';
+    cerrar.className = 'heatmap-detalle-cerrar';
+    cerrar.textContent = '×';
+    cerrar.setAttribute('aria-label', 'Cerrar detalle');
+    cerrar.addEventListener('click', () => {
+      panel.hidden = true;
+      panel.dataset.clave = '';
+    });
+    titulo.appendChild(cerrar);
+
+    panel.appendChild(titulo);
+
+    entradas.forEach((e) => {
+      const fila = document.createElement('div');
+      fila.className = 'heatmap-detalle-item';
+
+      const et = etiquetaBadgeHeatmap(e);
+      const badge = document.createElement('span');
+      badge.className = 'hm-badge ' + et.cls;
+      badge.textContent = et.txt;
+      fila.appendChild(badge);
+
+      const espacio = document.createElement('span');
+      espacio.className = 'heatmap-detalle-espacio';
+      espacio.textContent = e.espacio + ' ·';
+      fila.appendChild(espacio);
+
+      const nombre = document.createElement('span');
+      nombre.className = 'heatmap-detalle-nombre';
+      nombre.textContent = e.nombre;
+      fila.appendChild(nombre);
+
+      const nivel = document.createElement('span');
+      nivel.className = 'heatmap-detalle-nivel';
+      nivel.textContent = '· Nivel ' + e.nivel;
+      fila.appendChild(nivel);
+
+      panel.appendChild(fila);
+    });
+
+    panel.dataset.clave = clave;
+    panel.hidden = false;
+    panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  /* Render lazy: los meses se insertan de a uno cuando el sentinela
+     entra en el viewport (mismo patrón que la lista SRS). */
+  function renderizarHeatmapLazy(porDia, contenedorMeses, panelDetalle) {
+    contenedorMeses.innerHTML = '';
+    panelDetalle.hidden = true;
+    panelDetalle.dataset.clave = '';
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const hoyTs = hoy.getTime();
+    const claveHoy = claveDiaLocal(hoy);
+
+    const meses = [0, 1, 2].map((n) => {
+      const primer = new Date(hoy.getFullYear(), hoy.getMonth() + n, 1);
+      return { anio: primer.getFullYear(), mes: primer.getMonth() };
+    });
+
+    function abrirDetalle(clave, fecha) {
+      mostrarDetalleHeatmap(clave, fecha, porDia, panelDetalle);
+    }
+
+    const sentinela = document.createElement('div');
+    sentinela.id = 'heatmap-sentinela';
+    contenedorMeses.appendChild(sentinela);
+
+    let cursor = 0;
+    let observer = null;
+
+    function renderSiguienteMes() {
+      if (cursor >= meses.length) {
+        if (observer) observer.disconnect();
+        return;
+      }
+      const m = meses[cursor++];
+      const bloque = crearMesHeatmap(m.anio, m.mes, porDia, hoyTs, claveHoy, abrirDetalle);
+      contenedorMeses.insertBefore(bloque, sentinela);
+    }
+
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver((entradas) => {
+        entradas.forEach((entrada) => {
+          if (entrada.isIntersecting && cursor < meses.length) {
+            renderSiguienteMes();
+          }
+        });
+      }, { rootMargin: '150px' });
+      observer.observe(sentinela);
+    }
+
+    renderSiguienteMes();
+
+    if (!observer) {
+      while (cursor < meses.length) renderSiguienteMes();
+    }
+  }
+
+  /* ==================== FIN HEATMAP ==================== */
+
   function inicializarVistaSrs() {
     const contenedor = document.getElementById('srs-contenido');
     const grupos = construirDatosSrs();
     renderizarSrsConLazyLoading(grupos, contenedor);
+
+    /* NUEVO: heatmap dentro de la vista SRS, arriba de la lista. */
+    const bloqueHm = document.getElementById('heatmap-bloque');
+    const contHm = document.getElementById('heatmap-meses');
+    const panelHm = document.getElementById('heatmap-detalle');
+    const totalItems = grupos.reduce((acc, g) => acc + g.items.length, 0);
+
+    if (totalItems === 0) {
+      bloqueHm.style.display = 'none';
+      contHm.innerHTML = '';
+      panelHm.hidden = true;
+      return;
+    }
+
+    bloqueHm.style.display = '';
+    const porDia = construirMapaHeatmap(grupos);
+    renderizarHeatmapLazy(porDia, contHm, panelHm);
   }
 
   const CLAVE_GAMIFICACION_IDX = 'gamificacion_v1';

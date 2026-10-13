@@ -3099,6 +3099,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="progreso-texto" id="progreso-texto"></div>
         <div class="grupo-cronometro">
           <div class="cronometro" id="cronometro">⏱ 00:00</div>
+          <div class="cronometro" id="countdown-examen" style="display:none;"></div>
           <button class="boton-pausa" id="btn-pausa" title="Pausar el cronómetro">⏸ Pausar</button>
           <div class="badge-nota-actual" id="badge-nota-actual" title="Nota actual de la sesión">—</div>
         </div>
@@ -3284,6 +3285,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <div class="modal-overlay" id="modal-pomodoro-resumen">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>📊 Resumen del Pomodoro</h3>
+    <div id="pomodoro-resumen-analisis-retencion" style="display:none; white-space:pre-line;"></div>
     <p>⏱ Tiempo en lectura: <strong id="pomodoro-resumen-lectura"></strong></p>
     <p>🧠 Tiempo en retención: <strong id="pomodoro-resumen-retencion"></strong></p>
     <p>⏱ Tiempo total: <strong id="pomodoro-resumen-total"></strong></p>
@@ -3341,6 +3343,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <input type="file" id="input-backup-importar" accept="application/json,.json" style="display:none;">
     </div>
     <p class="lista-detalle" id="sync-backup-info"></p>
+
+    <div class="sync-seccion-titulo">☁️ GitHub Gist</div>
+    <p class="modal-ayuda" id="gist-estado-token">🔑 Token: no configurado</p>
+    <div class="fila-acciones-listas">
+      <button class="boton-mini" id="btn-gist-configurar-token">🔐 Configurar token</button>
+      <button class="boton-mini" id="btn-gist-cerrar-sesion">🔐 Cerrar sesión Gist</button>
+    </div>
+    <label class="modal-ayuda" for="input-gist-id" style="display:block; margin-top:6px;">Gist ID (opcional — vacío crea uno nuevo al primer subir):</label>
+    <input type="text" id="input-gist-id" placeholder="Pegá un Gist ID existente" style="width:100%; box-sizing:border-box; margin-bottom:6px;">
+    <p class="lista-detalle">Cada zona de abajo tiene, junto a Exportar/Importar, un botón ☁️ para subir o bajar ese archivo del Gist.</p>
+    <div class="fila-acciones-listas">
+      <button class="boton-mini" id="btn-gist-exportar-backup">☁️ Subir backup a Gist</button>
+      <button class="boton-mini" id="btn-gist-importar-backup">☁️ Bajar backup de Gist</button>
+    </div>
+
     <button class="boton-mini" id="btn-vincular-todo" style="width:100%; margin-bottom: 6px;">🔗 Vincular todo a este evaluador</button>
     <button class="boton-mini boton-mini-peligro" id="btn-borrar-evaluador" style="width:100%; margin-bottom: 6px;">🗑 Borrar un evaluador completo</button>
     <div id="lista-borrar-evaluador" style="display:none; margin-bottom: 6px;"></div>
@@ -3351,6 +3368,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-historial-exportar">Exportar</button>
         <button class="boton-mini" id="btn-historial-importar">Importar</button>
+        <button class="boton-mini" id="btn-gist-exportar-historial" title="Subir este archivo al Gist">☁️ Subir</button>
+        <button class="boton-mini" id="btn-gist-importar-historial" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-importar-historial" accept="application/json,.json" style="display:none;">
       </span>
     </div>
@@ -3359,6 +3378,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-dificiles" title="Descarga las difíciles activas como JSON">Exportar</button>
         <button class="boton-mini" id="btn-importar-dificiles" title="Agrega las difíciles de un JSON (fusiona con las actuales)">Importar</button>
+        <button class="boton-mini" id="btn-gist-exportar-dificiles" title="Subir este archivo al Gist">☁️ Subir</button>
+        <button class="boton-mini" id="btn-gist-importar-dificiles" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-importar" accept=".json,application/json" style="display:none">
       </span>
     </div>
@@ -3367,6 +3388,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-notas" title="Descarga tus notas editadas como JSON">Exportar</button>
         <button class="boton-mini" id="btn-importar-notas" title="Fusiona las notas de un JSON (gana la más reciente)">Importar</button>
+        <button class="boton-mini" id="btn-gist-exportar-notas" title="Subir este archivo al Gist">☁️ Subir</button>
+        <button class="boton-mini" id="btn-gist-importar-notas" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-importar-notas" accept=".json,application/json" style="display:none">
       </span>
     </div>
@@ -3375,6 +3398,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-notaseval" title="Descarga las notas del evaluador como JSON">Exportar</button>
         <button class="boton-mini" id="btn-importar-notaseval" title="Fusiona las notas del evaluador de un JSON (gana la más reciente)">Importar</button>
+        <button class="boton-mini" id="btn-gist-exportar-notaseval" title="Subir este archivo al Gist">☁️ Subir</button>
+        <button class="boton-mini" id="btn-gist-importar-notaseval" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-importar-notaseval" accept=".json,application/json" style="display:none">
       </span>
     </div>
@@ -3383,6 +3408,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-analisis" title="Descarga los análisis de sesión guardados como JSON">Exportar</button>
         <button class="boton-mini" id="btn-importar-analisis" title="Fusiona los análisis de sesión guardados de un JSON">Importar</button>
+        <button class="boton-mini" id="btn-gist-exportar-analisis" title="Subir este archivo al Gist">☁️ Subir</button>
+        <button class="boton-mini" id="btn-gist-importar-analisis" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-importar-analisis" accept=".json,application/json" style="display:none">
       </span>
     </div>
@@ -3391,6 +3418,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-retencion" title="Descarga el registro de retención de rutas como JSON">Exportar</button>
         <button class="boton-mini" id="btn-importar-retencion" title="Fusiona el registro de retención de rutas de un JSON">Importar</button>
+        <button class="boton-mini" id="btn-gist-exportar-retencion" title="Subir este archivo al Gist">☁️ Subir</button>
+        <button class="boton-mini" id="btn-gist-importar-retencion" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-importar-retencion" accept=".json,application/json" style="display:none">
       </span>
     </div>
@@ -3399,6 +3428,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-razones">Exportar</button>
         <button class="boton-mini" id="btn-importar-razones">Importar</button>
+        <button class="boton-mini" id="btn-gist-exportar-razones" title="Subir este archivo al Gist">☁️ Subir</button>
+        <button class="boton-mini" id="btn-gist-importar-razones" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-importar-razones" accept=".json,application/json" style="display:none">
       </span>
     </div>
@@ -3407,6 +3438,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-exportar-imagenes">Exportar</button>
         <button class="boton-mini" id="btn-importar-imagenes">Importar</button>
+        <button class="boton-mini" id="btn-gist-exportar-imagenes" title="Subir este archivo al Gist">☁️ Subir</button>
+        <button class="boton-mini" id="btn-gist-importar-imagenes" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-importar-imagenes" accept=".json,application/json" style="display:none">
       </span>
     </div>
@@ -3415,11 +3448,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <span class="zona-botones">
         <button class="boton-mini" id="btn-listas-exportar">Exportar</button>
         <button class="boton-mini" id="btn-listas-importar">Importar</button>
+        <button class="boton-mini" id="btn-gist-exportar-listas" title="Subir este archivo al Gist">☁️ Subir</button>
+        <button class="boton-mini" id="btn-gist-importar-listas" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-listas-importar" accept="application/json" style="display:none;">
       </span>
     </div>
 
     <button class="modal-cancelar" id="btn-sync-cerrar">Cerrar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-gist-token">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>🔐 Token de GitHub</h3>
+    <p class="modal-ayuda">Se guarda solo en esta pestaña (sessionStorage) y se borra al cerrarla. Scope mínimo necesario: <b>gist</b>.</p>
+    <input type="password" id="input-gist-token" placeholder="ghp_..." style="width:100%; box-sizing:border-box;">
+    <div class="fila-acciones-listas" style="margin-top:10px;">
+      <button class="boton-mini" id="btn-gist-token-guardar">Guardar</button>
+      <button class="boton-mini" id="btn-gist-token-cancelar">Cancelar</button>
+    </div>
   </div>
 </div>
 
@@ -3619,9 +3666,52 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="opcion-modo-nombre">Light</span>
         <span class="opcion-modo-detalle">Sin vidas, sin puntos</span>
       </button>
+      <button type="button" class="opcion-modo" id="opcion-modo-examen" data-modo="examen">
+        <span class="opcion-modo-icono">📝</span>
+        <span class="opcion-modo-nombre">Examen</span>
+        <span class="opcion-modo-detalle">Tiempo por tarjeta, sin ayudas</span>
+      </button>
     </div>
     <button class="boton-principal" id="btn-modo-confirmar">Comenzar</button>
     <button class="modal-cancelar" id="btn-modo-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-examen-opciones">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>📝 Opciones de Examen</h3>
+    <p class="modal-ayuda">Interacción</p>
+    <div class="opciones-modo">
+      <button type="button" class="opcion-modo seleccionada" id="opcion-examen-libre" data-interaccion="libre">
+        <span class="opcion-modo-icono">⌨️🎙</span>
+        <span class="opcion-modo-nombre">Sin restricción</span>
+        <span class="opcion-modo-detalle">Teclado y micrófono</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-examen-escrito" data-interaccion="escrito">
+        <span class="opcion-modo-icono">⌨️</span>
+        <span class="opcion-modo-nombre">Escrito</span>
+        <span class="opcion-modo-detalle">Solo teclado</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-examen-oral" data-interaccion="oral">
+        <span class="opcion-modo-icono">🎙</span>
+        <span class="opcion-modo-nombre">Oral</span>
+        <span class="opcion-modo-detalle">Solo micrófono</span>
+      </button>
+    </div>
+    <p class="modal-ayuda">Tiempo por tarjeta</p>
+    <div class="opciones-modo">
+      <button type="button" class="opcion-modo seleccionada" id="opcion-examen-t15" data-tiempo="15">
+        <span class="opcion-modo-nombre">15s</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-examen-t30" data-tiempo="30">
+        <span class="opcion-modo-nombre">30s</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-examen-t45" data-tiempo="45">
+        <span class="opcion-modo-nombre">45s</span>
+      </button>
+    </div>
+    <button class="boton-principal" id="btn-examen-opciones-comenzar">Comenzar</button>
+    <button class="modal-cancelar" id="btn-examen-opciones-cancelar">Cancelar</button>
   </div>
 </div>
 
@@ -3789,7 +3879,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   let gamificacion = cargarGamificacion();
 
-  let modoJuego = 'light';        // 'tryhard' | 'normal' | 'light'
+  let modoJuego = 'light';        // 'tryhard' | 'normal' | 'light' | 'examen'
+  let interaccionExamen = 'libre';   // 'libre' | 'escrito' | 'oral'
+  let segundosPorTarjetaExamen = 15;
+  let countdownExamenId = null;
+  let countdownExamenRestante = 0;
+  let countdownIndiceActivo = -1;
   let vidasMaximas = 0;
   let vidasActuales = 0;
   let puntosSesion = 0;
@@ -3858,6 +3953,48 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   window.addEventListener('beforeunload', () => {
     _guardadosPendientes.forEach((d) => d.flush());
   });
+
+  // ---------------- RELOJ LÓGICO LOCAL ----------------
+  // Un backup importado desde un dispositivo con el reloj desincronizado puede traer
+  // timestamps (t / modificada) más "nuevos" que los de este dispositivo sin serlo en
+  // realidad, y entonces "gana el más reciente" elegiría mal. Para evitar eso, además
+  // del timestamp de pared, cada edición local guarda un número de revisión (`rev`)
+  // tomado de un contador local que SOLO avanza (nunca retrocede, no depende del reloj
+  // del sistema). Al fusionar, si ambos lados traen `rev`, se compara por `rev` en vez
+  // de por timestamp; si alguno no lo trae (backup viejo), se cae al timestamp como antes.
+  const CLAVE_RELOJ_LOGICO = 'reloj_logico_v1';
+  let relojLogicoLocal = (function () {
+    try {
+      const n = parseInt(localStorage.getItem(CLAVE_RELOJ_LOGICO) || '0', 10);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    } catch (e) {
+      return 0;
+    }
+  })();
+  function guardarRelojLogico() {
+    try { localStorage.setItem(CLAVE_RELOJ_LOGICO, String(relojLogicoLocal)); } catch (e) { }
+  }
+  function siguienteRev() {
+    relojLogicoLocal += 1;
+    guardarRelojLogico();
+    return relojLogicoLocal;
+  }
+  // Tras ver una rev ajena (al fusionar un backup), el reloj local se adelanta para que
+  // cualquier edición local posterior quede, con seguridad, por delante de lo importado.
+  function registrarRevVista(revExterna) {
+    if (typeof revExterna === 'number' && revExterna > relojLogicoLocal) {
+      relojLogicoLocal = revExterna;
+      guardarRelojLogico();
+    }
+  }
+  // Decide si "entrante" es más reciente que "local". Preferí el reloj lógico (inmune al
+  // desfasaje de reloj) cuando ambos lo tienen; si no, cae al timestamp de pared de siempre.
+  function entranteEsMasReciente(entranteRev, entranteTs, localRev, localTs) {
+    if (typeof entranteRev === 'number' && typeof localRev === 'number') {
+      return entranteRev > localRev;
+    }
+    return (entranteTs || 0) > (localTs || 0);
+  }
 
   function guardarDificilesYa() {
     try {
@@ -4002,7 +4139,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       entrada.t = Date.now();   // NUEVO
       if (!modoObservador) reproducirSonido('dificil');  // NUEVO: solo al MARCAR (no al desmarcar), nunca en observador
     } else {
-      dificiles[h] = { p: t.primero || '', s: t.segundo || '', activa: true, t: Date.now() };
+      dificiles[h] = { p: t.primero || '', s: t.segundo || '', activa: true, t: Date.now(), espacio: ESPACIO_HASH };
       if (!modoObservador) reproducirSonido('dificil');  // NUEVO
     }
     guardarDificiles();
@@ -4088,7 +4225,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (texto === base) {
       delete notasLocales[h];   // igual al txt: no hace falta override
     } else {
-      notasLocales[h] = { p: t.primero || '', s: t.segundo || '', nota: texto, base: base, t: Date.now() };
+      notasLocales[h] = { p: t.primero || '', s: t.segundo || '', nota: texto, base: base, t: Date.now(), rev: siguienteRev(), espacio: ESPACIO_HASH };
     }
     guardarNotas();
   }
@@ -4103,6 +4240,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!e) return;
     e.base = notaTxtDe(t);
     e.t = Date.now();
+    e.rev = siguienteRev();
     guardarNotas();
   }
 
@@ -4251,6 +4389,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elBadgeComodines = document.getElementById('badge-comodines');
   const elResumenGamificacion = document.getElementById('resumen-gamificacion');
   const elBtnPausa = document.getElementById('btn-pausa');
+  const elCountdownExamen = document.getElementById('countdown-examen');
   const elOverlayPausa = document.getElementById('overlay-pausa');
   const elBtnReanudar = document.getElementById('btn-reanudar');
   const elBtnRevisar = document.getElementById('btn-revisar');
@@ -4776,8 +4915,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function guardarEntradaImagen(ruta, indice, cambios) {
     const h = hashImagen(ruta, indice);
-    const actual = datosImagenes[h] || { ruta: ruta, indice: indice, nota: '', base: '', dificil: false, t: 0 };
-    const nueva = Object.assign({}, actual, cambios, { ruta: ruta, indice: indice, t: Date.now() });
+    const actual = datosImagenes[h] || { ruta: ruta, indice: indice, nota: '', base: '', dificil: false, t: 0, espacio: ESPACIO_HASH };
+    const nueva = Object.assign({}, actual, cambios, { ruta: ruta, indice: indice, t: Date.now(), rev: siguienteRev() });
     if (!nueva.nota && !nueva.dificil) {
       delete datosImagenes[h];
     } else {
@@ -5465,7 +5604,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function aplicarPerdidaVida() {
-    if (modoJuego === 'light') return;
+    if (esModoSinGamificacion()) return;
     vidasActuales = Math.max(0, vidasActuales - 1);
     reproducirSonido('vida_perdida');
     if (vidasActuales === 0) dispararGameOver();
@@ -5482,10 +5621,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const anterior = puntosPorTarjeta[indice] || 0;
     const delta = puntos - anterior;
     puntosPorTarjeta[indice] = puntos;
-    if (modoJuego !== 'light') puntosSesion += delta;
+    if (!esModoSinGamificacion()) puntosSesion += delta;
 
     let escudoUsado = false;
-    if (modoJuego !== 'light') {
+    if (!esModoSinGamificacion()) {
       if (resultado === 'no' && rachaActual > 0 && (gamificacion.inventario.escudosRacha || 0) > 0) {
         gamificacion.inventario.escudosRacha--;
         guardarGamificacion();
@@ -5522,9 +5661,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const anterior = puntosPorTarjeta[indice] || 0;
     const delta = puntos - anterior;
     puntosPorTarjeta[indice] = puntos;
-    if (modoJuego !== 'light') puntosSesion += delta;
+    if (!esModoSinGamificacion()) puntosSesion += delta;
     actualizarBarraGamificacion();
   }
+
+  function esModoSinGamificacion() { return modoJuego === 'light' || modoJuego === 'examen'; }
 
   function configurarModoJuego(modo) {
     modoJuego = modo;
@@ -5535,6 +5676,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function nombreModoJuego(modo) {
     if (modo === 'srs') return '🧠 SRS';   // NUEVO
+    if (modo === 'examen') return '📝 Examen';
     if (modo === 'tryhard') return 'Tryhard';
     if (modo === 'normal') return 'Normal';
     return 'Light';
@@ -5542,6 +5684,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function actualizarBarraGamificacion() {
     if (modoObservador) return;
+
+    elFilaGamificacion.style.display = modoJuego === 'examen' ? 'none' : 'flex';
+    if (modoJuego === 'examen') return;
 
     elStatPuntos.style.display = modoJuego === 'light' ? 'none' : 'inline';
     elStatPuntos.textContent = '⭐ ' + puntosSesion;
@@ -5588,7 +5733,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function seleccionarModoEnModal(modo) {
     modoElegidoEnModal = modo;
-    document.querySelectorAll('.opcion-modo').forEach((el) => {
+    document.querySelectorAll('#modal-modo .opcion-modo').forEach((el) => {
       el.classList.toggle('seleccionada', el.dataset.modo === modo);
     });
   }
@@ -5608,8 +5753,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function confirmarModoYComenzar() {
     const lista = listaPendienteInicio;
     elModalModo.classList.remove('abierto');
+    if (!lista) { listaPendienteInicio = null; return; }
+    if (modoElegidoEnModal === 'examen') {
+      elModalExamenOpciones.classList.add('abierto');
+      return;
+    }
     listaPendienteInicio = null;
-    if (!lista) return;
     configurarModoJuego(modoElegidoEnModal);
     iniciarSesion(lista);
   }
@@ -5617,11 +5766,49 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('opcion-modo-tryhard').addEventListener('click', () => seleccionarModoEnModal('tryhard'));
   document.getElementById('opcion-modo-normal').addEventListener('click', () => seleccionarModoEnModal('normal'));
   document.getElementById('opcion-modo-light').addEventListener('click', () => seleccionarModoEnModal('light'));
+  document.getElementById('opcion-modo-examen').addEventListener('click', () => seleccionarModoEnModal('examen'));
   document.getElementById('btn-modo-confirmar').addEventListener('click', () => confirmarModoYComenzar());
   document.getElementById('btn-modo-cancelar').addEventListener('click', () => cancelarModalModo());
 
+  const elModalExamenOpciones = document.getElementById('modal-examen-opciones');
+  function seleccionarEnGrupo(boton) {
+    boton.closest('.opciones-modo').querySelectorAll('.opcion-modo').forEach((el) => {
+      el.classList.toggle('seleccionada', el === boton);
+    });
+  }
+  document.getElementById('opcion-examen-libre').addEventListener('click', (ev) => {
+    interaccionExamen = 'libre'; seleccionarEnGrupo(ev.currentTarget);
+  });
+  document.getElementById('opcion-examen-escrito').addEventListener('click', (ev) => {
+    interaccionExamen = 'escrito'; seleccionarEnGrupo(ev.currentTarget);
+  });
+  document.getElementById('opcion-examen-oral').addEventListener('click', (ev) => {
+    interaccionExamen = 'oral'; seleccionarEnGrupo(ev.currentTarget);
+  });
+  document.getElementById('opcion-examen-t15').addEventListener('click', (ev) => {
+    segundosPorTarjetaExamen = 15; seleccionarEnGrupo(ev.currentTarget);
+  });
+  document.getElementById('opcion-examen-t30').addEventListener('click', (ev) => {
+    segundosPorTarjetaExamen = 30; seleccionarEnGrupo(ev.currentTarget);
+  });
+  document.getElementById('opcion-examen-t45').addEventListener('click', (ev) => {
+    segundosPorTarjetaExamen = 45; seleccionarEnGrupo(ev.currentTarget);
+  });
+  document.getElementById('btn-examen-opciones-cancelar').addEventListener('click', () => {
+    elModalExamenOpciones.classList.remove('abierto');
+    listaPendienteInicio = null;
+  });
+  document.getElementById('btn-examen-opciones-comenzar').addEventListener('click', () => {
+    const lista = listaPendienteInicio;
+    elModalExamenOpciones.classList.remove('abierto');
+    listaPendienteInicio = null;
+    if (!lista) return;
+    configurarModoJuego('examen');
+    iniciarSesion(lista);
+  });
+
   function dispararGameOver() {
-    if (modoJuego === 'light') return;   // nunca en Light
+    if (esModoSinGamificacion()) return;   // nunca en Light
     if (gameOverDisparado) return;       // no disparar 2 veces
     gameOverDisparado = true;
     pausaManual = true;
@@ -5688,7 +5875,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       modo: srsSesionActiva ? 'srs' : modoJuego,   // NUEVO: distingue las sesiones de Repaso Espaciado
       nota: Math.round(nota * 10) / 10,
       duracion_ms: duracionMs,
-      puntos_ganados: modoJuego === 'light' ? 0 : puntosSesion,
+      puntos_ganados: esModoSinGamificacion() ? 0 : puntosSesion,
       espacio: ESPACIO_HASH,   // NUEVO: de que evaluador es esta sesion
       tarjetas: tarjetasSesion.map((t) => hashTarjeta(t)),
       conteos: conteos
@@ -5714,7 +5901,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     }
     podarHistorialPorEvaluador();   // NUEVO: justo después de agregar la entrada, antes de persistir
-    if (modoJuego !== 'light') {
+    if (!esModoSinGamificacion()) {
       gamificacion.puntosTotales += puntosSesion;
     }
     guardarGamificacion();
@@ -5727,7 +5914,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (modoObservador) { elResumenGamificacion.style.display = 'none'; return; }
     elResumenGamificacion.style.display = 'block';
     document.getElementById('resumen-puntos').textContent =
-      modoJuego === 'light' ? '⭐ Puntos ganados: — (modo Light)' : ('⭐ Puntos ganados: ' + puntosSesion);
+      esModoSinGamificacion() ? '⭐ Puntos ganados: — (sin gamificación en este modo)' : ('⭐ Puntos ganados: ' + puntosSesion);
     document.getElementById('resumen-mejor-racha').textContent = '🔥 Mejor racha: ' + mejorRacha;
     document.getElementById('resumen-modo').textContent = '🎮 Modo: ' + nombreModoJuego(modoJuego);
 
@@ -5862,6 +6049,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         if (filtrados.length === 0) return false;   // lista vacía: se borra
         lista.hashes = filtrados;
         lista.modificada = Date.now();
+        lista.rev = siguienteRev();
       }
       return true;
     });
@@ -5924,6 +6112,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       srs.snoozeUntil = 0;
     }
     lista.modificada = Date.now();
+    lista.rev = siguienteRev();
     guardarListas();
     renderListasGuardadas();
   }
@@ -6141,21 +6330,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const impEspacio = typeof imp.espacio === 'string' && imp.espacio ? imp.espacio : ESPACIO_HASH;
       const existente = buscarListaEnEspacio(imp.nombre, impEspacio);
       const impModificada = typeof imp.modificada === 'number' ? imp.modificada : 0;
+      const impRev = typeof imp.rev === 'number' ? imp.rev : undefined;
+      registrarRevVista(impRev);
       if (!existente) {
         listas.push({
           nombre: imp.nombre,
           hashes: imp.hashes.slice(),
           creada: typeof imp.creada === 'number' ? imp.creada : Date.now(),
           modificada: impModificada || Date.now(),
+          rev: impRev,
           srs: normalizarSrsImportado(imp.srs),   // NUEVO: el progreso de Repaso Espaciado viaja con la lista
           espacio: impEspacio,   // NUEVO: el espacio que traía el JSON (o este evaluador si no traía)
         });
         nuevas++;
-      } else if (impModificada > existente.modificada) {
+      } else if (entranteEsMasReciente(impRev, impModificada, existente.rev, existente.modificada)) {
         existente.nombre = imp.nombre;
         existente.hashes = imp.hashes.slice();
         existente.creada = typeof imp.creada === 'number' ? imp.creada : existente.creada;
         existente.modificada = impModificada;
+        existente.rev = impRev;
         existente.srs = normalizarSrsImportado(imp.srs);   // NUEVO
         existente.espacio = impEspacio;   // NUEVO: ya coincidía (se buscó por nombre+espacio), normaliza legacy
         actualizadas++;
@@ -6447,6 +6640,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       id: ESPACIO_HASH + '_' + timestamp,
       espacio: ESPACIO_HASH,
       fecha: new Date(timestamp).toISOString(),
+      modo: modoJuego,
       subT: ultimoAnalisisFilas.map((f) => ({
         nombre: f.nombre,
         pctAciertos: f.info.pctAciertos,
@@ -6690,6 +6884,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (listaActivaNombre === lista.nombre) listaActivaNombre = nombre;
       lista.nombre = nombre;
       lista.modificada = Date.now();
+      lista.rev = siguienteRev();
       guardarListas();
       cerrarModalGuardarLista();
       renderListasGuardadas();
@@ -6800,7 +6995,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return {
       version: 1,
       evaluador: ESPACIO_HASH,
-      timestamp: Date.now(),
+      timestamp_backup: Date.now(),   // RENOMBRADO: antes "timestamp"
       gamificacion: construirExportGamificacion(),
       dificiles: construirExportDificiles(),
       notas: construirExportNotas(),
@@ -6819,7 +7014,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'backup_' + ESPACIO_HASH + '.json';
+    a.download = 'backup_completo.json';   // RENOMBRADO: nombre fijo, se sobrescribe si se exporta de nuevo
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -6832,6 +7027,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!datos || typeof datos !== 'object') return { error: 'El archivo no es un JSON válido.' };
     if (typeof datos.version !== 'number') return { error: 'El archivo no tiene el formato esperado (falta "version").' };
     if (datos.version !== 1) return { error: 'Versión de backup desconocida (' + datos.version + ').' };
+    if (typeof datos.evaluador !== 'string' || !datos.evaluador) {
+      return { error: 'El backup no tiene el campo "evaluador" (formato viejo o inválido).' };
+    }
+    // NUEVO: ya no se rechaza si datos.evaluador !== ESPACIO_HASH — se acepta igual y los datos
+    // de otros evaluadores quedan disponibles para "Vincular a este evaluador" (se fusionan normalmente
+    // porque cada item ya trae/recibe su propio campo "espacio" en fusionarXLista()).
 
     const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas', 'notasEvaluador', 'retencionRutas', 'analisisSesion'];
     const presentes = ZONAS.filter((z) => datos[z] !== undefined && datos[z] !== null);
@@ -6890,10 +7091,211 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return { ok: true, zonasActualizadas: zonasActualizadas, zonasSinCambios: zonasSinCambios };
   }
 
+  // ---------------- SINCRONIZACIÓN CON GITHUB GIST ----------------
+  const CLAVE_GIST_TOKEN = 'gist_token_sesion';
+  const CLAVE_GIST_ID = 'gist_id_' + ESPACIO_HASH;
+  const CLAVE_GIST_ULTIMA_SYNC = 'gist_ultima_sync_' + ESPACIO_HASH;
+
+  function obtenerTokenGist() {
+    try { return sessionStorage.getItem(CLAVE_GIST_TOKEN) || ''; } catch (e) { return ''; }
+  }
+  function guardarTokenGist(token) {
+    try { sessionStorage.setItem(CLAVE_GIST_TOKEN, token); } catch (e) { }
+  }
+  function borrarTokenGist() {
+    try { sessionStorage.removeItem(CLAVE_GIST_TOKEN); } catch (e) { }
+  }
+  function obtenerGistId() {
+    try { return localStorage.getItem(CLAVE_GIST_ID) || ''; } catch (e) { return ''; }
+  }
+  function guardarGistId(id) {
+    try { id ? localStorage.setItem(CLAVE_GIST_ID, id) : localStorage.removeItem(CLAVE_GIST_ID); } catch (e) { }
+  }
+  function obtenerUltimasSyncGist() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_GIST_ULTIMA_SYNC);
+      return crudo ? JSON.parse(crudo) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function marcarSyncGist(nombreArchivo) {
+    try {
+      const mapa = obtenerUltimasSyncGist();
+      mapa[nombreArchivo] = Date.now();
+      localStorage.setItem(CLAVE_GIST_ULTIMA_SYNC, JSON.stringify(mapa));
+    } catch (e) { }
+  }
+
+  async function gistApi(metodo, ruta, cuerpo) {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      const err = new Error('Sin conexión a internet'); err.tipo = 'red'; throw err;
+    }
+    const token = obtenerTokenGist();
+    if (!token) {
+      const err = new Error('No hay token configurado.'); err.tipo = 'sin_token'; throw err;
+    }
+    let resp;
+    try {
+      resp = await fetch('https://api.github.com' + ruta, {
+        method: metodo,
+        headers: {
+          'Authorization': 'token ' + token,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+      });
+    } catch (e) {
+      const err = new Error('Sin conexión a internet'); err.tipo = 'red'; throw err;
+    }
+    if (resp.status === 401 || resp.status === 403) {
+      const err = new Error('Token inválido o sin permisos'); err.tipo = 'auth'; throw err;
+    }
+    if (resp.status === 404) {
+      const err = new Error('Gist no encontrado'); err.tipo = 'no_encontrado'; throw err;
+    }
+    if (!resp.ok) {
+      const err = new Error('Error de GitHub (' + resp.status + ')'); err.tipo = 'otro'; throw err;
+    }
+    return resp.json();
+  }
+
+  async function gistAsegurarId() {
+    const existente = obtenerGistId();
+    if (existente) return existente;
+    const creado = await gistApi('POST', '/gists', {
+      description: 'Backup evaluador — ' + ESPACIO_HASH,
+      public: false,
+      files: { 'backup_completo.json': { content: JSON.stringify(construirBackupCompleto(), null, 2) } },
+    });
+    guardarGistId(creado.id);
+    return creado.id;
+  }
+
+  async function gistEscribirArchivo(nombreArchivo, objeto) {
+    const id = await gistAsegurarId();
+    await gistApi('PATCH', '/gists/' + id, {
+      files: { [nombreArchivo]: { content: JSON.stringify(objeto, null, 2) } },
+    });
+    marcarSyncGist(nombreArchivo);
+  }
+
+  async function gistLeerArchivo(nombreArchivo) {
+    const id = obtenerGistId();
+    if (!id) {
+      const err = new Error('Todavía no hay un Gist configurado (subí algo primero, o pegá un Gist ID existente).');
+      err.tipo = 'sin_gist';
+      throw err;
+    }
+    const datos = await gistApi('GET', '/gists/' + id);
+    const archivo = datos.files && datos.files[nombreArchivo];
+    if (!archivo) {
+      const err = new Error('El Gist no tiene un archivo "' + nombreArchivo + '".'); err.tipo = 'no_encontrado'; throw err;
+    }
+    let contenido = archivo.content;
+    if (archivo.truncated && archivo.raw_url) {
+      const resp = await fetch(archivo.raw_url);
+      contenido = await resp.text();
+    }
+    marcarSyncGist(nombreArchivo);
+    return JSON.parse(contenido);
+  }
+
+  function mensajeErrorGist(e) {
+    if (e && e.tipo === 'red') return 'Sin conexión a internet.';
+    if (e && e.tipo === 'auth') return 'Token inválido o sin permisos.';
+    if (e && e.tipo === 'no_encontrado') return 'Gist no encontrado.';
+    if (e && e.tipo === 'sin_token') return 'No hay token de GitHub configurado. Tocá "🔐 Configurar token" primero.';
+    if (e && e.tipo === 'sin_gist') return e.message;
+    return (e && e.message) ? e.message : 'Error desconocido al sincronizar con Gist.';
+  }
+
+  const ZONAS_SYNC_GIST = [
+    { zona: 'backup', archivo: 'backup_completo.json', exportar: construirBackupCompleto, importar: (d) => {
+      const r = importarBackupCompleto(d);
+      if (r && r.error) throw new Error(r.error);
+      return r;
+    } },
+    { zona: 'historial', archivo: 'gamificacion_export.json', exportar: construirExportGamificacion, importar: (d) => {
+      fusionarGamificacionImportada(d);
+      return { ok: true };
+    } },
+    { zona: 'dificiles', archivo: 'dificiles_tarjetas.json', exportar: construirExportDificiles, importar: (d) =>
+      fusionarDificilesLista(Array.isArray(d) ? d : (d.tarjetas || [])) },
+    { zona: 'notas', archivo: 'notas_tarjetas.json', exportar: construirExportNotas, importar: (d) =>
+      fusionarNotasLista(Array.isArray(d) ? d : (d.notas || [])) },
+    { zona: 'notaseval', archivo: 'notas_evaluador.json', exportar: construirExportNotasEvaluador, importar: (d) =>
+      fusionarNotasEvaluadorLista(Array.isArray(d) ? d : (d.notasEvaluador || [])) },
+    { zona: 'analisis', archivo: 'analisis_sesion.json', exportar: construirExportAnalisis, importar: (d) =>
+      fusionarAnalisisLista(Array.isArray(d) ? d : (d.analisisGuardados || [])) },
+    { zona: 'retencion', archivo: 'retencion_rutas.json', exportar: construirExportRetencion, importar: (d) =>
+      fusionarRetencionLista(Array.isArray(d) ? d : (d.retencionRutas || [])) },
+    { zona: 'razones', archivo: 'razones_tarjetas.json', exportar: construirExportRazones, importar: (d) =>
+      fusionarRazonesLista(Array.isArray(d) ? d : (d.razones || [])) },
+    { zona: 'imagenes', archivo: 'datos_imagenes.json', exportar: construirExportImagenes, importar: (d) =>
+      fusionarImagenesLista(Array.isArray(d) ? d : (d.imagenes || [])) },
+    { zona: 'listas', archivo: 'listas_guardadas.json', exportar: () => ({ version: 1, listas: listas }), importar: (d) =>
+      fusionarListasEntrantes(Array.isArray(d) ? d : (d.listas || [])) },
+  ];
+
+  async function gistExportarZona(cfg) {
+    try {
+      await gistEscribirArchivo(cfg.archivo, cfg.exportar());
+      await avisar('☁️ Subido a Gist: ' + cfg.archivo);
+      actualizarEstadoGist();
+    } catch (e) {
+      await avisar('☁️ ' + mensajeErrorGist(e));
+    }
+  }
+  async function gistImportarZona(cfg) {
+    try {
+      const datos = await gistLeerArchivo(cfg.archivo);
+      cfg.importar(datos);
+      await avisar('☁️ Importado desde Gist: ' + cfg.archivo);
+      actualizarEstadoGist();
+    } catch (e) {
+      await avisar('☁️ ' + mensajeErrorGist(e));
+    }
+  }
+  ZONAS_SYNC_GIST.forEach((cfg) => {
+    const btnExp = document.getElementById('btn-gist-exportar-' + cfg.zona);
+    const btnImp = document.getElementById('btn-gist-importar-' + cfg.zona);
+    if (btnExp) btnExp.addEventListener('click', () => gistExportarZona(cfg));
+    if (btnImp) btnImp.addEventListener('click', () => gistImportarZona(cfg));
+  });
+
+  function actualizarEstadoGist() {
+    document.getElementById('gist-estado-token').textContent = obtenerTokenGist() ? '🔑 Token: configurado' : '🔑 Token: no configurado';
+    const elInputGistId = document.getElementById('input-gist-id');
+    if (elInputGistId && document.activeElement !== elInputGistId) elInputGistId.value = obtenerGistId();
+  }
+
+  const elModalGistToken = document.getElementById('modal-gist-token');
+  document.getElementById('btn-gist-configurar-token').addEventListener('click', () => {
+    document.getElementById('input-gist-token').value = '';
+    elModalGistToken.classList.add('abierto');
+  });
+  document.getElementById('btn-gist-token-cancelar').addEventListener('click', () => elModalGistToken.classList.remove('abierto'));
+  document.getElementById('btn-gist-token-guardar').addEventListener('click', () => {
+    const v = document.getElementById('input-gist-token').value.trim();
+    if (v) guardarTokenGist(v);
+    elModalGistToken.classList.remove('abierto');
+    actualizarEstadoGist();
+  });
+  document.getElementById('btn-gist-cerrar-sesion').addEventListener('click', () => {
+    borrarTokenGist();
+    actualizarEstadoGist();
+  });
+  document.getElementById('input-gist-id').addEventListener('change', (evento) => {
+    guardarGistId(evento.target.value.trim());
+  });
+
   const elModalSync = document.getElementById('modal-sync');
   function abrirModalSync() {
     actualizarIndicadorSync();
     document.getElementById('sync-backup-info').textContent = '';
+    actualizarEstadoGist();
     elModalSync.classList.add('abierto');
   }
   document.getElementById('btn-abrir-sync').addEventListener('click', () => abrirModalSync());
@@ -7448,6 +7850,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (cambio) {
         lista.hashes = nuevos;
         lista.modificada = Date.now();
+        lista.rev = siguienteRev();
         lista.espacio = ESPACIO_HASH;   // NUEVO: tras migrar, pasa a ser una lista de ESTE evaluador
       }
       return nuevos.length > 0;
@@ -7676,6 +8079,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     notasEvaluador.forEach((n) => { if (n.espacio && n.espacio !== ESPACIO_HASH) set.add(n.espacio); });
     retencionRutas.forEach((r) => { if (r.espacio && r.espacio !== ESPACIO_HASH) set.add(r.espacio); });
     analisisGuardados.forEach((a) => { if (a.espacio && a.espacio !== ESPACIO_HASH) set.add(a.espacio); });
+    Object.values(dificiles).forEach((v) => { if (v.espacio && v.espacio !== ESPACIO_HASH) set.add(v.espacio); });
+    Object.values(notasLocales).forEach((v) => { if (v.espacio && v.espacio !== ESPACIO_HASH) set.add(v.espacio); });
+    Object.values(razonesGuardadas).forEach((v) => { if (v.espacio && v.espacio !== ESPACIO_HASH) set.add(v.espacio); });
+    Object.values(datosImagenes).forEach((v) => { if (v.espacio && v.espacio !== ESPACIO_HASH) set.add(v.espacio); });
     return Array.from(set).sort();
   }
 
@@ -7726,17 +8133,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     guardarGamificacion();
 
     const hashesTarjetas = new Set(tarjetasCompletas.map((t) => hashTarjetaCon(espacio, t)));
-    hashesTarjetas.forEach((h) => {
-      delete dificiles[h];
-      delete notasLocales[h];
-      delete razonesGuardadas[h];
+    Object.keys(dificiles).forEach((h) => {
+      if (hashesTarjetas.has(h) || dificiles[h].espacio === espacio) delete dificiles[h];
+    });
+    Object.keys(notasLocales).forEach((h) => {
+      if (hashesTarjetas.has(h) || notasLocales[h].espacio === espacio) delete notasLocales[h];
+    });
+    Object.keys(razonesGuardadas).forEach((h) => {
+      if (hashesTarjetas.has(h) || razonesGuardadas[h].espacio === espacio) delete razonesGuardadas[h];
     });
     guardarDificiles();
     guardarNotas();
     guardarRazones();
 
-    INDICE_IMAGENES.forEach((c) => {
-      delete datosImagenes[hashImagenCon(espacio, c.ruta, c.indice)];
+    const hashesImagenes = new Set(INDICE_IMAGENES.map((c) => hashImagenCon(espacio, c.ruta, c.indice)));
+    Object.keys(datosImagenes).forEach((h) => {
+      if (hashesImagenes.has(h) || datosImagenes[h].espacio === espacio) delete datosImagenes[h];
     });
     guardarImagenesStorage();
 
@@ -8238,6 +8650,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
+    if (hash !== hashImagen(entrada.ruta, entrada.indice)) {
+      acc.appendChild(botonMini('🔗 Vincular a este evaluador', () => abrirModalVincular('imagenes', entrada.espacio)));
+    }
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar la nota y la marca de difícil de esta imagen?'))) return;
       delete datosImagenes[hash];
@@ -8263,6 +8678,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         invalidas++;
         return;
       }
+      const local = datosImagenes[item.h];
       const entrada = {
         ruta: item.ruta,
         indice: item.indice,
@@ -8270,15 +8686,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         base: typeof item.base === 'string' ? item.base : '',
         dificil: !!item.dificil,
         t: typeof item.t === 'number' ? item.t : 0,
+        rev: typeof item.rev === 'number' ? item.rev : undefined,
+        espacio: (typeof item.espacio === 'string' && item.espacio) ? item.espacio : ((local && local.espacio) ? local.espacio : ESPACIO_HASH),
       };
-      const local = datosImagenes[item.h];
+      registrarRevVista(entrada.rev);
       if (!local) {
         datosImagenes[item.h] = entrada;
         nuevas++;
       } else if ((local.nota || '') === entrada.nota && !!local.dificil === entrada.dificil &&
                  (local.base || '') === entrada.base) {
         iguales++;
-      } else if (entrada.t > (local.t || 0)) {
+      } else if (entranteEsMasReciente(entrada.rev, entrada.t, local.rev, local.t)) {
         datosImagenes[item.h] = entrada;
         actualizadas++;
       } else {
@@ -8307,6 +8725,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       base: datosImagenes[h].base || '',
       dificil: !!datosImagenes[h].dificil,
       t: datosImagenes[h].t || 0,
+      rev: typeof datosImagenes[h].rev === 'number' ? datosImagenes[h].rev : undefined,
+      espacio: datosImagenes[h].espacio || ESPACIO_HASH,
     }));
     return { version: 1, imagenes: lista };
   }
@@ -8414,7 +8834,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       let p = v.p || '', s = v.s || '';
       const enEste = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
       if (enEste) { p = enEste.primero || ''; s = enEste.segundo || ''; }
-      const fila = filaDificil(h, p, s, grupo !== 'desm');
+      const fila = filaDificil(h, p, s, grupo !== 'desm', grupo === 'otros' ? v.espacio : null);
       elLista.appendChild(fila);
       nodosDificiles.set(h, { fila: fila, grupo: grupo });
     });
@@ -8476,13 +8896,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const enTarjetas = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
     const p = enTarjetas ? (enTarjetas.primero || '') : (v.p || '');
     const s = enTarjetas ? (enTarjetas.segundo || '') : (v.s || '');
-    const fila = filaDificil(h, p, s, nuevoGrupo !== 'desm');
+    const fila = filaDificil(h, p, s, nuevoGrupo !== 'desm', nuevoGrupo === 'otros' ? v.espacio : null);
     contenedorDeGrupoDificil(nuevoGrupo).appendChild(fila);
     nodosDificiles.set(h, { fila: fila, grupo: nuevoGrupo });
     actualizarContadoresDificiles();
   }
 
-  function filaDificil(h, p, s, activa) {
+  function filaDificil(h, p, s, activa, espacioOtro) {
     const label = document.createElement('label');
     label.className = 'item-tema-check';
 
@@ -8511,6 +8931,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       extra.className = 'extra-dificil';
       extra.textContent = '— ' + s;
       label.appendChild(extra);
+    }
+
+    if (espacioOtro) {
+      const btnVinc = botonMini('🔗 Vincular a este evaluador', (evento) => {
+        evento.preventDefault();
+        abrirModalVincular('dificiles', espacioOtro);
+      });
+      btnVinc.style.marginLeft = '8px';
+      label.appendChild(btnVinc);
     }
 
     return label;
@@ -8548,6 +8977,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         p: dificiles[h].p || '',
         s: dificiles[h].s || '',
         t: dificiles[h].t || 0,
+        espacio: dificiles[h].espacio || ESPACIO_HASH,
       }));
     return { version: 1, tarjetas: lista };
   }
@@ -8604,6 +9034,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         s: typeof item.s === 'string' ? item.s : '',
         activa: true,
         t: typeof item.t === 'number' ? item.t : Date.now(),
+        espacio: typeof item.espacio === 'string' && item.espacio ? item.espacio : ESPACIO_HASH,
       };
       nuevas++;
     });
@@ -8779,6 +9210,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     div.appendChild(bloqueVersion('Mi nota', nota !== '' ? nota : '(nota borrada)', false, nota === ''));
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🔗 Vincular a este evaluador', () => abrirModalVincular('notas', v.espacio)));
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
       delete notasLocales[h];
@@ -8805,20 +9237,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         invalidas++;
         return;
       }
+      const local = notasLocales[item.h];
       const entrada = {
         p: typeof item.p === 'string' ? item.p : '',
         s: typeof item.s === 'string' ? item.s : '',
         nota: item.nota,
         base: typeof item.base === 'string' ? item.base : '',
         t: typeof item.t === 'number' ? item.t : 0,
+        rev: typeof item.rev === 'number' ? item.rev : undefined,
+        espacio: (typeof item.espacio === 'string' && item.espacio) ? item.espacio : ((local && local.espacio) ? local.espacio : ESPACIO_HASH),
       };
-      const local = notasLocales[item.h];
+      registrarRevVista(entrada.rev);
       if (!local) {
         notasLocales[item.h] = entrada;
         nuevas++;
       } else if ((local.nota || '') === entrada.nota) {
         iguales++;
-      } else if (entrada.t > (local.t || 0)) {
+      } else if (entranteEsMasReciente(entrada.rev, entrada.t, local.rev, local.t)) {
         notasLocales[item.h] = entrada;
         actualizadas++;
       } else {
@@ -8846,6 +9281,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       nota: notasLocales[h].nota || '',
       base: notasLocales[h].base || '',
       t: notasLocales[h].t || 0,
+      rev: typeof notasLocales[h].rev === 'number' ? notasLocales[h].rev : undefined,
+      espacio: notasLocales[h].espacio || ESPACIO_HASH,
     }));
     return { version: 1, notas: lista };
   }
@@ -8940,6 +9377,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       espacio: ESPACIO_HASH,
       creada: Date.now(),
       modificada: Date.now(),
+      rev: siguienteRev(),
     });
     guardarNotasEvaluador();
     elNotaEvalTextoNueva.value = '';
@@ -8975,6 +9413,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     nota.texto = texto;
     nota.categoria = notaEvalCategoriaEdicion || '';
     nota.modificada = Date.now();
+    nota.rev = siguienteRev();
     guardarNotasEvaluador();
     notaEvalEditandoId = null;
     notaEvalCategoriaEdicion = null;
@@ -9234,14 +9673,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         espacio: typeof item.espacio === 'string' && item.espacio ? item.espacio : ESPACIO_HASH,
         creada: typeof item.creada === 'number' ? item.creada : Date.now(),
         modificada: typeof item.modificada === 'number' ? item.modificada : Date.now(),
+        rev: typeof item.rev === 'number' ? item.rev : undefined,
       };
+      registrarRevVista(entrante.rev);
       const local = notasEvaluador.find((n) => n.id === entrante.id);
       if (!local) {
         notasEvaluador.push(entrante);
         nuevas++;
       } else if (local.texto === entrante.texto && (local.categoria || '') === (entrante.categoria || '')) {
         iguales++;
-      } else if (entrante.modificada > (local.modificada || 0)) {
+      } else if (entranteEsMasReciente(entrante.rev, entrante.modificada, local.rev, local.modificada)) {
         Object.assign(local, entrante);
         actualizadas++;
       } else {
@@ -9308,6 +9749,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   let retencionRutas = cargarRetencionRutas();
+  const MAX_RETENCION_RUTAS = 10;   // NUEVO: mismo tope que análisis de sesión
+
+  function limitarRetencionRutas() {
+    retencionRutas.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    while (retencionRutas.length > MAX_RETENCION_RUTAS) retencionRutas.shift();
+  }
 
   function guardarRetencionRutasYa() {
     try {
@@ -9448,29 +9895,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const RETENCION_POR_PAGINA = 15;
   let retencionHistorialPaginaActual = 1;
 
-  function filaRetencionHistorial(entrada) {
-    const div = document.createElement('div');
-    div.className = 'retencion-entrada';
-
-    const cab = document.createElement('div');
-    cab.className = 'retencion-entrada-cabecera';
-    cab.textContent = formatearFechaLista(entrada.timestamp || 0);
-    div.appendChild(cab);
-
+  function construirDetalleRetencionHistorial(entrada, contenedor) {
     const l1 = document.createElement('div');
     l1.className = 'retencion-entrada-linea';
     l1.textContent = '⏲️ Ciclos: ' + entrada.ciclos;
-    div.appendChild(l1);
+    contenedor.appendChild(l1);
 
     const l2 = document.createElement('div');
     l2.className = 'retencion-entrada-linea';
     l2.textContent = '📖 Lectura: ' + formatoMMSS(entrada.tiempoLecturaSeg) + ' · 🧠 Retención: ' + formatoMMSS(entrada.tiempoRetencionSeg) + ' · ⏱ Total: ' + formatoMMSS(entrada.tiempoTotalSeg);
-    div.appendChild(l2);
+    contenedor.appendChild(l2);
 
     const l3 = document.createElement('div');
     l3.className = 'retencion-entrada-linea';
     l3.textContent = '✅ Retenidas: ' + entrada.retenidas + ' (' + entrada.pctRetenidas + '%) · ❌ No retenidas: ' + entrada.noRetenidas + ' (' + entrada.pctNoRetenidas + '%) · ⚠️ Difíciles: ' + entrada.dificiles + ' (' + entrada.pctDificiles + '%)';
-    div.appendChild(l3);
+    contenedor.appendChild(l3);
 
     const acc = document.createElement('div');
     acc.className = 'retencion-entrada-acciones';
@@ -9478,11 +9917,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (!(await confirmarAccion('¿Borrar esta entrada del registro de retención? No se puede deshacer.'))) return;
       retencionRutas = retencionRutas.filter((r) => r.id !== entrada.id);
       guardarRetencionRutas();
+      subtRepasarConstruido = false;
+      sesgoConfianzaConstruido = false;
       renderRetencionHistorial();
     }));
-    div.appendChild(acc);
+    contenedor.appendChild(acc);
+  }
 
-    return div;
+  function filaRetencionHistorial(entrada) {
+    // NUEVO: <details> con render lazy del cuerpo, igual que análisis de sesión (filaAnalisisGuardado).
+    const det = document.createElement('details');
+    det.className = 'retencion-entrada';
+    const sum = document.createElement('summary');
+    sum.textContent = formatearFechaLista(entrada.timestamp || 0) +
+      ' — ✅' + entrada.pctRetenidas + '% ❌' + entrada.pctNoRetenidas + '% ⚠️' + entrada.pctDificiles + '%';
+    det.appendChild(sum);
+    const cont = document.createElement('div');
+    det.appendChild(cont);
+    prepararDetallesLazy(det, () => construirDetalleRetencionHistorial(entrada, cont));
+    return det;
   }
 
   function filaRetencionHistorialOtra(entrada) {
@@ -9558,24 +10011,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function renderRetencionHistorial() {
+    // NUEVO: ya no pagina — el registro propio está topado en MAX_RETENCION_RUTAS, igual que análisis de sesión.
     const propias = retencionPropias().slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     const elLista = document.getElementById('retencion-historial-lista');
     const elVacio = document.getElementById('retencion-historial-vacio');
     elLista.innerHTML = '';
+    document.getElementById('retencion-historial-paginacion').style.display = 'none';
 
     if (propias.length === 0) {
       elVacio.style.display = 'block';
-      document.getElementById('retencion-historial-paginacion').style.display = 'none';
     } else {
       elVacio.style.display = 'none';
-      const totalPaginas = Math.max(1, Math.ceil(propias.length / RETENCION_POR_PAGINA));
-      if (retencionHistorialPaginaActual > totalPaginas) retencionHistorialPaginaActual = totalPaginas;
-      if (retencionHistorialPaginaActual < 1) retencionHistorialPaginaActual = 1;
-      const inicio = (retencionHistorialPaginaActual - 1) * RETENCION_POR_PAGINA;
-      propias.slice(inicio, inicio + RETENCION_POR_PAGINA).forEach((entrada) => {
-        elLista.appendChild(filaRetencionHistorial(entrada));
-      });
-      renderRetencionHistorialPaginacion(totalPaginas);
+      propias.forEach((entrada) => elLista.appendChild(filaRetencionHistorial(entrada)));
     }
 
     document.getElementById('btn-vaciar-retencion').style.display = retencionRutas.length > 0 ? 'inline-block' : 'none';
@@ -9600,6 +10047,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!(await confirmarAccion('¿Vaciar TODO el registro de retención de rutas? No se puede deshacer.'))) return;
     retencionRutas = [];
     guardarRetencionRutas();
+    subtRepasarConstruido = false;
+    sesgoConfianzaConstruido = false;
     renderRetencionHistorial();
   });
 
@@ -9622,7 +10071,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }));
       nuevas++;
     });
+    limitarRetencionRutas();
     guardarRetencionRutas();
+    subtRepasarConstruido = false;
+    sesgoConfianzaConstruido = false;
     renderRetencionHistorial();
     return { nuevas: nuevas, actualizadas: 0, conservadas: conservadas, iguales: 0, invalidas: invalidas };
   }
@@ -9695,6 +10147,56 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       pctDificiles: Math.round((dificiles / total) * 100),
       rutas: detalle,
     };
+  }
+
+  function etiquetaRetencionTexto(pct) {
+    if (pct < 50) return 'mal';
+    if (pct < 70) return 'regular';
+    return 'bien';
+  }
+
+  function poblarAnalisisRetencionPomodoro(entrada) {
+    const el = document.getElementById('pomodoro-resumen-analisis-retencion');
+    if (!entrada || !Array.isArray(entrada.rutas) || entrada.rutas.length === 0) {
+      el.style.display = 'none';
+      el.textContent = '';
+      return;
+    }
+    const porSubt = {};
+    entrada.rutas.forEach((r) => {
+      const nombre = r.subtema || '(Sin tema)';
+      if (!porSubt[nombre]) porSubt[nombre] = { total: 0, retenidas: 0 };
+      porSubt[nombre].total++;
+      if (r.retenida) porSubt[nombre].retenidas++;
+    });
+    const totalGlobal = entrada.rutas.length;
+    const retenidasGlobal = entrada.rutas.filter((r) => r.retenida).length;
+    const pctGlobal = Math.round((retenidasGlobal / totalGlobal) * 100);
+
+    const problematicos = Object.keys(porSubt)
+      .map((nombre) => ({ nombre: nombre, pct: Math.round((porSubt[nombre].retenidas / porSubt[nombre].total) * 100) }))
+      .filter((f) => f.pct < 50)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+    const lineas = [];
+    if (pctGlobal < 50) {
+      lineas.push('⚠️ Retuviste el ' + pctGlobal + '% de las rutas citadas. Todavía no conviene evaluarte: conviene repasar más antes.');
+    }
+    if (problematicos.length > 0) {
+      if (lineas.length > 0) lineas.push('');
+      lineas.push('Subtemas a repasar (retención < 50%):');
+      problematicos.forEach((f) => {
+        lineas.push('• ' + f.nombre + ': ' + f.pct + '% (' + etiquetaRetencionTexto(f.pct) + ')');
+      });
+    }
+
+    if (lineas.length === 0) {
+      el.style.display = 'none';
+      el.textContent = '';
+      return;
+    }
+    el.style.display = 'block';
+    el.innerHTML = lineas.join('<br>');
   }
 
   function poblarResumenRetencionRutas(entrada) {
@@ -10060,8 +10562,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function sesionesSrsDeLista(nombre) {
+    // NUEVO: una sesión cuenta para esta lista si fue solo de esta lista (listado === nombre)
+    // o si fue una sesión "SRS Múltiple" que incluyó esta lista (niveles_srs[nombre] presente).
     return gamificacion.historial
-      .filter((s) => espacioDeSesion(s) === ESPACIO_HASH && s.modo === 'srs' && s.listado === nombre)
+      .filter((s) => espacioDeSesion(s) === ESPACIO_HASH && s.modo === 'srs' &&
+        (s.listado === nombre || (s.niveles_srs && typeof s.niveles_srs[nombre] === 'number')))
       .slice()
       .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)))
       .slice(-10);
@@ -10076,7 +10581,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const nombresConHistoria = new Set();
     gamificacion.historial.forEach((s) => {
-      if (espacioDeSesion(s) === ESPACIO_HASH && s.modo === 'srs' && s.listado && s.listado !== 'SRS Múltiple') {
+      if (espacioDeSesion(s) !== ESPACIO_HASH || s.modo !== 'srs') return;
+      // NUEVO: una sesión "SRS Múltiple" guarda el nivel de cada lista en niveles_srs,
+      // así que también debe alimentar el gráfico de línea de cada una de esas listas.
+      if (s.niveles_srs && typeof s.niveles_srs === 'object') {
+        Object.keys(s.niveles_srs).forEach((nombre) => nombresConHistoria.add(nombre));
+      } else if (s.listado && s.listado !== 'SRS Múltiple') {
         nombresConHistoria.add(s.listado);
       }
     });
@@ -10118,8 +10628,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
+  function analisisPropiosParaScore() { return analisisPropios().filter((a) => a.modo !== 'examen'); }
+
   function promedioCampoAnalisis(nombreSubtema, campo) {
-    const propios = analisisPropios().slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 10);
+    const propios = analisisPropiosParaScore().slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 10);
     const valores = [];
     propios.forEach((entrada) => {
       (entrada.subT || []).forEach((s) => {
@@ -10131,7 +10643,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function tieneAnalisisGuardado(nombreSubtema) {
-    return analisisPropios().some((entrada) => (entrada.subT || []).some((s) => s.nombre === nombreSubtema));
+    return analisisPropiosParaScore().some((entrada) => (entrada.subT || []).some((s) => s.nombre === nombreSubtema));
   }
 
   function pctNoRetenidaPorSubtema(nombreSubtema) {
@@ -10391,6 +10903,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
+    if (grupoActualRazon(hash) === 'otras') {
+      acc.appendChild(botonMini('🔗 Vincular a este evaluador', () => abrirModalVincular('razones', entrada.espacio)));
+    }
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar por completo este registro de razones?'))) return;
       delete razonesGuardadas[hash];
@@ -10418,21 +10933,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         return;
       }
       const codigosValidos = item.razones.filter((c) => MAPA_RAZONES.has(c));
+      const local = razonesGuardadas[item.h];
       const entrada = {
         p: typeof item.p === 'string' ? item.p : '',
         s: typeof item.s === 'string' ? item.s : '',
         razones: codigosValidos,
         estado: typeof item.estado === 'string' ? item.estado : null,
         t: typeof item.t === 'number' ? item.t : 0,
+        rev: typeof item.rev === 'number' ? item.rev : undefined,
+        espacio: (typeof item.espacio === 'string' && item.espacio) ? item.espacio : ((local && local.espacio) ? local.espacio : ESPACIO_HASH),
       };
-      const local = razonesGuardadas[item.h];
+      registrarRevVista(entrada.rev);
       if (!local) {
         razonesGuardadas[item.h] = entrada;
         nuevas++;
       } else if (JSON.stringify((local.razones || []).slice().sort()) === JSON.stringify(entrada.razones.slice().sort()) &&
                  (local.estado || null) === entrada.estado) {
         iguales++;
-      } else if (entrada.t > (local.t || 0)) {
+      } else if (entranteEsMasReciente(entrada.rev, entrada.t, local.rev, local.t)) {
         razonesGuardadas[item.h] = entrada;
         actualizadas++;
       } else {
@@ -10460,6 +10978,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       razones: razonesGuardadas[h].razones || [],
       estado: razonesGuardadas[h].estado || null,
       t: razonesGuardadas[h].t || 0,
+      rev: typeof razonesGuardadas[h].rev === 'number' ? razonesGuardadas[h].rev : undefined,
+      espacio: razonesGuardadas[h].espacio || ESPACIO_HASH,
     }));
     return { version: 1, razones: lista };
   }
@@ -10510,6 +11030,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
 
   function iniciarSesion(lista) {
+    detenerCountdownExamen();
     modoObservador = false;
     elAreaTarjeta.classList.remove('observador');
     tarjetasSesion = lista;
@@ -10595,13 +11116,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elSeparador.style.display = actual.segundo ? 'block' : 'none';
       elSegundo.style.display = actual.segundo ? 'block' : 'none';
     } else {
-      elBtnPista.style.display = 'inline-block';
+      elBtnPista.style.display = modoJuego === 'examen' ? 'none' : 'inline-block';
       elSeparador.style.display = 'none';
       elSegundo.style.display = 'none';
     }
 
     const validas = rutasValidasDe(actual);
-    elBtnRespuesta.style.display = (validas.length > 0 && !respuestaMostrada[indiceActual])
+    elBtnRespuesta.style.display = (modoJuego !== 'examen' && validas.length > 0 && !respuestaMostrada[indiceActual])
       ? 'inline-block' : 'none';
 
     elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
@@ -10647,6 +11168,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     elBtnAnterior.disabled = indiceActual === 0;
     elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+    elBtnAnterior.style.display = modoJuego === 'examen' ? 'none' : 'inline-block';
+    elBtnSiguiente.style.display = modoJuego === 'examen' ? 'none' : 'inline-block';
 
     const puedeEvaluar = (marcada === null) && evaluable(actual);
     const textoGuardado = escritos[indiceActual] || '';
@@ -10665,8 +11188,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         ));
       } else {
         elRespuestaUsuarioResaltada.style.display = 'none';
-        elTextoEval.style.display = 'block';
-        elBtnDictadoTextoEval.style.display = 'flex';
+        const soloOral = modoJuego === 'examen' && interaccionExamen === 'oral';
+        const soloEscrito = modoJuego === 'examen' && interaccionExamen === 'escrito';
+        elTextoEval.style.display = soloOral ? 'none' : 'block';
+        elBtnDictadoTextoEval.style.display = soloEscrito ? 'none' : 'flex';
         elTextoEval.value = textoGuardado;
         elTextoEval.readOnly = !puedeEvaluar;
       }
@@ -10700,6 +11225,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderRazones(actual);  // NUEVO: botón 🏷 + panel de razones
 
     renderRutas(actual);
+
+    actualizarCountdownExamen();
 
     elTarjeta.style.animation = 'none';
     void elTarjeta.offsetWidth;
@@ -11047,7 +11574,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function puedeSegundaOportunidad(idx) {
     if (modoObservador || modoZombie || segundaPendiente) return false;
-    if (modoJuego === 'light') return false;   // CORREGIDO: consumible de Normal/Tryhard, no de Light
+    if (esModoSinGamificacion()) return false;   // CORREGIDO: consumible de Normal/Tryhard, no de Light
     if ((gamificacion.inventario.segundasOportunidades || 0) <= 0) return false;
     return !reintentadasSesion.has(tarjetasSesion[idx]);
   }
@@ -11101,7 +11628,44 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function avisoReintentoAcertado(idx) {
     const pts = puntosPorTarjeta[idx] || 0;
     mostrarAviso('🔁 Reintento acertado: recompensa reducida al ' + Math.round(FACTOR_RECOMPENSA_REINTENTO * 100) + ' %' +
-      (modoJuego !== 'light' ? ' (+' + pts + ' pts)' : '') + '. Tu racha crece normal.');
+      (!esModoSinGamificacion() ? ' (+' + pts + ' pts)' : '') + '. Tu racha crece normal.');
+  }
+
+  function detenerCountdownExamen() {
+    if (countdownExamenId) { clearInterval(countdownExamenId); countdownExamenId = null; }
+    elCountdownExamen.style.display = 'none';
+    countdownIndiceActivo = -1;
+  }
+
+  function tiempoAgotadoExamen() {
+    if (resultados[indiceActual] !== null) return;
+    const texto = (elTextoEval.value || '').trim();
+    if (texto !== '' && evaluable(tarjetasSesion[indiceActual])) {
+      evaluarRespuesta();
+    } else {
+      marcar('no');
+    }
+  }
+
+  function actualizarCountdownExamen() {
+    if (modoJuego !== 'examen') { detenerCountdownExamen(); return; }
+    if (resultados[indiceActual] !== null) { detenerCountdownExamen(); return; }
+    if (countdownIndiceActivo === indiceActual && countdownExamenId) return;
+    detenerCountdownExamen();
+    countdownIndiceActivo = indiceActual;
+    countdownExamenRestante = segundosPorTarjetaExamen;
+    elCountdownExamen.style.display = 'inline-block';
+    elCountdownExamen.textContent = '⏳ ' + countdownExamenRestante + 's';
+    countdownExamenId = setInterval(() => {
+      if (pausaManual) return;
+      countdownExamenRestante--;
+      if (countdownExamenRestante <= 0) {
+        detenerCountdownExamen();
+        tiempoAgotadoExamen();
+        return;
+      }
+      elCountdownExamen.textContent = '⏳ ' + countdownExamenRestante + 's';
+    }, 1000);
   }
 
   function evaluarRespuesta() {
@@ -11240,7 +11804,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     resetPanelesUI();
 
     let comodinUsado = false;
-    if (!modoObservador && !modoZombie && modoJuego !== 'light' && resultado === 'saltar' && gamificacion.inventario.comodines > 0) {
+    if (!modoObservador && !modoZombie && !esModoSinGamificacion() && resultado === 'saltar' && gamificacion.inventario.comodines > 0) {
       gamificacion.inventario.comodines--;
       comodinUsado = true;
       guardarGamificacion();
@@ -11604,6 +12168,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         razones: razonesPendientes.slice(),
         estado: resultados[indiceActual],
         t: Date.now(),
+        rev: siguienteRev(),
+        espacio: ESPACIO_HASH,
       };
     }
     guardarRazones();
@@ -11671,7 +12237,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elBtnPista.addEventListener('click', () => {
     revelado[indiceActual] = true;
     pistaMostrada[indiceActual] = true;
-    if (!modoObservador && !modoZombie && modoJuego !== 'light' && gamificacion.inventario.pistasGratis > 0) {
+    if (!modoObservador && !modoZombie && !esModoSinGamificacion() && gamificacion.inventario.pistasGratis > 0) {
       gamificacion.inventario.pistasGratis--;
       pistaGratisUsadaPorTarjeta[indiceActual] = true;
       guardarGamificacion();
@@ -11783,6 +12349,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   async function finalizarSesion() {
     if (!(await confirmarDescartarBorrador())) return;
+    detenerCountdownExamen();
     if (cronometroActivo && !cronometroCongelado()) {
       acumularTiempo();
     }
@@ -12123,6 +12690,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       srs.lastReviewDate = Date.now();
       srs.snoozeUntil = 0;
       lista.modificada = Date.now();
+      lista.rev = siguienteRev();
     });
     guardarListas();
     srsSesionActiva = null;
@@ -12155,6 +12723,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     srsListasVencidasAviso.forEach((l) => {
       obtenerSrsLista(l).snoozeUntil = manana.getTime();
       l.modificada = Date.now();
+      l.rev = siguienteRev();
     });
     guardarListas();
     document.getElementById('modal-srs-aviso').classList.remove('abierto');
@@ -12163,6 +12732,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     srsListasVencidasAviso.forEach((l) => {
       obtenerSrsLista(l).snoozeUntil = Date.now() + 7200000;   // 2 horas
       l.modificada = Date.now();
+      l.rev = siguienteRev();
     });
     guardarListas();
     document.getElementById('modal-srs-aviso').classList.remove('abierto');
@@ -12471,10 +13041,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const entradaRetencion = construirEntradaRetencion(totalSeg);
     if (entradaRetencion) {
       retencionRutas.push(entradaRetencion);
+      limitarRetencionRutas();
       guardarRetencionRutas();
       estadisticasConstruidas = false;
+      subtRepasarConstruido = false;
+      sesgoConfianzaConstruido = false;
     }
     poblarResumenRetencionRutas(entradaRetencion);
+    poblarAnalisisRetencionPomodoro(entradaRetencion);
 
     pomodoroActivo = false;
     pomodoroRetencionPresionada = false;
