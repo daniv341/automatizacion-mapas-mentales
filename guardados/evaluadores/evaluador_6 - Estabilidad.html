@@ -5087,9 +5087,12 @@
       if (opciones.conPista) return 8;
       return 15;
     }
-    if (resultado === 'casi') return 3;
+    if (resultado === 'casi') return modoEspecial === 'cloze' ? 8 : 3;
     if (resultado === 'no') return 0;
-    if (resultado === 'saltar') return opciones.comodinUsado ? 0 : -5;
+    if (resultado === 'saltar') {
+      if (modoEspecial === 'cloze') return 0;
+      return opciones.comodinUsado ? 0 : -5;
+    }
     return 0;
   }
 
