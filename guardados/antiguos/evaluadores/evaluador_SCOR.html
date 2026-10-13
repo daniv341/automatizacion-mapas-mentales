@@ -1969,6 +1969,7 @@
   }
   .toggle-retencion.activa-retenida { background: #d4edda; color: #155724; border-color: #8fcf9f; }
   .toggle-retencion.activa-dificil { background: #ffe3cc; color: #8a4b00; border-color: #e0a860; }
+  .toggle-retencion.activa-nota { background: #FFF3C4; color: #8a6d00; border-color: #e0c860; }
 
   .retencion-entrada {
     border: 1.5px solid var(--color-borde-suave);
@@ -2105,6 +2106,197 @@
     color: var(--texto-tenue);
     text-align: center;
   }
+
+  .cloze-contenedor {
+    font-size: 15.5px;
+    line-height: 2;
+    color: var(--texto-principal);
+    background: var(--bg-superficie);
+    border: 2px solid var(--color-borde-medio);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .cloze-input {
+    display: inline-block;
+    border: none;
+    border-bottom: 2px solid var(--color-boton);
+    background: var(--bg-superficie-alt);
+    color: var(--texto-fuerte);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 2px 6px;
+    margin: 0 3px;
+    border-radius: 4px 4px 0 0;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .cloze-input:focus {
+    background: var(--bg-superficie-hover);
+    box-shadow: 0 2px 0 0 var(--color-boton);
+  }
+
+  .cloze-input.correcto {
+    border-bottom-color: #3aa76d;
+    background: rgba(58, 167, 109, 0.15);
+    color: #2e7d32;
+  }
+
+  .cloze-input.incorrecto {
+    border-bottom-color: #e0574c;
+    background: rgba(224, 87, 76, 0.15);
+    color: #c0392b;
+    text-decoration: line-through;
+  }
+
+  .cloze-correccion {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3aa76d;
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
+  .matching-contenedor {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    text-align: left;
+    margin-top: 8px;
+  }
+
+  .matching-seccion-titulo {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--texto-suave);
+    margin-bottom: 8px;
+  }
+
+  .matching-primeros-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .matching-primero-btn {
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 2px solid var(--color-borde-medio);
+    background: var(--bg-superficie);
+    color: var(--texto-principal);
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  }
+
+  .matching-primero-btn:hover:not(:disabled) {
+    background: var(--bg-superficie-hover);
+    border-color: var(--color-boton);
+  }
+
+  .matching-primero-btn.seleccionado {
+    border-color: var(--color-boton);
+    background: color-mix(in srgb, var(--color-boton) 12%, var(--bg-superficie));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-boton) 25%, transparent);
+  }
+
+  .matching-primero-btn.evaluado-bien {
+    border-color: #3aa76d;
+    background: rgba(58, 167, 109, 0.12);
+    color: #2e7d32;
+    cursor: default;
+  }
+
+  .matching-primero-btn.evaluado-mal {
+    border-color: #e0574c;
+    background: rgba(224, 87, 76, 0.12);
+    color: #c0392b;
+    cursor: default;
+  }
+
+  .matching-primero-badge {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--bg-superficie-alt);
+    color: var(--texto-secundario);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .matching-rutas-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .ruta-acordeon.matching-asociada-temp {
+    border: 2px solid var(--color-boton);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-boton) 20%, transparent);
+  }
+
+  .ruta-acordeon.matching-asociada-bien {
+    border: 2px solid #3aa76d;
+  }
+
+  .ruta-acordeon.matching-asociada-mal {
+    border: 2px solid #e0574c;
+  }
+
+  .ruta-acordeon.matching-bloqueada {
+    opacity: 0.72;
+  }
+
+  .matching-ruta-acciones {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-borde-suave);
+  }
+
+  .btn-asociar-ruta {
+    padding: 6px 16px;
+    border-radius: 16px;
+    border: 2px solid var(--color-boton);
+    background: var(--bg-superficie);
+    color: var(--color-boton);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .btn-asociar-ruta.asociada {
+    background: var(--color-boton);
+    color: #fff;
+  }
+
+  .btn-asociar-ruta:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 </style>
 </head>
 <body>
@@ -2140,6 +2332,7 @@
       <button class="boton-modo" id="btn-modo-completo" title="Estudia todas las tarjetas, ignora los temas marcados">Evaluación completa</button>
       <button class="boton-modo" id="btn-modo-dificiles" title="Estudia solo las tarjetas marcadas como difíciles en sesiones anteriores" disabled>Repasar difíciles (0)</button>
       <button class="boton-modo" id="btn-modo-observador" title="Recorrer las tarjetas sin evaluarte: ver, editar notas, marcar difíciles">👁 Modo observador</button>
+      <button class="boton-modo" id="btn-otros-modos" title="Jugar modos Cloze Deletion o Matching Pairs">🎮 Otros Modos</button>
     </div>
 
     <div class="lista-temas zona-dificiles" id="zona-dificiles">
@@ -2909,6 +3102,23 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-nota-duda-ruta">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3 id="titulo-modal-duda-ruta">💡 Nota de ruta</h3>
+    <div class="fila-chips-mini" style="justify-content:center; margin-bottom:6px;">
+      <span class="chip-razon chico" id="chip-modal-duda-ruta"></span>
+    </div>
+    <div class="wrap-dictado">
+      <textarea class="panel-nota-editor" id="duda-ruta-editor" style="display:block;" rows="4" placeholder="Escribí tu duda o nota sobre esta ruta (Ctrl+Enter para guardar)"></textarea>
+      <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-duda-ruta" data-dictado-target="duda-ruta-editor" title="Dictado por voz">🎙</button>
+    </div>
+    <div class="panel-razones-acciones" style="justify-content:center; margin-top:12px;">
+      <button class="boton-mini" id="btn-duda-ruta-guardar">Guardar</button>
+      <button class="modal-cancelar" id="btn-duda-ruta-cerrar">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-estadisticas">
   <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
     <h3>📊 Estadísticas</h3>
@@ -2936,6 +3146,26 @@
       <button class="boton-mini boton-mini-peligro" id="btn-vaciar-analisis" style="display:none; margin-top:10px;">Vaciar todas</button>
     </div>
     <button class="modal-cancelar" id="btn-estadisticas-cerrar">Cerrar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-otros-modos">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>🎮 Otros Modos</h3>
+    <div class="opciones-modo">
+      <button type="button" class="opcion-modo seleccionada" id="opcion-otro-cloze" data-otro-modo="cloze">
+        <span class="opcion-modo-icono">📝</span>
+        <span class="opcion-modo-nombre">Cloze Deletion</span>
+        <span class="opcion-modo-detalle">Completá los huecos del texto</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-otro-matching" data-otro-modo="matching">
+        <span class="opcion-modo-icono">🔗</span>
+        <span class="opcion-modo-nombre">Matching Pairs</span>
+        <span class="opcion-modo-detalle">Emparejá conceptos con sus rutas</span>
+      </button>
+    </div>
+    <button class="boton-principal" id="btn-otros-modos-comenzar">Comenzar</button>
+    <button class="modal-cancelar" id="btn-otros-modos-cancelar">Cancelar</button>
   </div>
 </div>
 
@@ -4966,13 +5196,102 @@
     else { vidasMaximas = 0; }
   }
 
+let modoEspecial = null;
+  let modoEspecialPendiente = null;
+  let otroModoElegidoEnModal = 'cloze';
+  let datosClozeSesion = [];
+  let rondasMatching = [];
+  let primeroSeleccionadoMatching = null;
+  let asociacionesTempMatching = new Set();
+
+  const elModalOtrosModos = document.getElementById('modal-otros-modos');
+  const elTituloModalModo = document.querySelector('#modal-modo h3');
+  const elOpcionModoExamen = document.getElementById('opcion-modo-examen');
+
+  function codigoModoHistorial() {
+    if (srsSesionActiva) return 'srs';
+    if (modoEspecial === 'cloze') return 'cloze_' + modoJuego;
+    if (modoEspecial === 'matching') return 'matching_' + modoJuego;
+    return modoJuego;
+  }
+
+  function esModoEspecialHistorial(modo) {
+    const m = String(modo || '');
+    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0;
+  }
+
   function nombreModoJuego(modo) {
-    if (modo === 'srs') return '🧠 SRS';   // NUEVO
+    if (modo === 'cloze_light') return '📝 Cloze Light';
+    if (modo === 'cloze_normal') return '📝 Cloze Normal';
+    if (modo === 'cloze_tryhard') return '📝 Cloze Tryhard';
+    if (modo === 'matching_light') return '🔗 Matching Light';
+    if (modo === 'matching_normal') return '🔗 Matching Normal';
+    if (modo === 'matching_tryhard') return '🔗 Matching Tryhard';
+    if (modo === 'srs') return '🧠 SRS';
     if (modo === 'examen') return '📝 Examen';
     if (modo === 'tryhard') return 'Tryhard';
     if (modo === 'normal') return 'Normal';
     return 'Light';
   }
+
+  function seleccionarOtroModoEnModal(tipo) {
+    otroModoElegidoEnModal = tipo;
+    document.querySelectorAll('#modal-otros-modos .opcion-modo').forEach((el) => {
+      el.classList.toggle('seleccionada', el.dataset.otroModo === tipo);
+    });
+  }
+
+  function obtenerTarjetasBaseSeleccionadas() {
+    const seleccion = indicesSeleccionados();
+    if (seleccion.size > 0) {
+      return tarjetasCompletas.filter((_, i) => seleccion.has(i));
+    }
+    return [...tarjetasCompletas];
+  }
+
+  function abrirModalOtrosModos() {
+    if (modoObservador) return;
+    seleccionarOtroModoEnModal('cloze');
+    elModalOtrosModos.classList.add('abierto');
+  }
+
+  function cerrarModalOtrosModos() {
+    elModalOtrosModos.classList.remove('abierto');
+    modoEspecialPendiente = null;
+  }
+
+  async function confirmarOtrosModos() {
+    const base = obtenerTarjetasBaseSeleccionadas();
+    if (otroModoElegidoEnModal === 'cloze') {
+      const calificadas = base.filter((t) => t.segundo && t.segundo.trim() !== '');
+      if (calificadas.length === 0) {
+        elModalOtrosModos.classList.remove('abierto');
+        await avisar('No hay tarjetas con segundo término en los temas seleccionados para iniciar Cloze Deletion.');
+        return;
+      }
+      elModalOtrosModos.classList.remove('abierto');
+      modoEspecialPendiente = 'cloze';
+      const lista = modoAleatorio ? mezclar(calificadas) : calificadas;
+      abrirModalSeleccionModo(lista, 'cloze');
+    } else if (otroModoElegidoEnModal === 'matching') {
+      const rondas = construirRondasMatching(base);
+      if (rondas.length === 0) {
+        elModalOtrosModos.classList.remove('abierto');
+        await avisar('No hay subtemas con tarjetas que tengan rutas válidas para iniciar Matching Pairs.');
+        return;
+      }
+      elModalOtrosModos.classList.remove('abierto');
+      modoEspecialPendiente = 'matching';
+      rondasMatching = rondas;
+      abrirModalSeleccionModo(rondas, 'matching');
+    }
+  }
+
+  document.getElementById('btn-otros-modos').addEventListener('click', () => abrirModalOtrosModos());
+  document.getElementById('opcion-otro-cloze').addEventListener('click', () => seleccionarOtroModoEnModal('cloze'));
+  document.getElementById('opcion-otro-matching').addEventListener('click', () => seleccionarOtroModoEnModal('matching'));
+  document.getElementById('btn-otros-modos-comenzar').addEventListener('click', () => confirmarOtrosModos());
+  document.getElementById('btn-otros-modos-cancelar').addEventListener('click', () => cerrarModalOtrosModos());
 
   function actualizarBarraGamificacion() {
     if (modoObservador) return;
@@ -5030,29 +5349,1075 @@
     });
   }
 
-  function abrirModalSeleccionModo(lista) {
+function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (!lista || lista.length === 0) return;
     listaPendienteInicio = lista;
-    seleccionarModoEnModal('light');   // Light por defecto
+    modoEspecialPendiente = tipoEspecial || null;
+    if (modoEspecialPendiente === 'cloze') {
+      elTituloModalModo.textContent = 'Elegí el modo de juego — 📝 Cloze';
+      elOpcionModoExamen.style.display = 'none';
+    } else if (modoEspecialPendiente === 'matching') {
+      elTituloModalModo.textContent = 'Elegí el modo de juego — 🔗 Matching';
+      elOpcionModoExamen.style.display = 'none';
+    } else {
+      elTituloModalModo.textContent = 'Elegí el modo de juego';
+      elOpcionModoExamen.style.display = '';
+    }
+    seleccionarModoEnModal('light');
     elModalModo.classList.add('abierto');
   }
 
   function cancelarModalModo() {
     elModalModo.classList.remove('abierto');
     listaPendienteInicio = null;
+    modoEspecialPendiente = null;
+    elTituloModalModo.textContent = 'Elegí el modo de juego';
+    elOpcionModoExamen.style.display = '';
   }
 
   function confirmarModoYComenzar() {
     const lista = listaPendienteInicio;
+    const especial = modoEspecialPendiente;
     elModalModo.classList.remove('abierto');
-    if (!lista) { listaPendienteInicio = null; return; }
-    if (modoElegidoEnModal === 'examen') {
+    elTituloModalModo.textContent = 'Elegí el modo de juego';
+    elOpcionModoExamen.style.display = '';
+    if (!lista) {
+      listaPendienteInicio = null;
+      modoEspecialPendiente = null;
+      return;
+    }
+    if (!especial && modoElegidoEnModal === 'examen') {
       elModalExamenOpciones.classList.add('abierto');
       return;
     }
     listaPendienteInicio = null;
+    modoEspecialPendiente = null;
+    modoEspecial = especial;
     configurarModoJuego(modoElegidoEnModal);
-    iniciarSesion(lista);
+    if (modoEspecial === 'cloze') {
+      iniciarSesionCloze(lista);
+    } else if (modoEspecial === 'matching') {
+      iniciarSesionMatching(lista);
+    } else {
+      iniciarSesion(lista);
+    }
+  }
+
+  function extraerPalabrasRutasMasDe4(tarjeta) {
+    const resultado = [];
+    const vistas = new Set();
+    rutasValidasDe(tarjeta).forEach((idRuta) => {
+      const bloque = rutasDisp[idRuta];
+      if (!bloque || !Array.isArray(bloque.lineas)) return;
+      bloque.lineas.forEach((linea) => {
+        if (esImagen(linea)) return;
+        const m = linea.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g) || [];
+        m.forEach((palabra) => {
+          const norm = normalizarPalabra(palabra);
+          if (norm.length > 4 && !STOPWORDS.has(norm) && !vistas.has(norm)) {
+            vistas.add(norm);
+            resultado.push(norm);
+          }
+        });
+      });
+    });
+    return resultado;
+  }
+
+  function tokenizarTextoParaCloze(texto) {
+    const tokens = [];
+    const regex = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g;
+    let ultimoIndice = 0;
+    let match;
+    while ((match = regex.exec(texto)) !== null) {
+      if (match.index > ultimoIndice) {
+        tokens.push({ tipo: 'texto', valor: texto.slice(ultimoIndice, match.index) });
+      }
+      tokens.push({
+        tipo: 'palabra',
+        valor: match[0],
+        norm: normalizarPalabra(match[0]),
+      });
+      ultimoIndice = regex.lastIndex;
+    }
+    if (ultimoIndice < texto.length) {
+      tokens.push({ tipo: 'texto', valor: texto.slice(ultimoIndice) });
+    }
+    return tokens;
+  }
+
+  function generarEstructuraClozeTarjeta(tarjeta) {
+    const textoBase = (tarjeta.segundo || '').trim();
+    const tokens = tokenizarTextoParaCloze(textoBase);
+    const fuente1 = Array.isArray(tarjeta.claves) && tarjeta.claves.length > 0
+      ? tarjeta.claves.map(normalizarPalabra)
+      : tokenizarParaIndice(textoBase);
+    const fuente2 = extraerPalabrasRutasMasDe4(tarjeta);
+    const setCandidatas = new Set([...fuente1, ...fuente2]);
+
+    const esCorto = textoBase.length < 40;
+    const minHuecos = esCorto ? 1 : 4;
+    const maxHuecos = esCorto ? 3 : 6;
+    const cantidadObjetivo = Math.floor(Math.random() * (maxHuecos - minHuecos + 1)) + minHuecos;
+
+    const indicesPalabras = [];
+    tokens.forEach((tk, idx) => {
+      if (tk.tipo === 'palabra') indicesPalabras.push(idx);
+    });
+
+    const indicesCandidatos = indicesPalabras.filter((idx) => setCandidatas.has(tokens[idx].norm));
+    const seleccionados = new Set();
+
+    mezclar(indicesCandidatos).forEach((idx) => {
+      if (seleccionados.size < cantidadObjetivo) {
+        seleccionados.add(idx);
+      }
+    });
+
+    if (seleccionados.size < minHuecos) {
+      const restantesPorLargo = indicesPalabras
+        .filter((idx) => !seleccionados.has(idx))
+        .sort((a, b) => tokens[b].valor.length - tokens[a].valor.length);
+      for (let i = 0; i < restantesPorLargo.length && seleccionados.size < minHuecos; i++) {
+        seleccionados.add(restantesPorLargo[i]);
+      }
+    }
+
+    if (seleccionados.size === 0 && indicesPalabras.length > 0) {
+      seleccionados.add(indicesPalabras[0]);
+    }
+
+    let contadorHueco = 0;
+    const segmentos = tokens.map((tk, idx) => {
+      if (tk.tipo === 'palabra' && seleccionados.has(idx)) {
+        const idHueco = contadorHueco++;
+        return {
+          tipo: 'hueco',
+          indiceHueco: idHueco,
+          original: tk.valor,
+          norm: tk.norm,
+        };
+      }
+      return { tipo: 'texto', valor: tk.valor };
+    });
+
+    return {
+      segmentos: segmentos,
+      totalHuecos: contadorHueco,
+      respuestasUsuario: new Array(contadorHueco).fill(''),
+      aciertosDetalle: new Array(contadorHueco).fill(false),
+      evaluada: false,
+    };
+  }
+
+  function iniciarSesionCloze(lista) {
+    modoObservador = false;
+    srsSesionActiva = null;
+    elAreaTarjeta.classList.remove('observador');
+    tarjetasSesion = [...lista];
+    const n = tarjetasSesion.length;
+    resultados = new Array(n).fill(null);
+    tiempos = new Array(n).fill(0);
+    revelado = new Array(n).fill(false);
+    pistaMostrada = new Array(n).fill(false);
+    respuestaMostrada = new Array(n).fill(false);
+    escritos = new Array(n).fill('');
+    evaluaciones = new Array(n).fill(null);
+    porComprension = new Array(n).fill(false);
+    datosClozeSesion = tarjetasSesion.map((t) => generarEstructuraClozeTarjeta(t));
+
+    vidasActuales = vidasMaximas;
+    puntosSesion = 0;
+    rachaActual = 0;
+    mejorRacha = 0;
+    multiplicadorActual = 1;
+    puntosPorTarjeta = new Array(n).fill(0);
+    pistaGratisUsadaPorTarjeta = new Array(n).fill(false);
+    gameOverDisparado = false;
+    historialGuardadoEstaSesion = false;
+    analisisGuardadoEstaSesion = false;
+    modoZombie = false;
+    reintentadasSesion = new Set();
+    primerIntentoFallido = new Set();
+    reintentoExitoso = new Set();
+    segundaPendiente = false;
+
+    indiceActual = 0;
+    cronometroActivo = true;
+    indiceCongelado = -1;
+    pausaManual = false;
+    elOverlayPausa.classList.remove('abierto');
+    resetPanelesUI();
+    actualizarBarraGamificacion();
+    mostrarPantalla('estudio');
+    renderTarjeta();
+    iniciarCronometro();
+  }
+
+  function renderTarjetaCloze() {
+    const t = tarjetasSesion[indiceActual];
+    const clozeData = datosClozeSesion[indiceActual];
+    const yaEvaluada = clozeData.evaluada;
+    const r = resultados[indiceActual];
+
+    elTemaTexto.textContent = nombreTema(t);
+    elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
+    const contestadas = resultados.filter((x) => x !== null).length;
+    elBarraRelleno.style.width = ((contestadas / tarjetasSesion.length) * 100) + '%';
+
+    const nRutas = rutasValidasDe(t).length;
+    if (nRutas > 0) {
+      elBadgeRutas.textContent = '📑 ' + nRutas + (nRutas === 1 ? ' ruta' : ' rutas');
+      elBadgeRutas.style.display = 'block';
+    } else {
+      elBadgeRutas.style.display = 'none';
+    }
+
+    elBtnRevisar.style.display = 'inline-block';
+    elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
+
+    elPrimero.style.display = 'block';
+    elPrimero.textContent = t.primero;
+
+    elBtnPista.style.display = 'none';
+    elBtnRespuesta.style.display = yaEvaluada ? 'inline-block' : 'none';
+    if (yaEvaluada) {
+      elBtnRespuesta.textContent = 'Mostrar respuesta';
+      elBtnRespuesta.disabled = true;
+    }
+
+    elBtnNota.style.display = 'inline-flex';
+    const notaActual = notaEfectivaDe(t);
+    elBtnNota.classList.toggle('vacia', notaActual === '');
+    elBtnNota.classList.toggle('activa', notaAbierta);
+    elBtnNota.classList.toggle('dif', estadoNotaDe(t) !== 'igual');
+
+    elSeparador.style.display = 'block';
+    elSegundo.style.display = yaEvaluada ? 'block' : 'none';
+    elSegundo.textContent = yaEvaluada ? (t.segundo || '') : '';
+
+    renderPanelNota(t);
+
+    elTextoEval.parentElement.style.display = 'none';
+    elBtnDictadoTextoEval.style.display = 'none';
+    elRespuestaUsuarioResaltada.style.display = 'none';
+    elZonaEval.style.display = 'block';
+
+    let contenedorCloze = document.getElementById('cloze-contenedor-activo');
+    if (!contenedorCloze) {
+      contenedorCloze = document.createElement('div');
+      contenedorCloze.id = 'cloze-contenedor-activo';
+      contenedorCloze.className = 'cloze-contenedor';
+      elZonaEval.insertBefore(contenedorCloze, elFilaEval);
+    }
+    contenedorCloze.style.display = 'block';
+    contenedorCloze.innerHTML = '';
+
+    clozeData.segmentos.forEach((seg) => {
+      if (seg.tipo === 'texto') {
+        contenedorCloze.appendChild(document.createTextNode(seg.valor));
+      } else {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'cloze-input';
+        const ancho = Math.min(20, Math.max(6, seg.original.length));
+        input.style.width = ancho + 'ch';
+        input.dataset.huecoIdx = String(seg.indiceHueco);
+        input.value = clozeData.respuestasUsuario[seg.indiceHueco] || '';
+        input.autocomplete = 'off';
+        if (yaEvaluada) {
+          input.disabled = true;
+          const ok = clozeData.aciertosDetalle[seg.indiceHueco];
+          input.classList.add(ok ? 'correcto' : 'incorrecto');
+          contenedorCloze.appendChild(input);
+          if (!ok) {
+            const corr = document.createElement('span');
+            corr.className = 'cloze-correccion';
+            corr.textContent = '(' + seg.original + ')';
+            contenedorCloze.appendChild(corr);
+          }
+        } else {
+          input.addEventListener('input', () => {
+            clozeData.respuestasUsuario[seg.indiceHueco] = input.value;
+          });
+          contenedorCloze.appendChild(input);
+        }
+      }
+    });
+
+    elFilaEval.style.display = yaEvaluada ? 'none' : 'flex';
+    elBtnEvaluar.disabled = yaEvaluada;
+
+    if (yaEvaluada) {
+      renderRutas(t);
+      elRutasContenedor.style.display = nRutas > 0 ? 'block' : 'none';
+      elRutasContenedor.querySelectorAll('details.ruta-acordeon').forEach((det) => {
+        det.open = false;
+      });
+    } else {
+      elRutasContenedor.style.display = 'none';
+      elRutasContenedor.innerHTML = '';
+    }
+
+    const ev = evaluaciones[indiceActual];
+    if (yaEvaluada && ev) {
+      elResultadoEval.style.display = 'block';
+      elResultadoEval.className = 'resultado-eval ' + (ev.resultado === 'si' ? 'bien' : (ev.resultado === 'casi' ? 'casi' : 'mal'));
+      elResultadoEval.textContent = ev.textoDetalle;
+    } else {
+      elResultadoEval.style.display = 'none';
+      elResultadoEval.textContent = '';
+    }
+
+    elEstadoMarca.className = 'estado-marca' + (r ? ' ' + r : '');
+    if (r === 'si') elEstadoMarca.textContent = '✓ Marcada como entendida';
+    else if (r === 'casi') elEstadoMarca.textContent = '~ Casi entendida';
+    else if (r === 'no') elEstadoMarca.textContent = '✗ Marcada como no entendida';
+    else if (r === 'saltar') elEstadoMarca.textContent = '— Pasada sin marcar';
+    else elEstadoMarca.textContent = '';
+
+    document.querySelector('.botonera').style.display = 'flex';
+    elBtnSi.style.display = yaEvaluada ? 'flex' : 'none';
+    elBtnNo.style.display = yaEvaluada ? 'flex' : 'none';
+    elBtnSaltar.style.display = 'inline-block';
+    elBtnDificil.style.display = 'inline-block';
+    elBtnRazones.style.display = 'inline-block';
+
+    elBtnDificil.classList.toggle('activa', esDificil(t));
+    elBtnDificil.textContent = esDificil(t) ? '★ Difícil' : '☆ Difícil';
+    renderRazonesUI(t);
+
+    elBtnAnterior.disabled = indiceActual === 0;
+    elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+    actualizarBadgeNotaActual();
+
+    if (!yaEvaluada) {
+      const primerInput = contenedorCloze.querySelector('.cloze-input');
+      if (primerInput) setTimeout(() => primerInput.focus(), 20);
+    }
+  }
+
+  function evaluarClozeActual() {
+    const clozeData = datosClozeSesion[indiceActual];
+    if (!clozeData || clozeData.evaluada) return;
+
+    acumularTiempoActual();
+    indiceCongelado = indiceActual;
+
+    let aciertos = 0;
+    const palabrasCorrectas = [];
+
+    clozeData.segmentos.forEach((seg) => {
+      if (seg.tipo !== 'hueco') return;
+      const resp = normalizarPalabra((clozeData.respuestasUsuario[seg.indiceHueco] || '').trim());
+      const ok = resp !== '' && resp === seg.norm;
+      clozeData.aciertosDetalle[seg.indiceHueco] = ok;
+      if (ok) aciertos++;
+      palabrasCorrectas.push(seg.original);
+    });
+
+    clozeData.evaluada = true;
+    revelado[indiceActual] = true;
+    respuestaMostrada[indiceActual] = true;
+
+    const total = clozeData.totalHuecos || 1;
+    const prop = aciertos / total;
+    let res = 'no';
+    if (aciertos === total) res = 'si';
+    else if (prop >= 0.5) res = 'casi';
+
+    const etq = res === 'si' ? '✓ Bien' : (res === 'casi' ? '~ Casi' : '✗ Mal');
+    const textoDetalle = etq + ' — Acertaste ' + aciertos + ' de ' + total + ' hueco(s). Correctas: ' + palabrasCorrectas.join(', ');
+
+    evaluaciones[indiceActual] = {
+      resultado: res,
+      acertadas: aciertos,
+      clavesTotal: total,
+      textoDetalle: textoDetalle,
+    };
+    escritos[indiceActual] = clozeData.respuestasUsuario.join(' | ');
+    resultados[indiceActual] = res;
+
+    procesarResultadoGamificacion(indiceActual, res, { conPista: false, pistaGratisUsada: false });
+    if (resultados.every((x) => x !== null)) {
+      cronometroActivo = false;
+    }
+    renderTarjeta();
+  }
+
+  function construirRondasMatching(tarjetasBase) {
+    const gruposPorSubt = new Map();
+    tarjetasBase.forEach((t) => {
+      const rValidas = rutasValidasDe(t);
+      if (rValidas.length === 0) return;
+      const subt = nombreTema(t);
+      if (!gruposPorSubt.has(subt)) gruposPorSubt.set(subt, []);
+      gruposPorSubt.get(subt).push(t);
+    });
+
+    const todasLasRutasSistema = Object.keys(rutasDisp).map(Number);
+    const rondas = [];
+
+    gruposPorSubt.forEach((tarjetasSubt, nombreSubt) => {
+      let seleccionTarjetas = [...tarjetasSubt];
+      if (seleccionTarjetas.length > 20) {
+        seleccionTarjetas = mezclar(seleccionTarjetas).slice(0, 20);
+      } else if (modoAleatorio) {
+        seleccionTarjetas = mezclar(seleccionTarjetas);
+      }
+
+      const rutasElegidasSet = new Set();
+      const rutasAsignadasAPrimero = new Map();
+      const primerosRonda = [];
+
+      seleccionTarjetas.forEach((t) => {
+        const candidatas = rutasValidasDe(t).filter((rId) => !rutasAsignadasAPrimero.has(rId));
+        if (candidatas.length === 0) return;
+        const rutaGarantizada = candidatas[Math.floor(Math.random() * candidatas.length)];
+        if (rutasElegidasSet.size < 20) {
+          rutasElegidasSet.add(rutaGarantizada);
+          rutasAsignadasAPrimero.set(rutaGarantizada, primerosRonda.length);
+          primerosRonda.push({
+            tarjeta: t,
+            primero: t.primero,
+            rutasExtrasCandidatas: candidatas.filter((rId) => rId !== rutaGarantizada),
+            rutasReales: [rutaGarantizada],
+            asociadasUsuario: [],
+            evaluado: false,
+            erroresDetalle: [],
+            cantidadErrores: 0,
+          });
+        }
+      });
+
+      if (primerosRonda.length === 0) return;
+
+      primerosRonda.forEach((itemP, idxP) => {
+        itemP.rutasExtrasCandidatas.forEach((rId) => {
+          if (rutasElegidasSet.size < 20 && !rutasAsignadasAPrimero.has(rId)) {
+            rutasElegidasSet.add(rId);
+            rutasAsignadasAPrimero.set(rId, idxP);
+            itemP.rutasReales.push(rId);
+          }
+        });
+        delete itemP.rutasExtrasCandidatas;
+      });
+
+      const rutasSubtCitadas = new Set();
+      tarjetasSubt.forEach((t) => rutasValidasDe(t).forEach((rId) => rutasSubtCitadas.add(rId)));
+      const distractoresCandidatos = mezclar(
+        todasLasRutasSistema.filter((rId) => !rutasSubtCitadas.has(rId) && !rutasElegidasSet.has(rId))
+      );
+      for (let i = 0; i < distractoresCandidatos.length && rutasElegidasSet.size < 20; i++) {
+        rutasElegidasSet.add(distractoresCandidatos[i]);
+      }
+
+      const rutasRonda = mezclar(Array.from(rutasElegidasSet));
+
+      rondas.push({
+        tema: nombreSubt,
+        primeros: primerosRonda,
+        rutas: rutasRonda,
+        rutasBloqueadas: new Set(),
+        rutaEstadoResultado: new Map(),
+        completada: false,
+        erroresTotales: 0,
+        detalleErroresRonda: [],
+      });
+    });
+
+    return rondas;
+  }
+
+  function iniciarSesionMatching(rondas) {
+    modoObservador = false;
+    srsSesionActiva = null;
+    elAreaTarjeta.classList.remove('observador');
+    rondasMatching = rondas;
+    tarjetasSesion = rondasMatching.map((r) => ({
+      tema: r.tema,
+      primero: r.tema,
+      segundo: '',
+      rutas: r.rutas,
+    }));
+
+    const n = rondasMatching.length;
+    resultados = new Array(n).fill(null);
+    tiempos = new Array(n).fill(0);
+    revelado = new Array(n).fill(false);
+    pistaMostrada = new Array(n).fill(false);
+    respuestaMostrada = new Array(n).fill(false);
+    escritos = new Array(n).fill('');
+    evaluaciones = new Array(n).fill(null);
+    porComprension = new Array(n).fill(false);
+
+    vidasActuales = vidasMaximas;
+    puntosSesion = 0;
+    rachaActual = 0;
+    mejorRacha = 0;
+    multiplicadorActual = 1;
+    puntosPorTarjeta = new Array(n).fill(0);
+    pistaGratisUsadaPorTarjeta = new Array(n).fill(false);
+    gameOverDisparado = false;
+    historialGuardadoEstaSesion = false;
+    analisisGuardadoEstaSesion = false;
+    modoZombie = false;
+    reintentadasSesion = new Set();
+    primerIntentoFallido = new Set();
+    reintentoExitoso = new Set();
+    segundaPendiente = false;
+
+    indiceActual = 0;
+    primeroSeleccionadoMatching = null;
+    asociacionesTempMatching.clear();
+    cronometroActivo = true;
+    indiceCongelado = -1;
+    pausaManual = false;
+    elOverlayPausa.classList.remove('abierto');
+    resetPanelesUI();
+    actualizarBarraGamificacion();
+    mostrarPantalla('estudio');
+    renderTarjeta();
+    iniciarCronometro();
+  }
+
+  function seleccionarPrimeroMatching(idxPrimero) {
+    const ronda = rondasMatching[indiceActual];
+    if (!ronda || ronda.completada) return;
+    const itemP = ronda.primeros[idxPrimero];
+    if (!itemP || itemP.evaluado) return;
+
+    if (primeroSeleccionadoMatching !== idxPrimero) {
+      asociacionesTempMatching.clear();
+      primeroSeleccionadoMatching = idxPrimero;
+    }
+    actualizarVistaSeleccionMatching();
+  }
+
+  function cancelarSeleccionMatchingActual() {
+    if (primeroSeleccionadoMatching === null) return false;
+    primeroSeleccionadoMatching = null;
+    asociacionesTempMatching.clear();
+    actualizarVistaSeleccionMatching();
+    return true;
+  }
+
+  function toggleAsociarRutaMatching(idRuta) {
+    const ronda = rondasMatching[indiceActual];
+    if (!ronda || ronda.completada) return;
+    if (primeroSeleccionadoMatching === null) return;
+    if (ronda.rutasBloqueadas.has(idRuta)) return;
+
+    if (asociacionesTempMatching.has(idRuta)) {
+      asociacionesTempMatching.delete(idRuta);
+    } else {
+      asociacionesTempMatching.add(idRuta);
+    }
+    actualizarVistaSeleccionMatching();
+  }
+
+  function actualizarVistaSeleccionMatching() {
+    const ronda = rondasMatching[indiceActual];
+    if (!ronda) return;
+    const cont = document.getElementById('matching-contenedor-activo');
+    if (!cont) return;
+
+    cont.querySelectorAll('.matching-primero-btn').forEach((btn) => {
+      const idx = Number(btn.dataset.idxPrimero);
+      const itemP = ronda.primeros[idx];
+      btn.classList.toggle('seleccionado', !itemP.evaluado && primeroSeleccionadoMatching === idx);
+      const badge = btn.querySelector('.matching-primero-badge');
+      if (badge) {
+        if (itemP.evaluado) {
+          badge.textContent = itemP.cantidadErrores === 0 ? '✓ 0 errores' : ('✗ ' + itemP.cantidadErrores + ' error(es)');
+        } else if (primeroSeleccionadoMatching === idx && asociacionesTempMatching.size > 0) {
+          badge.textContent = asociacionesTempMatching.size + ' asociada(s)';
+        } else {
+          badge.textContent = 'Pendiente';
+        }
+      }
+    });
+
+    cont.querySelectorAll('details.ruta-acordeon').forEach((det) => {
+      const idRuta = Number(det.dataset.rutaId);
+      const bloqueada = ronda.rutasBloqueadas.has(idRuta);
+      const asociadaTemp = asociacionesTempMatching.has(idRuta);
+      const estadoRes = ronda.rutaEstadoResultado.get(idRuta);
+
+      det.classList.toggle('matching-asociada-temp', !bloqueada && asociadaTemp);
+      det.classList.toggle('matching-bloqueada', bloqueada);
+      det.classList.toggle('matching-asociada-bien', estadoRes === 'bien');
+      det.classList.toggle('matching-asociada-mal', estadoRes === 'mal');
+
+      const btnAsoc = det.querySelector('.btn-asociar-ruta');
+      if (btnAsoc) {
+        btnAsoc.disabled = ronda.completada || bloqueada || primeroSeleccionadoMatching === null;
+        btnAsoc.classList.toggle('asociada', asociadaTemp || bloqueada);
+        if (bloqueada) {
+          btnAsoc.textContent = '✓ Ya asociada';
+        } else if (asociadaTemp) {
+          btnAsoc.textContent = '✓ Asociada';
+        } else {
+          btnAsoc.textContent = 'Asociar';
+        }
+      }
+    });
+
+    elBtnEvaluar.disabled = ronda.completada || primeroSeleccionadoMatching === null;
+  }
+
+  function renderTarjetaMatching() {
+    const ronda = rondasMatching[indiceActual];
+    const r = resultados[indiceActual];
+
+    elTemaTexto.textContent = ronda.tema;
+    elProgresoTexto.textContent = 'Ronda ' + (indiceActual + 1) + ' de ' + rondasMatching.length;
+    const contestadas = resultados.filter((x) => x !== null).length;
+    elBarraRelleno.style.width = ((contestadas / rondasMatching.length) * 100) + '%';
+
+    elBadgeRutas.style.display = 'none';
+    elBtnRevisar.style.display = 'none';
+    elBtnNota.style.display = 'none';
+    elPanelNota.style.display = 'none';
+    elBtnPista.style.display = 'none';
+    elBtnRespuesta.style.display = 'none';
+    elSeparador.style.display = 'none';
+    elSegundo.style.display = 'none';
+    elRutasContenedor.style.display = 'none';
+    elChipsRazones.style.display = 'none';
+    elPanelRazones.style.display = 'none';
+
+    const clozeCont = document.getElementById('cloze-contenedor-activo');
+    if (clozeCont) clozeCont.style.display = 'none';
+
+    elPrimero.style.display = 'block';
+    elPrimero.textContent = 'Emparejá cada concepto con sus rutas (' + ronda.primeros.length + ' conceptos · ' + ronda.rutas.length + ' rutas)';
+
+    elTextoEval.parentElement.style.display = 'none';
+    elBtnDictadoTextoEval.style.display = 'none';
+    elRespuestaUsuarioResaltada.style.display = 'none';
+    elZonaEval.style.display = 'block';
+
+    let contMatching = document.getElementById('matching-contenedor-activo');
+    if (!contMatching) {
+      contMatching = document.createElement('div');
+      contMatching.id = 'matching-contenedor-activo';
+      contMatching.className = 'matching-contenedor';
+      elZonaEval.insertBefore(contMatching, elFilaEval);
+    }
+    contMatching.style.display = 'flex';
+    contMatching.innerHTML = '';
+
+    const secPrimeros = document.createElement('div');
+    const titPrimeros = document.createElement('div');
+    titPrimeros.className = 'matching-seccion-titulo';
+    titPrimeros.textContent = 'Conceptos (seleccioná uno para asociarle rutas)';
+    secPrimeros.appendChild(titPrimeros);
+
+    const listaPrimeros = document.createElement('div');
+    listaPrimeros.className = 'matching-primeros-lista';
+
+    ronda.primeros.forEach((itemP, idxP) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'matching-primero-btn';
+      btn.dataset.idxPrimero = String(idxP);
+      if (itemP.evaluado) {
+        btn.classList.add(itemP.cantidadErrores === 0 ? 'evaluado-bien' : 'evaluado-mal');
+        btn.disabled = true;
+      }
+      const spanTexto = document.createElement('span');
+      spanTexto.textContent = itemP.primero;
+      const badge = document.createElement('span');
+      badge.className = 'matching-primero-badge';
+      btn.appendChild(spanTexto);
+      btn.appendChild(badge);
+      btn.addEventListener('click', () => seleccionarPrimeroMatching(idxP));
+      listaPrimeros.appendChild(btn);
+    });
+    secPrimeros.appendChild(listaPrimeros);
+    contMatching.appendChild(secPrimeros);
+
+    const secRutas = document.createElement('div');
+    const titRutas = document.createElement('div');
+    titRutas.className = 'matching-seccion-titulo';
+    titRutas.textContent = 'Rutas disponibles';
+    secRutas.appendChild(titRutas);
+
+    const listaRutas = document.createElement('div');
+    listaRutas.className = 'matching-rutas-lista';
+
+    ronda.rutas.forEach((idRuta) => {
+      const bloque = rutasDisp[idRuta];
+      if (!bloque) return;
+
+      const det = document.createElement('details');
+      det.className = 'ruta-acordeon';
+      det.dataset.rutaId = String(idRuta);
+
+      const sum = document.createElement('summary');
+      sum.textContent = 'Ruta ' + idRuta;
+      det.appendChild(sum);
+
+      prepararDetallesLazy(det, () => {
+        const contenido = document.createElement('div');
+        contenido.className = 'ruta-contenido';
+        (bloque.lineas || []).forEach((linea) => {
+          if (esImagen(linea)) {
+            const img = document.createElement('img');
+            img.className = 'ruta-img-thumb';
+            img.src = linea.substring(4);
+            img.alt = 'Imagen de la ruta ' + idRuta;
+            img.addEventListener('click', () => abrirLightbox(img.src));
+            contenido.appendChild(img);
+          } else {
+            agregarLineaPlana(contenido, linea);
+          }
+        });
+
+        const filaAcc = document.createElement('div');
+        filaAcc.className = 'matching-ruta-acciones';
+        const btnAsoc = document.createElement('button');
+        btnAsoc.type = 'button';
+        btnAsoc.className = 'btn-asociar-ruta';
+        btnAsoc.textContent = 'Asociar';
+        btnAsoc.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleAsociarRutaMatching(idRuta);
+        });
+        filaAcc.appendChild(btnAsoc);
+        contenido.appendChild(filaAcc);
+        det.appendChild(contenido);
+        actualizarVistaSeleccionMatching();
+      });
+
+      listaRutas.appendChild(det);
+    });
+    secRutas.appendChild(listaRutas);
+    contMatching.appendChild(secRutas);
+
+    elFilaEval.style.display = ronda.completada ? 'none' : 'flex';
+    actualizarVistaSeleccionMatching();
+
+    if (ronda.completada) {
+      elResultadoEval.style.display = 'block';
+      elResultadoEval.className = 'resultado-eval ' + (r === 'si' ? 'bien' : (r === 'casi' ? 'casi' : 'mal'));
+      const etq = r === 'si' ? '✓ Ronda perfecta (0 errores)' : (r === 'casi' ? '~ Ronda casi entendida (' + ronda.erroresTotales + ' error/es)' : '✗ Ronda no entendida (' + ronda.erroresTotales + ' errores)');
+      elResultadoEval.textContent = ronda.detalleErroresRonda.length > 0
+        ? etq + ' — ' + ronda.detalleErroresRonda.join(' | ')
+        : etq;
+    } else {
+      elResultadoEval.style.display = 'none';
+      elResultadoEval.textContent = '';
+    }
+
+    elEstadoMarca.className = 'estado-marca' + (r ? ' ' + r : '');
+    if (r === 'si') elEstadoMarca.textContent = '✓ Ronda entendida';
+    else if (r === 'casi') elEstadoMarca.textContent = '~ Ronda casi entendida';
+    else if (r === 'no') elEstadoMarca.textContent = '✗ Ronda no entendida';
+    else if (r === 'saltar') elEstadoMarca.textContent = '— Ronda pasada sin marcar';
+    else elEstadoMarca.textContent = '';
+
+    document.querySelector('.botonera').style.display = 'none';
+
+    elBtnAnterior.disabled = indiceActual === 0;
+    elBtnSiguiente.disabled = indiceActual === rondasMatching.length - 1;
+    actualizarBadgeNotaActual();
+  }
+
+  function evaluarPrimeroMatchingActual() {
+    const ronda = rondasMatching[indiceActual];
+    if (!ronda || ronda.completada) return;
+    if (primeroSeleccionadoMatching === null) return;
+
+    const idxP = primeroSeleccionadoMatching;
+    const itemP = ronda.primeros[idxP];
+    if (!itemP || itemP.evaluado) return;
+
+    const asociadas = Array.from(asociacionesTempMatching);
+    const realesSet = new Set(itemP.rutasReales);
+    const asociadasSet = new Set(asociadas);
+
+    const errores = [];
+    let nErrores = 0;
+
+    asociadas.forEach((idRuta) => {
+      ronda.rutasBloqueadas.add(idRuta);
+      if (!realesSet.has(idRuta)) {
+        nErrores++;
+        const esExtra = asociadas.length > itemP.rutasReales.length;
+        const tipoTxt = esExtra ? 'Ruta extra' : 'Asociación incorrecta';
+        errores.push(tipoTxt + ' (Ruta ' + idRuta + ')');
+        ronda.rutaEstadoResultado.set(idRuta, 'mal');
+      } else {
+        ronda.rutaEstadoResultado.set(idRuta, 'bien');
+      }
+    });
+
+    itemP.rutasReales.forEach((idRuta) => {
+      if (!asociadasSet.has(idRuta)) {
+        nErrores++;
+        errores.push('Ruta faltante (Ruta ' + idRuta + ')');
+      }
+    });
+
+    itemP.asociadasUsuario = asociadas;
+    itemP.evaluado = true;
+    itemP.cantidadErrores = nErrores;
+    itemP.erroresDetalle = errores;
+
+    ronda.erroresTotales += nErrores;
+    if (errores.length > 0) {
+      ronda.detalleErroresRonda.push('«' + itemP.primero + '»: ' + errores.join(', '));
+    }
+
+    primeroSeleccionadoMatching = null;
+    asociacionesTempMatching.clear();
+
+    if (!modoZombie) {
+      if (nErrores === 0) {
+        if (!esModoSinGamificacion()) {
+          const pts = Math.round(15 * multiplicadorActual);
+          puntosSesion += pts;
+          puntosPorTarjeta[indiceActual] = (puntosPorTarjeta[indiceActual] || 0) + pts;
+          rachaActual++;
+          if (rachaActual > mejorRacha) mejorRacha = rachaActual;
+          recalcularMultiplicador();
+        }
+        reproducirSonido('bien');
+      } else {
+        if (!esModoSinGamificacion()) {
+          rachaActual = 0;
+          recalcularMultiplicador();
+        }
+        reproducirSonido('mal');
+        aplicarPerdidaVida();
+      }
+      actualizarBarraGamificacion();
+    }
+
+    if (gameOverDisparado) {
+      renderTarjetaMatching();
+      return;
+    }
+
+    const todosEvaluados = ronda.primeros.every((p) => p.evaluado);
+    if (todosEvaluados) {
+      completarRondaMatchingActual();
+    } else {
+      renderTarjetaMatching();
+    }
+  }
+
+  function completarRondaMatchingActual() {
+    const ronda = rondasMatching[indiceActual];
+    if (!ronda || ronda.completada) return;
+
+    acumularTiempoActual();
+    ronda.completada = true;
+    revelado[indiceActual] = true;
+    respuestaMostrada[indiceActual] = true;
+    indiceCongelado = indiceActual;
+
+    let res = 'no';
+    if (ronda.erroresTotales === 0) res = 'si';
+    else if (ronda.erroresTotales <= 2) res = 'casi';
+
+    resultados[indiceActual] = res;
+    evaluaciones[indiceActual] = {
+      resultado: res,
+      erroresTotales: ronda.erroresTotales,
+      detalle: ronda.detalleErroresRonda.slice(),
+    };
+    escritos[indiceActual] = ronda.detalleErroresRonda.join(' | ');
+
+    if (resultados.every((x) => x !== null)) {
+      cronometroActivo = false;
+    }
+    renderTarjetaMatching();
+  }
+
+  function limpiarContenedoresModoEspecial() {
+    const clozeCont = document.getElementById('cloze-contenedor-activo');
+    if (clozeCont) clozeCont.style.display = 'none';
+    const matchCont = document.getElementById('matching-contenedor-activo');
+    if (matchCont) matchCont.style.display = 'none';
+    elTextoEval.parentElement.style.display = '';
+    document.querySelector('.botonera').style.display = 'flex';
+  }
+
+  function hookInicioRenderTarjeta() {
+    if (modoEspecial === 'cloze') {
+      const matchCont = document.getElementById('matching-contenedor-activo');
+      if (matchCont) matchCont.style.display = 'none';
+      renderTarjetaCloze();
+      return true;
+    }
+    if (modoEspecial === 'matching') {
+      renderTarjetaMatching();
+      return true;
+    }
+    limpiarContenedoresModoEspecial();
+    return false;
+  }
+
+  function hookEvaluarActual() {
+    if (modoEspecial === 'cloze') {
+      evaluarClozeActual();
+      return true;
+    }
+    if (modoEspecial === 'matching') {
+      evaluarPrimeroMatchingActual();
+      return true;
+    }
+    return false;
+  }
+
+  function hookCambioIndiceEspecial() {
+    if (modoEspecial === 'matching') {
+      primeroSeleccionadoMatching = null;
+      asociacionesTempMatching.clear();
+      const ronda = rondasMatching[indiceActual];
+      if (ronda && ronda.completada) {
+        indiceCongelado = indiceActual;
+      } else {
+        indiceCongelado = -1;
+      }
+    } else if (modoEspecial === 'cloze') {
+      const clozeData = datosClozeSesion[indiceActual];
+      if (clozeData && clozeData.evaluada) {
+        indiceCongelado = indiceActual;
+      } else {
+        indiceCongelado = -1;
+      }
+    }
+  }
+
+  function prepararFinalizarSesionEspecial() {
+    if (modoEspecial === 'matching') {
+      rondasMatching.forEach((ronda, i) => {
+        if (resultados[i] !== null) return;
+        const algunoEvaluado = ronda.primeros.some((p) => p.evaluado);
+        const todosEvaluados = ronda.primeros.every((p) => p.evaluado);
+        if (!algunoEvaluado || !todosEvaluados) {
+          ronda.primeros.forEach((p) => {
+            if (!p.evaluado) p.saltado = true;
+          });
+          if (!algunoEvaluado) {
+            resultados[i] = 'saltar';
+          } else {
+            let res = 'no';
+            if (ronda.erroresTotales === 0) res = 'si';
+            else if (ronda.erroresTotales <= 2) res = 'casi';
+            resultados[i] = res;
+            ronda.completada = true;
+          }
+        }
+      });
+    } else if (modoEspecial === 'cloze') {
+      resultados.forEach((r, i) => {
+        if (r === null) resultados[i] = 'saltar';
+      });
+    }
+  }
+
+  function renderResumenMatchingPersonalizado() {
+    if (modoEspecial !== 'matching') {
+      const etqProm = document.querySelector('#tiempo-promedio')?.previousElementSibling;
+      if (etqProm) etqProm.textContent = '⏱ Promedio por tarjeta';
+      return;
+    }
+
+    const etqProm = document.querySelector('#tiempo-promedio')?.previousElementSibling;
+    if (etqProm) etqProm.textContent = '⏱ Promedio por ronda';
+
+    const preencherSeccionMatching = (idContenedor, estadoFiltro) => {
+      const cont = document.getElementById(idContenedor);
+      if (!cont) return;
+      cont.innerHTML = '';
+      const indices = [];
+      rondasMatching.forEach((_, i) => {
+        if (resultados[i] === estadoFiltro) indices.push(i);
+      });
+      if (indices.length === 0) {
+        const vacio = document.createElement('div');
+        vacio.className = 'lista-vacia';
+        vacio.textContent = 'Ninguna ronda en esta categoría.';
+        cont.appendChild(vacio);
+        return;
+      }
+      indices.forEach((i) => {
+        const ronda = rondasMatching[i];
+        const item = document.createElement('div');
+        item.className = 'item-lista';
+
+        const temaEl = document.createElement('span');
+        temaEl.className = 'item-tema';
+        temaEl.textContent = ronda.tema;
+        item.appendChild(temaEl);
+
+        const detalleEl = document.createElement('span');
+        detalleEl.className = 'item-renglon';
+        if (estadoFiltro === 'saltar') {
+          detalleEl.textContent = 'Ronda no evaluada';
+        } else if (ronda.erroresTotales === 0) {
+          detalleEl.textContent = '0 errores en ' + ronda.primeros.filter((p) => p.evaluado).length + ' concepto(s)';
+        } else {
+          detalleEl.textContent = ronda.erroresTotales + ' error(es): ' + ronda.detalleErroresRonda.join(' · ');
+        }
+        item.appendChild(detalleEl);
+
+        const tiempoEl = document.createElement('span');
+        tiempoEl.className = 'item-tiempo';
+        tiempoEl.textContent = '⏱ ' + formatearTiempo(tiempos[i] || 0);
+        item.appendChild(tiempoEl);
+
+        cont.appendChild(item);
+      });
+    };
+
+    preencherSeccionMatching('lista-si', 'si');
+    preencherSeccionMatching('lista-casi', 'casi');
+    preencherSeccionMatching('lista-no', 'no');
+    preencherSeccionMatching('lista-saltar', 'saltar');
+  }
+
+  function aplicarExclusionesResumenModoEspecial() {
+    if (modoEspecial !== null) {
+      elBtnResumenGuardarLista.style.display = 'none';
+      elBtnAnalisisSesion.style.display = 'none';
+      document.getElementById('btn-continuar-pendientes').style.display = 'none';
+      document.getElementById('btn-repasar-no').style.display = 'none';
+      renderResumenMatchingPersonalizado();
+    } else {
+      renderResumenMatchingPersonalizado();
+    }
+  }
+
+  function reiniciarSesionActual() {
+    if (modoEspecial === 'cloze') {
+      const base = modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion];
+      iniciarSesionCloze(base);
+      return true;
+    }
+    if (modoEspecial === 'matching') {
+      const baseTarjetas = obtenerTarjetasBaseSeleccionadas();
+      const nuevasRondas = construirRondasMatching(baseTarjetas);
+      iniciarSesionMatching(nuevasRondas);
+      return true;
+    }
+    return false;
+  }
+
+  function limpiarModoEspecialAlSalir() {
+    modoEspecial = null;
+    modoEspecialPendiente = null;
+    datosClozeSesion = [];
+    rondasMatching = [];
+    primeroSeleccionadoMatching = null;
+    asociacionesTempMatching.clear();
+    limpiarContenedoresModoEspecial();
   }
 
   document.getElementById('opcion-modo-tryhard').addEventListener('click', () => seleccionarModoEnModal('tryhard'));
@@ -5164,7 +6529,7 @@
     const duracionMs = tiempos.reduce((a, b) => a + b, 0);
     gamificacion.historial.push({
       fecha: new Date().toISOString(),
-      modo: srsSesionActiva ? 'srs' : modoJuego,   // NUEVO: distingue las sesiones de Repaso Espaciado
+      modo: codigoModoHistorial(),   // NUEVO: distingue las sesiones de Repaso Espaciado
       nota: Math.round(nota * 10) / 10,
       duracion_ms: duracionMs,
       puntos_ganados: esModoSinGamificacion() ? 0 : puntosSesion,
@@ -7867,6 +9232,57 @@
     if (elModalAnalisisSesion.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-analisis-sesion-cerrar').click(); return; }
   });
 
+  document.addEventListener('keydown', (evento) => {
+    if (evento.key === 'Escape') {
+      if (elModalOtrosModos.classList.contains('abierto')) {
+        evento.preventDefault();
+        cerrarModalOtrosModos();
+        return;
+      }
+      if (elAreaTarjeta.style.display !== 'none' && !modoObservador) {
+        if (modoEspecial === 'matching' && cancelarSeleccionMatchingActual()) {
+          evento.preventDefault();
+          return;
+        }
+        const activo = document.activeElement;
+        if (activo && activo.classList && activo.classList.contains('cloze-input')) {
+          activo.blur();
+          evento.preventDefault();
+          return;
+        }
+      }
+    }
+
+    if (evento.key === 'Enter') {
+      if (elModalOtrosModos.classList.contains('abierto')) {
+        evento.preventDefault();
+        confirmarOtrosModos();
+        return;
+      }
+      if (elAreaTarjeta.style.display !== 'none' && !modoObservador && !pausaManual) {
+        const hayModalAbierto = document.querySelector('.modal-overlay.abierto') !== null;
+        if (hayModalAbierto) return;
+        if (notaAbierta || razonesAbierto) return;
+
+        if (modoEspecial === 'cloze') {
+          const clozeData = datosClozeSesion[indiceActual];
+          if (clozeData && !clozeData.evaluada) {
+            evento.preventDefault();
+            evaluarClozeActual();
+            return;
+          }
+        } else if (modoEspecial === 'matching') {
+          const ronda = rondasMatching[indiceActual];
+          if (ronda && !ronda.completada && primeroSeleccionadoMatching !== null) {
+            evento.preventDefault();
+            evaluarPrimeroMatchingActual();
+            return;
+          }
+        }
+      }
+    }
+  });
+
   const nodosImagenes = new Map();   // hash -> fila
 
   const elListaImagenesGuardadas = document.getElementById('lista-imagenes-guardadas');
@@ -8695,27 +10111,35 @@
     renderListaNotasEvaluador();
   }
 
+function esCategoriaDudaRuta(codigo) {
+    return typeof codigo === 'string' && /^duda_ruta_\d+$/.test(codigo);
+  }
+
+  function obtenerDefCategoriaNotaEval(codigo) {
+    if (esCategoriaDudaRuta(codigo)) {
+      const num = codigo.slice('duda_ruta_'.length);
+      return { codigo: codigo, texto: 'Duda Ruta ' + num, color: '#64748B' };
+    }
+    return MAPA_CATEGORIAS_NOTA_EVAL.get(codigo) || null;
+  }
+
   function guardarEdicionNotaEvaluador(id) {
     const nota = notasEvaluador.find((n) => n.id === id);
     if (!nota) return;
     const textarea = document.getElementById('notaseval-editor-compartido');
     if (textarea && typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(textarea);
     const texto = textarea ? textarea.value.trim() : '';
-    if (texto === '') return;
+    const esDudaRuta = esCategoriaDudaRuta(nota.categoria);
+    if (texto === '' && !esDudaRuta) return;
     nota.texto = texto;
-    nota.categoria = notaEvalCategoriaEdicion || '';
+    if (!esDudaRuta) {
+      nota.categoria = notaEvalCategoriaEdicion || '';
+    }
     nota.modificada = Date.now();
     nota.rev = siguienteRev();
     guardarNotasEvaluador();
     notaEvalEditandoId = null;
     notaEvalCategoriaEdicion = null;
-    renderListaNotasEvaluador();
-  }
-
-  function borrarNotaEvaluador(id) {
-    notasEvaluador = notasEvaluador.filter((n) => n.id !== id);
-    guardarNotasEvaluador();
-    if (notaEvalEditandoId === id) notaEvalEditandoId = null;
     renderListaNotasEvaluador();
   }
 
@@ -8732,6 +10156,9 @@
     cab.appendChild(titulo);
     div.appendChild(cab);
 
+    const esDudaRuta = esCategoriaDudaRuta(nota.categoria);
+    const def = obtenerDefCategoriaNotaEval(nota.categoria);
+
     if (notaEvalEditandoId === nota.id) {
       const wrapEditor = document.getElementById('notaseval-editor-compartido-wrap');
       const textarea = document.getElementById('notaseval-editor-compartido');
@@ -8746,17 +10173,30 @@
       };
       div.appendChild(wrapEditor);
 
-      const chips = document.createElement('div');
-      chips.className = 'chips-razones';
-      chips.style.display = 'flex';
-      div.appendChild(chips);
-      const actualizarChipsEdicion = () => {
-        renderSelectorCategoriaNota(chips, notaEvalCategoriaEdicion, (cod) => {
-          notaEvalCategoriaEdicion = cod;
-          actualizarChipsEdicion();
-        });
-      };
-      actualizarChipsEdicion();
+      if (esDudaRuta && def) {
+        const chipFijoWrap = document.createElement('div');
+        chipFijoWrap.className = 'fila-chips-mini';
+        const chipFijo = document.createElement('span');
+        chipFijo.className = 'chip-razon chico';
+        chipFijo.textContent = def.texto;
+        chipFijo.style.backgroundColor = hexToRgba(def.color, 0.15);
+        chipFijo.style.borderColor = def.color;
+        chipFijo.style.color = def.color;
+        chipFijoWrap.appendChild(chipFijo);
+        div.appendChild(chipFijoWrap);
+      } else {
+        const chips = document.createElement('div');
+        chips.className = 'chips-razones';
+        chips.style.display = 'flex';
+        div.appendChild(chips);
+        const actualizarChipsEdicion = () => {
+          renderSelectorCategoriaNota(chips, notaEvalCategoriaEdicion, (cod) => {
+            notaEvalCategoriaEdicion = cod;
+            actualizarChipsEdicion();
+          });
+        };
+        actualizarChipsEdicion();
+      }
 
       const acc = document.createElement('div');
       acc.className = 'panel-nota-acciones';
@@ -8768,7 +10208,6 @@
     } else {
       const chipCat = document.createElement('div');
       chipCat.className = 'fila-chips-mini';
-      const def = MAPA_CATEGORIAS_NOTA_EVAL.get(nota.categoria);
       const chip = document.createElement('span');
       if (def) {
         chip.className = 'chip-razon chico';
@@ -8784,8 +10223,9 @@
       div.appendChild(chipCat);
 
       const texto = document.createElement('div');
-      texto.className = 'panel-nota-texto';
-      texto.textContent = nota.texto;
+      const vacia = !nota.texto || nota.texto.trim() === '';
+      texto.className = 'panel-nota-texto' + (vacia ? ' vacio' : '');
+      texto.textContent = vacia ? '(sin nota)' : nota.texto;
       div.appendChild(texto);
 
       const acc = document.createElement('div');
@@ -8794,10 +10234,43 @@
       acc.appendChild(botonMini('🗑 Borrar', async () => {
         if (!(await confirmarAccion('¿Borrar esta nota del evaluador? No se puede deshacer.'))) return;
         borrarNotaEvaluador(nota.id);
+        if (elModalRetencionRutas.classList.contains('abierto')) renderRetencionSesionLista();
       }));
       div.appendChild(acc);
     }
 
+    return div;
+  }
+
+  function filaNotaEvaluadorOtra(nota) {
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
+    const titulo = document.createElement('div');
+    const vacia = !nota.texto || nota.texto.trim() === '';
+    titulo.textContent = '(' + etiquetaEspacio(nota.espacio) + ') ' + (vacia ? '(sin nota)' : nota.texto);
+    div.appendChild(titulo);
+    const def = obtenerDefCategoriaNotaEval(nota.categoria);
+    if (def) {
+      const chips = document.createElement('div');
+      chips.className = 'fila-chips-mini';
+      const chip = document.createElement('span');
+      chip.className = 'chip-razon chico';
+      chip.textContent = def.texto;
+      chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+      chip.style.borderColor = def.color;
+      chip.style.color = def.color;
+      chips.appendChild(chip);
+      div.appendChild(chips);
+    }
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
+      notasEvaluador = notasEvaluador.filter((n) => n.id !== nota.id);
+      guardarNotasEvaluador();
+      renderListaNotasEvaluador();
+    }));
+    div.appendChild(acc);
     return div;
   }
 
@@ -9102,6 +10575,87 @@
     return todasLasRutasCitadas().filter((id) => retencionSubtemasActivos[rutaSubt[id]] !== false);
   }
 
+const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
+  const elTituloModalDudaRuta = document.getElementById('titulo-modal-duda-ruta');
+  const elChipModalDudaRuta = document.getElementById('chip-modal-duda-ruta');
+  const elDudaRutaEditor = document.getElementById('duda-ruta-editor');
+  let rutaDudaActivaId = null;
+
+  function buscarNotaDudaRuta(idRuta) {
+    const cat = 'duda_ruta_' + idRuta;
+    return notasEvaluadorPropias().find((n) => n.categoria === cat) || null;
+  }
+
+  function abrirModalNotaDudaRuta(idRuta) {
+    const cat = 'duda_ruta_' + idRuta;
+    let nota = buscarNotaDudaRuta(idRuta);
+    if (!nota) {
+      nota = {
+        id: generarIdNotaEvaluador(),
+        texto: '',
+        categoria: cat,
+        espacio: ESPACIO_HASH,
+        creada: Date.now(),
+        modificada: Date.now(),
+        rev: siguienteRev(),
+      };
+      notasEvaluador.push(nota);
+      guardarNotasEvaluador();
+      renderRetencionSesionLista();
+    }
+
+    rutaDudaActivaId = idRuta;
+    elTituloModalDudaRuta.textContent = '💡 Nota — Ruta #' + idRuta;
+    const def = obtenerDefCategoriaNotaEval(cat);
+    elChipModalDudaRuta.textContent = def.texto;
+    elChipModalDudaRuta.style.backgroundColor = hexToRgba(def.color, 0.15);
+    elChipModalDudaRuta.style.borderColor = def.color;
+    elChipModalDudaRuta.style.color = def.color;
+
+    elDudaRutaEditor.value = nota.texto || '';
+    elModalNotaDudaRuta.classList.add('abierto');
+    setTimeout(() => elDudaRutaEditor.focus(), 0);
+  }
+
+  function cerrarModalNotaDudaRuta() {
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') {
+      window.__detenerDictadoSiActivoEn(elDudaRutaEditor);
+    }
+    elModalNotaDudaRuta.classList.remove('abierto');
+    rutaDudaActivaId = null;
+  }
+
+  function guardarModalNotaDudaRuta() {
+    if (rutaDudaActivaId === null) return;
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') {
+      window.__detenerDictadoSiActivoEn(elDudaRutaEditor);
+    }
+    const nota = buscarNotaDudaRuta(rutaDudaActivaId);
+    if (nota) {
+      nota.texto = elDudaRutaEditor.value.trim();
+      nota.modificada = Date.now();
+      nota.rev = siguienteRev();
+      guardarNotasEvaluador();
+    }
+    cerrarModalNotaDudaRuta();
+    renderRetencionSesionLista();
+  }
+
+  document.getElementById('btn-duda-ruta-guardar').addEventListener('click', () => guardarModalNotaDudaRuta());
+  document.getElementById('btn-duda-ruta-cerrar').addEventListener('click', () => cerrarModalNotaDudaRuta());
+  elModalNotaDudaRuta.addEventListener('click', (evento) => {
+    if (evento.target === elModalNotaDudaRuta) cerrarModalNotaDudaRuta();
+  });
+  elDudaRutaEditor.addEventListener('keydown', (evento) => {
+    if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+      evento.preventDefault();
+      guardarModalNotaDudaRuta();
+    } else if (evento.key === 'Escape') {
+      evento.preventDefault();
+      cerrarModalNotaDudaRuta();
+    }
+  });
+
   function filaRetencionSesion(id) {
     const estado = retencionSesionToggles[id] || { retenida: false, dificil: false };
     const div = document.createElement('div');
@@ -9137,6 +10691,17 @@
 
     toggles.appendChild(btnRet);
     toggles.appendChild(btnDif);
+
+    if (estado.dificil) {
+      const tieneNota = !!buscarNotaDudaRuta(id);
+      const btnNota = document.createElement('button');
+      btnNota.type = 'button';
+      btnNota.className = 'toggle-retencion' + (tieneNota ? ' activa-nota' : '');
+      btnNota.textContent = '💡 Nota';
+      btnNota.addEventListener('click', () => abrirModalNotaDudaRuta(id));
+      toggles.appendChild(btnNota);
+    }
+
     div.appendChild(toggles);
     return div;
   }
@@ -9920,7 +11485,13 @@
     }
   }
 
-  function analisisPropiosParaScore() { return analisisPropios().filter((a) => a.modo !== 'examen'); }
+  function analisisPropiosParaScore() {
+    return analisisPropios().filter((a) => !esModoEspecialHistorial(a.modo));
+  }
+
+  function sesionesPropiasParaScoreYSesgo() {
+    return gamificacion.historial.filter((s) => esSesionLocal(s) && !esModoEspecialHistorial(s.modo));
+  }
 
   function promedioCampoAnalisis(nombreSubtema, campo) {
     const propios = analisisPropiosParaScore().slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 10);
@@ -10317,7 +11888,12 @@
     lector.readAsText(archivo);
   });
 
+  const renderPanelNota = (t) => renderNota(t);
+  const renderRazonesUI = (t) => renderRazones(t);
+  const acumularTiempoActual = () => { if (cronometroActivo && !cronometroCongelado()) acumularTiempo(); };
+
   document.getElementById('btn-elegir-temas').addEventListener('click', () => {
+    limpiarModoEspecialAlSalir();
     mostrarPantalla('temas');
   });
 
@@ -10385,6 +11961,7 @@
   }
 
   function renderTarjeta() {
+    if (hookInicioRenderTarjeta()) return;
     if (tarjetasSesion.length === 0) {
       elAreaTarjeta.innerHTML = '<p class="sin-tarjetas">No hay tarjetas para estudiar con los temas elegidos.</p>';
       return;
@@ -10962,6 +12539,7 @@
 
   function evaluarRespuesta() {
     if (pausaManual || segundaPendiente) return;
+    if (hookEvaluarActual()) return;
     if (resultados[indiceActual] !== null) return;
     if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elTextoEval);
     const texto = elTextoEval.value;
@@ -11215,6 +12793,7 @@
       indiceActual = nuevo;
     }
 
+    hookCambioIndiceEspecial();
     resetPanelesUI();  // NUEVO: nota y razones se cierran al cambiar de tarjeta
     renderTarjeta();
   }
@@ -11627,6 +13206,7 @@
   }
 
   function iniciarCronometro() {
+    tiempoInicioTarjeta = Date.now();
     detenerCronometro();
     actualizarCronometro();
     cronometroIntervalId = setInterval(actualizarCronometro, 1000);
@@ -11645,6 +13225,7 @@
     if (cronometroActivo && !cronometroCongelado()) {
       acumularTiempo();
     }
+    prepararFinalizarSesionEspecial();
     for (let i = 0; i < resultados.length; i++) {
       if (resultados[i] === null) resultados[i] = 'saltar';
     }
@@ -11858,6 +13439,7 @@
     };
 
     document.getElementById('btn-reiniciar').onclick = () => {
+      if (reiniciarSesionActual()) return;
       const nuevaLista = modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion];
       iniciarSesion(nuevaLista);
     };
@@ -11872,6 +13454,7 @@
     renderResumenListado();
 
     mostrarAnalisisSesion();
+    aplicarExclusionesResumenModoEspecial();
 
     mostrarPantalla('resumen');
   }

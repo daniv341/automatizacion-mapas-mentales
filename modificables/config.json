@@ -1,6 +1,13 @@
 {
   "entradas": [
     {
+      "recordatorio": "../guardados/recordatorios/recordatorio-U7.txt",
+      "respuestas": "../guardados/rutas/7 - Lugar de las Raices.txt",
+      "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\7 - Lugar de las Raices.drawio",
+      "resaltar": false,
+      "colores": "amarilloClaro"
+    },
+    {
       "recordatorio": "../guardados/antiguos/recordatorios/recordatorio SCOR.txt",
       "respuestas": "../guardados/antiguos/rutas/SCOR.txt",
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\SCOR.drawio",
