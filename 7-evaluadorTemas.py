@@ -10066,9 +10066,6 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
 
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    if (hash !== hashImagen(entrada.ruta, entrada.indice)) {
-      acc.appendChild(botonMini('🔗 Vincular a este evaluador', () => abrirModalVincular('imagenes', entrada.espacio)));
-    }
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar la nota y la marca de difícil de esta imagen?'))) return;
       delete datosImagenes[hash];
@@ -10348,16 +10345,6 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       extra.textContent = '— ' + s;
       label.appendChild(extra);
     }
-
-    if (espacioOtro) {
-      const btnVinc = botonMini('🔗 Vincular a este evaluador', (evento) => {
-        evento.preventDefault();
-        abrirModalVincular('dificiles', espacioOtro);
-      });
-      btnVinc.style.marginLeft = '8px';
-      label.appendChild(btnVinc);
-    }
-
     return label;
   }
 
@@ -10626,7 +10613,6 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     div.appendChild(bloqueVersion('Mi nota', nota !== '' ? nota : '(nota borrada)', false, nota === ''));
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🔗 Vincular a este evaluador', () => abrirModalVincular('notas', v.espacio)));
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
       delete notasLocales[h];
@@ -12474,9 +12460,6 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
 
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    if (grupoActualRazon(hash) === 'otras') {
-      acc.appendChild(botonMini('🔗 Vincular a este evaluador', () => abrirModalVincular('razones', entrada.espacio)));
-    }
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar por completo este registro de razones?'))) return;
       delete razonesGuardadas[hash];
