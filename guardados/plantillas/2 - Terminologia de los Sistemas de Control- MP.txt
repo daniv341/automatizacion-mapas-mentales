@@ -2,9 +2,9 @@ subT CLASIFICACIÓN CONTROLADORES ANALÓGICOS
 controladores industriales analógicos
 se pueden clasificar
 de acuerdo con sus acciones control,
-siguiente forma:
-Controladores proporcionales integrales (PI)
-Controladores proporcionales derivativos (PD)
+*siguiente forma:
++Controladores proporcionales integrales (PI)
++Controladores proporcionales derivativos (PD)
 
 Controladores dos posiciones,
 o encendido_apagado (on off);
@@ -18,7 +18,6 @@ Controladores proporcionales (P)
 Tienen
 una salida proporcional su entrada,
 es decir
-<imagen>
 Donde Kp
 es una constante proporcionalidad,
 ganancia del controlador
@@ -31,41 +30,37 @@ Controladores derivativo (D)
 Tienen una salida u
 proporcional
 a derivada de su entrada e,
-<imagen>
 en donde KD
 es una constante proporcionalidad
 
 Controladores integrales (I)
 Tiene una salida proporcional
 a integral su entrada
-<imagen>
 mayoría ingenieros
 usan tiempo integración
-<imagen>
 donde Ki
 es constante de integracion
 
 Controladores proporcionales integrales derivativos (PID)
 salida
-es suma contribuciones partes
-integral y
-proporcional
-derivativa:
-<imagen>
+*es suma contribuciones partes
++integral y
++proporcional
++derivativa:
 
 controladores PD, PI, DI,
-son combinaciones controladores
-proporcional (P),
-derivativo (D) e
-integral (I)
+*son combinaciones controladores
++proporcional (P),
++derivativo (D) e
++integral (I)
 
 subT Diagramas Bloques
 es una representación simplificada
 relación causa y efecto
-que existe entre
-entrada y
-salida
-1 sistema físico
+*que existe entre
++@entrada y
++@salida
+$1 sistema físico
 
 suministra 1 método útil
 para caracterizar
@@ -81,24 +76,23 @@ elementos del sistema
 DIAGRAMA BLOQUES SIN RETROALIMENTACION
 interior del rectángulo
 que representa al bloque
-generalmente contiene
-descripción o
-nombre del elemento o
-símbolo operación matemática
-que se ejecuta
+*generalmente contiene
++@descripción o
++@nombre del elemento o
++@símbolo operación matemática
+$que se ejecuta
 sobre entrada,
 con fin obtener salida
-<imagen>
 
 subT DIAGRAMA BLOQUES SIN RETROALIMENTACION
-flechas representan
-dirección información unilateral o
-flujo señales
+*flechas representan
++dirección información unilateral o
++flujo señales
 
-operaciones
-adición y
-sustracción
-tienen una representación especial
+*operaciones
++@adición y
++@sustracción
+$tienen una representación especial
 bloque se convierte
 en 1 pequeño círculo,
 llamado
@@ -113,16 +107,14 @@ puede llegar a 1 punto suma
 salida
 es suma algebraica
 entradas
-<imagen>
 
 Para hacer
 que misma señal o variable
 sea una entrada
-a más
-1 bloque o
-punto suma
-se utiliza 1 punto toma
-<imagen>
+*a más
++@1 bloque o
++@punto suma
+$se utiliza 1 punto toma
 
 subT Diagramas Bloques
 DIAGRAMAS BLOQUES SISTEMAS CONTINUOS CON RETROALIMENTACIÓN
@@ -133,7 +125,6 @@ están conectados 1 modo
 que caracteriza
 sus relaciones funcionales
 dentro del sistema
-<imagen>
 
 subT DIAGRAMAS BLOQUES SISTEMAS CONTINUOS CON RETROALIMENTACIÓN
 en este diagrama bloques
@@ -166,38 +157,24 @@ DEFINICIONES
 planta
 (proceso o sistema controlado)
 g2
-es
-sistema
-subsistema
-proceso u
-objeto
-la cual se va a controlar
-con una
-cantidad o
-condición
-particular
-
-subT DEFINICIONES
-(proceso o sistema controlado)
-g2
-es
-sistema
-subsistema
-proceso u
-objeto
-la cual se va a controlar
-con una
-cantidad o
-condición
-particular
+*es
++@sistema
++@subsistema
++@proceso u
++@objeto
+$la cual se va a controlar
+*con una
++@cantidad o
++@condición
+$particular
 
 2
 salida controlada c
 es variable salida planta,
-es decir, es
-esa cantidad o
-condición
-de la planta
+*es decir, es
++@esa cantidad o
++@condición
+$de la planta
 que se controla
 
 3
@@ -215,10 +192,10 @@ señal control apropiada
 u o m
 que se aplica a planta
 
-Entre estos se encuentran
-controladores,
-compensadores o
-amplificadores
+*Entre estos se encuentran
++controladores,
++compensadores o
++amplificadores
 
 5
 señal control u, o
@@ -244,10 +221,10 @@ entre
 señal retroalimentación primaria b y
 salida controlada c
 
-Entre estos se encuentran
-sensores,
-compensadores o
-controladores
+*Entre estos se encuentran
++sensores,
++compensadores o
++controladores
 
 8
 entrada referencia r
@@ -265,16 +242,16 @@ salida de la planta
 
 9
 señal retroalimentación primaria b
-es una función
-salida controlada c y
-a entrada referencia r
-para obtener
+*es una función
++@salida controlada c y
++@a entrada referencia r
+$para obtener
 señal actuante (error)
 
-que se suma algebraicamente
-salida controlada c y
-a entrada referencia r
-para obtener
+*que se suma algebraicamente
++@salida controlada c y
++@a entrada referencia r
+$para obtener
 señal actuante (error)
 
 En 1 sistema malla abierta
@@ -301,12 +278,11 @@ señal actuante (error)
 en 1 sistema control
 con retroalimentación
 
-11
-En retroalimentación negativa
+*11
++En retroalimentación negativa
 punto suma
 es 1 sustractor y
-
-en retroalimentación positiva
++en retroalimentación positiva
 punto suma
 es 1 sumador
 
@@ -327,7 +303,6 @@ Un muestreador
 es 1 dispositivo que transforma
 una señal continua en tiempo,
 en una señal discreta en tiempo
-<imagen>
 
 muestreadores ideales
 se representan manera esquemática
@@ -368,46 +343,43 @@ orden ν
 es una señal entrada,
 generalmente igual
 a entrada referencia r
-<imagen>
 
 Pero cuando
 clase energía orden v
 no es misma
 que retroalimentación primaria b,
 se requiere 1 transductor
-entre
-orden v y
-entrada referencia r
+*entre
++orden v y
++entrada referencia r
 
 18
 un sistema multivariable
 es aquel
-que tiene
-más una entrada o
-más una salida o
-ambas
+*que tiene
++más una entrada o
++más una salida o
++ambas
 
 subT OTROS SISTEMAS CONTROL
 SERVOMECANISMOS
 es 1 sistema control
 con retroalimentación amplificada en potencia,
 en el cual
-variable controlada c
-es una posición mecánica o
-<imagen>
-
-una derivada
-con respecto al tiempo,
-tal como
+*variable controlada c
++@es una posición mecánica o
++una derivada
+@con respecto al tiempo,
+$tal como
 velocidad o aceleración
 
 REGULADOR
 es 1 sistema control
 con retroalimentación
-en cual
-entrada o
-comando referencia
-es constante
+*en cual
++@entrada o
++@comando referencia
+$es constante
 por largos periodos tiempo,
 habitualmente
 durante todo intervalo tiempo

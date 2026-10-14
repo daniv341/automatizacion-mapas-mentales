@@ -6,15 +6,11 @@ para sistemas orden general
 
 sí se tiene
 siguiente sistema segundo orden
-<imagen>
 
 Obtenemos su Función Transferencia:
-<imagen>
-<imagen>
 
 Por tanto,
 su Función Transferencia es
-<imagen>
 
 comportamiento dinámico
 1 Sistema Segundo Orden
@@ -26,9 +22,9 @@ donde ζ
 es relación amortiguamiento o
 amortiguamiento relativo
 es decir
-ángulo existente entre
-origen y
-Polo
+*ángulo existente entre
++origen y
++Polo
 
 ωn es
 frecuencia angular oscilación natural,
@@ -49,34 +45,29 @@ frecuencia angular oscilación
 a cual sistema oscila
 cuando amortiguamiento
 es distinto cero
-<imagen>
 
-Es importante discutir valores
-en que se mueven
-estos parámetros y
-diferentes comportamientos
-que adoptan sistemas
-conforme varian
+*Es importante discutir valores
++en que se mueven
+@estos parámetros y
++diferentes comportamientos
+@que adoptan sistemas
+$conforme varian
 ζ y ωn
 afectan
 raíces ecuación característica
 del Polinómio denominador
 Función Transferencia
-
 es decir las raices
-<imagen>
-
 dos raíces pueden expresarse como:
-<imagen>
 
 donde
 1
 ζ = cos φ,
 siendo φ ángulo
-entre
-origen y
-Polo;
-s1, s2= sigma ± jω
+*entre
++@origen y
++@Polo;
+$s1, s2= sigma ± jω
 
 2
 ωn es distancia
@@ -95,15 +86,13 @@ raices s1, s2 ,
 pueden reescribirse
 en términos
 forma binómica variable compleja s,
-donde ζ ω
-representa parte real y
-parte imaginaria
-<imagen>
+*donde ζ ω
++representa parte real y
++parte imaginaria
 
-parámetro ωd representa
-representa parte real y
-parte imaginaria
-<imagen>
+*parámetro ωd representa
++representa parte real y
++parte imaginaria
 
 subT Ubicación Geométrica ζ y su magnitud
 1
@@ -113,7 +102,6 @@ corresponde al amortiguamiento positivo
 factor amortiguamiento sigma o
 relación amortiguamiento ζ
 es positivo)
-<imagen>
 
 amortiguamiento positivo
 causa que respuesta
@@ -145,10 +133,10 @@ a 1 amortiguamiento nulo
 amortiguamiento cero
 resulta
 en una respuesta oscilación permanente,
-y sistema se denomina
-marginalmente estable o
-marginalmente inestable
-y corresponde
+*y sistema se denomina
++@marginalmente estable o
++@marginalmente inestable
+$y corresponde
 a Polos Imaginarios puros,
 es decir
 su parte real
@@ -157,23 +145,22 @@ donde s=± jω
 
 subT Ubicación Geométrica Raices 1 Sistema 2º Orden conforme varía ζ
 1
-Si ζ ) 1
+Si ζ > 1
 entonces respuesta del sistema
 es sobreamortiguada,
-corresponde a polos
-reales y
-distintos
-<imagen>
+*corresponde a polos
++reales y
++distintos
 
 2
 Si ζ = 1
 entonces respuesta del sistema
 es críticamente amortiguada,
 corresponde por lo menos
-a 1 par polos
-reales e
-iguales
-presentando
+*a 1 par polos
++@reales e
++@iguales
+$presentando
 Raices Reales Múltiples
 
 3
@@ -194,16 +181,16 @@ sobre eje imaginario jω
 nuestro caso interés
 es cuando respuesta del sistema
 es subamortiguada,
-es decir 0( ζ ( 1
+es decir 0< ζ < 1
 
 desempeño
 1 sistema control
 se estudia en base
 a respuesta transitoria
 a una entrada escalón unitario,
-ya que
-es fácil generarla y
-muy drástica
+*ya que
++es fácil generarla y
++muy drástica
 
 Es decir,
 si responde bien
@@ -215,13 +202,6 @@ Se puede particularizar
 analisis todos valores posibles
 pueda tomar ζ
 y su comportamiento
-<imagen>
-<imagen>
-<imagen>
-<imagen>
-<imagen>
-<imagen>
-<imagen>
 
 subT PARAMETROS RESPUESTA TRANSITORIA
 1
@@ -231,7 +211,6 @@ que tarda respuesta
 en alcanzar
 mitad del valor final
 por primera vez
-<imagen>
 
 2
 Tiempo Crecimiento tc:
@@ -264,7 +243,6 @@ Es valor
 pico máximo curva respuesta
 medido desde unidad
 Que se define
-<imagen>
 
 Si
 valor final estabilizado respuesta
@@ -276,10 +254,10 @@ sobreimpulso porcentual máximo
 Tiempo Establecimiento ts:
 Es tiempo que
 curva respuesta requiere
-para
-alcanzar y
-mantenerse
-en 1 rango alrededor
+*para
++@alcanzar y
++@mantenerse
+$en 1 rango alrededor
 del valor final
 con una magnitud especificada
 por porcentaje absoluto
@@ -300,24 +278,22 @@ es aquel que
 tiene polos complejos conjugados,
 con una relación amortiguamiento
 entre 0,4 y 0,8
-<imagen>
 
 Ya que valores pequeños
-ζ (ζ ( 0,4)
+ζ (ζ < 0,4)
 producen 1 excesivo sobreimpulso
 en respuesta transitoria,
 mientras que
 1 sistema
 con 1 valor grande
-ζ (ζ ) 0,8)
+ζ (ζ > 0,8)
 responde lentamente
 
 Un sistema control
 debe tener
-como requisito fundamental
-su rapidez respuesta y
-
-un adecuado amortiguamiento
-(incluso en algunas aplicaciones
+*como requisito fundamental
++@su rapidez respuesta y
++@un adecuado amortiguamiento
+$(incluso en algunas aplicaciones
 no se tolera ninguna oscilación)
 

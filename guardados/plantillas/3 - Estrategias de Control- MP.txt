@@ -3,20 +3,20 @@ Un Controlador PID
 (Proporcional Integral Derivativo)
 es 1 Mecanismo Control
 por Realimentación
-que calcula
-desviación o
-error
-entre
-1 valor medido y
-valor que se quiere obtener
-de manera poder aplicar
+*que calcula
++@desviación o
++@error
+$*entre
++@1 valor medido y
++@alor que se quiere obtener
+$de manera poder aplicar
 una acción correctiva
 (Acción Control)
 que ajuste Proceso
-a fin
-minimizar o
-anular
-error
+*a fin
++@minimizar o
++@anular
+$error
 
 algoritmo cálculo del control PID
 se da
@@ -27,8 +27,6 @@ valor Banda Proporcional
 determina reacción
 conforme
 al error actual
-<imagen>
-<imagen>
 
 Tiempo Integral
 (Acción Integral)
@@ -44,10 +42,10 @@ se reduce a cero
 Tiempo Derivativo
 (Acción Derivativa)
 Tiempo Derivativo
-determina reacción
-en función del tiempo o
-velocidad
-en que se produce error
+*determina reacción
++@en función del tiempo o
++@velocidad
+$en que se produce error
 
 suma estas tres acciones,
 es usada
@@ -66,10 +64,10 @@ en proceso
 respuesta del controlador
 puede ser descrita
 en términos de:
-a
-grado o
-magnitud
-Acción Control
+*a
++@grado o
++@magnitud
+$Acción Control
 ante 1 desvío
 con respecto al Set Point
 
@@ -84,9 +82,9 @@ del sistema
 
 uso del PID
 para Control,
-no garantiza
-Control Óptimo del Sistema o
-Estabilidad del mismo
+*no garantiza
++Control Óptimo del Sistema o
++Estabilidad del mismo
 
 controladores PI
 son particularmente comunes,
@@ -99,15 +97,16 @@ debido a acción control
 
 subT FUNCIONAMIENTO
 Para correcto funcionamiento
-1 controlador PID
-que regule
+*1 controlador PID
++que regule
 1 proceso o
-sistema
++sistema
 se necesita al menos:
-a
-un sensor o
-un transmisor
-que determine
+
+*a
++@un sensor o
++@un transmisor
+$que determine
 estado del sistema
 
 b
@@ -115,10 +114,10 @@ un controlador,
 que genere señal
 que gobierna al actuador
 
-c
-un actuador o
-elemento final control
-que modifique al sistema
+*c
++@un actuador o
++@elemento final control
+$que modifique al sistema
 manera controlada
 
 PASOS
@@ -132,10 +131,10 @@ subT PASOS
 2
 Esta señal
 recibe nombre
-punto consigna
-el cual es misma naturaleza y
-tiene mismo rango valores
-que señal
+*punto consigna
++@el cual es misma naturaleza y
++@tiene mismo rango valores
+$que señal
 que proporciona sensor
 
 3
@@ -147,9 +146,9 @@ obteniendo así
 señal error,
 que determina en cada instante
 diferencia que hay
-entre
-valor deseado y
-valor medido
+*entre
++valor deseado y
++valor medido
 
 4
 señal error
@@ -179,11 +178,11 @@ con actuador utilizado
 
 subT ACCION PROPORCIONAL
 consiste en producto
-entre
-señal error y
-Constante Proporcionalidad
-(recíproca K o G, Ganancia)
-como para que produzca
+*entre
++@señal error y
++Constante Proporcionalidad
+@(recíproca K o G, Ganancia)
+$como para que produzca
 que error
 en estado estacionario
 sea casi nulo
@@ -210,36 +209,37 @@ y de hacer
 que sistema contenga
 alguna componente
 que contemple variación
-respecto al tiempo,
-es incluyendo y
-configurando acciones
-integral y
-derivativa
+*respecto al tiempo,
++@es incluyendo y
++@configurando 
+$*acciones
++integral y
++derivativa
 
 subT ACCION INTEGRAL
-tiene como propósito
-disminuir y
-eliminar
-error en estado estacionario
+*tiene como propósito
++@disminuir y
++@eliminar
+$error en estado estacionario
 (error Offset),
 generado al aplicar
 Acción Proporcional
 
 Control Integral
 actúa cuando persiste
-una desviación entre
-variable y
-punto consigna
-integrando esta desviación
+*una desviación entre
++@variable y
++@punto consigna
+$integrando esta desviación
 en tiempo y
 sumándola
 a acción proporcional
 
 error es integrado,
-el cual tiene función
-promediarlo o
-sumarlo
-por 1 período determinado
+*el cual tiene función
++@promediarlo o
++@sumarlo
+$por 1 período determinado
 
 Luego es multiplicado
 por una constante I
@@ -269,15 +269,15 @@ en valor absoluto
 del error;
 (si error es constante,
 solamente actúan
-modos
-proporcional e
-integral)
+*modos
++proporcional e
++integral)
 
 error,
 es desviación existente
-entre
-punto medida y
-valor consigna,
+*entre
++punto medida y
++valor consigna,
 
 Su funcion
 es mantener error al mínimo
@@ -287,12 +287,12 @@ consiguiéndose esta manera
 evitar que error
 se incremente
 
-se
-deriva
+*se
++deriva
 con respecto al tiempo y
-se multiplica
++se multiplica
 por una constante D y
-luego se suma
++luego se suma
 a señales anteriores (PI)
 
 Es importante
@@ -327,9 +327,9 @@ con mínimas oscilaciones
 acción derivada
 es adecuada
 cuando hay retraso
-entre
-movimiento válvula control y
-su repercusión
+*entre
++movimiento válvula control y
++su repercusión
 a variable controlada
 
 Suele ser poco utilizada
@@ -352,10 +352,10 @@ a
 pueden dar 1 desempeño inadecuado
 si ganancia del lazo del PID
 debe ser reducida
-para que respuesta de este
-no se dispare
-u oscile
-sobre valor del Set Point
+*para que respuesta de este
++@no se dispare
++@u oscile
+$sobre valor del Set Point
 
 b
 es lineal
@@ -375,45 +375,45 @@ sea muy grande
 
 subT APLICACIONES
 fueron inventados
-para simplificar
-labores de operadores y
-ejercer un mejor control
-sobre operaciones
+*para simplificar
++@labores de operadores y
++@ejercer un mejor control
+$sobre operaciones
 
 se utiliza
 en aplicaciones más críticas
-tales como
-Control
-Presión,
-Flujo,
-Fuerza,
-Velocidad,
-en muchas aplicaciones química
+*tales como
++Control
++Presión,
++Flujo,
++Fuerza,
++Velocidad,
++en muchas aplicaciones química
 
 a
-Lazos de Temperatura
-(Aire acondicionado,
-Calentadores,
-Refrigeradores, etc.)
+*Lazos de Temperatura
++(Aire acondicionado,
++Calentadores,
++Refrigeradores, etc.)
 
 b
 Lazos de Nivel
-(Nivel en tanques de líquidos
-como agua,
-lácteos,
-mezclas,
-crudo, etc.)
+*(Nivel en tanques de líquidos
++como agua,
++lácteos,
++mezclas,
++crudo, etc.)
 
 c
 Lazos de Presión
-(para mantener una presión predeterminada
-en tanques,
-tubos,
-recipientes, etc.)
+*(para mantener una presión predeterminada
++en tanques,
++tubos,
++recipientes, etc.)
 
 d
 Lazos de Flujo
-(mantienen la cantidad de flujo dentro de
-una línea
-o tubo)
+*(mantienen la cantidad de flujo dentro de
++una línea
++o tubo)
 
