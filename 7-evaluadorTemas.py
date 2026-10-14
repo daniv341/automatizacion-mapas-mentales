@@ -2721,17 +2721,51 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .estadisticas-tab { opacity: 0.6; }
   .estadisticas-tab.activa { opacity: 1; font-weight: 700; }
 
+  .subt-repasar-acordeon {
+    border-bottom: 1px solid var(--color-borde-suave);
+  }
+  .subt-repasar-acordeon:last-child { border-bottom: none; }
   .subt-repasar-fila {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 8px 4px;
-    border-bottom: 1px solid var(--color-borde-suave);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
   }
-  .subt-repasar-fila:last-child { border-bottom: none; }
+  .subt-repasar-fila::-webkit-details-marker { display: none; }
+  .subt-repasar-fila:hover { background: var(--bg-superficie-hover); border-radius: 6px; }
   .subt-repasar-badge { font-size: 12px; white-space: nowrap; }
-  .subt-repasar-nombre { flex: 1; font-weight: 600; }
-  .subt-repasar-score { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .subt-repasar-nombre { flex: 1; font-weight: 600; text-align: left; }
+  .subt-repasar-derecha {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .subt-repasar-score { font-weight: 700; }
+  .subt-repasar-sesgo { font-size: 13px; line-height: 1; }
+  .subt-sesgo-sobreconfianza { color: #e07b00; }
+  .subt-sesgo-subestimacion { color: #2563EB; }
+  .subt-repasar-detalle {
+    padding: 8px 12px 12px;
+    margin: 0 4px 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--texto-secundario);
+    background: var(--bg-superficie-alt);
+    border-radius: 8px;
+    white-space: pre-line;
+    text-align: left;
+  }
+
+  .velocidad-leyenda-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
 
   .zona-buscador {
     position: relative;
@@ -3004,6 +3038,37 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .btn-asociar-ruta:disabled {
     opacity: 0.45;
     cursor: not-allowed;
+  }
+
+  .estadisticas-tooltip-flotante {
+    position: fixed;
+    z-index: 3500;
+    background: var(--bg-superficie);
+    color: var(--texto-principal);
+    border: 1.5px solid var(--color-borde-fuerte);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    box-shadow: 0 8px 24px var(--color-sombra-fuerte);
+    pointer-events: none;
+    white-space: pre-line;
+    text-align: left;
+    max-width: 260px;
+    display: none;
+  }
+  .tooltip-segmento-activo {
+    stroke: #ffffff;
+    stroke-width: 2px;
+  }
+  .tooltip-segmento-atenuado {
+    opacity: 0.6;
+  }
+  .curva-olvido-aviso {
+    font-size: 12px;
+    color: var(--texto-suave);
+    margin-top: 6px;
+    font-style: italic;
   }
 </style>
 </head>
@@ -3838,12 +3903,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
     <div id="estadisticas-pane-diagramas">
       <div id="estadisticas-contenido"></div>
+      <div id="curva-olvido-contenedor"></div>
     </div>
     <div id="estadisticas-pane-srs" style="display:none;">
       <div id="srs-tab-contenido"></div>
     </div>
     <div id="estadisticas-pane-subt" style="display:none;">
       <div id="subt-repasar-lista"></div>
+      <div id="subt-velocidad-contenedor"></div>
       <div class="sync-seccion-titulo">Análisis de Sesión</div>
       <div id="analisis-guardados-lista"></div>
       <p class="nota-dificiles" id="analisis-guardados-vacio" style="display:none;">Todavía no guardaste ningún análisis de sesión.</p>
@@ -8082,8 +8149,10 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     analisisGuardados.sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
     while (analisisGuardados.length > MAX_ANALISIS_GUARDADOS) analisisGuardados.shift();
     guardarAnalisisGuardados();
+    estadisticasConstruidas = false;
+    curvaOlvidoConstruido = false;
     subtRepasarConstruido = false;
-    analisisGuardadoEstaSesion = true;
+    sesgoConfianzaConstruido = false;
     elBtnAnalisisSesionGuardar.disabled = true;
     elBtnAnalisisSesionGuardar.textContent = '✓ Guardado';
   });
@@ -8105,7 +8174,10 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     analisisGuardados.sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
     while (analisisGuardados.length > MAX_ANALISIS_GUARDADOS) analisisGuardados.shift();
     guardarAnalisisGuardados();
+    estadisticasConstruidas = false;
+    curvaOlvidoConstruido = false;
     subtRepasarConstruido = false;
+    sesgoConfianzaConstruido = false;
     renderAnalisisGuardadosLista();
     return { nuevas: nuevas, actualizadas: 0, conservadas: conservadas, iguales: 0, invalidas: invalidas };
   }
@@ -8145,7 +8217,10 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       if (!(await confirmarAccion('¿Borrar este análisis de sesión? No se puede deshacer.'))) return;
       analisisGuardados = analisisGuardados.filter((a) => a.id !== entrada.id);
       guardarAnalisisGuardados();
+      estadisticasConstruidas = false;
+      curvaOlvidoConstruido = false;
       subtRepasarConstruido = false;
+      sesgoConfianzaConstruido = false;
       renderAnalisisGuardadosLista();
     }));
     contenedor.appendChild(acc);
@@ -8236,7 +8311,10 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (!(await confirmarAccion('¿Vaciar TODOS los análisis de sesión? No se puede deshacer.'))) return;
     analisisGuardados = [];
     guardarAnalisisGuardados();
+    estadisticasConstruidas = false;
+    curvaOlvidoConstruido = false;
     subtRepasarConstruido = false;
+    sesgoConfianzaConstruido = false;
     renderAnalisisGuardadosLista();
   });
 
@@ -9422,6 +9500,10 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
         if (r.espacio === viejo) { r.espacio = ESPACIO_HASH; n++; }
       });
       guardarRetencionRutas();
+      estadisticasConstruidas = false;
+      curvaOlvidoConstruido = false;
+      subtRepasarConstruido = false;
+      sesgoConfianzaConstruido = false;
       renderRetencionHistorial();
       return { movidas: n, sin: 0 };
     }
@@ -9431,7 +9513,10 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
         if (a.espacio === viejo) { a.espacio = ESPACIO_HASH; n++; }
       });
       guardarAnalisisGuardados();
+      estadisticasConstruidas = false;
+      curvaOlvidoConstruido = false;
       subtRepasarConstruido = false;
+      sesgoConfianzaConstruido = false;
       renderAnalisisGuardadosLista();
       return { movidas: n, sin: 0 };
     }
@@ -9652,7 +9737,10 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
 
     analisisGuardados = analisisGuardados.filter((a) => a.espacio !== espacio);
     guardarAnalisisGuardados();
+    estadisticasConstruidas = false;
+    curvaOlvidoConstruido = false;
     subtRepasarConstruido = false;
+    sesgoConfianzaConstruido = false;
     renderAnalisisGuardadosLista();
 
     try {
@@ -10843,7 +10931,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
         const r = fusionarNotasLista(lista);
         elInfo.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
           ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
-          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
       } catch (e) {
         elInfo.textContent = 'El archivo no es un JSON válido de notas.';
       }
@@ -11041,7 +11129,7 @@ function esCategoriaDudaRuta(codigo) {
       texto.textContent = vacia ? '(sin nota)' : nota.texto;
       div.appendChild(texto);
 
-const acc = document.createElement('div');
+      const acc = document.createElement('div');
       acc.className = 'panel-nota-acciones';
       acc.appendChild(botonMini('✎ Editar', () => empezarEdicionNotaEvaluador(nota.id)));
       acc.appendChild(botonMini('🗑 Borrar', async () => {
@@ -11052,36 +11140,6 @@ const acc = document.createElement('div');
       div.appendChild(acc);
     }
 
-    return div;
-  }
-
-  function filaNotaEvaluadorOtra(nota) {
-    const div = document.createElement('div');
-    div.className = 'item-nota-otra';
-    const titulo = document.createElement('div');
-    const vacia = !nota.texto || nota.texto.trim() === '';
-    titulo.textContent = '(' + etiquetaEspacio(nota.espacio) + ') ' + (vacia ? '(sin nota)' : nota.texto);
-    div.appendChild(titulo);
-    const def = obtenerDefCategoriaNotaEval(nota.categoria);
-    if (def) {
-      const chips = document.createElement('div');
-      chips.className = 'fila-chips-mini';
-      const chip = document.createElement('span');
-      chip.className = 'chip-razon chico';
-      chip.textContent = def.texto;
-      chip.style.backgroundColor = hexToRgba(def.color, 0.15);
-      chip.style.borderColor = def.color;
-      chip.style.color = def.color;
-      chips.appendChild(chip);
-      div.appendChild(chips);
-    }
-    const acc = document.createElement('div');
-    acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', async () => {
-      if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
-      borrarNotaEvaluador(nota.id);
-    }));
-    div.appendChild(acc);
     return div;
   }
 
@@ -11590,6 +11648,8 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       if (!(await confirmarAccion('¿Borrar esta entrada del registro de retención? No se puede deshacer.'))) return;
       retencionRutas = retencionRutas.filter((r) => r.id !== entrada.id);
       guardarRetencionRutas();
+      estadisticasConstruidas = false;
+      curvaOlvidoConstruido = false;
       subtRepasarConstruido = false;
       sesgoConfianzaConstruido = false;
       renderRetencionHistorial();
@@ -11720,6 +11780,8 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     if (!(await confirmarAccion('¿Vaciar TODO el registro de retención de rutas? No se puede deshacer.'))) return;
     retencionRutas = [];
     guardarRetencionRutas();
+    estadisticasConstruidas = false;
+    curvaOlvidoConstruido = false;
     subtRepasarConstruido = false;
     sesgoConfianzaConstruido = false;
     renderRetencionHistorial();
@@ -11746,6 +11808,8 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     });
     limitarRetencionRutas();
     guardarRetencionRutas();
+    estadisticasConstruidas = false;
+    curvaOlvidoConstruido = false;
     subtRepasarConstruido = false;
     sesgoConfianzaConstruido = false;
     renderRetencionHistorial();
@@ -11869,7 +11933,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       return;
     }
     el.style.display = 'block';
-    el.innerHTML = lineas.join('<br>');
+    el.textContent = lineas.join('\\n');
   }
 
   function poblarResumenRetencionRutas(entrada) {
@@ -12046,9 +12110,224 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     contenedor.appendChild(wrap);
   }
 
-  let estadisticasConstruidas = false;
+let estadisticasConstruidas = false;
+  let curvaOlvidoConstruido = false;
 
-  function construirGraficoStackedBarras(entradas, series, etiquetasX) {
+  let elTooltipEstadisticas = null;
+  let touchTimerTooltip = null;
+  let rectActivoStacked = null;
+
+  function asegurarTooltipEstadisticas() {
+    if (!elTooltipEstadisticas) {
+      elTooltipEstadisticas = document.createElement('div');
+      elTooltipEstadisticas.className = 'estadisticas-tooltip-flotante';
+      document.body.appendChild(elTooltipEstadisticas);
+    }
+    return elTooltipEstadisticas;
+  }
+
+  function posicionarTooltipEstadisticas(clientX, clientY) {
+    const tip = asegurarTooltipEstadisticas();
+    const margen = 12;
+    const rect = tip.getBoundingClientRect();
+    let x = clientX + margen;
+    let y = clientY - rect.height - margen;
+    if (x + rect.width > window.innerWidth - 8) {
+      x = Math.max(8, window.innerWidth - rect.width - 8);
+    }
+    if (y < 8) {
+      y = Math.min(window.innerHeight - rect.height - 8, clientY + margen);
+    }
+    tip.style.left = Math.round(x) + 'px';
+    tip.style.top = Math.round(y) + 'px';
+  }
+
+  function emojiColorSegmento(color) {
+    const c = String(color || '').toLowerCase();
+    if (c === '#2e7d32' || c === '#059669') return '🟢';
+    if (c === '#b8860b') return '🟡';
+    if (c === '#e07b00') return '🟠';
+    if (c === '#c0392b') return '🔴';
+    return '⚪';
+  }
+
+  function coordenadasDeEvento(evento) {
+    if (evento.touches && evento.touches.length > 0) {
+      return { x: evento.touches[0].clientX, y: evento.touches[0].clientY };
+    }
+    if (evento.changedTouches && evento.changedTouches.length > 0) {
+      return { x: evento.changedTouches[0].clientX, y: evento.changedTouches[0].clientY };
+    }
+    return { x: evento.clientX || 0, y: evento.clientY || 0 };
+  }
+
+  function mostrarTooltipStackedBar(evento, rect) {
+    ocultarTooltipStackedBar();
+    rectActivoStacked = rect;
+    const svg = rect.ownerSVGElement;
+    const idxBarra = rect.getAttribute('data-barra-idx');
+    if (svg) {
+      svg.querySelectorAll('rect[data-barra-idx="' + idxBarra + '"]').forEach((r) => {
+        if (r === rect) {
+          r.classList.add('tooltip-segmento-activo');
+          r.classList.remove('tooltip-segmento-atenuado');
+        } else {
+          r.classList.add('tooltip-segmento-atenuado');
+          r.classList.remove('tooltip-segmento-activo');
+        }
+      });
+    }
+
+    const sesion = rect.getAttribute('data-sesion') || '—';
+    const total = rect.getAttribute('data-total') || '0';
+    const unidad = rect.getAttribute('data-unidad') || 'tarjetas';
+    let segmentos = [];
+    try {
+      segmentos = JSON.parse(rect.getAttribute('data-todos-segmentos') || '[]');
+    } catch (e) {
+      segmentos = [];
+    }
+
+    const lineas = [
+      'Sesión: ' + sesion,
+      'Total: ' + total + ' ' + unidad,
+      '',
+    ];
+    segmentos.forEach((seg) => {
+      lineas.push(emojiColorSegmento(seg.color) + ' ' + seg.nombre + ': ' + seg.valor + ' (' + seg.pct + '%)');
+    });
+
+    const tip = asegurarTooltipEstadisticas();
+    tip.textContent = lineas.join('\\n');
+    tip.style.display = 'block';
+    const coords = coordenadasDeEvento(evento);
+    posicionarTooltipEstadisticas(coords.x, coords.y);
+  }
+
+  function ocultarTooltipStackedBar() {
+    if (touchTimerTooltip) {
+      clearTimeout(touchTimerTooltip);
+      touchTimerTooltip = null;
+    }
+    if (rectActivoStacked && rectActivoStacked.ownerSVGElement) {
+      rectActivoStacked.ownerSVGElement.querySelectorAll('.tooltip-segmento-activo, .tooltip-segmento-atenuado').forEach((r) => {
+        r.classList.remove('tooltip-segmento-activo', 'tooltip-segmento-atenuado');
+      });
+    }
+    rectActivoStacked = null;
+    if (elTooltipEstadisticas) {
+      elTooltipEstadisticas.style.display = 'none';
+    }
+  }
+
+  function vincularEventosTooltipStacked(rect) {
+    rect.style.cursor = 'pointer';
+    rect.addEventListener('mouseenter', (ev) => {
+      if (ES_DISPOSITIVO_TACTIL) return;
+      mostrarTooltipStackedBar(ev, rect);
+    });
+    rect.addEventListener('mousemove', (ev) => {
+      if (ES_DISPOSITIVO_TACTIL || rectActivoStacked !== rect) return;
+      posicionarTooltipEstadisticas(ev.clientX, ev.clientY);
+    });
+    rect.addEventListener('mouseleave', () => {
+      if (ES_DISPOSITIVO_TACTIL) return;
+      ocultarTooltipStackedBar();
+    });
+    rect.addEventListener('touchstart', (ev) => {
+      if (touchTimerTooltip) clearTimeout(touchTimerTooltip);
+      const touch = ev.touches && ev.touches[0] ? { clientX: ev.touches[0].clientX, clientY: ev.touches[0].clientY } : { clientX: 0, clientY: 0 };
+      touchTimerTooltip = setTimeout(() => {
+        touchTimerTooltip = null;
+        mostrarTooltipStackedBar({ touches: [touch] }, rect);
+      }, 500);
+    }, { passive: true });
+    rect.addEventListener('touchmove', () => {
+      if (touchTimerTooltip) {
+        clearTimeout(touchTimerTooltip);
+        touchTimerTooltip = null;
+      }
+    }, { passive: true });
+    rect.addEventListener('touchend', () => {
+      if (touchTimerTooltip) {
+        clearTimeout(touchTimerTooltip);
+        touchTimerTooltip = null;
+      }
+    }, { passive: true });
+    rect.addEventListener('touchcancel', () => {
+      if (touchTimerTooltip) {
+        clearTimeout(touchTimerTooltip);
+        touchTimerTooltip = null;
+      }
+    }, { passive: true });
+  }
+
+  function mostrarTooltipCurvaOlvido(evento, circ) {
+    ocultarTooltipStackedBar();
+    rectActivoStacked = circ;
+    const lineas = [
+      'Bucket: ' + (circ.getAttribute('data-bucket-etiqueta') || ''),
+      'SubT evaluados: ' + (circ.getAttribute('data-subt-evaluados') || '0'),
+      'Retenidas: ' + (circ.getAttribute('data-retenidas-pct') || '0') + '%',
+      'Olvidadas: ' + (circ.getAttribute('data-olvidadas-pct') || '0') + '%',
+    ];
+    const tip = asegurarTooltipEstadisticas();
+    tip.textContent = lineas.join('\\n');
+    tip.style.display = 'block';
+    const coords = coordenadasDeEvento(evento);
+    posicionarTooltipEstadisticas(coords.x, coords.y);
+  }
+
+  function vincularEventosTooltipCurva(circ) {
+    circ.style.cursor = 'pointer';
+    circ.addEventListener('mouseenter', (ev) => {
+      if (ES_DISPOSITIVO_TACTIL) return;
+      mostrarTooltipCurvaOlvido(ev, circ);
+    });
+    circ.addEventListener('mousemove', (ev) => {
+      if (ES_DISPOSITIVO_TACTIL || rectActivoStacked !== circ) return;
+      posicionarTooltipEstadisticas(ev.clientX, ev.clientY);
+    });
+    circ.addEventListener('mouseleave', () => {
+      if (ES_DISPOSITIVO_TACTIL) return;
+      ocultarTooltipStackedBar();
+    });
+    circ.addEventListener('touchstart', (ev) => {
+      if (touchTimerTooltip) clearTimeout(touchTimerTooltip);
+      const touch = ev.touches && ev.touches[0] ? { clientX: ev.touches[0].clientX, clientY: ev.touches[0].clientY } : { clientX: 0, clientY: 0 };
+      touchTimerTooltip = setTimeout(() => {
+        touchTimerTooltip = null;
+        mostrarTooltipCurvaOlvido({ touches: [touch] }, circ);
+      }, 500);
+    }, { passive: true });
+    circ.addEventListener('touchmove', () => {
+      if (touchTimerTooltip) {
+        clearTimeout(touchTimerTooltip);
+        touchTimerTooltip = null;
+      }
+    }, { passive: true });
+    circ.addEventListener('touchend', () => {
+      if (touchTimerTooltip) {
+        clearTimeout(touchTimerTooltip);
+        touchTimerTooltip = null;
+      }
+    }, { passive: true });
+    circ.addEventListener('touchcancel', () => {
+      if (touchTimerTooltip) {
+        clearTimeout(touchTimerTooltip);
+        touchTimerTooltip = null;
+      }
+    }, { passive: true });
+  }
+
+  document.addEventListener('click', (ev) => {
+    if (!elTooltipEstadisticas || elTooltipEstadisticas.style.display === 'none') return;
+    if (rectActivoStacked && (ev.target === rectActivoStacked || rectActivoStacked.contains(ev.target))) return;
+    ocultarTooltipStackedBar();
+  });
+
+  function construirGraficoStackedBarras(entradas, series, etiquetasX, unidadTotal) {
+    const unidad = unidadTotal || 'tarjetas';
     const w = 600, h = 240, padL = 16, padR = 16, padT = 10, padB = 30;
     const innerW = w - padL - padR, innerH = h - padT - padB;
     const anchoBarra = (innerW / entradas.length) * 0.55;
@@ -12058,15 +12337,40 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       const total = series.reduce((a, s) => a + (entrada[s.campo] || 0), 0);
       const cx = padL + (innerW / entradas.length) * (i + 0.5);
       const x = cx - anchoBarra / 2;
+      const etqSesion = (etiquetasX && etiquetasX[i]) || String(i + 1);
+
+      const todosSegmentos = series.map((s) => {
+        const val = entrada[s.campo] || 0;
+        const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+        return { nombre: s.nombre, valor: val, pct: pct, color: s.color };
+      });
+      const todosJson = JSON.stringify(todosSegmentos);
 
       if (total > 0) {
         let yAcum = padT + innerH;
         series.forEach((s) => {
           const valor = entrada[s.campo] || 0;
           if (valor <= 0) return;
+          const pct = Math.round((valor / total) * 100);
           const altura = (valor / total) * innerH;
           const y = yAcum - altura;
-          svg.appendChild(elSvg('rect', { x: x.toFixed(1), y: y.toFixed(1), width: anchoBarra.toFixed(1), height: altura.toFixed(1), fill: s.color }));
+          const rect = elSvg('rect', {
+            x: x.toFixed(1),
+            y: y.toFixed(1),
+            width: anchoBarra.toFixed(1),
+            height: altura.toFixed(1),
+            fill: s.color,
+            'data-barra-idx': String(i),
+            'data-sesion': etqSesion,
+            'data-total': String(total),
+            'data-unidad': unidad,
+            'data-segmento-actual': s.nombre,
+            'data-segmento-valor': String(valor),
+            'data-segmento-pct': String(pct),
+            'data-todos-segmentos': todosJson,
+          });
+          vincularEventosTooltipStacked(rect);
+          svg.appendChild(rect);
           yAcum = y;
         });
       } else {
@@ -12074,7 +12378,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       }
 
       const etqX = elSvg('text', { x: cx.toFixed(1), y: h - 10, 'text-anchor': 'middle', 'font-size': 9.5, fill: 'var(--texto-suave)' });
-      etqX.textContent = (etiquetasX && etiquetasX[i]) || String(i + 1);
+      etqX.textContent = etqSesion;
       svg.appendChild(etqX);
     });
 
@@ -12096,6 +12400,315 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       div.appendChild(item);
     });
     return div;
+  }
+
+  const BUCKETS_OLVIDO_DEF = [
+    { clave: '0-1', etiqueta: '0-1d', etiquetaLarga: '0-1 días', tMedio: 0.5, min: 0, max: 1 },
+    { clave: '1-3', etiqueta: '1-3d', etiquetaLarga: '1-3 días', tMedio: 2, min: 1, max: 3 },
+    { clave: '3-7', etiqueta: '3-7d', etiquetaLarga: '3-7 días', tMedio: 5, min: 3, max: 7 },
+    { clave: '7-14', etiqueta: '7-14d', etiquetaLarga: '7-14 días', tMedio: 10.5, min: 7, max: 14 },
+    { clave: '14-30', etiqueta: '14-30d', etiquetaLarga: '14-30 días', tMedio: 22, min: 14, max: 30 },
+    { clave: '30+', etiqueta: '30d+', etiquetaLarga: '30+ días', tMedio: 45, min: 30, max: Infinity },
+  ];
+
+  function calcularSRetenido(t, S) {
+    return Math.exp(-t / S);
+  }
+
+  function ajustarS_a_datos(buckets_reales) {
+    const puntos = [];
+    BUCKETS_OLVIDO_DEF.forEach((def) => {
+      const b = buckets_reales && buckets_reales[def.clave];
+      if (!b || (b.retenidas + b.olvidadas) <= 0 || typeof b.pctRetenidas !== 'number') return;
+      puntos.push({ t: def.tMedio, y: b.pctRetenidas / 100 });
+    });
+    if (puntos.length === 0) return null;
+
+    const derivadaSSE = (S) => {
+      let suma = 0;
+      const invS2 = 1 / (S * S);
+      for (let i = 0; i < puntos.length; i++) {
+        const p = puntos[i];
+        const pred = calcularSRetenido(p.t, S);
+        suma += 2 * (pred - p.y) * pred * p.t * invS2;
+      }
+      return suma;
+    };
+
+    const segundaDerivadaSSE = (S) => {
+      let suma = 0;
+      const invS3 = 1 / (S * S * S);
+      const invS4 = invS3 / S;
+      for (let i = 0; i < puntos.length; i++) {
+        const p = puntos[i];
+        const pred = calcularSRetenido(p.t, S);
+        const t = p.t;
+        const term1 = 2 * t * t * pred * (2 * pred - p.y) * invS4;
+        const term2 = -4 * t * pred * (pred - p.y) * invS3;
+        suma += term1 + term2;
+      }
+      return suma;
+    };
+
+    let low = 0.05;
+    let high = 105;
+    let dLow = derivadaSSE(low);
+    let dHigh = derivadaSSE(high);
+    if (dLow >= 0 || dHigh <= 0) return null;
+
+    let S = 5;
+    let convergio = false;
+    for (let iter = 0; iter < 100; iter++) {
+      const g = derivadaSSE(S);
+      if (Math.abs(g) < 1e-6) {
+        convergio = true;
+        break;
+      }
+      if (g < 0) low = S;
+      else high = S;
+
+      const h = segundaDerivadaSSE(S);
+      let sNext = (Math.abs(h) > 1e-9) ? (S - g / h) : ((low + high) / 2);
+      if (sNext <= low || sNext >= high || !Number.isFinite(sNext)) {
+        sNext = (low + high) / 2;
+      }
+      if (Math.abs(sNext - S) < 0.001) {
+        S = sNext;
+        convergio = true;
+        break;
+      }
+      S = sNext;
+    }
+
+    if (!convergio || !Number.isFinite(S) || S < 0.1 || S > 100) return null;
+    return S;
+  }
+
+  function obtenerBucketsDeRetencion() {
+    const resultado = {};
+    BUCKETS_OLVIDO_DEF.forEach((def) => {
+      resultado[def.clave] = {
+        retenidas: 0,
+        olvidadas: 0,
+        subtEvaluados: 0,
+        pctRetenidas: null,
+        pctOlvidadas: null,
+        porSubt: {},
+      };
+    });
+
+    const totalCitadas = todasLasRutasCitadas().length;
+    if (totalCitadas === 0) {
+      resultado._meta = { sesionesValidas: 0 };
+      return resultado;
+    }
+
+    const todasPropias = retencionPropias()
+      .slice()
+      .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    const ultimas10 = todasPropias.slice(-10);
+    const rutaSubt = mapaRutaASubtema();
+
+    let sesionesValidas = 0;
+    ultimas10.forEach((entrada) => {
+      const rutasEntrada = Array.isArray(entrada.rutas) ? entrada.rutas : [];
+      if (rutasEntrada.length / totalCitadas < 0.80) return;
+      sesionesValidas++;
+
+      const tsActual = entrada.timestamp || 0;
+      const anteriores = todasPropias.filter((prev) => (prev.timestamp || 0) < tsActual);
+
+      rutasEntrada.forEach((r) => {
+        const idRuta = r.ruta;
+        const subT = r.subtema || rutaSubt[idRuta] || '(Sin tema)';
+
+        let tsAnterior = null;
+        for (let i = anteriores.length - 1; i >= 0; i--) {
+          const prevRutas = anteriores[i].rutas || [];
+          const encontrada = prevRutas.find((pr) => pr.ruta === idRuta && pr.retenida === true);
+          if (encontrada) {
+            tsAnterior = anteriores[i].timestamp || 0;
+            break;
+          }
+        }
+
+        const dias = tsAnterior !== null ? Math.max(0, (tsActual - tsAnterior) / 86400000) : 0;
+        let defBucket = BUCKETS_OLVIDO_DEF[BUCKETS_OLVIDO_DEF.length - 1];
+        for (let b = 0; b < BUCKETS_OLVIDO_DEF.length; b++) {
+          if (dias >= BUCKETS_OLVIDO_DEF[b].min && dias < BUCKETS_OLVIDO_DEF[b].max) {
+            defBucket = BUCKETS_OLVIDO_DEF[b];
+            break;
+          }
+        }
+
+        const bucketObj = resultado[defBucket.clave];
+        if (!bucketObj.porSubt[subT]) {
+          bucketObj.porSubt[subT] = { retenidas: 0, olvidadas: 0 };
+        }
+        if (r.retenida) {
+          bucketObj.retenidas++;
+          bucketObj.porSubt[subT].retenidas++;
+        } else {
+          bucketObj.olvidadas++;
+          bucketObj.porSubt[subT].olvidadas++;
+        }
+      });
+    });
+
+    BUCKETS_OLVIDO_DEF.forEach((def) => {
+      const b = resultado[def.clave];
+      const subts = Object.keys(b.porSubt);
+      b.subtEvaluados = subts.length;
+      if (subts.length > 0) {
+        let sumaPct = 0;
+        subts.forEach((st) => {
+          const datosSt = b.porSubt[st];
+          const tot = datosSt.retenidas + datosSt.olvidadas;
+          sumaPct += tot > 0 ? ((datosSt.retenidas / tot) * 100) : 0;
+        });
+        b.pctRetenidas = Math.round(sumaPct / subts.length);
+        b.pctOlvidadas = 100 - b.pctRetenidas;
+      }
+      delete b.porSubt;
+    });
+
+    resultado._meta = { sesionesValidas: sesionesValidas };
+    return resultado;
+  }
+
+  function construirCurvaOlvido() {
+    const cont = document.getElementById('curva-olvido-contenedor');
+    if (!cont) return;
+    cont.innerHTML = '';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'grafico-wrap';
+    const tit = document.createElement('div');
+    tit.className = 'grafico-titulo';
+    tit.textContent = '📉 Curva de olvido personalizada';
+    wrap.appendChild(tit);
+
+    const buckets = obtenerBucketsDeRetencion();
+    const sesionesValidas = buckets._meta ? buckets._meta.sesionesValidas : 0;
+    const hayAlgunBucket = BUCKETS_OLVIDO_DEF.some((def) => {
+      const b = buckets[def.clave];
+      return b && (b.retenidas + b.olvidadas) > 0 && b.pctRetenidas !== null;
+    });
+
+    if (sesionesValidas < 3 || !hayAlgunBucket) {
+      const p = document.createElement('p');
+      p.className = 'grafico-vacio';
+      p.textContent = 'Sin datos suficientes (mínimo 3 sesiones con ≥80% de rutas)';
+      wrap.appendChild(p);
+      cont.appendChild(wrap);
+      return;
+    }
+
+    const w = 600, h = 230, padL = 34, padR = 18, padT = 16, padB = 30;
+    const innerW = w - padL - padR, innerH = h - padT - padB;
+    const svg = elSvg('svg', { viewBox: '0 0 ' + w + ' ' + h, class: 'grafico-svg', preserveAspectRatio: 'xMidYMid meet' });
+
+    [0, 25, 50, 75, 100].forEach((v) => {
+      const y = padT + innerH - (v / 100) * innerH;
+      svg.appendChild(elSvg('line', { x1: padL, y1: y.toFixed(1), x2: w - padR, y2: y.toFixed(1), stroke: 'var(--color-borde-suave)', 'stroke-width': 1 }));
+      const txt = elSvg('text', { x: padL - 6, y: (y + 3.5).toFixed(1), 'text-anchor': 'end', 'font-size': 10, fill: 'var(--texto-suave)' });
+      txt.textContent = String(v);
+      svg.appendChild(txt);
+    });
+
+    const nB = BUCKETS_OLVIDO_DEF.length;
+    const pasoX = nB > 1 ? innerW / (nB - 1) : 0;
+    const xDeBucket = (i) => padL + i * pasoX;
+    const yDePct = (pct) => padT + innerH - (Math.max(0, Math.min(100, pct)) / 100) * innerH;
+
+    BUCKETS_OLVIDO_DEF.forEach((def, i) => {
+      const cx = xDeBucket(i);
+      const etqX = elSvg('text', { x: cx.toFixed(1), y: h - 10, 'text-anchor': 'middle', 'font-size': 9.5, fill: 'var(--texto-suave)' });
+      etqX.textContent = def.etiqueta;
+      svg.appendChild(etqX);
+    });
+
+    const coordsTeorica = BUCKETS_OLVIDO_DEF.map((def, i) => ({
+      x: xDeBucket(i),
+      y: yDePct(calcularSRetenido(def.tMedio, 1) * 100),
+    }));
+    const dTeorica = coordsTeorica.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+    svg.appendChild(elSvg('path', { d: dTeorica, fill: 'none', stroke: '#9ca3af', 'stroke-width': 2, 'stroke-dasharray': '5,4' }));
+
+    const sAjustado = ajustarS_a_datos(buckets);
+    if (sAjustado !== null) {
+      const coordsAjustada = BUCKETS_OLVIDO_DEF.map((def, i) => ({
+        x: xDeBucket(i),
+        y: yDePct(calcularSRetenido(def.tMedio, sAjustado) * 100),
+      }));
+      const dAjustada = coordsAjustada.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+      svg.appendChild(elSvg('path', { d: dAjustada, fill: 'none', stroke: '#f59e0b', 'stroke-width': 2, 'stroke-dasharray': '5,4' }));
+    }
+
+    const puntosReales = [];
+    BUCKETS_OLVIDO_DEF.forEach((def, i) => {
+      const b = buckets[def.clave];
+      if (!b || (b.retenidas + b.olvidadas) <= 0 || b.pctRetenidas === null) return;
+      puntosReales.push({
+        x: xDeBucket(i),
+        y: yDePct(b.pctRetenidas),
+        etiquetaLarga: def.etiquetaLarga,
+        subtEvaluados: b.subtEvaluados,
+        pctRetenidas: b.pctRetenidas,
+        pctOlvidadas: b.pctOlvidadas,
+      });
+    });
+
+    if (puntosReales.length > 1) {
+      const dReal = puntosReales.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+      svg.appendChild(elSvg('path', { d: dReal, fill: 'none', stroke: '#3b82f6', 'stroke-width': 2.5 }));
+    }
+
+    puntosReales.forEach((p) => {
+      const circ = elSvg('circle', {
+        cx: p.x.toFixed(1),
+        cy: p.y.toFixed(1),
+        r: 4,
+        fill: '#3b82f6',
+        'data-bucket-etiqueta': p.etiquetaLarga,
+        'data-subt-evaluados': String(p.subtEvaluados),
+        'data-retenidas-pct': String(p.pctRetenidas),
+        'data-olvidadas-pct': String(p.pctOlvidadas),
+      });
+      vincularEventosTooltipCurva(circ);
+      svg.appendChild(circ);
+    });
+
+    wrap.appendChild(svg);
+
+    const leyenda = document.createElement('div');
+    leyenda.className = 'velocidad-leyenda-chips';
+    const chipsDef = [
+      { texto: '📊 Tu retención', color: '#3b82f6' },
+      { texto: '— Teórica (S=1d)', color: '#9ca3af' },
+    ];
+    if (sAjustado !== null) {
+      chipsDef.push({ texto: '⚙️ Ajustada (S=' + sAjustado.toFixed(1) + 'd)', color: '#f59e0b' });
+    }
+    chipsDef.forEach((c) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip-razon chico';
+      chip.textContent = c.texto;
+      chip.style.backgroundColor = hexToRgba(c.color, 0.15);
+      chip.style.borderColor = c.color;
+      chip.style.color = c.color;
+      leyenda.appendChild(chip);
+    });
+    wrap.appendChild(leyenda);
+
+    if (sAjustado === null) {
+      const aviso = document.createElement('div');
+      aviso.className = 'curva-olvido-aviso';
+      aviso.textContent = 'No se pudo ajustar una curva exponencial válida (S fuera de [0.1, 100] o sin convergencia).';
+      wrap.appendChild(aviso);
+    }
+
+    cont.appendChild(wrap);
   }
 
   function construirEstadisticas() {
@@ -12129,7 +12742,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     ];
     const hayResultadoPorSesion = ultimasSesiones.some((s) => s.conteos && (s.conteos.si + s.conteos.casi + s.conteos.no) > 0);
     agregarSeccionGrafico(cont, '📊 Resultado por sesión',
-      hayResultadoPorSesion ? construirGraficoStackedBarras(ultimasSesiones.map((s) => s.conteos || {}), seriesResultado, etiquetasSesiones) : null,
+      hayResultadoPorSesion ? construirGraficoStackedBarras(ultimasSesiones.map((s) => s.conteos || {}), seriesResultado, etiquetasSesiones, 'tarjetas') : null,
       hayResultadoPorSesion ? leyendaSeries(seriesResultado) : null);
 
     const sesionesConPista = ultimasSesiones.map((s) => {
@@ -12143,7 +12756,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       { campo: 'sinPista', color: '#2e7d32', nombre: 'Sin pista' },
     ];
     agregarSeccionGrafico(cont, '💡 Uso de pistas por sesión',
-      hayPista ? construirGraficoStackedBarras(sesionesConPista, seriesPista, etiquetasSesiones) : null,
+      hayPista ? construirGraficoStackedBarras(sesionesConPista, seriesPista, etiquetasSesiones, 'tarjetas') : null,
       hayPista ? leyendaSeries(seriesPista) : null);
 
     const sesionesConResp = ultimasSesiones.map((s) => {
@@ -12157,7 +12770,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       { campo: 'sinResp', color: '#2e7d32', nombre: 'No mostró' },
     ];
     agregarSeccionGrafico(cont, '👁 Uso de "Mostrar respuesta" por sesión',
-      hayResp ? construirGraficoStackedBarras(sesionesConResp, seriesResp, etiquetasSesiones) : null,
+      hayResp ? construirGraficoStackedBarras(sesionesConResp, seriesResp, etiquetasSesiones, 'tarjetas') : null,
       hayResp ? leyendaSeries(seriesResp) : null);
 
     const ultimosPomodoros = retencionPropias().slice().sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)).slice(-10);
@@ -12169,7 +12782,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       { campo: 'noRetenidas', color: '#c0392b', nombre: 'No retenidas' },
     ];
     agregarSeccionGrafico(cont, '🧠 Retención de rutas (últimos 10 Pomodoros)',
-      hayRetencion ? construirGraficoStackedBarras(ultimosPomodoros, seriesRetencion, etiquetasPomodoros) : null,
+      hayRetencion ? construirGraficoStackedBarras(ultimosPomodoros, seriesRetencion, etiquetasPomodoros, 'rutas') : null,
       hayRetencion ? leyendaSeries(seriesRetencion) : null);
 
     const pomodorosDificiles = ultimosPomodoros.map((r) => ({ dificiles: r.dificiles || 0, noDificiles: Math.max(0, (r.totalRutas || 0) - (r.dificiles || 0)) }));
@@ -12179,7 +12792,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       { campo: 'noDificiles', color: '#9e9e9e', nombre: 'No difíciles' },
     ];
     agregarSeccionGrafico(cont, '⚠️ Dificultad de rutas (últimos 10 Pomodoros)',
-      hayDificiles ? construirGraficoStackedBarras(pomodorosDificiles, seriesDificiles, etiquetasPomodoros) : null,
+      hayDificiles ? construirGraficoStackedBarras(pomodorosDificiles, seriesDificiles, etiquetasPomodoros, 'rutas') : null,
       hayDificiles ? leyendaSeries(seriesDificiles) : null);
   }
 
@@ -12359,6 +12972,141 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   }
 
   let subtRepasarConstruido = false;
+  let sesgoConfianzaConstruido = false;
+
+  function calcularSesgoSubT(nombreSubtema) {
+    const ultimos10Analisis = analisisPropiosParaScore()
+      .slice()
+      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)))
+      .slice(0, 10);
+
+    let sumaPonderada = 0;
+    let sumaEvaluadas = 0;
+    let analisisDisponibles = 0;
+
+    ultimos10Analisis.forEach((entrada) => {
+      const item = (entrada.subT || []).find((s) => s.nombre === nombreSubtema);
+      if (!item) return;
+      analisisDisponibles++;
+      const nEval = typeof item.nEvaluadas === 'number' ? item.nEvaluadas : 0;
+      const pctAc = typeof item.pctAciertos === 'number' ? item.pctAciertos : 0;
+      if (nEval > 0) {
+        sumaPonderada += pctAc * nEval;
+        sumaEvaluadas += nEval;
+      }
+    });
+
+    const promedioPctAciertos = sumaEvaluadas > 0 ? (sumaPonderada / sumaEvaluadas) : 50;
+
+    const ultimas10Ret = retencionPropias()
+      .slice()
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+      .slice(0, 10);
+
+    let totalRutas = 0;
+    let retenidas = 0;
+    ultimas10Ret.forEach((entrada) => {
+      (entrada.rutas || []).forEach((r) => {
+        if (r.subtema !== nombreSubtema) return;
+        totalRutas++;
+        if (r.retenida) retenidas++;
+      });
+    });
+
+    const pctRetenidas = totalRutas > 0 ? ((retenidas / totalRutas) * 100) : 50;
+    const diferencia = promedioPctAciertos - pctRetenidas;
+
+    let tipo = 'calibrado';
+    let ordenSesgo = 2;
+    if (diferencia > 20) {
+      tipo = 'sobreconfianza';
+      ordenSesgo = 1;
+    } else if (diferencia < -20) {
+      tipo = 'subestimacion';
+      ordenSesgo = 3;
+    }
+
+    return {
+      pctAnalisis: Math.round(promedioPctAciertos),
+      pctRetencion: Math.round(pctRetenidas),
+      diferencia: Math.round(diferencia),
+      tipo: tipo,
+      ordenSesgo: ordenSesgo,
+      analisisDisponibles: analisisDisponibles,
+    };
+  }
+
+  function construirDetalleSesgo(det, contenedor, nombreSubtema) {
+    const score = det.dataset.score || '50';
+    const pctAnalisis = Number(det.dataset.pctAnalisis || 50);
+    const pctRetencion = Number(det.dataset.pctRetencion || 50);
+    const diferencia = Number(det.dataset.diferencia || 0);
+    const tipoSesgo = det.dataset.tipoSesgo || 'calibrado';
+    const analisisDisponibles = Number(det.dataset.analisisDisponibles || 0);
+
+    const pctFallos = Math.round(promedioCampoAnalisis(nombreSubtema, 'pctFallos') || 0);
+    const pctCasi = Math.round(promedioCampoAnalisis(nombreSubtema, 'pctCasi') || 0);
+    const pctNoRetDesglose = Math.round(pctNoRetenidaPorSubtema(nombreSubtema) || 0);
+
+    const signoDiff = diferencia > 0 ? ('+' + diferencia) : String(diferencia);
+    let textoSesgo;
+    if (tipoSesgo === 'sobreconfianza') {
+      textoSesgo = '⚠️ Sobreconfianza (' + signoDiff + '%)';
+    } else if (tipoSesgo === 'subestimacion') {
+      textoSesgo = '📉 Subestimación (' + signoDiff + '%)';
+    } else {
+      textoSesgo = 'Calibrado (' + signoDiff + '%)';
+    }
+
+    const ultimas10Ret = retencionPropias()
+      .slice()
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+      .slice(0, 10);
+
+    let totalRutas = 0;
+    let retenidas = 0;
+    let dificilesCount = 0;
+    let retencionesAnalizadas = 0;
+
+    ultimas10Ret.forEach((entrada) => {
+      let tuvoSubt = false;
+      (entrada.rutas || []).forEach((r) => {
+        if (r.subtema !== nombreSubtema) return;
+        tuvoSubt = true;
+        totalRutas++;
+        if (r.retenida) retenidas++;
+        if (r.dificil) dificilesCount++;
+      });
+      if (tuvoSubt) retencionesAnalizadas++;
+    });
+
+    const noRetenidas = totalRutas - retenidas;
+    const pctRetDetalle = totalRutas > 0 ? Math.round((retenidas / totalRutas) * 100) : 0;
+    const pctNoRetDetalle = totalRutas > 0 ? (100 - pctRetDetalle) : 0;
+    const pctDifDetalle = totalRutas > 0 ? Math.round((dificilesCount / totalRutas) * 100) : 0;
+
+    const lineas = [
+      'Score: ' + score + '/100',
+      '',
+      'Desglose:',
+      '- Fallos: ' + pctFallos + '%',
+      '- Casi: ' + pctCasi + '%',
+      '- No retenidas: ' + pctNoRetDesglose + '%',
+      '',
+      'Sesgo: ' + textoSesgo,
+      '(análisis: ' + pctAnalisis + '% vs retención: ' + pctRetencion + '%)',
+      '',
+      'Detalle de retención:',
+      '- Retenidas: ' + retenidas + ' de ' + totalRutas + ' rutas (' + pctRetDetalle + '%)',
+      '- No retenidas: ' + noRetenidas + ' de ' + totalRutas + ' rutas (' + pctNoRetDetalle + '%)',
+      '- Difíciles: ' + dificilesCount + ' de ' + totalRutas + ' rutas (' + pctDifDetalle + '%)',
+      '',
+      'Análisis disponibles: ' + analisisDisponibles,
+      'Retenciones analizadas: ' + retencionesAnalizadas,
+    ];
+
+    contenedor.textContent = lineas.join('\\n');
+  }
 
   function construirListaSubtRepasar() {
     const cont = document.getElementById('subt-repasar-lista');
@@ -12371,35 +13119,270 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       cont.appendChild(p);
       return;
     }
-    const filas = subtemas.map((s) => ({ nombre: s.nombre, score: calcularScoreSubtema(s.nombre) }));
-    filas.sort((a, b) => b.score - a.score);
-    filas.forEach((f) => {
-      const nivel = nivelPrioridad(f.score);
-      const div = document.createElement('div');
-      div.className = 'subt-repasar-fila';
+
+    const items = [];
+    subtemas.forEach((s) => {
+      const scoreVal = calcularScoreSubtema(s.nombre);
+      const sesgo = calcularSesgoSubT(s.nombre);
+      const nivel = nivelPrioridad(scoreVal);
+
+      const det = document.createElement('details');
+      det.className = 'subt-repasar-acordeon';
+      det.dataset.score = String(scoreVal);
+      det.dataset.pctAnalisis = String(sesgo.pctAnalisis);
+      det.dataset.pctRetencion = String(sesgo.pctRetencion);
+      det.dataset.diferencia = String(sesgo.diferencia);
+      det.dataset.tipoSesgo = sesgo.tipo;
+      det.dataset.analisisDisponibles = String(sesgo.analisisDisponibles);
+
+      const sum = document.createElement('summary');
+      sum.className = 'subt-repasar-fila';
 
       const badge = document.createElement('span');
       badge.className = 'subt-repasar-badge';
       badge.textContent = nivel.emoji + ' ' + nivel.texto;
-      div.appendChild(badge);
+      sum.appendChild(badge);
 
       const nombre = document.createElement('span');
       nombre.className = 'subt-repasar-nombre';
-      nombre.textContent = f.nombre;
-      div.appendChild(nombre);
+      nombre.textContent = s.nombre;
+      sum.appendChild(nombre);
 
-      const score = document.createElement('span');
-      score.className = 'subt-repasar-score';
-      score.textContent = String(f.score);
-      div.appendChild(score);
+      const derecha = document.createElement('span');
+      derecha.className = 'subt-repasar-derecha';
 
-      cont.appendChild(div);
+      const scoreEl = document.createElement('span');
+      scoreEl.className = 'subt-repasar-score';
+      scoreEl.textContent = String(scoreVal);
+      derecha.appendChild(scoreEl);
+
+      if (sesgo.tipo === 'sobreconfianza') {
+        const ind = document.createElement('span');
+        ind.className = 'subt-repasar-sesgo subt-sesgo-sobreconfianza';
+        ind.title = 'Sobreconfianza (' + (sesgo.diferencia > 0 ? '+' : '') + sesgo.diferencia + '%)';
+        ind.textContent = '⚠️';
+        derecha.appendChild(ind);
+      } else if (sesgo.tipo === 'subestimacion') {
+        const ind = document.createElement('span');
+        ind.className = 'subt-repasar-sesgo subt-sesgo-subestimacion';
+        ind.title = 'Subestimación (' + sesgo.diferencia + '%)';
+        ind.textContent = '📉';
+        derecha.appendChild(ind);
+      }
+
+      sum.appendChild(derecha);
+      det.appendChild(sum);
+
+      const detalleCont = document.createElement('div');
+      detalleCont.className = 'subt-repasar-detalle';
+      det.appendChild(detalleCont);
+
+      prepararDetallesLazy(det, () => construirDetalleSesgo(det, detalleCont, s.nombre));
+
+      items.push({
+        nombre: s.nombre,
+        score: scoreVal,
+        ordenSesgo: sesgo.ordenSesgo,
+        det: det,
+      });
     });
+
+    items.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (a.ordenSesgo !== b.ordenSesgo) return a.ordenSesgo - b.ordenSesgo;
+      return a.nombre.localeCompare(b.nombre);
+    });
+
+    items.forEach((item) => cont.appendChild(item.det));
   }
 
   const elModalEstadisticas = document.getElementById('modal-estadisticas');
 
+  const PALETA_VELOCIDAD = [
+    '#2e7d32', '#b8860b', '#c0392b', '#3b82f6', '#8b5cf6',
+    '#e07b00', '#059669', '#ec4899', '#d97706', '#06b6d4'
+  ];
+
+  function calcularScoreSubtemaEnFecha(nombreSubT, fechaCorte) {
+    const corteStr = String(fechaCorte || '');
+    const tsCorte = Date.parse(corteStr) || 0;
+    const analisisHastaFecha = analisisPropiosParaScore()
+      .filter((a) => String(a.fecha || '') <= corteStr)
+      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)))
+      .slice(0, 10);
+
+    const itemsSubt = [];
+    analisisHastaFecha.forEach((entrada) => {
+      (entrada.subT || []).forEach((s) => {
+        if (s.nombre === nombreSubT) itemsSubt.push(s);
+      });
+    });
+
+    if (itemsSubt.length === 0) return 50;
+
+    const promedioCampo = (campo) => {
+      const vals = itemsSubt.filter((s) => typeof s[campo] === 'number').map((s) => s[campo]);
+      return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    };
+
+    let totalRutas = 0;
+    let noRet = 0;
+    retencionPropias().forEach((entrada) => {
+      if (tsCorte > 0 && (entrada.timestamp || 0) > tsCorte) return;
+      (entrada.rutas || []).forEach((r) => {
+        if (r.subtema !== nombreSubT) return;
+        totalRutas++;
+        if (!r.retenida) noRet++;
+      });
+    });
+
+    const pctNoRet = totalRutas > 0 ? (noRet / totalRutas) * 100 : 0;
+    const pctFallos = promedioCampo('pctFallos');
+    const pctCasi = promedioCampo('pctCasi');
+    const pctPista = promedioCampo('pctPista');
+    const pctResp = promedioCampo('pctResp');
+    const base = pctNoRet * PESO_NO_RET + pctFallos * PESO_FALLOS + pctCasi * PESO_CASI;
+    const dependencia = 1 + (pctPista + pctResp) / 200;
+    return Math.round(Math.min(100, base * dependencia));
+  }
+
+  function construirGraficoVelocidadAprendizaje() {
+    const cont = document.getElementById('subt-velocidad-contenedor');
+    if (!cont) return;
+    cont.innerHTML = '';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'grafico-wrap';
+    const tit = document.createElement('div');
+    tit.className = 'grafico-titulo';
+    tit.textContent = '📉 Velocidad de aprendizaje por subT';
+    wrap.appendChild(tit);
+
+    const sesiones = analisisPropiosParaScore()
+      .slice()
+      .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)))
+      .slice(-10);
+
+    const conteoPorSubt = new Map();
+    sesiones.forEach((sesion) => {
+      const vistos = new Set();
+      (sesion.subT || []).forEach((s) => {
+        if (s && typeof s.nombre === 'string' && !vistos.has(s.nombre)) {
+          vistos.add(s.nombre);
+          conteoPorSubt.set(s.nombre, (conteoPorSubt.get(s.nombre) || 0) + 1);
+        }
+      });
+    });
+
+    let elegibles = Array.from(conteoPorSubt.entries())
+      .filter((par) => par[1] >= 3)
+      .map((par) => ({
+        nombre: par[0],
+        conteo: par[1],
+        scoreActual: calcularScoreSubtema(par[0]),
+      }));
+
+    if (elegibles.length < 2) {
+      const p = document.createElement('p');
+      p.className = 'grafico-vacio';
+      p.textContent = 'Sin datos suficientes para graficar la evolución';
+      wrap.appendChild(p);
+      cont.appendChild(wrap);
+      return;
+    }
+
+    elegibles.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    elegibles.forEach((item, idx) => {
+      item.color = PALETA_VELOCIDAD[idx % PALETA_VELOCIDAD.length];
+    });
+
+    if (elegibles.length > 10) {
+      elegibles = elegibles
+        .slice()
+        .sort((a, b) => {
+          if (b.conteo !== a.conteo) return b.conteo - a.conteo;
+          if (b.scoreActual !== a.scoreActual) return b.scoreActual - a.scoreActual;
+          return a.nombre.localeCompare(b.nombre);
+        })
+        .slice(0, 10);
+    }
+
+    const w = 600, h = 240, padL = 32, padR = 20, padT = 16, padB = 32;
+    const innerW = w - padL - padR, innerH = h - padT - padB;
+    const svg = elSvg('svg', { viewBox: '0 0 ' + w + ' ' + h, class: 'grafico-svg', preserveAspectRatio: 'xMidYMid meet' });
+
+    [0, 25, 50, 75, 100].forEach((v) => {
+      const y = padT + innerH - (v / 100) * innerH;
+      svg.appendChild(elSvg('line', { x1: padL, y1: y.toFixed(1), x2: w - padR, y2: y.toFixed(1), stroke: 'var(--color-borde-suave)', 'stroke-width': 1 }));
+      const txt = elSvg('text', { x: padL - 6, y: (y + 3.5).toFixed(1), 'text-anchor': 'end', 'font-size': 10, fill: 'var(--texto-suave)' });
+      txt.textContent = String(v);
+      svg.appendChild(txt);
+    });
+
+    const nSes = sesiones.length;
+    const pasoX = nSes > 1 ? innerW / (nSes - 1) : 0;
+    const xDeSesion = (i) => padL + (nSes > 1 ? i * pasoX : innerW / 2);
+
+    sesiones.forEach((_, i) => {
+      const cx = xDeSesion(i);
+      const etqX = elSvg('text', { x: cx.toFixed(1), y: h - 10, 'text-anchor': 'middle', 'font-size': 9, fill: 'var(--texto-suave)' });
+      etqX.textContent = 'Sesión ' + (i + 1);
+      svg.appendChild(etqX);
+    });
+
+    const paraDibujar = elegibles.slice().sort((a, b) => {
+      if (b.scoreActual !== a.scoreActual) return b.scoreActual - a.scoreActual;
+      return a.nombre.localeCompare(b.nombre);
+    });
+
+    paraDibujar.forEach((item) => {
+      const puntos = [];
+      sesiones.forEach((sesion, idxSesion) => {
+        const aparece = (sesion.subT || []).some((s) => s.nombre === item.nombre);
+        if (!aparece) return;
+        const score = calcularScoreSubtemaEnFecha(item.nombre, sesion.fecha);
+        const x = xDeSesion(idxSesion);
+        const y = padT + innerH - (Math.max(0, Math.min(100, score)) / 100) * innerH;
+        puntos.push({ x: x, y: y, score: score, numSesion: idxSesion + 1 });
+      });
+
+      if (puntos.length > 1) {
+        const d = puntos.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+        svg.appendChild(elSvg('path', { d: d, fill: 'none', stroke: item.color, 'stroke-width': 2 }));
+      }
+
+      puntos.forEach((p) => {
+        const circ = elSvg('circle', { cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: 3, fill: item.color });
+        if (!ES_DISPOSITIVO_TACTIL) {
+          const title = elSvg('title');
+          title.textContent = item.nombre + ' — Sesión ' + p.numSesion + ': ' + p.score;
+          circ.appendChild(title);
+        }
+        svg.appendChild(circ);
+      });
+    });
+
+    wrap.appendChild(svg);
+
+    const leyenda = document.createElement('div');
+    leyenda.className = 'velocidad-leyenda-chips';
+    const paraLeyenda = elegibles.slice().sort((a, b) => a.nombre.localeCompare(b.nombre));
+    paraLeyenda.forEach((item) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip-razon chico';
+      chip.textContent = item.nombre + ' (' + item.scoreActual + ')';
+      chip.style.backgroundColor = hexToRgba(item.color, 0.15);
+      chip.style.borderColor = item.color;
+      chip.style.color = item.color;
+      leyenda.appendChild(chip);
+    });
+    wrap.appendChild(leyenda);
+
+    cont.appendChild(wrap);
+  }
+
   function mostrarTabEstadisticas(tab) {
+    ocultarTooltipStackedBar();
     document.getElementById('estadisticas-pane-diagramas').style.display = tab === 'diagramas' ? 'block' : 'none';
     document.getElementById('estadisticas-pane-subt').style.display = tab === 'subt' ? 'block' : 'none';
     document.getElementById('estadisticas-pane-srs').style.display = tab === 'srs' ? 'block' : 'none';
@@ -12412,10 +13395,16 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
         construirEstadisticas();
         estadisticasConstruidas = true;
       }
+      if (!curvaOlvidoConstruido) {
+        construirCurvaOlvido();
+        curvaOlvidoConstruido = true;
+      }
     } else if (tab === 'subt') {
-      if (!subtRepasarConstruido) {
+      if (!subtRepasarConstruido || !sesgoConfianzaConstruido) {
         construirListaSubtRepasar();
+        construirGraficoVelocidadAprendizaje();
         subtRepasarConstruido = true;
+        sesgoConfianzaConstruido = true;
       }
       renderAnalisisGuardadosLista();
     } else if (tab === 'srs') {
@@ -12432,8 +13421,10 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     elModalEstadisticas.classList.add('abierto');
   }
   function cerrarModalEstadisticas() {
+    ocultarTooltipStackedBar();
     elModalEstadisticas.classList.remove('abierto');
   }
+
   document.getElementById('btn-estadisticas').addEventListener('click', () => abrirModalEstadisticas());
   document.getElementById('btn-estadisticas-cerrar').addEventListener('click', () => cerrarModalEstadisticas());
   document.getElementById('tab-estadisticas-diagramas').addEventListener('click', () => mostrarTabEstadisticas('diagramas'));
@@ -14820,6 +15811,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       limitarRetencionRutas();
       guardarRetencionRutas();
       estadisticasConstruidas = false;
+      curvaOlvidoConstruido = false;
       subtRepasarConstruido = false;
       sesgoConfianzaConstruido = false;
     }
