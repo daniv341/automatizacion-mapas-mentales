@@ -3327,6 +3327,16 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-sync-eliminaciones">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>⚠️ Eliminaciones detectadas</h3>
+    <p id="modal-sync-eliminaciones-texto" style="white-space: pre-line; text-align: left;"></p>
+    <button class="boton-reiniciar" id="btn-sync-elim-sincronizar">Sí, sincronizar</button>
+    <button class="boton-secundario" id="btn-sync-elim-fusionar">No, mantener fusión</button>
+    <button class="modal-cancelar" id="btn-sync-elim-cancelar">Cancelar</button>
+  </div>
+</div>
+
 <div class="lightbox" id="lightbox">
   <button class="lightbox-cerrar" title="Cerrar">&times;</button>
   <img id="lightbox-img" src="" alt="Imagen ampliada">
@@ -3585,6 +3595,211 @@
     return (entranteTs || 0) > (localTs || 0);
   }
 
+  function asegurarRevActual() {
+    return relojLogicoLocal > 0 ? relojLogicoLocal : siguienteRev();
+  }
+
+  function esEliminacionSegura(entranteRev, entranteTs, localRev, localTs) {
+    if (typeof entranteRev !== 'number') return false;
+    if (typeof localRev === 'number') {
+      return entranteRev > localRev;
+    }
+    return (entranteTs || 0) > (localTs || 0);
+  }
+
+  function obtenerMetaEntrante(contenedor, lista, metaPadre) {
+    let rev = undefined;
+    let ts = 0;
+
+    if (metaPadre) {
+      if (typeof metaPadre.rev === 'number') rev = metaPadre.rev;
+      if (typeof metaPadre.ts === 'number' && metaPadre.ts > ts) ts = metaPadre.ts;
+    }
+    if (contenedor && typeof contenedor === 'object' && !Array.isArray(contenedor)) {
+      if (typeof contenedor.rev === 'number' && (rev === undefined || contenedor.rev > rev)) {
+        rev = contenedor.rev;
+      }
+      const tsCont = contenedor.timestamp_backup || contenedor.timestamp || contenedor.t || 0;
+      if (typeof tsCont === 'number' && tsCont > ts) ts = tsCont;
+    }
+    if (Array.isArray(lista)) {
+      lista.forEach((item) => {
+        if (!item || typeof item !== 'object') return;
+        if (typeof item.rev === 'number' && (rev === undefined || item.rev > rev)) {
+          rev = item.rev;
+        }
+        const tsItem = item.t || item.modificada || item.creada || item.timestamp || (item.fecha ? Date.parse(item.fecha) : 0) || 0;
+        if (typeof tsItem === 'number' && tsItem > ts) ts = tsItem;
+      });
+    }
+    return { rev: rev, ts: ts };
+  }
+
+  function claveNaturalLista(item) {
+    const esp = (item && typeof item.espacio === 'string' && item.espacio) ? item.espacio : ESPACIO_HASH;
+    const nom = (item && typeof item.nombre === 'string') ? item.nombre.toLowerCase() : '';
+    return esp + '\u0000' + nom;
+  }
+
+  function extraerListaZona(zona, datosZona) {
+    if (Array.isArray(datosZona)) return datosZona;
+    if (!datosZona || typeof datosZona !== 'object') return null;
+    if (zona === 'dificiles') return Array.isArray(datosZona.tarjetas) ? datosZona.tarjetas : null;
+    if (zona === 'notas') return Array.isArray(datosZona.notas) ? datosZona.notas : null;
+    if (zona === 'notaseval') return Array.isArray(datosZona.notasEvaluador) ? datosZona.notasEvaluador : null;
+    if (zona === 'analisis') return Array.isArray(datosZona.analisisGuardados) ? datosZona.analisisGuardados : null;
+    if (zona === 'retencion') return Array.isArray(datosZona.retencionRutas) ? datosZona.retencionRutas : null;
+    if (zona === 'razones') return Array.isArray(datosZona.razones) ? datosZona.razones : null;
+    if (zona === 'imagenes') return Array.isArray(datosZona.imagenes) ? datosZona.imagenes : null;
+    if (zona === 'listas') return Array.isArray(datosZona.listas) ? datosZona.listas : null;
+    return null;
+  }
+
+  function detectarEliminacionesZona(zona, datosZona, metaPadre) {
+    const lista = extraerListaZona(zona, datosZona);
+    if (!lista) return { lista: null, idsAEliminar: [], meta: { rev: undefined, ts: 0 } };
+
+    const meta = obtenerMetaEntrante(datosZona, lista, metaPadre);
+    const idsAEliminar = [];
+
+    if (typeof meta.rev !== 'number') {
+      return { lista: lista, idsAEliminar: idsAEliminar, meta: meta };
+    }
+
+    if (zona === 'dificiles') {
+      const entrantes = new Set(lista.filter((x) => x && typeof x.h === 'string' && x.h).map((x) => x.h));
+      Object.keys(dificiles).forEach((h) => {
+        const loc = dificiles[h];
+        if (!loc || !loc.activa) return;
+        if (!entrantes.has(h) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.t || 0)) {
+          idsAEliminar.push(h);
+        }
+      });
+    } else if (zona === 'notas') {
+      const entrantes = new Set(lista.filter((x) => x && typeof x.h === 'string' && x.h).map((x) => x.h));
+      Object.keys(notasLocales).forEach((h) => {
+        const loc = notasLocales[h];
+        if (!loc) return;
+        if (!entrantes.has(h) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.t || 0)) {
+          idsAEliminar.push(h);
+        }
+      });
+    } else if (zona === 'razones') {
+      const entrantes = new Set(lista.filter((x) => x && typeof x.h === 'string' && x.h).map((x) => x.h));
+      Object.keys(razonesGuardadas).forEach((h) => {
+        const loc = razonesGuardadas[h];
+        if (!loc) return;
+        if (!entrantes.has(h) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.t || 0)) {
+          idsAEliminar.push(h);
+        }
+      });
+    } else if (zona === 'imagenes') {
+      const entrantes = new Set(lista.filter((x) => x && typeof x.h === 'string' && x.h && typeof x.ruta === 'number' && typeof x.indice === 'number').map((x) => x.h));
+      Object.keys(datosImagenes).forEach((h) => {
+        const loc = datosImagenes[h];
+        if (!loc) return;
+        if (!entrantes.has(h) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.t || 0)) {
+          idsAEliminar.push(h);
+        }
+      });
+    } else if (zona === 'notaseval') {
+      const entrantes = new Set(lista.filter((x) => x && typeof x.id === 'string' && x.id).map((x) => x.id));
+      notasEvaluador.forEach((loc) => {
+        if (!entrantes.has(loc.id) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.modificada || loc.creada || 0)) {
+          idsAEliminar.push(loc.id);
+        }
+      });
+    } else if (zona === 'retencion') {
+      const entrantes = new Set(lista.filter((x) => x && typeof x.id === 'string' && x.id).map((x) => x.id));
+      retencionRutas.forEach((loc) => {
+        if (!entrantes.has(loc.id) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.timestamp || 0)) {
+          idsAEliminar.push(loc.id);
+        }
+      });
+    } else if (zona === 'analisis') {
+      const entrantes = new Set(lista.filter((x) => x && typeof x.id === 'string' && x.id).map((x) => x.id));
+      analisisGuardados.forEach((loc) => {
+        if (!entrantes.has(loc.id) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, Date.parse(loc.fecha) || 0)) {
+          idsAEliminar.push(loc.id);
+        }
+      });
+    } else if (zona === 'listas') {
+      const entrantes = new Set(lista.filter((x) => x && typeof x.nombre === 'string' && Array.isArray(x.hashes)).map(claveNaturalLista));
+      listas.forEach((loc) => {
+        const clave = claveNaturalLista(loc);
+        if (!entrantes.has(clave) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.modificada || loc.creada || 0)) {
+          idsAEliminar.push(clave);
+        }
+      });
+    }
+
+    return { lista: lista, idsAEliminar: idsAEliminar, meta: meta };
+  }
+
+  function aplicarEliminacionesZona(zona, idsAEliminar) {
+    if (!idsAEliminar || idsAEliminar.length === 0) return;
+    const setIds = new Set(idsAEliminar);
+    if (zona === 'dificiles') {
+      idsAEliminar.forEach((h) => { delete dificiles[h]; });
+      guardarDificiles();
+    } else if (zona === 'notas') {
+      idsAEliminar.forEach((h) => { delete notasLocales[h]; });
+      guardarNotas();
+    } else if (zona === 'razones') {
+      idsAEliminar.forEach((h) => { delete razonesGuardadas[h]; });
+      guardarRazones();
+    } else if (zona === 'imagenes') {
+      idsAEliminar.forEach((h) => { delete datosImagenes[h]; });
+      guardarImagenesStorage();
+    } else if (zona === 'notaseval') {
+      notasEvaluador = notasEvaluador.filter((n) => !setIds.has(n.id));
+      guardarNotasEvaluador();
+    } else if (zona === 'retencion') {
+      retencionRutas = retencionRutas.filter((r) => !setIds.has(r.id));
+      guardarRetencionRutas();
+      estadisticasConstruidas = false;
+      curvaOlvidoConstruido = false;
+      subtRepasarConstruido = false;
+      sesgoConfianzaConstruido = false;
+    } else if (zona === 'analisis') {
+      analisisGuardados = analisisGuardados.filter((a) => !setIds.has(a.id));
+      guardarAnalisisGuardados();
+      estadisticasConstruidas = false;
+      curvaOlvidoConstruido = false;
+      subtRepasarConstruido = false;
+      sesgoConfianzaConstruido = false;
+    } else if (zona === 'listas') {
+      listas = listas.filter((l) => !setIds.has(claveNaturalLista(l)));
+      guardarListas();
+      if (listaActivaNombre && !buscarListaPropia(listaActivaNombre)) {
+        quitarListaActiva();
+      }
+    }
+  }
+
+  function textoConteoEliminacionZona(zona, n) {
+    if (zona === 'dificiles') return 'Se ' + (n === 1 ? 'eliminaría 1 difícil' : 'eliminarían ' + n + ' difíciles') + ' localmente';
+    if (zona === 'notas') return 'Se ' + (n === 1 ? 'eliminaría 1 nota' : 'eliminarían ' + n + ' notas') + ' localmente';
+    if (zona === 'notaseval') return 'Se ' + (n === 1 ? 'eliminaría 1 nota del evaluador' : 'eliminarían ' + n + ' notas del evaluador') + ' localmente';
+    if (zona === 'analisis') return 'Se ' + (n === 1 ? 'eliminaría 1 análisis' : 'eliminarían ' + n + ' análisis') + ' localmente';
+    if (zona === 'retencion') return 'Se ' + (n === 1 ? 'eliminaría 1 registro de retención' : 'eliminarían ' + n + ' registros de retención') + ' localmente';
+    if (zona === 'razones') return 'Se ' + (n === 1 ? 'eliminaría 1 registro de razones' : 'eliminarían ' + n + ' registros de razones') + ' localmente';
+    if (zona === 'imagenes') return 'Se ' + (n === 1 ? 'eliminaría 1 imagen' : 'eliminarían ' + n + ' imágenes') + ' localmente';
+    if (zona === 'listas') return 'Se ' + (n === 1 ? 'eliminaría 1 lista' : 'eliminarían ' + n + ' listas') + ' localmente';
+    return 'Se eliminarían ' + n + ' registro(s) localmente';
+  }
+
+  const ETIQUETA_ZONA_MODAL = {
+    dificiles: '☆ Difíciles',
+    notas: '💡 Notas',
+    notaseval: '📝 Notas del evaluador',
+    analisis: '📑 Análisis de Sesión',
+    retencion: '🧠 Retención de rutas',
+    razones: '🏷 Razones',
+    imagenes: '🖼 Imágenes',
+    listas: '📋 Listas',
+  };
+
   function guardarDificilesYa() {
     try {
       localStorage.setItem(CLAVE_DIFICILES, JSON.stringify(dificiles));
@@ -3722,14 +3937,16 @@
     const entrada = dificiles[h];
     if (entrada && entrada.activa) {
       entrada.activa = false;
-      entrada.t = Date.now();   // NUEVO: para saber si hay cambios sin respaldar (§8)
+      entrada.t = Date.now();
+      entrada.rev = siguienteRev();
     } else if (entrada) {
       entrada.activa = true;
-      entrada.t = Date.now();   // NUEVO
-      if (!modoObservador) reproducirSonido('dificil');  // NUEVO: solo al MARCAR (no al desmarcar), nunca en observador
+      entrada.t = Date.now();
+      entrada.rev = siguienteRev();
+      if (!modoObservador) reproducirSonido('dificil');
     } else {
-      dificiles[h] = { p: t.primero || '', s: t.segundo || '', activa: true, t: Date.now(), espacio: ESPACIO_HASH };
-      if (!modoObservador) reproducirSonido('dificil');  // NUEVO
+      dificiles[h] = { p: t.primero || '', s: t.segundo || '', activa: true, t: Date.now(), rev: siguienteRev(), espacio: ESPACIO_HASH };
+      if (!modoObservador) reproducirSonido('dificil');
     }
     guardarDificiles();
     renderTarjeta();
@@ -3812,7 +4029,8 @@
     const h = hashTarjeta(t);
     const base = notaTxtDe(t);
     if (texto === base) {
-      delete notasLocales[h];   // igual al txt: no hace falta override
+      if (notasLocales[h]) siguienteRev();
+      delete notasLocales[h];
     } else {
       notasLocales[h] = { p: t.primero || '', s: t.segundo || '', nota: texto, base: base, t: Date.now(), rev: siguienteRev(), espacio: ESPACIO_HASH };
     }
@@ -3821,6 +4039,7 @@
 
   function descartarNotaLocal(t) {
     delete notasLocales[hashTarjeta(t)];
+    siguienteRev();
     guardarNotas();
   }
 
@@ -3936,6 +4155,68 @@
       _resolverAviso = null;
       resolver();
     }
+  }
+
+  const elModalSyncEliminaciones = document.getElementById('modal-sync-eliminaciones');
+  const elModalSyncEliminacionesTexto = document.getElementById('modal-sync-eliminaciones-texto');
+  let _resolverSyncEliminaciones = null;
+
+  function pedirDecisionEliminaciones(itemsZonas, esBackupCompleto) {
+    return new Promise((resolve) => {
+      if (!esBackupCompleto && itemsZonas.length === 1) {
+        elModalSyncEliminacionesTexto.textContent = textoConteoEliminacionZona(itemsZonas[0].zona, itemsZonas[0].cantidad) + '.';
+      } else {
+        const lineas = itemsZonas.map((it) => '• ' + ETIQUETA_ZONA_MODAL[it.zona] + ': ' + textoConteoEliminacionZona(it.zona, it.cantidad));
+        elModalSyncEliminacionesTexto.textContent = lineas.join('\n');
+      }
+      elModalSyncEliminaciones.classList.add('abierto');
+      _resolverSyncEliminaciones = resolve;
+    });
+  }
+
+  function cerrarModalSyncEliminaciones(decision) {
+    elModalSyncEliminaciones.classList.remove('abierto');
+    if (_resolverSyncEliminaciones) {
+      const r = _resolverSyncEliminaciones;
+      _resolverSyncEliminaciones = null;
+      r(decision);
+    }
+  }
+
+  document.getElementById('btn-sync-elim-sincronizar').addEventListener('click', () => cerrarModalSyncEliminaciones('sincronizar'));
+  document.getElementById('btn-sync-elim-fusionar').addEventListener('click', () => cerrarModalSyncEliminaciones('fusionar'));
+  document.getElementById('btn-sync-elim-cancelar').addEventListener('click', () => cerrarModalSyncEliminaciones('cancelar'));
+  elModalSyncEliminaciones.addEventListener('click', (evento) => {
+    if (evento.target === elModalSyncEliminaciones) cerrarModalSyncEliminaciones('cancelar');
+  });
+
+  async function procesarImportacionZonaIndividual(zona, datosCrudos) {
+    const det = detectarEliminacionesZona(zona, datosCrudos, null);
+    if (!det.lista) return { errorFormato: true };
+
+    let eliminadas = 0;
+    if (det.idsAEliminar.length > 0) {
+      const decision = await pedirDecisionEliminaciones([{ zona: zona, cantidad: det.idsAEliminar.length }], false);
+      if (decision === 'cancelar') return { cancelado: true };
+      if (decision === 'sincronizar') {
+        aplicarEliminacionesZona(zona, det.idsAEliminar);
+        eliminadas = det.idsAEliminar.length;
+      }
+    }
+
+    registrarRevVista(det.meta.rev);
+
+    let r;
+    if (zona === 'dificiles') r = fusionarDificilesLista(det.lista);
+    else if (zona === 'notas') r = fusionarNotasLista(det.lista);
+    else if (zona === 'notaseval') r = fusionarNotasEvaluadorLista(det.lista);
+    else if (zona === 'analisis') r = fusionarAnalisisLista(det.lista);
+    else if (zona === 'retencion') r = fusionarRetencionLista(det.lista);
+    else if (zona === 'razones') r = fusionarRazonesLista(det.lista);
+    else if (zona === 'imagenes') r = fusionarImagenesLista(det.lista);
+    else if (zona === 'listas') r = fusionarListasEntrantes(det.lista);
+
+    return Object.assign({}, r, { eliminadas: eliminadas });
   }
 
   elBtnAvisoAceptar.addEventListener('click', () => cerrarModalAviso());
@@ -7054,6 +7335,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       : '¿Borrar la lista «' + nombre + '» (del evaluador «' + etiquetaEspacio(esp) + '»)?';
     if (!(await confirmarAccion(aviso))) return;
     listas = listas.filter((l) => !(l.nombre === nombre && (l.espacio || ESPACIO_HASH) === esp));
+    siguienteRev();
     guardarListas();
     if (esPropia && listaActivaNombre === nombre) quitarListaActiva();
     renderListasGuardadas();
@@ -7063,10 +7345,15 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (listas.length === 0) return;
     if (!(await confirmarAccion('¿Vaciar TODAS las listas guardadas (' + listas.length + ')? No se puede deshacer.'))) return;
     listas = [];
+    siguienteRev();
     guardarListas();
     if (listaActivaNombre) quitarListaActiva();
     renderListasGuardadas();
   });
+
+  function construirExportListas() {
+    return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), listas: listas };
+  }
 
   document.getElementById('btn-listas-exportar').addEventListener('click', () => {
     const salida = { version: 1, listas: listas };
@@ -7088,13 +7375,13 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     elInputListasImportar.value = '';
     if (!archivo) return;
     const lector = new FileReader();
-    lector.onload = () => {
+    lector.onload = async () => {
       let datos;
       try { datos = JSON.parse(lector.result); } catch (e) { avisar('El archivo no es un JSON válido.'); return; }
-      const entrantes = (datos && Array.isArray(datos.listas)) ? datos.listas : null;
-      if (!entrantes) { avisar('El archivo no tiene el formato esperado ({ "listas": [...] }).'); return; }
-      const r = fusionarListasEntrantes(entrantes);
-      avisar('Importación de listas: ' + r.nuevas + ' nueva(s), ' + r.actualizadas + ' actualizada(s), ' + r.conservadas + ' conservada(s).');
+      const r = await procesarImportacionZonaIndividual('listas', datos);
+      if (r.cancelado) return;
+      if (r.errorFormato) { avisar('El archivo no tiene el formato esperado ({ "listas": [...] }).'); return; }
+      avisar('Importación de listas: ' + r.nuevas + ' nueva(s), ' + r.actualizadas + ' actualizada(s), ' + r.conservadas + ' conservada(s)' + (r.eliminadas > 0 ? ', ' + r.eliminadas + ' eliminada(s)' : '') + '.');
     };
     lector.readAsText(archivo);
   });
@@ -7416,6 +7703,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       id: ESPACIO_HASH + '_' + timestamp,
       espacio: ESPACIO_HASH,
       fecha: new Date(timestamp).toISOString(),
+      rev: siguienteRev(),
       modo: modoJuego,
       subT: ultimoAnalisisFilas.map((f) => ({
         nombre: f.nombre,
@@ -7450,13 +7738,14 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
   });
 
   function construirExportAnalisis() {
-    return { version: 1, analisisGuardados: analisisGuardados };
+    return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), analisisGuardados: analisisGuardados };
   }
 
   function fusionarAnalisisLista(lista) {
     let nuevas = 0, conservadas = 0, invalidas = 0;
     lista.forEach((item) => {
       if (!item || typeof item.id !== 'string' || !item.id) { invalidas++; return; }
+      if (typeof item.rev === 'number') registrarRevVista(item.rev);
       if (analisisGuardados.some((a) => a.id === item.id)) { conservadas++; return; }
       analisisGuardados.push(Object.assign({}, item, {
         espacio: typeof item.espacio === 'string' && item.espacio ? item.espacio : ESPACIO_HASH,
@@ -7508,6 +7797,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar este análisis de sesión? No se puede deshacer.'))) return;
       analisisGuardados = analisisGuardados.filter((a) => a.id !== entrada.id);
+      siguienteRev();
       guardarAnalisisGuardados();
       estadisticasConstruidas = false;
       curvaOlvidoConstruido = false;
@@ -7602,6 +7892,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (analisisGuardados.length === 0) return;
     if (!(await confirmarAccion('¿Vaciar TODOS los análisis de sesión? No se puede deshacer.'))) return;
     analisisGuardados = [];
+    siguienteRev();
     guardarAnalisisGuardados();
     estadisticasConstruidas = false;
     curvaOlvidoConstruido = false;
@@ -7632,13 +7923,13 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     evento.target.value = '';
     if (!archivo) return;
     const lector = new FileReader();
-    lector.onload = () => {
+    lector.onload = async () => {
       try {
         const obj = JSON.parse(lector.result);
-        const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.analisisGuardados) ? obj.analisisGuardados : null);
-        if (!lista) throw new Error('formato');
-        const r = fusionarAnalisisLista(lista);
-        avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
+        const r = await procesarImportacionZonaIndividual('analisis', obj);
+        if (r.cancelado) return;
+        if (r.errorFormato) throw new Error('formato');
+        avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.eliminadas > 0 ? ', ' + r.eliminadas + ' eliminada(s)' : '') + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
       } catch (e) {
         avisar('El archivo no es un JSON válido de análisis de sesión.');
       }
@@ -7687,7 +7978,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       return;
     }
     const ahora = Date.now();
-    const lista = { nombre: nombre, hashes: hashes, creada: ahora, modificada: ahora, srs: Object.assign({}, SRS_DEFAULT), espacio: ESPACIO_HASH };
+    const lista = { nombre: nombre, hashes: hashes, creada: ahora, modificada: ahora, rev: siguienteRev(), srs: Object.assign({}, SRS_DEFAULT), espacio: ESPACIO_HASH };
     listas.push(lista);
     guardarListas();
     asociarRetroactivamente(lista);
@@ -7782,13 +8073,14 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     return {
       version: 1,
       evaluador: ESPACIO_HASH,
-      timestamp_backup: Date.now(),   // RENOMBRADO: antes "timestamp"
+      rev: asegurarRevActual(),
+      timestamp_backup: Date.now(),
       gamificacion: construirExportGamificacion(),
       dificiles: construirExportDificiles(),
       notas: construirExportNotas(),
       razones: construirExportRazones(),
       imagenes: construirExportImagenes(),
-      listas: { version: 1, listas: listas },
+      listas: construirExportListas(),
       notasEvaluador: construirExportNotasEvaluador(),
       retencionRutas: construirExportRetencion(),
       analisisSesion: construirExportAnalisis(),
@@ -7810,20 +8102,68 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     document.getElementById('sync-backup-info').textContent = 'Backup exportado: ' + new Date().toLocaleString() + '.';
   }
 
-  function importarBackupCompleto(datos) {
+  async function importarBackupCompleto(datos) {
     if (!datos || typeof datos !== 'object') return { error: 'El archivo no es un JSON válido.' };
     if (typeof datos.version !== 'number') return { error: 'El archivo no tiene el formato esperado (falta "version").' };
     if (datos.version !== 1) return { error: 'Versión de backup desconocida (' + datos.version + ').' };
     if (typeof datos.evaluador !== 'string' || !datos.evaluador) {
       return { error: 'El backup no tiene el campo "evaluador" (formato viejo o inválido).' };
     }
-    // NUEVO: ya no se rechaza si datos.evaluador !== ESPACIO_HASH — se acepta igual y los datos
-    // de otros evaluadores quedan disponibles para "Vincular a este evaluador" (se fusionan normalmente
-    // porque cada item ya trae/recibe su propio campo "espacio" en fusionarXLista()).
 
     const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas', 'notasEvaluador', 'retencionRutas', 'analisisSesion'];
     const presentes = ZONAS.filter((z) => datos[z] !== undefined && datos[z] !== null);
     if (presentes.length === 0) return { error: 'El archivo no tiene ninguna sección reconocida.' };
+
+    const metaPadre = {
+      rev: typeof datos.rev === 'number' ? datos.rev : undefined,
+      ts: typeof datos.timestamp_backup === 'number' ? datos.timestamp_backup : 0,
+    };
+
+    const MAPA_CAMPOS_ZONA = [
+      { prop: 'dificiles', zona: 'dificiles' },
+      { prop: 'notas', zona: 'notas' },
+      { prop: ' notasEvaluador'.trim(), zona: 'notaseval' },
+      { prop: 'analisisSesion', zona: 'analisis' },
+      { prop: 'retencionRutas', zona: 'retencion' },
+      { prop: 'razones', zona: 'razones' },
+      { prop: 'imagenes', zona: 'imagenes' },
+      { prop: 'listas', zona: 'listas' },
+    ];
+
+    const deteccionesPorZona = {};
+    const resumenModal = [];
+
+    MAPA_CAMPOS_ZONA.forEach(({ prop, zona }) => {
+      if (!datos[prop]) return;
+      const det = detectarEliminacionesZona(zona, datos[prop], metaPadre);
+      deteccionesPorZona[zona] = det;
+      if (det.idsAEliminar.length > 0) {
+        resumenModal.push({ zona: zona, cantidad: det.idsAEliminar.length });
+      }
+    });
+
+    let sincronizarEliminaciones = false;
+    if (resumenModal.length > 0) {
+      const decision = await pedirDecisionEliminaciones(resumenModal, true);
+      if (decision === 'cancelar') return { cancelado: true };
+      sincronizarEliminaciones = (decision === 'sincronizar');
+    }
+
+    const eliminadasPorZona = {};
+    if (sincronizarEliminaciones) {
+      Object.keys(deteccionesPorZona).forEach((zona) => {
+        const ids = deteccionesPorZona[zona].idsAEliminar;
+        if (ids.length > 0) {
+          aplicarEliminacionesZona(zona, ids);
+          eliminadasPorZona[zona] = ids.length;
+        }
+      });
+    }
+
+    registrarRevVista(metaPadre.rev);
+    Object.keys(deteccionesPorZona).forEach((zona) => {
+      registrarRevVista(deteccionesPorZona[zona].meta.rev);
+    });
 
     let zonasActualizadas = 0, zonasSinCambios = 0;
     const contar = (huboCambios) => { huboCambios ? zonasActualizadas++ : zonasSinCambios++; };
@@ -7836,42 +8176,42 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (datos.dificiles) {
       const lista = Array.isArray(datos.dificiles) ? datos.dificiles : (datos.dificiles.tarjetas || []);
       const r = fusionarDificilesLista(lista);
-      contar(r.nuevas > 0);
+      contar(r.nuevas > 0 || (eliminadasPorZona.dificiles || 0) > 0);
     }
     if (datos.notas) {
       const lista = Array.isArray(datos.notas) ? datos.notas : (datos.notas.notas || []);
       const r = fusionarNotasLista(lista);
-      contar(r.nuevas > 0 || r.actualizadas > 0);
+      contar(r.nuevas > 0 || r.actualizadas > 0 || (eliminadasPorZona.notas || 0) > 0);
     }
     if (datos.razones) {
       const lista = Array.isArray(datos.razones) ? datos.razones : (datos.razones.razones || []);
       const r = fusionarRazonesLista(lista);
-      contar(r.nuevas > 0 || r.actualizadas > 0);
+      contar(r.nuevas > 0 || r.actualizadas > 0 || (eliminadasPorZona.razones || 0) > 0);
     }
     if (datos.imagenes) {
       const lista = Array.isArray(datos.imagenes) ? datos.imagenes : (datos.imagenes.imagenes || []);
       const r = fusionarImagenesLista(lista);
-      contar(r.nuevas > 0 || r.actualizadas > 0);
+      contar(r.nuevas > 0 || r.actualizadas > 0 || (eliminadasPorZona.imagenes || 0) > 0);
     }
     if (datos.listas) {
       const entrantes = Array.isArray(datos.listas) ? datos.listas : (datos.listas.listas || []);
       const r = fusionarListasEntrantes(entrantes);
-      contar(r.nuevas > 0 || r.actualizadas > 0);
+      contar(r.nuevas > 0 || r.actualizadas > 0 || (eliminadasPorZona.listas || 0) > 0);
     }
     if (datos.notasEvaluador) {
       const lista = Array.isArray(datos.notasEvaluador) ? datos.notasEvaluador : (datos.notasEvaluador.notasEvaluador || []);
       const r = fusionarNotasEvaluadorLista(lista);
-      contar(r.nuevas > 0 || r.actualizadas > 0);
+      contar(r.nuevas > 0 || r.actualizadas > 0 || (eliminadasPorZona.notaseval || 0) > 0);
     }
     if (datos.retencionRutas) {
       const lista = Array.isArray(datos.retencionRutas) ? datos.retencionRutas : (datos.retencionRutas.retencionRutas || []);
       const r = fusionarRetencionLista(lista);
-      contar(r.nuevas > 0);
+      contar(r.nuevas > 0 || (eliminadasPorZona.retencion || 0) > 0);
     }
     if (datos.analisisSesion) {
       const lista = Array.isArray(datos.analisisSesion) ? datos.analisisSesion : (datos.analisisSesion.analisisGuardados || []);
       const r = fusionarAnalisisLista(lista);
-      contar(r.nuevas > 0);
+      contar(r.nuevas > 0 || (eliminadasPorZona.analisis || 0) > 0);
     }
 
     marcarUltimoBackup();
@@ -8060,32 +8400,32 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     return (e && e.message) ? e.message : 'Error desconocido al sincronizar con Gist.';
   }
 
-  const ZONAS_SYNC_GIST = [
-    { zona: 'backup', archivo: 'backup_completo.json', exportar: construirBackupCompleto, importar: (d) => {
-      const r = importarBackupCompleto(d);
+const ZONAS_SYNC_GIST = [
+    { zona: 'backup', archivo: 'backup_completo.json', exportar: construirBackupCompleto, importar: async (d) => {
+      const r = await importarBackupCompleto(d);
       if (r && r.error) throw new Error(r.error);
       return r;
     } },
-    { zona: 'historial', archivo: 'gamificacion_export.json', exportar: construirExportGamificacion, importar: (d) => {
+    { zona: 'historial', archivo: 'gamificacion_export.json', exportar: construirExportGamificacion, importar: async (d) => {
       fusionarGamificacionImportada(d);
       return { ok: true };
     } },
     { zona: 'dificiles', archivo: 'dificiles_tarjetas.json', exportar: construirExportDificiles, importar: (d) =>
-      fusionarDificilesLista(Array.isArray(d) ? d : (d.tarjetas || [])) },
+      procesarImportacionZonaIndividual('dificiles', d) },
     { zona: 'notas', archivo: 'notas_tarjetas.json', exportar: construirExportNotas, importar: (d) =>
-      fusionarNotasLista(Array.isArray(d) ? d : (d.notas || [])) },
+      procesarImportacionZonaIndividual('notas', d) },
     { zona: 'notaseval', archivo: 'notas_evaluador.json', exportar: construirExportNotasEvaluador, importar: (d) =>
-      fusionarNotasEvaluadorLista(Array.isArray(d) ? d : (d.notasEvaluador || [])) },
+      procesarImportacionZonaIndividual('notaseval', d) },
     { zona: 'analisis', archivo: 'analisis_sesion.json', exportar: construirExportAnalisis, importar: (d) =>
-      fusionarAnalisisLista(Array.isArray(d) ? d : (d.analisisGuardados || [])) },
+      procesarImportacionZonaIndividual('analisis', d) },
     { zona: 'retencion', archivo: 'retencion_rutas.json', exportar: construirExportRetencion, importar: (d) =>
-      fusionarRetencionLista(Array.isArray(d) ? d : (d.retencionRutas || [])) },
+      procesarImportacionZonaIndividual('retencion', d) },
     { zona: 'razones', archivo: 'razones_tarjetas.json', exportar: construirExportRazones, importar: (d) =>
-      fusionarRazonesLista(Array.isArray(d) ? d : (d.razones || [])) },
+      procesarImportacionZonaIndividual('razones', d) },
     { zona: 'imagenes', archivo: 'datos_imagenes.json', exportar: construirExportImagenes, importar: (d) =>
-      fusionarImagenesLista(Array.isArray(d) ? d : (d.imagenes || [])) },
-    { zona: 'listas', archivo: 'listas_guardadas.json', exportar: () => ({ version: 1, listas: listas }), importar: (d) =>
-      fusionarListasEntrantes(Array.isArray(d) ? d : (d.listas || [])) },
+      procesarImportacionZonaIndividual('imagenes', d) },
+    { zona: 'listas', archivo: 'listas_guardadas.json', exportar: construirExportListas, importar: (d) =>
+      procesarImportacionZonaIndividual('listas', d) },
   ];
 
   async function gistExportarZona(cfg) {
@@ -8097,16 +8437,20 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       await avisar('☁️ ' + mensajeErrorGist(e));
     }
   }
+
   async function gistImportarZona(cfg) {
     try {
       const datos = await gistLeerArchivo(cfg.archivo);
-      cfg.importar(datos);
+      const r = await cfg.importar(datos);
+      if (r && r.cancelado) return;
+      if (r && r.errorFormato) throw new Error('El archivo en Gist no tiene el formato esperado.');
       await avisar('☁️ Importado desde Gist: ' + cfg.archivo);
       actualizarEstadoGist();
     } catch (e) {
       await avisar('☁️ ' + mensajeErrorGist(e));
     }
   }
+
   ZONAS_SYNC_GIST.forEach((cfg) => {
     const btnExp = document.getElementById('btn-gist-exportar-' + cfg.zona);
     const btnImp = document.getElementById('btn-gist-importar-' + cfg.zona);
@@ -8164,7 +8508,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     elInputBackupImportar.value = '';
     if (!archivo) return;
     const lector = new FileReader();
-    lector.onload = () => {
+    lector.onload = async () => {
       const elInfo = document.getElementById('sync-backup-info');
       let datos;
       try {
@@ -8173,7 +8517,11 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
         elInfo.textContent = 'El archivo no es un JSON válido.';
         return;
       }
-      const r = importarBackupCompleto(datos);
+      const r = await importarBackupCompleto(datos);
+      if (r.cancelado) {
+        elInfo.textContent = 'Importación cancelada.';
+        return;
+      }
       if (r.error) {
         elInfo.textContent = r.error;
         return;
@@ -9418,6 +9766,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (elPantallaGaleria.style.display !== 'none') { volverListaDesdeGaleria(); return; }
     if (elPantallaHuerfanas.style.display !== 'none') { volverDesdeHuerfanas(); return; }
     if (elPantallaMapa.style.display !== 'none') { cerrarPantallaMapa(); return; }
+    if (elModalSyncEliminaciones.classList.contains('abierto')) { cerrarModalSyncEliminaciones('cancelar'); return; }
   });
 
   document.addEventListener('keydown', (evento) => {
@@ -9568,8 +9917,9 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar la nota y la marca de difícil de esta imagen?'))) return;
       delete datosImagenes[hash];
+      siguienteRev();
       guardarImagenesStorage();
-      actualizarFilaImagenIndividual(hash);   // CORREGIDO: solo esta fila, no todo el listado
+      actualizarFilaImagenIndividual(hash);
     }));
     div.appendChild(acc);
     return div;
@@ -9624,6 +9974,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (Object.keys(datosImagenes).length === 0) return;
     if (!(await confirmarAccion('¿Vaciar TODOS los datos de imágenes guardados? No se puede deshacer.'))) return;
     datosImagenes = {};
+    siguienteRev();
     guardarImagenesStorage();
     renderImagenesPreview();
   });
@@ -9640,7 +9991,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       rev: typeof datosImagenes[h].rev === 'number' ? datosImagenes[h].rev : undefined,
       espacio: datosImagenes[h].espacio || ESPACIO_HASH,
     }));
-    return { version: 1, imagenes: lista };
+    return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), imagenes: lista };
   }
 
   document.getElementById('btn-exportar-imagenes').addEventListener('click', () => {
@@ -9666,17 +10017,17 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (!archivo) return;
 
     const lector = new FileReader();
-    lector.onload = () => {
+    lector.onload = async () => {
       const elInfo = document.getElementById('nota-imagenes');
       try {
         const obj = JSON.parse(lector.result);
-        const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.imagenes) ? obj.imagenes : null);
-        if (!lista) throw new Error('formato');
-
-        const r = fusionarImagenesLista(lista);
+        const r = await procesarImportacionZonaIndividual('imagenes', obj);
+        if (r.cancelado) return;
+        if (r.errorFormato) throw new Error('formato');
         elInfo.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
           ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
-          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
+          r.iguales + ' ya estaban igual' + (r.eliminadas > 0 ? ', ' + r.eliminadas + ' eliminada(s)' : '') +
+          (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
       } catch (e) {
         elInfo.textContent = 'El archivo no es un JSON válido de imágenes.';
       }
@@ -9827,7 +10178,8 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       } else {
         dificiles[h] = { p: p, s: s, activa: check.checked };
       }
-      dificiles[h].t = Date.now();   // NUEVO: para saber si hay cambios sin respaldar (§8)
+      dificiles[h].t = Date.now();
+      dificiles[h].rev = siguienteRev();
       guardarDificiles();
       actualizarFilaDificilIndividual(h);
     });
@@ -9879,9 +10231,10 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
         p: dificiles[h].p || '',
         s: dificiles[h].s || '',
         t: dificiles[h].t || 0,
+        rev: typeof dificiles[h].rev === 'number' ? dificiles[h].rev : undefined,
         espacio: dificiles[h].espacio || ESPACIO_HASH,
       }));
-    return { version: 1, tarjetas: lista };
+    return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), tarjetas: lista };
   }
 
   document.getElementById('btn-exportar-dificiles').addEventListener('click', () => {
@@ -9903,22 +10256,20 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
 
   document.getElementById('input-importar').addEventListener('change', (evento) => {
     const archivo = evento.target.files && evento.target.files[0];
-    evento.target.value = '';  // permitir re-importar el mismo archivo
+    evento.target.value = '';
     if (!archivo) return;
 
     const lector = new FileReader();
-    lector.onload = () => {
+    lector.onload = async () => {
       const elNota = document.getElementById('nota-dificiles');
       try {
         const obj = JSON.parse(lector.result);
-        const lista = Array.isArray(obj)
-          ? obj
-          : (obj && Array.isArray(obj.tarjetas) ? obj.tarjetas : null);
-        if (!lista) throw new Error('formato');
-
-        const r = fusionarDificilesLista(lista);
+        const r = await procesarImportacionZonaIndividual('dificiles', obj);
+        if (r.cancelado) return;
+        if (r.errorFormato) throw new Error('formato');
         elNota.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.repetidas +
-          ' ya estaban' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
+          ' ya estaban' + (r.eliminadas > 0 ? ', ' + r.eliminadas + ' eliminada(s)' : '') +
+          (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
       } catch (e) {
         elNota.textContent = 'El archivo no es un JSON válido de difíciles.';
       }
@@ -9930,12 +10281,15 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     let nuevas = 0, repetidas = 0, invalidas = 0;
     lista.forEach((item) => {
       if (!item || typeof item.h !== 'string' || !item.h) { invalidas++; return; }
-      if (dificiles[item.h]) { repetidas++; return; }  // fusionar: no duplica (regla ya existente)
+      const itemRev = typeof item.rev === 'number' ? item.rev : undefined;
+      registrarRevVista(itemRev);
+      if (dificiles[item.h] && dificiles[item.h].activa) { repetidas++; return; }
       dificiles[item.h] = {
         p: typeof item.p === 'string' ? item.p : '',
         s: typeof item.s === 'string' ? item.s : '',
         activa: true,
         t: typeof item.t === 'number' ? item.t : Date.now(),
+        rev: itemRev,
         espacio: typeof item.espacio === 'string' && item.espacio ? item.espacio : ESPACIO_HASH,
       };
       nuevas++;
@@ -10115,8 +10469,9 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
       delete notasLocales[h];
+      siguienteRev();
       guardarNotas();
-      actualizarFilaNotaIndividual(h);   // CORREGIDO: solo esta fila, no todo el listado
+      actualizarFilaNotaIndividual(h);
     }));
     div.appendChild(acc);
     return div;
@@ -10170,6 +10525,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (Object.keys(notasLocales).length === 0) return;
     if (!(await confirmarAccion('¿Vaciar TODAS las notas guardadas? No se puede deshacer.'))) return;
     notasLocales = {};
+    siguienteRev();
     guardarNotas();
     renderNotasPreview();
   });
@@ -10185,7 +10541,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       rev: typeof notasLocales[h].rev === 'number' ? notasLocales[h].rev : undefined,
       espacio: notasLocales[h].espacio || ESPACIO_HASH,
     }));
-    return { version: 1, notas: lista };
+    return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), notas: lista };
   }
 
   document.getElementById('btn-exportar-notas').addEventListener('click', () => {
@@ -10211,19 +10567,17 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (!archivo) return;
 
     const lector = new FileReader();
-    lector.onload = () => {
+    lector.onload = async () => {
       const elInfo = document.getElementById('nota-notas');
       try {
         const obj = JSON.parse(lector.result);
-        const lista = Array.isArray(obj)
-          ? obj
-          : (obj && Array.isArray(obj.notas) ? obj.notas : null);
-        if (!lista) throw new Error('formato');
-
-        const r = fusionarNotasLista(lista);
+        const r = await procesarImportacionZonaIndividual('notas', obj);
+        if (r.cancelado) return;
+        if (r.errorFormato) throw new Error('formato');
         elInfo.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
           ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
-          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
+          r.iguales + ' ya estaban igual' + (r.eliminadas > 0 ? ', ' + r.eliminadas + ' eliminada(s)' : '') +
+          (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
       } catch (e) {
         elInfo.textContent = 'El archivo no es un JSON válido de notas.';
       }
@@ -10437,6 +10791,7 @@ function esCategoriaDudaRuta(codigo) {
 
   function borrarNotaEvaluador(id) {
     notasEvaluador = notasEvaluador.filter((n) => n.id !== id);
+    siguienteRev();
     guardarNotasEvaluador();
     renderListaNotasEvaluador();
   }
@@ -10577,6 +10932,7 @@ function esCategoriaDudaRuta(codigo) {
     if (notasEvaluador.length === 0) return;
     if (!(await confirmarAccion('¿Vaciar TODAS las notas del evaluador? No se puede deshacer.'))) return;
     notasEvaluador = [];
+    siguienteRev();
     guardarNotasEvaluador();
     renderListaNotasEvaluador();
   });
@@ -10587,7 +10943,7 @@ function esCategoriaDudaRuta(codigo) {
   });
 
   function construirExportNotasEvaluador() {
-    return { version: 1, notasEvaluador: notasEvaluador };
+    return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), notasEvaluador: notasEvaluador };
   }
 
   function fusionarNotasEvaluadorLista(lista) {
@@ -10648,18 +11004,16 @@ function esCategoriaDudaRuta(codigo) {
     if (!archivo) return;
 
     const lector = new FileReader();
-    lector.onload = () => {
+    lector.onload = async () => {
       try {
         const obj = JSON.parse(lector.result);
-        const lista = Array.isArray(obj)
-          ? obj
-          : (obj && Array.isArray(obj.notasEvaluador) ? obj.notasEvaluador : null);
-        if (!lista) throw new Error('formato');
-
-        const r = fusionarNotasEvaluadorLista(lista);
+        const r = await procesarImportacionZonaIndividual('notaseval', obj);
+        if (r.cancelado) return;
+        if (r.errorFormato) throw new Error('formato');
         avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
           ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
-          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : ''));
+          r.iguales + ' ya estaban igual' + (r.eliminadas > 0 ? ', ' + r.eliminadas + ' eliminada(s)' : '') +
+          (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : ''));
       } catch (e) {
         avisar('El archivo no es un JSON válido de notas del evaluador.');
       }
@@ -10939,6 +11293,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar esta entrada del registro de retención? No se puede deshacer.'))) return;
       retencionRutas = retencionRutas.filter((r) => r.id !== entrada.id);
+      siguienteRev();
       guardarRetencionRutas();
       estadisticasConstruidas = false;
       curvaOlvidoConstruido = false;
@@ -10975,6 +11330,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar esta entrada guardada? No se puede deshacer.'))) return;
       retencionRutas = retencionRutas.filter((r) => r.id !== entrada.id);
+      siguienteRev();
       guardarRetencionRutas();
       renderRetencionHistorial();
     }));
@@ -11071,6 +11427,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     if (retencionRutas.length === 0) return;
     if (!(await confirmarAccion('¿Vaciar TODO el registro de retención de rutas? No se puede deshacer.'))) return;
     retencionRutas = [];
+    siguienteRev();
     guardarRetencionRutas();
     estadisticasConstruidas = false;
     curvaOlvidoConstruido = false;
@@ -11085,13 +11442,14 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   });
 
   function construirExportRetencion() {
-    return { version: 1, retencionRutas: retencionRutas };
+    return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), retencionRutas: retencionRutas };
   }
 
   function fusionarRetencionLista(lista) {
     let nuevas = 0, conservadas = 0, invalidas = 0;
     lista.forEach((item) => {
       if (!item || typeof item.id !== 'string' || !item.id) { invalidas++; return; }
+      if (typeof item.rev === 'number') registrarRevVista(item.rev);
       if (retencionRutas.some((r) => r.id === item.id)) { conservadas++; return; }
       retencionRutas.push(Object.assign({}, item, {
         espacio: typeof item.espacio === 'string' && item.espacio ? item.espacio : ESPACIO_HASH,
@@ -11130,13 +11488,13 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     evento.target.value = '';
     if (!archivo) return;
     const lector = new FileReader();
-    lector.onload = () => {
+    lector.onload = async () => {
       try {
         const obj = JSON.parse(lector.result);
-        const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.retencionRutas) ? obj.retencionRutas : null);
-        if (!lista) throw new Error('formato');
-        const r = fusionarRetencionLista(lista);
-        avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
+        const r = await procesarImportacionZonaIndividual('retencion', obj);
+        if (r.cancelado) return;
+        if (r.errorFormato) throw new Error('formato');
+        avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.conservadas + ' ya existente(s)' + (r.eliminadas > 0 ? ', ' + r.eliminadas + ' eliminada(s)' : '') + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : ''));
       } catch (e) {
         avisar('El archivo no es un JSON válido de retención de rutas.');
       }
@@ -11163,6 +11521,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       id: hashRetencion(ESPACIO_HASH, timestamp),
       espacio: ESPACIO_HASH,
       timestamp: timestamp,
+      rev: siguienteRev(),
       ciclos: Math.max(0, pomodoroCiclo - 1),
       tiempoLecturaSeg: pomodoroAcumulado.lectura,
       tiempoRetencionSeg: pomodoroAcumulado.retencion,
@@ -12868,8 +13227,9 @@ let estadisticasConstruidas = false;
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar por completo este registro de razones?'))) return;
       delete razonesGuardadas[hash];
+      siguienteRev();
       guardarRazones();
-      actualizarFilaRazonIndividual(hash);   // CORREGIDO: solo esta fila, no todo el listado
+      actualizarFilaRazonIndividual(hash);
     }));
     div.appendChild(acc);
     return div;
@@ -12925,6 +13285,7 @@ let estadisticasConstruidas = false;
     if (Object.keys(razonesGuardadas).length === 0) return;
     if (!(await confirmarAccion('¿Vaciar TODAS las razones guardadas? No se puede deshacer.'))) return;
     razonesGuardadas = {};
+    siguienteRev();
     guardarRazones();
     renderRazonesPreview();
   });
@@ -12940,7 +13301,7 @@ let estadisticasConstruidas = false;
       rev: typeof razonesGuardadas[h].rev === 'number' ? razonesGuardadas[h].rev : undefined,
       espacio: razonesGuardadas[h].espacio || ESPACIO_HASH,
     }));
-    return { version: 1, razones: lista };
+    return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), razones: lista };
   }
 
   document.getElementById('btn-exportar-razones').addEventListener('click', () => {
@@ -12966,17 +13327,17 @@ let estadisticasConstruidas = false;
     if (!archivo) return;
 
     const lector = new FileReader();
-    lector.onload = () => {
+    lector.onload = async () => {
       const elInfo = document.getElementById('nota-razones');
       try {
         const obj = JSON.parse(lector.result);
-        const lista = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.razones) ? obj.razones : null);
-        if (!lista) throw new Error('formato');
-
-        const r = fusionarRazonesLista(lista);
+        const r = await procesarImportacionZonaIndividual('razones', obj);
+        if (r.cancelado) return;
+        if (r.errorFormato) throw new Error('formato');
         elInfo.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
           ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
-          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
+          r.iguales + ' ya estaban igual' + (r.eliminadas > 0 ? ', ' + r.eliminadas + ' eliminada(s)' : '') +
+          (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
       } catch (e) {
         elInfo.textContent = 'El archivo no es un JSON válido de razones.';
       }
@@ -14208,6 +14569,7 @@ let estadisticasConstruidas = false;
     if (!actual || razonesPendientes === null) return;
     const h = hashTarjeta(actual);
     if (razonesPendientes.length === 0) {
+      if (razonesGuardadas[h]) siguienteRev();
       delete razonesGuardadas[h];
     } else {
       razonesGuardadas[h] = {
