@@ -1,0 +1,212 @@
+temaP SCOR
+
+temaS
+
+subT DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR
+imP Supply Chain Operations Reference (SCOR®)
+imP es una creación del
+imP Supply Chain Council (SCC)
+
+cuR Modelo SCOR
+cuR recoge
+cuR visión consensuada del Consejo
+cuR sobre gestión
+cuR cadena suministro
+
+deF el modelo SCOR proporciona
+deF 1 marco único
+*deF que vincula
++@deF procesos empresariales,
++@deF métricas,
++@deF mejores prácticas y
++@deF características tecnológicas
+$*deF en una estructura unificada
++deF para facilitar comunicación
+deF entre socios cadena suministro y
++deF mejorar eficacia
+deF gestión cadena suministro y
++deF actividades relacionadas
+deF con su mejora
+
+subT ALCANCE Y PROCESOS SCOR
+imP el modelo SCOR
+imP describe
+imP actividades empresariales
+imP asociadas a todas fases
+imP del proceso
+imP satisfacer demanda 1 cliente
+
+imP el modelo en sí
+imP se organiza en torno
+imP a cinco procesos
+imP gestión principales
+
+imP Mediante estos componentes básicos procesos,
+imP modelo SCOR
+imP puede utilizarse
+imP para describir
+imP cadenas suministro
+imP tanto muy sencillas
+imP como muy complejas
+
+caR el modelo está
+caR diseñado y
+caR se mantiene
+caR para dar soporte
+*caR a cadenas suministro
++caR diversa complejidad y
++caR en múltiples sectores
+
+subT ESTRUCTURA PROCESOS SCOR (NIVEL 1 Y NIVEL 2)
+caR Planificar
+caR Fuente y Abastecer
+caR Realizar y Fabricar
+caR Entrega
+caR Devolución
+caR Habilitar y Facilitar
+
+subT ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
+imP los atributos rendimiento
+imP una cadena suministro
+*imP permiten
++@imP analizarla y
++@imP evaluarla
+$imP en comparación
+imP con otras cadenas suministro
+imP que aplican
+imP estrategias competitivas
+
+deF SCOR identifica
+deF cinco atributos fundamentales
+*deF del rendimiento cadena suministro:
++deF fiabilidad,
++deF capacidad respuesta,
++deF agilidad,
++deF costes y
++deF gestión activos
+
+deF Sin estas características,
+deF resulta difícil comparar
+deF una organización
+deF que opta estratégicamente
+deF ser proveedor bajo coste
+deF con una organización
+*deF que opta por competir en
++deF fiabilidad y
++deF rendimiento
+
+deF las métricas estratégicas nivel 1
+deF están directamente relacionadas
+deF con atributos rendimiento
+
+deF Estas métricas nivel 1
+deF son cálculos
+deF mediante los cuales
+deF una organización
+deF puede medir su éxito
+deF a hora alcanzar
+deF posicionamiento deseado en mercado
+
+deF Muchas métricas del modelo SCOR
+deF son jerárquicas,
+deF al igual que son
+deF elementos proceso
+
+deF las métricas nivel 1
+deF se crean a partir
+deF cálculos niveles inferiores
+
+deF las métricas nivel 2
+deF suelen estar asociadas
+deF a 1 subconjunto más reducido
+deF de procesos
+
+imP Además,
+imP métricas (diagnósticos)
+imP se utilizan para diagnosticar
+imP variaciones en rendimiento
+imP con respecto al plan
+
+deF Métricas Nivel 1
+deF por Atributo
+deF Fiabilidad
+deF Capacidad respuesta
+deF Agilidad
+deF Coste
+deF Eficiencia en gestión activos
+
+subT PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
+imP la sección dedicada al personal
+imP proporciona herramientas
+imP para gestionar talento
+imP en cadena suministro
+imP mediante incorporación 1 estándar
+imP que describe
+imP conocimientos especializados necesarios
+*imP para
++imP realizar tareas y
++imP gestionar procesos
+
+deF En SCOR,
+deF una competencia
+deF es capacidad
+deF obtener resultados predeterminados
+*deF con 1 mínimo
++@deF tiempo y
++@deF energía,
+$deF caracterizada
+*deF por una definición estándar con
++deF experiencia,
++deF aptitudes y
++deF formación asociadas
+
+*imP la experiencia es
++@imP conocimiento o
++@imP capacidad
+$imP adquiridos
+*imP mediante
++@imP observación o
++@imP participación activa,
+$*imP que son
++imP obtenidos al realizar trabajo
+imP en 1 entorno real y
++imP al enfrentarse
+imP a diferentes situaciones
+imP que requieren distintas acciones
+
+caR la aptitud
+*caR es una capacidad natural,
++@caR adquirida,
++@caR aprendida o
++@caR desarrollada
+$caR para realizar 1 determinado tipo trabajo
+caR a 1 nivel concreto
+*caR la formación
++@caR desarrolla una competencia o
++@caR 1 tipo comportamiento
+$caR a través instrucción
+
+subT PRÁCTICAS SCOR
+caR las empresas
+caR utilizan prácticas
+*caR para identificar formas
++@caR alternativas o
++@caR deseadas
+$caR operar en sus cadenas suministro
+
+caR las prácticas SCOR
+caR pueden constituir 1 subconjunto del
+caR conjunto total prácticas
+caR que reconoce una empresa
+
+caR el Supply Chain Council
+caR recomienda a empresas
+caR interesadas en adoptar SCOR
+caR que adapten este marco
+*caR mediante
++@caR investigación,
++@caR revisión y
++@caR integración prácticas relevantes
+$*caR del
++caR sector y
++caR propia empresa (internalización)

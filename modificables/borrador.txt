@@ -1,273 +1,224 @@
-temaP SCOR
-
-temaS
-
-^subT DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR
-deF Supply Chain Operations Reference (SCOR®)
-deF es una creación del 
-deF Supply Chain Council (SCC)
-
-~cuR Modelo SCOR
-cuR recoge 
-cuR visión consensuada del Consejo
-cuR sobre gestión 
-cuR cadena suministro
-
-~imP el modelo SCOR proporciona 
-imP 1 marco único
-*imP que vincula 
-
-+@imP procesos empresariales,
-
-+@imP métricas,
-
-+@imP mejores prácticas y
-
-+@imP características tecnológicas 
-
-$*imP en una estructura unificada
-
-+imP para facilitar comunicación
-imP entre socios cadena suministro y
-
-+imP mejorar eficacia 
-imP gestión cadena suministro y
-
-+imP actividades relacionadas
-imP con su mejora
-
-^subT ALCANCE Y PROCESOS SCOR
-imP el modelo SCOR 
-imP describe 
-imP actividades empresariales
-imP asociadas a todas fases 
-imP del proceso 
-imP satisfacer demanda 1 cliente
-
-~deF el modelo en sí 
-deF se organiza en torno
-deF a cinco procesos 
-deF gestión principales
-
-~deF Mediante estos componentes básicos procesos,
-deF modelo SCOR
-deF puede utilizarse
-deF para describir 
-deF cadenas suministro 
-deF tanto muy sencillas
-deF como muy complejas
-
-~imP el modelo está 
-imP diseñado y
-imP se mantiene
-imP para dar soporte 
-imP a cadenas suministro 
-imP diversa complejidad y
-imP en múltiples sectores
-
-^subT ESTRUCTURA PROCESOS SCOR (NIVEL 1 Y NIVEL 2)
-caR Planificar
-
-~caR Fuente y Abastecer
-
-~caR Realizar y Fabricar
-
-~caR Entrega
-
-~caR Devolución
-
-~caR Habilitar y Facilitar
-
-^subT ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
-imP los atributos rendimiento 
-imP una cadena suministro
-*imP permiten 
-
-+@imP analizarla y
-
-+@imP evaluarla 
-
-$imP en comparación
-imP con otras cadenas suministro
-imP que aplican 
-imP estrategias competitivas
-
-~imP SCOR identifica 
-imP cinco atributos fundamentales
-*imP del rendimiento cadena suministro:
-
-+caR fiabilidad,
-
-+caR capacidad respuesta,
-
-+caR agilidad,
-
-+caR costes y
-
-+caR gestión activos
-
-~cuR Sin estas características,
-cuR resulta difícil comparar 
-cuR una organización
-cuR que opta estratégicamente
-cuR ser proveedor bajo coste
-cuR con una organización
-*cuR que opta por competir en 
-
-+cuR fiabilidad y
-
-+cuR rendimiento
-
-~imP las métricas estratégicas nivel 1
-imP están directamente relacionadas
-imP con atributos rendimiento
-
-~imP Estas métricas nivel 1
-imP son cálculos
-imP mediante los cuales 
-imP una organización
-imP puede medir su éxito 
-imP a hora alcanzar 
-imP posicionamiento deseado en mercado
-
-~cuR Muchas métricas del modelo SCOR
-cuR son jerárquicas,
-cuR al igual que son 
-cuR elementos proceso
-
-~caR las métricas nivel 1 
-caR se crean a partir 
-caR cálculos niveles inferiores
-
-~caR las métricas nivel 2
-caR suelen estar asociadas 
-caR a 1 subconjunto más reducido 
-caR de procesos
-
-~deF Además,
-deF métricas (diagnósticos)
-deF se utilizan para diagnosticar 
-deF variaciones en rendimiento
-deF con respecto al plan
-
-~imP Métricas Nivel 1
-*imP por Atributo
-
-+caR Fiabilidad
-
-+caR Capacidad respuesta
-
-+caR Agilidad
-
-+caR Coste
-
-+caR Eficiencia en gestión activos
-
-^subT PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
-deF la sección dedicada al personal
-deF proporciona herramientas
-deF para gestionar talento 
-deF en cadena suministro
-deF mediante incorporación 1 estándar
-deF que describe 
-deF conocimientos especializados necesarios
-*deF para 
-
-+deF realizar tareas y
-
-+deF gestionar procesos
-
-~imP En SCOR,
-imP una competencia
-imP es capacidad 
-imP obtener resultados predeterminados
-*imP con 1 mínimo 
-
-+@imP tiempo y
-
-+@imP energía,
-
-$imP caracterizada
-*imP por una definición estándar con 
-
-+imP experiencia,
-
-+imP aptitudes y
-
-+imP formación asociadas
-
-~*imP la experiencia es
-
-+@imP conocimiento o
-
-+@imP capacidad 
-
-$imP adquiridos
-*imP mediante 
-
-+@imP observación o
-
-+@imP participación activa,
-
-$*que son
-
-+imP obtenidos al realizar trabajo 
-imP en 1 entorno real y
-
-+imP al enfrentarse 
-imP a diferentes situaciones
-imP que requieren distintas acciones
-
-~imP la aptitud
-*imP es una capacidad natural,
-
-+@imP adquirida,
-
-+@imP aprendida o
-
-+@imP desarrollada
-
-$imP para realizar 1 determinado tipo trabajo
-imP a 1 nivel concreto
-
-~*imP la formación 
-
-+@imP desarrolla una competencia o
-
-+@imP 1 tipo comportamiento 
-
-$imP a través instrucción
-
-^subT PRÁCTICAS SCOR
-imP las empresas
-imP utilizan prácticas
-*imP para identificar formas 
-
-+@imP alternativas o
-
-+@imP deseadas 
-
-$imP operar en sus cadenas suministro
-
-~imP las prácticas SCOR
-imP pueden constituir 1 subconjunto del
-imP conjunto total prácticas
-imP que reconoce una empresa
-
-~cuR el Supply Chain Council 
-cuR recomienda a empresas 
-cuR interesadas en adoptar SCOR
-cuR que adapten este marco
-*cuR mediante 
-
-+@cuR investigación,
-
-+@cuR revisión y
-
-+@cuR integración prácticas relevantes 
-
-$*cuR del 
-
-+cuR sector y
-
-+cuR propia empresa (internalización)
+temaP FUNCION TRANSFERENCIA
+
+temaS POLOS REALES
+
+subT DEFINICIÓN FUNCIONES TRANSFERENCIA UN SISTEMA CONTINUO
+Se considerará primero
+funciones transferencia continuas,
+*para sistemas
++@una sola salida
++@una sola entrada y
+$o en notación transformada,
+como
+función Transferencia P(s)
+1 sistema continuo se define
+como
+aquel factor en ecuación Y(s)
+que multiplica
+a transformada entrada U(s)
+
+función transferencia
+se define como
+transformada Laplace salida
+sobre
+transformada Laplace entrada
+
+denominador es
+Polinomio característico y
+transformada respuesta
+puede escribirse como
+
+donde términos correspondientes
+a valores iniciales uk0, yk0
+se consideran igual
+a cero,
+por tanto,
+Transformada Laplace salida Y(s)
+en respuesta
+a una entrada U(s)
+está dada por
+
+Se hace énfasis
+en que
+no todas funciones transferencia
+son expresiones algebraicas racionales
+
+Puesto que
+formación transformada salida Y(s)
+es simplemente
+una multiplicación algebraica
+P(s) y U(s)
+
+Cuando términos los valores iniciales uk0, yk0
+son ceros,
+multiplicación es conmutativa;
+es decir:
+Y(s) = U(s) P(s) = P(s) U(s),
+entonces
+transformada inversa es
+
+Por tanto,
+respuesta tiempo y(t)
+puede determinarse
+encontrando polos P(s) U(s)
+
+En consecuencia y(t)
+depende tanto
++@polos y
++@ceros
+$función transferencia
+*como
++@polos y
++@ceros
+$entrada
+
+subT PROPIEDADES FUNCIÓN TRANSFERENCIA UN SISTEMA CONTINUO
+1
+Si entrada
+en 1 sistema
+con función transferencia P(s)
+es 1 impulso unitario,
+y todos sus valores iniciales
+son cero,
+transformada salida es P(s)
+
+2
+función transferencia
+del sistema
+puede determinarse
+a partir ecuación diferencial
+del sistema
+
+3
+Para sistemas continuos,
+si todas raíces del denominador
+tienen partes reales negativas,
+sistema es estable
+
+4
+función transferencia del sistema
+puede especificarse entonces
+como una constante,
+*especificando
++@polos y
++@ceros
+$del sistema
+
+Esta constante
+representada por K
+es factor ganancia del sistema
+
+subT FORMA CANÓNICA UN SISTEMA EN MALLA CERRADA
+Donde G y H son
+funciones Transferencia
+del Sistema Control
+componentes Sistema Control son
+
+En siguientes ecuaciones,
+signo –
+se refiere a 1 sistema
+con retroalimentación positiva
+con retroalimentación negativa
+se debe considerar
+
+y signo +
+a 1 sistema
+con retroalimentación positiva
+con retroalimentación negativa
+se debe considerar
+
+denominador C/R
+determina
+ecuación característica del sistema,
+que se define
+a partir 1 ± GH=0
+
+subT RESPUESTA EN TIEMPO
+cómo variables estado
+están asociadas
+con sistemas lazo cerrado,
+para una variedad entradas o
+condiciones iniciales
+Queda encontrar y(t)
+
+función transferencia
+lazo cerrado es
+
+Conociendo entrada en tiempo,
+se conoce su transformada
+
+Y conociendo
+función transferencia lazo cerrado,
+se puede hallar
+transformada Laplace salida
+
+Esto se obtiene hallando
+transformada Inversa Laplace anterior
+
+métodos gráficos
+son una herramienta poderosa
+en ingeniería control
+ya que exactitud obtenida
+es por general compatible
+con exactitudes
+con que se describen plantas
+que se desean estudiar
+
+subT ganancia respuesta tiempo
+
+diagrama respuesta en tiempo
+
+subT EFP  metodo grafico
+ganancia
+acostumbra poner
+segundo
+cuadrante
+
+subT conceptos previos
+
+temaS POLOS COMPLEJOS
+
+subT EFP metodo grafico
+variable compleja
+en forma binomica
+considera como expresion
+sigma parte real
+jw
+parte imaginaria
+sigma y w
+numeros reales
+unidad imaginaria con propiedades
+polos en grafico
+son triangulos
+
+obteniendo valores
+s1 s2
+podemos expresar polinomio
+como
+si desarrolla
+cuadrado binomio
+llegara polinomio origen
+
+polos reales
+aproximan
+valores estables
+
+S imaginario puro
+sistema inestable
+
+si no dan R(s)
+usar 1/s
+
+angulos
+siempre
+positivizados
+usar radianes
+
+suplementarios
+suma cuyo
+resultado
+= 180
+
+diagrama respuesta en tiempo
+
+ejemplo diagrama

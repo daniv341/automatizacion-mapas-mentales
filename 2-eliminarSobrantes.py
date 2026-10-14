@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# v4 — reescribe el archivo de entrada in place; antes de tocarlo guarda
-#       el original como *_base.txt. Sin CLI: solo correr el script.
+# v4.1 — reescribe el archivo de entrada in place; antes de tocarlo guarda
+#         el original como *_base.txt. Sin CLI: solo correr el script.
 import re, os, sys, glob, unicodedata
 
 # ==================== PARÁMETROS ====================
@@ -28,28 +28,185 @@ BIGRAM_OPENERS = {("ya","que"),("por","tanto"),("por","lo"),("es","decir"),
 CORTAR_DESPUES = {"y","e","o","u","ni"}
 MINIMO = {"en":3, "a":3}   # palabras mínimas en la línea para cortar ahí
 
+# [D1] Diccionario de verbos depurado (sin duplicados y ordenado por familias)
 VERBOS = {
-    "es","son","está","están","sea","sean","esté","estén","fue","fueron","ser",
-    "ha","han","hay","tiene","tienen","puede","pueden","debe","deben","va","van",
-    "da","dan","dar","hace","hacen","hacer","define","definen","aplica","aplican",
-    "usa","usan","utiliza","utilizan","brinda","brindan","aporta","aportan",
-    "valora","evalúa","evalúan","ofrece","ofrecen","sirve","sirven","monitorea",
-    "maximizan","aumenta","trabajan","participan","recoge","logra","logre",
-    "llama","llaman","conoce","conocen","representa","representan","determina",
-    "determinan","determinarse","afecta","afectan","contiene","contienen",
-    "suministra","calcula","corresponde","corresponden","causa","causan","crece",
-    "produce","producen","garantiza","garantizan","garantizar","reduce","asegura",
-    "aseguran","genera","generan","encuentra","encuentran","requiere","requiere",
-    "requieren","convierte","convierten","transforma","transforman","caracteriza",
-    "caracterizan","manifiesta","manifiestan","denomina","difiere","ocasiona",
-    "ocasione","retorna","tarda","alcanza","alcanzar","resulta","resultan",
-    "existe","existen","permite","permiten","llega","llegar","establece",
-    "establecen","establecer","establezca","obtiene","obtienen","obtener",
-    "mantiene","mantienen","mantener","necesita","necesitan","lee","resta",
-    "componen","evita","evitar","clasifica","clasificar","escribirse",
-    "describirse","cuenta","cuentan","depende","dependen","persiste","persisten",
-    "regule","gobierna","gobiernan","tenderá","tenderán","descendiera","pueda"}
+    # 1. Copulativos, auxiliares, modales y existencia
+    "es","son","está","están","sea","sean","esté","estén","fue","fueron","ser","estar",
+    "ha","han","hay","haber","tiene","tienen","tener","puede","pueden","pueda","puedan","poder",
+    "debe","deben","deber","va","van","ir","da","dan","dar","hace","hacen","hacer",
+    "existe","existen","existir",
+
+    # 2. Definición, denominación y exposición teórica
+    "define","definen","definir","llama","llaman","llamar","denomina","denominan","denominar",
+    "conoce","conocen","conocer","describe","describen","describir","describirse",
+    "escribirse","caracteriza","caracterizan","caracterizar","clasifica","clasifican","clasificar",
+    "representa","representan","representar","manifiesta","manifiestan","manifestar",
+    "expresa","expresan","expresar","indica","indican","indicar","señala","señalan","señalar",
+    "explica","explican","explicar","implica","implican","implicar","significa","significan","significar",
+    "considera","consideran","considerar","contempla","contemplan","contemplar",
+    "asume","asumen","asumir","supone","suponen","suponer","plantea","plantean","plantear",
+    "propone","proponen","proponer","sugiere","sugieren","sugerir","destaca","destacan","destacar",
+
+    # 3. Enfoque, soporte y comportamiento (frecuentes con "se")
+    "basa","basan","basar","centra","centran","centrar","enfoca","enfocan","enfocar",
+    "orienta","orientan","orientar","apoya","apoyan","apoyar","sustenta","sustentan","sustentar",
+    "fundamenta","fundamentan","fundamentar","comporta","comportan","comportar",
+    "traduce","traducen","traducir","refleja","reflejan","reflejar","resume","resumen","resumir",
+    "visualiza","visualizan","visualizar","observa","observan","observar",
+    "realiza","realizan","realizar","efectúa","efectúan","efectuar","lleva","llevan","llevar",
+
+    # 4. Aplicación, uso, utilidad y provisión
+    "aplica","aplican","aplicar","usa","usan","usar","utiliza","utilizan","utilizar",
+    "emplea","emplean","emplear","sirve","sirven","servir","funciona","funcionan","funcionar",
+    "brinda","brindan","brindar","aporta","aportan","aportar","ofrece","ofrecen","ofrecer",
+    "suministra","suministran","suministrar","provee","proveen","proveer",
+    "proporciona","proporcionan","proporcionar","facilita","facilitan","facilitar",
+    "favorece","favorecen","favorecer","permite","permiten","permitir",
+    "garantiza","garantizan","garantizar","asegura","aseguran","asegurar",
+    "cumple","cumplen","cumplir","satisface","satisfacen","satisfacer",
+
+    # 5. Pertenencia, composición, estructura y conexión
+    "contiene","contienen","contener","compone","componen","componer",
+    "consta","constan","constar","consiste","consisten","consistir",
+    "abarca","abarcan","abarcar","comprende","comprenden","comprender",
+    "engloba","engloban","englobar","incluye","incluyen","incluir",
+    "excluye","excluyen","excluir","incorpora","incorporan","incorporar",
+    "reúne","reúnen","reunir","integra","integran","integrar",
+    "combina","combinan","combinar","agrupa","agrupan","agrupar",
+    "pertenece","pertenecen","pertenecer","corresponde","corresponden","corresponder",
+    "radica","radican","radicar","reside","residen","residir",
+    "encuentra","encuentran","encontrar","ubica","ubican","ubicar",
+    "sitúa","sitúan","situar","localiza","localizan","localizar",
+    "conecta","conectan","conectar","enlaza","enlazan","enlazar",
+    "vincula","vinculan","vincular","asocia","asocian","asociar",
+    "relaciona","relacionan","relacionar","acopla","acoplan","acoplar",
+    "une","unen","unir","separa","separan","separar","divide","dividen","dividir",
+
+    # 6. Causalidad, dependencia, transformación y efecto
+    "determina","determinan","determinar","determinarse","depende","dependen","depender",
+    "difiere","difieren","diferir","afecta","afectan","afectar",
+    "causa","causan","causar","ocasiona","ocasionan","ocasione","ocasionar",
+    "provoca","provocan","provocar","origina","originan","originar",
+    "produce","producen","producir","genera","generan","generar",
+    "convierte","convierten","convertir","transforma","transforman","transformar",
+    "resulta","resultan","resultar","impide","impiden","impedir","evita","evitan","evitar",
+    "requiere","requieren","requerir","necesita","necesitan","necesitar","exige","exigen","exigir",
+
+    # 7. Ciclo de vida, inicio, evolución y finalización
+    "inicia","inician","iniciar","comienza","comienzan","comenzar",
+    "empieza","empiezan","empezar","arranca","arrancan","arrancar",
+    "surge","surgen","surgir","nace","nacen","nacer",
+    "proviene","provienen","provenir","deriva","derivan","derivar",
+    "continúa","continúan","continuar","sigue","siguen","seguir",
+    "avanza","avanzan","avanzar","evoluciona","evolucionan","evolucionar",
+    "pasa","pasan","pasar","transcurre","transcurren","transcurrir",
+    "tarda","tardan","tardar","persiste","persisten","persistir",
+    "alcanza","alcanzan","alcanzar","llega","llegan","llegar","logra","logran","logre","lograr",
+    "retorna","retornan","retornar","termina","terminan","terminar",
+    "finaliza","finalizan","finalizar","concluye","concluyen","concluir",
+    "acaba","acaban","acabar","cesa","cesan","cesar","detiene","detienen","detener",
+
+    # 8. Gestión, dirección y procesos organizacionales
+    "establece","establecen","establecer","establezca","mantiene","mantienen","mantener",
+    "obtiene","obtienen","obtener","recoge","recogen","recoger",
+    "trabaja","trabajan","trabajar","participa","participan","participar",
+    "gestiona","gestionan","gestionar","administra","administran","administrar",
+    "dirige","dirigen","dirigir","lidera","lideran","liderar",
+    "coordina","coordinan","coordinar","supervisa","supervisan","supervisar",
+    "monitorea","monitorean","monitorear","planifica","planifican","planificar",
+    "organiza","organizan","organizar","asigna","asignan","asignar",
+    "delega","delegan","delegar","distribuye","distribuyen","distribuir",
+    "prioriza","priorizan","priorizar","decide","deciden","decidir",
+    "elige","eligen","elegir","selecciona","seleccionan","seleccionar",
+    "opta","optan","optar","resuelve","resuelven","resolver",
+    "soluciona","solucionan","solucionar","atiende","atienden","atender",
+    "aborda","abordan","abordar","comunica","comunican","comunicar",
+    "informa","informan","informar","reporta","reportan","reportar",
+    "notifica","notifican","notificar","capacita","capacitan","capacitar",
+    "motiva","motivan","motivar","contrata","contratan","contratar",
+
+    # 9. Diseño, informática, análisis y validación
+    "diseña","diseñan","diseñar","construye","construyen","construir",
+    "desarrolla","desarrollan","desarrollar","implementa","implementan","implementar",
+    "configura","configuran","configurar","instala","instalan","instalar",
+    "ejecuta","ejecutan","ejecutar","procesa","procesan","procesar",
+    "almacena","almacenan","almacenar","guarda","guardan","guardar",
+    "registra","registran","registrar","lee","leen","leer",
+    "envía","envían","enviar","recibe","reciben","recibir",
+    "transmite","transmiten","transmitir","extrae","extraen","extraer",
+    "analiza","analizan","analizar","evalúa","evalúan","evaluar",
+    "valora","valoran","valorar","estudia","estudian","estudiar",
+    "examina","examinan","examinar","detecta","detectan","detectar",
+    "identifica","identifican","identificar","reconoce","reconocen","reconocer",
+    "verifica","verifican","verificar","valida","validan","validar",
+    "comprueba","comprueban","comprobar","compara","comparan","comparar",
+    "distingue","distinguen","distinguir",
+
+    # 10. Dinámica física, matemática, variación y sistemas de control
+    "calcula","calculan","calcular","mide","miden","medir",
+    "estima","estiman","estimar","aproxima","aproximan","aproximar",
+    "resta","restan","restar","multiplica","multiplican","multiplicar",
+    "iguala","igualan","igualar","equivale","equivalen","equivaler",
+    "varía","varían","variar","modifica","modifican","modificar",
+    "altera","alteran","alterar","ajusta","ajustan","ajustar",
+    "corrige","corrigen","corregir","crece","crecen","crecer",
+    "aumenta","aumentan","aumentar","incrementa","incrementan","incrementar",
+    "reduce","reducen","reducir","disminuye","disminuyen","disminuir",
+    "maximiza","maximizan","maximizar","minimiza","minimizan","minimizar",
+    "optimiza","optimizan","optimizar","supera","superan","superar",
+    "excede","exceden","exceder","gobierna","gobiernan","gobernar",
+    "regula","regulan","regule","regular","opera","operan","operar",
+    "actúa","actúan","actuar","responde","responden","responder",
+    "reacciona","reaccionan","reaccionar","oscila","oscilan","oscilar",
+    "converge","convergen","converger","diverge","divergen","divergir",
+    "estabiliza","estabilizan","estabilizar","compensa","compensan","compensar",
+    "atenúa","atenúan","atenuar","amplifica","amplifican","amplificar",
+    "filtra","filtran","filtrar","anula","anulan","anular",
+    "cancela","cancelan","cancelar","satura","saturan","saturar",
+    "amortigua","amortiguan","amortiguar","tiende","tienden","tender","tenderá","tenderán",
+    "desciende","descienden","descender","descendiera",
+
+    # 11. Homógrafos seguros (SOLO plural e infinitivo para no cortar ante sustantivos)
+    # Nota: "cuenta"/"cuentan" se conservan por compatibilidad con el original;
+    # del resto se omite el singular (muestra, parte, forma, planta, carga, control, etc.)
+    "cuenta","cuentan","contar",
+    "muestran","mostrar","parten","partir","forman","formar","plantan","plantar",
+    "fuerzan","forzar","cargan","cargar","entregan","entregar","demandan","demandar",
+    "mejoran","mejorar","prueban","probar","fallan","fallar","cambian","cambiar",
+    "controlan","controlar","programan","programar","consultan","consultar",
+    "suman","sumar","limitan","limitar","buscan","buscar","tratan","tratar",
+    "marcan","marcar","causan","causar",
+}
+
 CLITICOS = {"se","me","te","le","les","nos","os"}
+
+# [C1] Reglas para detección precisa de gerundios (incluye -yendo y enclíticos)
+RE_GERUNDIO = re.compile(
+    r"(?:ando|iendo|yendo)(?:se|me|te|le|les|lo|la|los|las|nos)?$"
+)
+NO_GERUNDIOS = {
+    "comando","comandos","bando","bandos","contrabando","recomiendo",
+    "entiendo","atiendo","tiendo","defiendo","asciendo","desciendo",
+    "enciendo","extiendo","pretendo","dividendo","dividendos","memorando",
+    "memorandos","educando","educandos","graduando","graduandos","sumando",
+    "sumandos","multiplicando","sustraendo","minuendo",
+}
+
+# [C2] Abreviaturas protegidas para no partir oraciones en sus puntos
+RE_ABREV = re.compile(
+    r"\b(?:etc|p\.\s*ej|ej|aprox|máx|max|mín|min|fig|figs|cap|caps|"
+    r"pág|págs|pag|pags|dr|dra|sr|sra|lic|ing|prof|art|arts|inc|"
+    r"núm|num|nro|vol|vs|ref|sec|secc)\.",
+    re.IGNORECASE
+)
+
+# [C3] Marcadores de listas: números (1., 1), 1.-), letras (a), A.), romanos y viñetas
+RE_MARCADOR = re.compile(
+    r"^(?:(\d{1,3})\s*(?:[.)]|-\.)"
+    r"|([a-zA-Z])[.)]"
+    r"|([IVXLCDMivxlcdm]{1,5})[.)]"
+    r"|([-•*–]))\s+(.*)$"
+)
 
 FRASES_A_BORRAR = []   # p.ej. ["Hace seguimiento del trabajo del personal..."]
 REEMPLAZOS = []        # p.ej. [("en algunos casos, los clientes", "en algunos casos de clientes")]
@@ -85,6 +242,9 @@ def partir(oracion):
     tokens = oracion.split()
     lineas, actual = [], []
     prev = ""
+    prev_real = ""     # [C4] última palabra efectivamente conservada
+    prefijo_pend = ""  # [B1] paréntesis de apertura transferible si se borra artículo
+    en_paren = False   # [B3] control de paréntesis multi-palabra abierto
     n = len(tokens)
 
     def cerrar():
@@ -94,42 +254,57 @@ def partir(oracion):
             actual = []
 
     for i, tok in enumerate(tokens):
+        if prefijo_pend:
+            tok = prefijo_pend + tok
+            prefijo_pend = ""
+
         nxt = tokens[i + 1] if i + 1 < n else ""
         base = tok.lower().strip(",.;:()")
         base_next = nxt.lower().strip(",.;:()")
 
         if tok.startswith("\x00"):                     # marcador de <imagen>
-            cerrar(); lineas.append(tok); prev = ""; continue
+            cerrar(); lineas.append(tok)
+            prev = ""; prev_real = ""; en_paren = False
+            continue
 
         if BREAK_PAREN and tok.startswith("(") and ")" not in tok:
             cerrar()                                   # paréntesis multi-palabra
+            en_paren = True
 
         # --- artículos ---
         if base in ARTICULOS:
-            queda = (base == "de" and tok[-1:] in ",;:") \
-                 or (base == "de" and ((prev, base) in DE_CONSERVAR
+            queda = (base == "de" and tok.rstrip(")")[-1:] in ",;:") \
+                 or (base == "de" and ((prev_real, base) in DE_CONSERVAR
                                        or base_next in DE_NEXT_PROTECT)) \
-                 or (base == "lo" and prev == "por") \
+                 or (base == "lo" and prev_real == "por") \
                  or (base in ("el","la","los","las") and base_next in RELATIVOS)
             if not queda:
                 if not actual and not lineas and ARTICULO_INICIAL == "conservar":
                     tok = tok.lower()
                 else:
-                    prev = base; continue
+                    # [B1] Si el artículo abría paréntesis, pasarlo a la siguiente palabra
+                    if tok.startswith("("):
+                        prefijo_pend = "("
+                    prev = base
+                    continue
 
         if CONVERTIR_UN and base == "un" and (actual or lineas):
-            tok = "1"
+            tok = re.sub(r"(?i)\bun\b", "1", tok)      # conserva signos adyacentes
 
         # --- ¿abrir línea antes de este token? ---
         if actual:
-            st = sin_tildes(tok.lower())
-            gerundio = len(st) >= 7 and ("iendo" in st or "ando" in st)
+            st = sin_tildes(tok.lower()).strip(",.;:()\"'")
+            # [C1] Sufijo real de gerundio sin falsos positivos
+            gerundio = (len(st) >= 7 and st not in NO_GERUNDIOS
+                        and bool(RE_GERUNDIO.search(st)))
             opener = base in CORTAR_ANTES \
                   or (base, base_next) in BIGRAM_OPENERS or gerundio
-            verbo = base in VERBOS or (base in CLITICOS and base_next in VERBOS)
+            raiz_inf = re.sub(r"(?:se|me|te|le|les|lo|la|los|las|nos)$", "", base)
+            verbo = base in VERBOS or (base in CLITICOS and base_next in VERBOS) or (raiz_inf != base and raiz_inf in VERBOS)
             abrir = False
-            if (opener or verbo) and prev not in CORTAR_ANTES \
-               and (prev, base) not in COLOCACIONES:
+            # [C4] Usa prev_real para que artículos eliminados no anulen conectores previos
+            if (opener or verbo) and prev_real not in CORTAR_ANTES \
+               and (prev_real, base) not in COLOCACIONES:
                 abrir = len(actual) >= MINIMO.get(base, 1) if opener else len(actual) >= 2
             if abrir:
                 lleva_no = base in CLITICOS and actual[-1].lower() == "no"
@@ -139,11 +314,15 @@ def partir(oracion):
 
         actual.append(tok)
         prev = base
+        prev_real = base
 
         # --- ¿cerrar línea después de este token? ---
         cerrada = False
-        if tok[-1:] in ",;:":
+        # [B3] Cierra también al terminar paréntesis multi-palabra o con puntuación tras ")"
+        if tok[-1:] in ",;:" or tok.rstrip(")")[-1:] in ",;:" or (en_paren and ")" in tok):
             cerrar(); cerrada = True
+            if ")" in tok:
+                en_paren = False
         elif base in CORTAR_DESPUES and len(actual) >= 2:
             p = actual[-2]
             pl = p.strip("()\".,;:")
@@ -161,13 +340,15 @@ def partir(oracion):
 def procesar_linea(linea):
     linea = linea.strip()
     marcador = None
-    m = re.match(r"^(\d{1,2})\s*[.)]\s+(.*)$", linea)       # "1. ..." / "1) ..."
-    m2 = re.match(r"^([a-z])\)\s+(.*)$", linea)             # "a) ..."
-    if m:   marcador, linea = m.group(1), m.group(2)
-    elif m2: marcador, linea = m2.group(1), m2.group(2)
+    # [C3] Detección ampliada de numeraciones, incisos y viñetas
+    m = RE_MARCADOR.match(linea)
+    if m:
+        marcador = next(g for g in m.groups()[:-1] if g is not None)
+        linea = m.group(5)
 
     bloques = []
-    texto = linea.replace("etc.", "etc\x01")
+    # [C2] Proteger abreviaturas comunes reemplazando sus puntos por \x01
+    texto = RE_ABREV.sub(lambda m: m.group(0).replace(".", "\x01"), linea)
     for oracion in re.split(r"(?<=\w)\.\s+", texto):
         oracion = oracion.replace("\x01", ".").strip(" .;:")
         if oracion:
