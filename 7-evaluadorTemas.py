@@ -81,7 +81,7 @@ SIMBOLOS_ESPECIALES = {
     "ℝ": "reales", "ℂ": "complejos", "ℕ": "naturales", "ℤ": "enteros", "ℚ": "racionales",
     "°": "grados", "′": "minutos", "″": "segundos",
     "℃": "grados celsius", "℉": "grados fahrenheit", "ₖ": "kelvin",
-    "Å": "angstrom", "Ω": "ohmio", "℧": "mho",
+    "Å": "angstrom", "Ω": "omega", "℧": "mho",
     "‰": "por mil", "‱": "por diez mil",
 }
 NOMBRES_A_SIMBOLOS = {v: k for k, v in SIMBOLOS_ESPECIALES.items()}
@@ -3543,7 +3543,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-mini" id="btn-gist-configurar-token">🔐 Configurar token</button>
       <button class="boton-mini" id="btn-gist-cerrar-sesion">🔐 Cerrar sesión Gist</button>
     </div>
-    <label class="modal-ayuda" for="input-gist-id" style="display:block; margin-top:6px;">Gist ID (opcional — vacío crea uno nuevo al primer subir):</label>
+    <label class="modal-ayuda" for="input-gist-id" style="display:block; margin-top:6px;">Gist ID (compartido entre todos los evaluadores — vacío crea uno nuevo al primer subir):</label>
     <input type="text" id="input-gist-id" placeholder="Pegá un Gist ID existente" style="width:100%; box-sizing:border-box; margin-bottom:6px;">
     <p class="lista-detalle">Cada zona de abajo tiene, junto a Exportar/Importar, un botón ☁️ para subir o bajar ese archivo del Gist.</p>
     <div class="fila-acciones-listas">
@@ -5974,10 +5974,10 @@ let modoEspecial = null;
   async function confirmarOtrosModos() {
     const base = obtenerTarjetasBaseSeleccionadas();
     if (otroModoElegidoEnModal === 'cloze') {
-      const calificadas = base.filter((t) => t.segundo && t.segundo.trim() !== '');
+      const calificadas = base.filter((t) => t.segundo && t.segundo.trim() !== '' && rutasValidasDe(t).length > 0);
       if (calificadas.length === 0) {
         elModalOtrosModos.classList.remove('abierto');
-        await avisar('No hay tarjetas con segundo término en los temas seleccionados para iniciar Cloze Deletion.');
+        await avisar('No hay tarjetas calificadas (con segundo término y rutas válidas) en los temas seleccionados para iniciar Cloze Deletion.');
         return;
       }
       elModalOtrosModos.classList.remove('abierto');
@@ -6114,27 +6114,6 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     }
   }
 
-  function extraerPalabrasRutasMasDe4(tarjeta) {
-    const resultado = [];
-    const vistas = new Set();
-    rutasValidasDe(tarjeta).forEach((idRuta) => {
-      const bloque = rutasDisp[idRuta];
-      if (!bloque || !Array.isArray(bloque.lineas)) return;
-      bloque.lineas.forEach((linea) => {
-        if (esImagen(linea)) return;
-        const m = linea.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g) || [];
-        m.forEach((palabra) => {
-          const norm = normalizarPalabra(palabra);
-          if (norm.length > 4 && !STOPWORDS.has(norm) && !vistas.has(norm)) {
-            vistas.add(norm);
-            resultado.push(norm);
-          }
-        });
-      });
-    });
-    return resultado;
-  }
-
   function tokenizarTextoParaCloze(texto) {
     const tokens = [];
     const regex = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g;
@@ -6157,64 +6136,135 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     return tokens;
   }
 
+  function extraerPalabrasValidasSegundo(segundo) {
+    const set = new Set();
+    const m = (segundo || '').match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g) || [];
+    m.forEach((p) => {
+      const norm = normalizarPalabra(p);
+      if (norm.length > 0 && !STOPWORDS.has(norm)) set.add(norm);
+    });
+    return set;
+  }
+
   function generarEstructuraClozeTarjeta(tarjeta) {
-    const textoBase = (tarjeta.segundo || '').trim();
-    const tokens = tokenizarTextoParaCloze(textoBase);
-    const fuente1 = Array.isArray(tarjeta.claves) && tarjeta.claves.length > 0
-      ? tarjeta.claves.map(normalizarPalabra)
-      : tokenizarParaIndice(textoBase);
-    const fuente2 = extraerPalabrasRutasMasDe4(tarjeta);
-    const setCandidatas = new Set([...fuente1, ...fuente2]);
+    const idsRutas = rutasValidasDe(tarjeta);
+    const palabrasSegundo = extraerPalabrasValidasSegundo(tarjeta.segundo);
+    let totalCaracteres = 0;
 
-    const esCorto = textoBase.length < 40;
-    const minHuecos = esCorto ? 1 : 4;
-    const maxHuecos = esCorto ? 3 : 6;
-    const cantidadObjetivo = Math.floor(Math.random() * (maxHuecos - minHuecos + 1)) + minHuecos;
+    const candidatasPorRuta = new Map();
+    const maxHuecosPorRuta = new Map();
+    const huecosAsignadosPorRuta = new Map();
 
-    const indicesPalabras = [];
-    tokens.forEach((tk, idx) => {
-      if (tk.tipo === 'palabra') indicesPalabras.push(idx);
-    });
+    idsRutas.forEach((idRuta) => {
+      const bloque = rutasDisp[idRuta];
+      const lineas = (bloque && Array.isArray(bloque.lineas)) ? bloque.lineas : [];
+      const candidatasMasDe4 = new Set();
+      const todasPalabrasRuta = new Set();
 
-    const indicesCandidatos = indicesPalabras.filter((idx) => setCandidatas.has(tokens[idx].norm));
-    const seleccionados = new Set();
+      lineas.forEach((linea) => {
+        if (esImagen(linea)) return;
+        totalCaracteres += linea.length;
+        const m = linea.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g) || [];
+        m.forEach((palabra) => {
+          const norm = normalizarPalabra(palabra);
+          if (!STOPWORDS.has(norm)) {
+            todasPalabrasRuta.add(norm);
+            if (norm.length > 4) candidatasMasDe4.add(norm);
+          }
+        });
+      });
 
-    mezclar(indicesCandidatos).forEach((idx) => {
-      if (seleccionados.size < cantidadObjetivo) {
-        seleccionados.add(idx);
+      let listaFinal;
+      if (candidatasMasDe4.size > 0) {
+        listaFinal = mezclar(Array.from(candidatasMasDe4));
+      } else {
+        const respaldo = Array.from(todasPalabrasRuta).filter((norm) => palabrasSegundo.has(norm));
+        listaFinal = mezclar(respaldo);
       }
+
+      candidatasPorRuta.set(idRuta, listaFinal);
+      const topeRuta = listaFinal.length > 0 ? Math.max(1, Math.floor(listaFinal.length * 0.4)) : 0;
+      maxHuecosPorRuta.set(idRuta, topeRuta);
+      huecosAsignadosPorRuta.set(idRuta, 0);
     });
 
-    if (seleccionados.size < minHuecos) {
-      const restantesPorLargo = indicesPalabras
-        .filter((idx) => !seleccionados.has(idx))
-        .sort((a, b) => tokens[b].valor.length - tokens[a].valor.length);
-      for (let i = 0; i < restantesPorLargo.length && seleccionados.size < minHuecos; i++) {
-        seleccionados.add(restantesPorLargo[i]);
+    let topeGlobalRutas = 0;
+    maxHuecosPorRuta.forEach((tope) => { topeGlobalRutas += tope; });
+
+    const esCorto = totalCaracteres < 80;
+    const minBase = esCorto ? 1 : 4;
+    const maxBase = esCorto ? 3 : 6;
+    const aleatorioBase = Math.floor(Math.random() * (maxBase - minBase + 1)) + minBase;
+    const cantidadObjetivo = Math.min(aleatorioBase, topeGlobalRutas);
+
+    const palabrasOcultas = new Set();
+    const cursores = new Map(idsRutas.map((id) => [id, 0]));
+    let huboAvance = true;
+
+    while (palabrasOcultas.size < cantidadObjetivo && huboAvance) {
+      huboAvance = false;
+      for (let i = 0; i < idsRutas.length && palabrasOcultas.size < cantidadObjetivo; i++) {
+        const idRuta = idsRutas[i];
+        const asignados = huecosAsignadosPorRuta.get(idRuta) || 0;
+        const tope = maxHuecosPorRuta.get(idRuta) || 0;
+        if (asignados >= tope) continue;
+
+        const lista = candidatasPorRuta.get(idRuta) || [];
+        let cursor = cursores.get(idRuta) || 0;
+        while (cursor < lista.length && palabrasOcultas.has(lista[cursor])) {
+          cursor++;
+        }
+        if (cursor < lista.length) {
+          palabrasOcultas.add(lista[cursor]);
+          huecosAsignadosPorRuta.set(idRuta, asignados + 1);
+          cursor++;
+          huboAvance = true;
+        }
+        cursores.set(idRuta, cursor);
       }
     }
 
-    if (seleccionados.size === 0 && indicesPalabras.length > 0) {
-      seleccionados.add(indicesPalabras[0]);
-    }
+    idsRutas.forEach((idRuta) => {
+      const lista = candidatasPorRuta.get(idRuta) || [];
+      if (lista.length > 0 && !lista.some((w) => palabrasOcultas.has(w))) {
+        palabrasOcultas.add(lista[0]);
+      }
+    });
 
     let contadorHueco = 0;
-    const segmentos = tokens.map((tk, idx) => {
-      if (tk.tipo === 'palabra' && seleccionados.has(idx)) {
-        const idHueco = contadorHueco++;
-        return {
-          tipo: 'hueco',
-          indiceHueco: idHueco,
-          original: tk.valor,
-          norm: tk.norm,
-        };
-      }
-      return { tipo: 'texto', valor: tk.valor };
+    const estructuraRutas = {};
+    const originalesPorHueco = [];
+
+    idsRutas.forEach((idRuta) => {
+      const bloque = rutasDisp[idRuta];
+      const lineas = (bloque && Array.isArray(bloque.lineas)) ? bloque.lineas : [];
+      estructuraRutas[idRuta] = lineas.map((linea) => {
+        if (esImagen(linea)) {
+          return { tipo: 'imagen', src: linea.substring(4) };
+        }
+        const tokens = tokenizarTextoParaCloze(linea);
+        const segmentos = tokens.map((tk) => {
+          if (tk.tipo === 'palabra' && palabrasOcultas.has(tk.norm)) {
+            const idHueco = contadorHueco++;
+            originalesPorHueco.push(tk.valor);
+            return {
+              tipo: 'hueco',
+              indiceHueco: idHueco,
+              original: tk.valor,
+              norm: tk.norm,
+            };
+          }
+          return { tipo: 'texto', valor: tk.valor };
+        });
+        return { tipo: 'texto', segmentos: segmentos };
+      });
     });
 
     return {
-      segmentos: segmentos,
+      rutas: estructuraRutas,
+      abiertas: new Set(),
       totalHuecos: contadorHueco,
+      originalesPorHueco: originalesPorHueco,
       respuestasUsuario: new Array(contadorHueco).fill(''),
       aciertosDetalle: new Array(contadorHueco).fill(false),
       evaluada: false,
@@ -6268,8 +6318,8 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
   function renderTarjetaCloze() {
     const t = tarjetasSesion[indiceActual];
     const clozeData = datosClozeSesion[indiceActual];
-    const yaEvaluada = clozeData.evaluada;
     const r = resultados[indiceActual];
+    const yaEvaluada = clozeData.evaluada || r !== null;
 
     elTemaTexto.textContent = nombreTema(t);
     elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
@@ -6278,7 +6328,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
 
     const nRutas = rutasValidasDe(t).length;
     if (nRutas > 0) {
-      elBadgeRutas.textContent = '📑 ' + nRutas + (nRutas === 1 ? ' ruta' : ' rutas');
+      elBadgeRutas.textContent = 'rutas = ' + nRutas;
       elBadgeRutas.style.display = 'block';
     } else {
       elBadgeRutas.style.display = 'none';
@@ -6298,78 +6348,28 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       elBtnRespuesta.disabled = true;
     }
 
-    elBtnNota.style.display = 'inline-flex';
-    const notaActual = notaEfectivaDe(t);
-    elBtnNota.classList.toggle('vacia', notaActual === '');
-    elBtnNota.classList.toggle('activa', notaAbierta);
-    elBtnNota.classList.toggle('dif', estadoNotaDe(t) !== 'igual');
-
-    elSeparador.style.display = 'block';
-    elSegundo.style.display = yaEvaluada ? 'block' : 'none';
+    elSeparador.style.display = (yaEvaluada && t.segundo) ? 'block' : 'none';
+    elSegundo.style.display = (yaEvaluada && t.segundo) ? 'block' : 'none';
     elSegundo.textContent = yaEvaluada ? (t.segundo || '') : '';
 
     renderPanelNota(t);
+    renderRazonesUI(t);
+
+    if (elRutasContenedor.nextElementSibling !== elZonaEval) {
+      elZonaEval.parentNode.insertBefore(elRutasContenedor, elZonaEval);
+    }
+
+    renderRutas(t);
+
+    const clozeCont = document.getElementById('cloze-contenedor-activo');
+    if (clozeCont) clozeCont.style.display = 'none';
 
     elTextoEval.parentElement.style.display = 'none';
     elBtnDictadoTextoEval.style.display = 'none';
     elRespuestaUsuarioResaltada.style.display = 'none';
-    elZonaEval.style.display = 'block';
-
-    let contenedorCloze = document.getElementById('cloze-contenedor-activo');
-    if (!contenedorCloze) {
-      contenedorCloze = document.createElement('div');
-      contenedorCloze.id = 'cloze-contenedor-activo';
-      contenedorCloze.className = 'cloze-contenedor';
-      elZonaEval.insertBefore(contenedorCloze, elFilaEval);
-    }
-    contenedorCloze.style.display = 'block';
-    contenedorCloze.innerHTML = '';
-
-    clozeData.segmentos.forEach((seg) => {
-      if (seg.tipo === 'texto') {
-        contenedorCloze.appendChild(document.createTextNode(seg.valor));
-      } else {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'cloze-input';
-        const ancho = Math.min(20, Math.max(6, seg.original.length));
-        input.style.width = ancho + 'ch';
-        input.dataset.huecoIdx = String(seg.indiceHueco);
-        input.value = clozeData.respuestasUsuario[seg.indiceHueco] || '';
-        input.autocomplete = 'off';
-        if (yaEvaluada) {
-          input.disabled = true;
-          const ok = clozeData.aciertosDetalle[seg.indiceHueco];
-          input.classList.add(ok ? 'correcto' : 'incorrecto');
-          contenedorCloze.appendChild(input);
-          if (!ok) {
-            const corr = document.createElement('span');
-            corr.className = 'cloze-correccion';
-            corr.textContent = '(' + seg.original + ')';
-            contenedorCloze.appendChild(corr);
-          }
-        } else {
-          input.addEventListener('input', () => {
-            clozeData.respuestasUsuario[seg.indiceHueco] = input.value;
-          });
-          contenedorCloze.appendChild(input);
-        }
-      }
-    });
-
+    elZonaEval.style.display = yaEvaluada ? 'none' : 'block';
     elFilaEval.style.display = yaEvaluada ? 'none' : 'flex';
     elBtnEvaluar.disabled = yaEvaluada;
-
-    if (yaEvaluada) {
-      renderRutas(t);
-      elRutasContenedor.style.display = nRutas > 0 ? 'block' : 'none';
-      elRutasContenedor.querySelectorAll('details.ruta-acordeon').forEach((det) => {
-        det.open = false;
-      });
-    } else {
-      elRutasContenedor.style.display = 'none';
-      elRutasContenedor.innerHTML = '';
-    }
 
     const ev = evaluaciones[indiceActual];
     if (yaEvaluada && ev) {
@@ -6388,30 +6388,33 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     else if (r === 'saltar') elEstadoMarca.textContent = '— Pasada sin marcar';
     else elEstadoMarca.textContent = '';
 
+    const yaMarcada = r !== null;
     document.querySelector('.botonera').style.display = 'flex';
+    elBtnSi.classList.remove('comprension');
+    elBtnSi.textContent = '✓';
+    elBtnSi.title = 'Entendido';
     elBtnSi.style.display = yaEvaluada ? 'flex' : 'none';
     elBtnNo.style.display = yaEvaluada ? 'flex' : 'none';
     elBtnSaltar.style.display = 'inline-block';
     elBtnDificil.style.display = 'inline-block';
     elBtnRazones.style.display = 'inline-block';
 
+    elBtnSi.disabled = yaMarcada;
+    elBtnNo.disabled = yaMarcada;
+    elBtnSaltar.disabled = yaMarcada;
+
     elBtnDificil.classList.toggle('activa', esDificil(t));
     elBtnDificil.textContent = esDificil(t) ? '★ Difícil' : '☆ Difícil';
-    renderRazonesUI(t);
 
+    elBtnPausa.style.display = cronometroActivo ? 'inline-block' : 'none';
     elBtnAnterior.disabled = indiceActual === 0;
     elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
     actualizarBadgeNotaActual();
-
-    if (!yaEvaluada) {
-      const primerInput = contenedorCloze.querySelector('.cloze-input');
-      if (primerInput) setTimeout(() => primerInput.focus(), 20);
-    }
   }
 
   function evaluarClozeActual() {
     const clozeData = datosClozeSesion[indiceActual];
-    if (!clozeData || clozeData.evaluada) return;
+    if (!clozeData || clozeData.evaluada || resultados[indiceActual] !== null) return;
 
     acumularTiempoActual();
     indiceCongelado = indiceActual;
@@ -6419,27 +6422,34 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     let aciertos = 0;
     const palabrasCorrectas = [];
 
-    clozeData.segmentos.forEach((seg) => {
-      if (seg.tipo !== 'hueco') return;
-      const resp = normalizarPalabra((clozeData.respuestasUsuario[seg.indiceHueco] || '').trim());
-      const ok = resp !== '' && resp === seg.norm;
-      clozeData.aciertosDetalle[seg.indiceHueco] = ok;
-      if (ok) aciertos++;
-      palabrasCorrectas.push(seg.original);
+    Object.keys(clozeData.rutas).forEach((idRuta) => {
+      (clozeData.rutas[idRuta] || []).forEach((lineaObj) => {
+        if (lineaObj.tipo !== 'texto') return;
+        lineaObj.segmentos.forEach((seg) => {
+          if (seg.tipo !== 'hueco') return;
+          const resp = normalizarPalabra((clozeData.respuestasUsuario[seg.indiceHueco] || '').trim());
+          const ok = resp !== '' && resp === seg.norm;
+          clozeData.aciertosDetalle[seg.indiceHueco] = ok;
+          if (ok) aciertos++;
+          palabrasCorrectas.push(seg.original);
+        });
+      });
     });
 
     clozeData.evaluada = true;
     revelado[indiceActual] = true;
     respuestaMostrada[indiceActual] = true;
 
-    const total = clozeData.totalHuecos || 1;
-    const prop = aciertos / total;
+    const total = clozeData.totalHuecos;
+    const prop = total > 0 ? (aciertos / total) : 1;
     let res = 'no';
     if (aciertos === total) res = 'si';
     else if (prop >= 0.5) res = 'casi';
 
     const etq = res === 'si' ? '✓ Bien' : (res === 'casi' ? '~ Casi' : '✗ Mal');
-    const textoDetalle = etq + ' — Acertaste ' + aciertos + ' de ' + total + ' hueco(s). Correctas: ' + palabrasCorrectas.join(', ');
+    const textoDetalle = total > 0
+      ? etq + ' — Acertaste ' + aciertos + ' de ' + total + ' hueco(s). Correctas: ' + palabrasCorrectas.join(', ')
+      : etq + ' — Sin huecos para evaluar.';
 
     evaluaciones[indiceActual] = {
       resultado: res,
@@ -6454,6 +6464,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (resultados.every((x) => x !== null)) {
       cronometroActivo = false;
     }
+    actualizarCronometro();
     renderTarjeta();
   }
 
@@ -6469,73 +6480,108 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
 
     const todasLasRutasSistema = Object.keys(rutasDisp).map(Number);
     const rondas = [];
+    const MAX_PRIMEROS_RONDA = 8;
+    const MAX_RUTAS_RONDA = 12;
 
     gruposPorSubt.forEach((tarjetasSubt, nombreSubt) => {
-      let seleccionTarjetas = [...tarjetasSubt];
-      if (seleccionTarjetas.length > 20) {
-        seleccionTarjetas = mezclar(seleccionTarjetas).slice(0, 20);
-      } else if (modoAleatorio) {
-        seleccionTarjetas = mezclar(seleccionTarjetas);
-      }
+      const rutasSubtCitadas = new Set();
+      tarjetasSubt.forEach((t) => rutasValidasDe(t).forEach((rId) => rutasSubtCitadas.add(rId)));
 
-      const rutasElegidasSet = new Set();
-      const rutasAsignadasAPrimero = new Map();
-      const primerosRonda = [];
+      const rutasUsadasSubt = new Set();
+      let pendientes = modoAleatorio ? mezclar(tarjetasSubt) : [...tarjetasSubt];
 
-      seleccionTarjetas.forEach((t) => {
-        const candidatas = rutasValidasDe(t).filter((rId) => !rutasAsignadasAPrimero.has(rId));
-        if (candidatas.length === 0) return;
-        const rutaGarantizada = candidatas[Math.floor(Math.random() * candidatas.length)];
-        if (rutasElegidasSet.size < 20) {
-          rutasElegidasSet.add(rutaGarantizada);
-          rutasAsignadasAPrimero.set(rutaGarantizada, primerosRonda.length);
+      while (pendientes.length > 0) {
+        const frecuenciaRuta = new Map();
+        pendientes.forEach((t) => {
+          rutasValidasDe(t).forEach((rId) => {
+            frecuenciaRuta.set(rId, (frecuenciaRuta.get(rId) || 0) + 1);
+          });
+        });
+
+        const primerosRonda = [];
+        const rutasAsignadasRonda = new Set();
+        const diferidas = [];
+
+        pendientes.forEach((t) => {
+          if (primerosRonda.length >= MAX_PRIMEROS_RONDA) {
+            diferidas.push(t);
+            return;
+          }
+          const disponiblesRonda = rutasValidasDe(t).filter((rId) => !rutasAsignadasRonda.has(rId));
+          if (disponiblesRonda.length === 0) {
+            diferidas.push(t);
+            return;
+          }
+          const noUsadasEnSubt = disponiblesRonda.filter((rId) => !rutasUsadasSubt.has(rId));
+          const pool = noUsadasEnSubt.length > 0 ? noUsadasEnSubt : disponiblesRonda;
+          const ordenadas = mezclar(pool).sort(
+            (a, b) => (frecuenciaRuta.get(a) || 0) - (frecuenciaRuta.get(b) || 0)
+          );
+          const rutaGarantizada = ordenadas[0];
+          rutasAsignadasRonda.add(rutaGarantizada);
+          rutasUsadasSubt.add(rutaGarantizada);
           primerosRonda.push({
             tarjeta: t,
             primero: t.primero,
-            rutasExtrasCandidatas: candidatas.filter((rId) => rId !== rutaGarantizada),
+            rutasExtrasCandidatas: disponiblesRonda.filter((rId) => rId !== rutaGarantizada),
             rutasReales: [rutaGarantizada],
             asociadasUsuario: [],
             evaluado: false,
             erroresDetalle: [],
             cantidadErrores: 0,
           });
-        }
-      });
-
-      if (primerosRonda.length === 0) return;
-
-      primerosRonda.forEach((itemP, idxP) => {
-        itemP.rutasExtrasCandidatas.forEach((rId) => {
-          if (rutasElegidasSet.size < 20 && !rutasAsignadasAPrimero.has(rId)) {
-            rutasElegidasSet.add(rId);
-            rutasAsignadasAPrimero.set(rId, idxP);
-            itemP.rutasReales.push(rId);
-          }
         });
-        delete itemP.rutasExtrasCandidatas;
-      });
 
-      const rutasSubtCitadas = new Set();
-      tarjetasSubt.forEach((t) => rutasValidasDe(t).forEach((rId) => rutasSubtCitadas.add(rId)));
-      const distractoresCandidatos = mezclar(
-        todasLasRutasSistema.filter((rId) => !rutasSubtCitadas.has(rId) && !rutasElegidasSet.has(rId))
-      );
-      for (let i = 0; i < distractoresCandidatos.length && rutasElegidasSet.size < 20; i++) {
-        rutasElegidasSet.add(distractoresCandidatos[i]);
+        if (primerosRonda.length === 0) break;
+        pendientes = diferidas;
+
+        const nPrimeros = primerosRonda.length;
+        let numDistractores = Math.max(1, Math.ceil(nPrimeros * 0.5));
+        if (nPrimeros + numDistractores > MAX_RUTAS_RONDA) {
+          numDistractores = Math.max(0, MAX_RUTAS_RONDA - nPrimeros);
+        }
+
+        const rutasElegidasSet = new Set(rutasAsignadasRonda);
+        const topeRealesRonda = MAX_RUTAS_RONDA - numDistractores;
+
+        primerosRonda.forEach((itemP) => {
+          itemP.rutasExtrasCandidatas.forEach((rId) => {
+            if (rutasElegidasSet.size < topeRealesRonda && !rutasAsignadasRonda.has(rId) && !rutasUsadasSubt.has(rId)) {
+              rutasElegidasSet.add(rId);
+              rutasAsignadasRonda.add(rId);
+              rutasUsadasSubt.add(rId);
+              itemP.rutasReales.push(rId);
+            }
+          });
+          delete itemP.rutasExtrasCandidatas;
+        });
+
+        const distractoresCandidatos = mezclar(
+          todasLasRutasSistema.filter((rId) => !rutasSubtCitadas.has(rId) && !rutasElegidasSet.has(rId))
+        );
+        let distractoresAgregados = 0;
+        for (
+          let d = 0;
+          d < distractoresCandidatos.length &&
+          distractoresAgregados < numDistractores &&
+          rutasElegidasSet.size < MAX_RUTAS_RONDA;
+          d++
+        ) {
+          rutasElegidasSet.add(distractoresCandidatos[d]);
+          distractoresAgregados++;
+        }
+
+        rondas.push({
+          tema: nombreSubt,
+          primeros: primerosRonda,
+          rutas: mezclar(Array.from(rutasElegidasSet)),
+          rutasBloqueadas: new Set(),
+          rutaEstadoResultado: new Map(),
+          completada: false,
+          erroresTotales: 0,
+          detalleErroresRonda: [],
+        });
       }
-
-      const rutasRonda = mezclar(Array.from(rutasElegidasSet));
-
-      rondas.push({
-        tema: nombreSubt,
-        primeros: primerosRonda,
-        rutas: rutasRonda,
-        rutasBloqueadas: new Set(),
-        rutaEstadoResultado: new Map(),
-        completada: false,
-        erroresTotales: 0,
-        detalleErroresRonda: [],
-      });
     });
 
     return rondas;
@@ -6954,6 +7000,9 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     if (clozeCont) clozeCont.style.display = 'none';
     const matchCont = document.getElementById('matching-contenedor-activo');
     if (matchCont) matchCont.style.display = 'none';
+    if (elZonaEval.nextElementSibling !== elRutasContenedor) {
+      elRutasContenedor.parentNode.insertBefore(elZonaEval, elRutasContenedor);
+    }
     elTextoEval.parentElement.style.display = '';
     document.querySelector('.botonera').style.display = 'flex';
   }
@@ -6997,7 +7046,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       }
     } else if (modoEspecial === 'cloze') {
       const clozeData = datosClozeSesion[indiceActual];
-      if (clozeData && clozeData.evaluada) {
+      if ((clozeData && clozeData.evaluada) || resultados[indiceActual] !== null) {
         indiceCongelado = indiceActual;
       } else {
         indiceCongelado = -1;
@@ -7284,7 +7333,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     document.getElementById('resumen-puntos').textContent =
       esModoSinGamificacion() ? '⭐ Puntos ganados: — (sin gamificación en este modo)' : ('⭐ Puntos ganados: ' + puntosSesion);
     document.getElementById('resumen-mejor-racha').textContent = '🔥 Mejor racha: ' + mejorRacha;
-    document.getElementById('resumen-modo').textContent = '🎮 Modo: ' + nombreModoJuego(modoJuego);
+    document.getElementById('resumen-modo').textContent = '🎮 Modo: ' + nombreModoJuego(codigoModoHistorial());
 
     const elNota = document.getElementById('nota-sesion');
     if (gameOverDisparado) {
@@ -8459,10 +8508,72 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     return { ok: true, zonasActualizadas: zonasActualizadas, zonasSinCambios: zonasSinCambios };
   }
 
-  // ---------------- SINCRONIZACIÓN CON GITHUB GIST ----------------
   const CLAVE_GIST_TOKEN = 'gist_token_sesion';
-  const CLAVE_GIST_ID = 'gist_id_' + ESPACIO_HASH;
-  const CLAVE_GIST_ULTIMA_SYNC = 'gist_ultima_sync_' + ESPACIO_HASH;
+  const CLAVE_GIST_ID = 'gist_id_global';
+  const CLAVE_GIST_ULTIMA_SYNC = 'gist_ultima_sync_global';
+
+  (function migrarClavesGistAntiguas() {
+    try {
+      const prefijoId = 'gist_id_';
+      const prefijoSync = 'gist_ultima_sync_';
+      const clavesIdViejas = [];
+      const clavesSyncViejas = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k) continue;
+        if (k.indexOf(prefijoId) === 0 && k !== CLAVE_GIST_ID) clavesIdViejas.push(k);
+        else if (k.indexOf(prefijoSync) === 0 && k !== CLAVE_GIST_ULTIMA_SYNC) clavesSyncViejas.push(k);
+      }
+
+      if (clavesIdViejas.length === 0 && clavesSyncViejas.length === 0) return;
+
+      let mapaGlobalSync = {};
+      try {
+        const crudo = localStorage.getItem(CLAVE_GIST_ULTIMA_SYNC);
+        if (crudo) mapaGlobalSync = JSON.parse(crudo) || {};
+      } catch (e) {}
+
+      const maxSyncPorEspacio = {};
+      clavesSyncViejas.forEach((k) => {
+        const esp = k.slice(prefijoSync.length);
+        try {
+          const mapa = JSON.parse(localStorage.getItem(k) || '{}');
+          if (mapa && typeof mapa === 'object') {
+            Object.keys(mapa).forEach((archivo) => {
+              const ts = Number(mapa[archivo]) || 0;
+              if (ts > (mapaGlobalSync[archivo] || 0)) mapaGlobalSync[archivo] = ts;
+              if (ts > (maxSyncPorEspacio[esp] || 0)) maxSyncPorEspacio[esp] = ts;
+            });
+          }
+        } catch (e) {}
+      });
+
+      if (Object.keys(mapaGlobalSync).length > 0) {
+        localStorage.setItem(CLAVE_GIST_ULTIMA_SYNC, JSON.stringify(mapaGlobalSync));
+      }
+
+      const idGlobalActual = localStorage.getItem(CLAVE_GIST_ID) || '';
+      if (!idGlobalActual && clavesIdViejas.length > 0) {
+        let mejorId = '';
+        let mejorTs = -1;
+        clavesIdViejas.forEach((k) => {
+          const val = (localStorage.getItem(k) || '').trim();
+          if (!val) return;
+          const esp = k.slice(prefijoId.length);
+          const ts = maxSyncPorEspacio[esp] || 0;
+          if (ts > mejorTs) {
+            mejorTs = ts;
+            mejorId = val;
+          }
+        });
+        if (mejorId) localStorage.setItem(CLAVE_GIST_ID, mejorId);
+      }
+
+      clavesIdViejas.forEach((k) => localStorage.removeItem(k));
+      clavesSyncViejas.forEach((k) => localStorage.removeItem(k));
+    } catch (e) {}
+  })();
 
   function obtenerTokenGist() {
     try { return sessionStorage.getItem(CLAVE_GIST_TOKEN) || ''; } catch (e) { return ''; }
@@ -8533,7 +8644,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     const existente = obtenerGistId();
     if (existente) return existente;
     const creado = await gistApi('POST', '/gists', {
-      description: 'Backup evaluador — ' + ESPACIO_HASH,
+      description: 'Backup evaluador (global)',
       public: false,
       files: { 'backup_completo.json': { content: JSON.stringify(construirBackupCompleto(), null, 2) } },
     });
@@ -8655,8 +8766,13 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     borrarTokenGist();
     actualizarEstadoGist();
   });
-  document.getElementById('input-gist-id').addEventListener('change', (evento) => {
-    guardarGistId(evento.target.value.trim());
+  document.getElementById('input-gist-id').addEventListener('change', async (evento) => {
+    const anterior = obtenerGistId();
+    const nuevo = evento.target.value.trim();
+    guardarGistId(nuevo);
+    if (nuevo !== anterior) {
+      await avisar('El Gist ID fue actualizado. Este cambio aplica a todos los evaluadores que usen este navegador.');
+    }
   });
 
   const elModalSync = document.getElementById('modal-sync');
@@ -10180,7 +10296,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
         const r = fusionarImagenesLista(lista);
         elInfo.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
           ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
-          iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + r.invalidas + ' inválidas' : '');
       } catch (e) {
         elInfo.textContent = 'El archivo no es un JSON válido de imágenes.';
       }
@@ -10726,8 +10842,8 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
 
         const r = fusionarNotasLista(lista);
         elInfo.textContent = 'Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas +
-          ' actualizada(s) por ser más recientes, ' + conservadas + ' conservada(s) (la tuya era más reciente), ' +
-          iguales + ' ya estaban igual' + (invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
+          ' actualizada(s) por ser más recientes, ' + r.conservadas + ' conservada(s) (la tuya era más reciente), ' +
+          r.iguales + ' ya estaban igual' + (r.invalidas > 0 ? ', ' + invalidas + ' inválidas' : '');
       } catch (e) {
         elInfo.textContent = 'El archivo no es un JSON válido de notas.';
       }
@@ -10925,7 +11041,7 @@ function esCategoriaDudaRuta(codigo) {
       texto.textContent = vacia ? '(sin nota)' : nota.texto;
       div.appendChild(texto);
 
-      const acc = document.createElement('div');
+const acc = document.createElement('div');
       acc.className = 'panel-nota-acciones';
       acc.appendChild(botonMini('✎ Editar', () => empezarEdicionNotaEvaluador(nota.id)));
       acc.appendChild(botonMini('🗑 Borrar', async () => {
@@ -10963,21 +11079,26 @@ function esCategoriaDudaRuta(codigo) {
     acc.className = 'acciones-nota-dif';
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
-      notasEvaluador = notasEvaluador.filter((n) => n.id !== nota.id);
-      guardarNotasEvaluador();
-      renderListaNotasEvaluador();
+      borrarNotaEvaluador(nota.id);
     }));
     div.appendChild(acc);
     return div;
+  }
+
+  function borrarNotaEvaluador(id) {
+    notasEvaluador = notasEvaluador.filter((n) => n.id !== id);
+    guardarNotasEvaluador();
+    renderListaNotasEvaluador();
   }
 
   function filaNotaEvaluadorOtra(nota) {
     const div = document.createElement('div');
     div.className = 'item-nota-otra';
     const titulo = document.createElement('div');
-    titulo.textContent = '(' + etiquetaEspacio(nota.espacio) + ') ' + (nota.texto || '(sin texto)');
+    const vacia = !nota.texto || nota.texto.trim() === '';
+    titulo.textContent = '(' + etiquetaEspacio(nota.espacio) + ') ' + (vacia ? '(sin nota)' : nota.texto);
     div.appendChild(titulo);
-    const def = MAPA_CATEGORIAS_NOTA_EVAL.get(nota.categoria);
+    const def = obtenerDefCategoriaNotaEval(nota.categoria);
     if (def) {
       const chips = document.createElement('div');
       chips.className = 'fila-chips-mini';
@@ -10994,9 +11115,7 @@ function esCategoriaDudaRuta(codigo) {
     acc.className = 'acciones-nota-dif';
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
-      notasEvaluador = notasEvaluador.filter((n) => n.id !== nota.id);
-      guardarNotasEvaluador();
-      renderListaNotasEvaluador();
+      borrarNotaEvaluador(nota.id);
     }));
     div.appendChild(acc);
     return div;
@@ -12835,13 +12954,95 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   function renderRutas(tarjeta) {
     elRutasContenedor.innerHTML = '';
 
-    if (!respuestaMostrada[indiceActual]) {
+    const validas = rutasValidasDe(tarjeta);
+    if (validas.length === 0) {
       elRutasContenedor.style.display = 'none';
       return;
     }
 
-    const validas = rutasValidasDe(tarjeta);
-    if (validas.length === 0) {
+    if (modoEspecial === 'cloze') {
+      const clozeData = datosClozeSesion[indiceActual];
+      if (!clozeData) {
+        elRutasContenedor.style.display = 'none';
+        return;
+      }
+      elRutasContenedor.style.display = 'block';
+      const yaEvaluada = clozeData.evaluada || resultados[indiceActual] !== null;
+
+      validas.forEach((id) => {
+        const det = document.createElement('details');
+        det.className = 'ruta-acordeon';
+        det.open = clozeData.abiertas.has(id);
+
+        const sum = document.createElement('summary');
+        sum.textContent = 'Ruta ' + id;
+        det.appendChild(sum);
+
+        det.addEventListener('toggle', () => {
+          if (det.open) clozeData.abiertas.add(id);
+          else clozeData.abiertas.delete(id);
+        });
+
+        prepararDetallesLazy(det, () => {
+          const contenido = document.createElement('div');
+          contenido.className = 'ruta-contenido';
+          const lineasCloze = clozeData.rutas[id] || [];
+
+          lineasCloze.forEach((lineaObj) => {
+            if (lineaObj.tipo === 'imagen') {
+              const img = document.createElement('img');
+              img.className = 'ruta-img-thumb';
+              img.src = lineaObj.src;
+              img.alt = 'Imagen de la ruta ' + id;
+              contenido.appendChild(img);
+            } else {
+              const div = document.createElement('div');
+              div.className = 'ruta-linea';
+              lineaObj.segmentos.forEach((seg) => {
+                if (seg.tipo === 'texto') {
+                  div.appendChild(document.createTextNode(seg.valor));
+                } else {
+                  const input = document.createElement('input');
+                  input.type = 'text';
+                  input.className = 'cloze-input';
+                  const ancho = Math.min(20, Math.max(6, seg.original.length));
+                  input.style.width = ancho + 'ch';
+                  input.dataset.huecoIdx = String(seg.indiceHueco);
+                  input.value = clozeData.respuestasUsuario[seg.indiceHueco] || '';
+                  input.autocomplete = 'off';
+
+                  if (yaEvaluada) {
+                    input.disabled = true;
+                    const ok = clozeData.aciertosDetalle[seg.indiceHueco];
+                    input.classList.add(ok ? 'correcto' : 'incorrecto');
+                    div.appendChild(input);
+                    if (!ok) {
+                      const corr = document.createElement('span');
+                      corr.className = 'cloze-correccion';
+                      corr.textContent = '(' + seg.original + ')';
+                      div.appendChild(corr);
+                    }
+                  } else {
+                    input.addEventListener('input', () => {
+                      clozeData.respuestasUsuario[seg.indiceHueco] = input.value;
+                    });
+                    div.appendChild(input);
+                  }
+                }
+              });
+              contenido.appendChild(div);
+            }
+          });
+
+          det.appendChild(contenido);
+        });
+
+        elRutasContenedor.appendChild(det);
+      });
+      return;
+    }
+
+    if (!respuestaMostrada[indiceActual]) {
       elRutasContenedor.style.display = 'none';
       return;
     }
@@ -12849,7 +13050,6 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     elRutasContenedor.style.display = 'block';
 
     const claves = new Set(tarjeta.claves || []);
-
     const evActual = evaluaciones[indiceActual];
     const raicesUsuario = evActual ? extraerPalabrasUsuario(escritos[indiceActual] || '') : null;
 
@@ -12870,7 +13070,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
           if (esImagen(linea)) {
             const img = document.createElement('img');
             img.className = 'ruta-img-thumb';
-            img.src = linea.substring(4);  // quitar el prefijo 'IMG:'
+            img.src = linea.substring(4);
             img.alt = 'Imagen de la ruta ' + id;
             contenido.appendChild(img);
           } else {
@@ -13981,15 +14181,22 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     const ev = evaluaciones[i];
     if (ev) {
       const resultado = document.createElement('span');
-      resultado.className = 'item-resultado ' + ev.resultado;
-      let txt = ev.resultado === 'bien' ? '✓ Bien' : (ev.resultado === 'casi' ? '✗ Casi' : '✗ Mal');
-      if (porComprension[i]) txt += ' → 💡 entendida por comprensión';
-      if (ev.clavesTotal > 0) {
-        txt += ' — claves ' + ev.acertadas.length + '/' + ev.clavesTotal;
-        if (ev.faltaron.length > 0) txt += ' (faltaron: ' + ev.faltaron.join(', ') + ')';
+      const claseEv = (ev.resultado === 'bien' || ev.resultado === 'si') ? 'bien' : (ev.resultado === 'casi' ? 'casi' : 'mal');
+      resultado.className = 'item-resultado ' + claseEv;
+      if (typeof ev.textoDetalle === 'string') {
+        resultado.textContent = ev.textoDetalle;
+      } else {
+        let txt = ev.resultado === 'bien' ? '✓ Bien' : (ev.resultado === 'casi' ? '✗ Casi' : '✗ Mal');
+        if (porComprension[i]) txt += ' → 💡 entendida por comprensión';
+        if (ev.clavesTotal > 0 && Array.isArray(ev.acertadas)) {
+          txt += ' — claves ' + ev.acertadas.length + '/' + ev.clavesTotal;
+          if (Array.isArray(ev.faltaron) && ev.faltaron.length > 0) txt += ' (faltaron: ' + ev.faltaron.join(', ') + ')';
+        }
+        if (typeof ev.sim === 'number') {
+          txt += ' — coincidencia ' + Math.round(ev.sim * 100) + '% (' + (ev.comunes || 0) + ' en común)';
+        }
+        resultado.textContent = txt;
       }
-      txt += ' — coincidencia ' + Math.round(ev.sim * 100) + '% (' + ev.comunes + ' en común)';
-      resultado.textContent = txt;
       item.appendChild(resultado);
     }
 
