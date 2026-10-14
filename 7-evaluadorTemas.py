@@ -13525,6 +13525,15 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       svg.appendChild(etqX);
     });
 
+    const lineasTooltip = sesiones.map((s, i) => {
+      const fechaCorta = formatearFechaCortaGrafico(s.fecha) || '—';
+      const notaVal = typeof s.nota === 'number' ? s.nota : 0;
+      const nivel = nivelDeSesionSrs(s, nombre);
+      return 'Sesión ' + (i + 1) + ' — ' + fechaCorta + ' — nota ' + notaVal + '/10 — Nivel ' + (nivel === null ? '?' : nivel);
+    });
+    svg.setAttribute('data-tooltip-texto', lineasTooltip.join('\\n'));
+    vincularEventosTooltipLineaSvg(svg, mostrarTooltipTextoSvg);
+
     return svg;
   }
 
