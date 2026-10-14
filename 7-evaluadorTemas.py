@@ -13,20 +13,17 @@ try:
 except ImportError:
     Tk = filedialog = None
 
-# ---------------- CONFIG EVALUACIÓN DE RESPUESTAS ESCRITAS ----------------
 UMBRAL_CASI = 0.5
 SIM_ALTA = 0.7
 SIM_SIN_PISTA = 0.5
 SIM_CON_PISTA = 0.6
 
-# ---------------- CONFIG ECONOMÍA (tienda) ----------------
 PRECIO_COMODIN = 100
 PRECIO_PISTA_GRATIS = 50
 PRECIO_ESCUDO_RACHA = 90
 PRECIO_SEGUNDA_OPORTUNIDAD = 70
 FACTOR_RECOMPENSA_REINTENTO = 0.5
 
-# ---------------- CONFIG POMODORO ----------------
 DURACION_LECTURA_SEG = 25 * 60
 DURACION_DESCANSO_SEG = 5 * 60
 
@@ -38,10 +35,7 @@ STOPWORDS_ES = {
     "esto", "eso", "aquello",
 }
 
-# ============================================================
-
 def normalizar_palabra(palabra):
-    """Minúsculas y sin acentos, para comparar 'ANALÓGICA' con 'analogica'."""
     forma = unicodedata.normalize('NFD', palabra.lower())
     return ''.join(c for c in forma if unicodedata.combining(c) == 0)
 
@@ -105,8 +99,6 @@ def extraer_claves(segundo):
                 claves.append(nombre)
     return claves
 
-# ============================================================
-
 PATRON_CABECERA_RUTA = re.compile(r'^ruta\s+(\d+)\s*$', re.IGNORECASE)
 
 def preparar_linea_ruta(linea):
@@ -165,8 +157,6 @@ def parsear_respuestas(txt):
 
     cerrar_bloque()
     return rutas
-
-# ============================================================
 
 PATRON_RUTAS_TARJETA = re.compile(r'&\s*([0-9]+(?:\s*,\s*[0-9]+)*)\s*[.,;]*\s*$')
 PATRON_AMPERSAND_SUELTO = re.compile(r'&[\s,;]*$')
@@ -242,7 +232,6 @@ def parsear_recordatorio(txt):
     return tarjetas
 
 def reportar_asociaciones(tarjetas, rutas):
-    """Diagnóstico por consola: cuántas tarjetas tienen botón y rutas faltantes."""
     con_rutas = [t for t in tarjetas if t["rutas"]]
     print(f"\nTarjetas con botón 'Mostrar respuesta': {len(con_rutas)} de {len(tarjetas)}")
     con_nota = [t for t in tarjetas if t.get("nota")]
@@ -254,8 +243,6 @@ def reportar_asociaciones(tarjetas, rutas):
               "(serán ignoradas): " + ", ".join(map(str, faltantes)))
     else:
         print("Todas las rutas citadas existen en respuestas.txt.")
-
-# ============================================================
 
 PALETA_RESALTADO = [
     "#FFFF00",
@@ -275,19 +262,14 @@ NOMBRE_MODULO_RUTAS = "6-generadorRespuestas.py"
 
 INDICE_PAGINA_DRAWIO = 0
 
-# BUGFIX: además de <object>, las versiones recientes de draw.io serializan
 TAGS_OBJETO_DRAWIO = ("object", "UserObject")
 
 def normalizar_tema(texto):
-    """Normaliza un tema completo (minúsculas, sin acentos, espacios colapsados)."""
     if not texto:
         return ""
     return " ".join(normalizar_palabra(texto).split())
 
 def cargar_generador_respuestas():
-    """
-    Importa get_routes_id_map desde 6-generadorRespuestas.py (misma carpeta).
-    """
     try:
         base = Path(__file__).resolve().parent
     except NameError:
@@ -303,7 +285,7 @@ def cargar_generador_respuestas():
     try:
         spec = importlib.util.spec_from_file_location("generador_respuestas", ruta_modulo)
         modulo = importlib.util.module_from_spec(spec)
-        sys.modules["generador_respuestas"] = modulo  # CLAVE: fix crash de dataclasses
+        sys.modules["generador_respuestas"] = modulo 
         spec.loader.exec_module(modulo)
         return modulo.get_routes_id_map
     except Exception as error:
@@ -384,7 +366,6 @@ def activar_html_en_celda(elem):
             elem.set("style", style_agregar_html1(style))
 
 def _expandir_hex(valor):
-    """'#abc' -> '#aabbcc'. Devuelve None si no es un hex válido."""
     if not valor:
         return None
     v = valor.strip().lstrip('#')
@@ -399,7 +380,6 @@ def _expandir_hex(valor):
     return '#' + v.lower()
 
 def luminancia_relativa(hex_color):
-    """Luminancia relativa WCAG (0..1). None si el color es inválido."""
     hex_color = _expandir_hex(hex_color)
     if hex_color is None:
         return None
@@ -411,7 +391,6 @@ def luminancia_relativa(hex_color):
     return 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(b)
 
 def contraste(color1, color2):
-    """Ratio de contraste WCAG (1 = idénticos, 21 = máximo). 0 si algo es inválido."""
     l1 = luminancia_relativa(color1)
     l2 = luminancia_relativa(color2)
     if l1 is None or l2 is None:
@@ -420,7 +399,6 @@ def contraste(color1, color2):
     return (clara + 0.05) / (oscura + 0.05)
 
 def extraer_style_param(style, clave):
-    """De un style drawio ('html=1;fillColor=#ff0000;...') saca el valor de un parámetro."""
     if not style:
         return None
     prefijo = clave + '='
@@ -494,7 +472,6 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
         if tag == "object":
             elementos[eid] = (elem, "label")
         elif tag == "UserObject":
-            # BUGFIX: mismo caso que <object> (ver TAGS_OBJETO_DRAWIO), las
             elementos[eid] = (elem, "label")
         elif tag == "mxCell" and eid not in elementos:
             elementos[eid] = (elem, "value")
@@ -510,7 +487,6 @@ def resaltar_drawio(ruta_drawio, get_routes_id_map, tarjetas):
     convergencias_resueltas = 0
 
     def resolver_id(id_celda):
-        """Clave del mapa -> celdas reales a escanear/limpiar."""
         nonlocal convergencias_resueltas
         if id_celda.startswith(PREFIJO_CONV):
             destino = id_celda[len(PREFIJO_CONV):]
@@ -657,7 +633,6 @@ def cargar_imagen_mapa_base64(ruta):
     return codificado, mime, ruta.stem
 
 def _escapar_atributo_html(texto):
-    """Escapa texto para insertarlo dentro de un atributo HTML con comillas dobles."""
     return (
         str(texto)
         .replace("&", "&amp;")
@@ -2005,6 +1980,37 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .opcion-modo-nombre { font-weight: 700; color: var(--texto-principal); margin-right: auto; }
   .opcion-modo-detalle { font-size: 12px; color: var(--texto-suave); }
 
+  .opcion-demostraciones-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 4px 0 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--bg-superficie-alt);
+    border: 1.5px solid var(--color-borde-medio);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--texto-principal);
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s ease;
+  }
+  .opcion-demostraciones-wrap input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--color-boton);
+    cursor: pointer;
+  }
+  .opcion-demostraciones-wrap.deshabilitado {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .opcion-demostraciones-wrap.deshabilitado input {
+    cursor: not-allowed;
+  }
+
   .modal-gameover.abierto { background: rgba(60,0,0,0.75); }
   .modal-caja-gameover { background: #2a1010; }
   .titulo-gameover { color: #ff5252 !important; font-size: 24px !important; }
@@ -2282,6 +2288,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     text-align: center;
   }
   .item-reintento { display: block; font-size: 12px; color: #a4841c; }
+
+  .pomodoro-banner-repaso {
+    margin: 4px 0 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fff8e6;
+    border: 1.5px solid #ecd28a;
+    color: #7a5c00;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.45;
+    text-align: center;
+  }
+  .pomodoro-banner-repaso strong {
+    font-weight: 700;
+  }
 
   .fila-acciones-historial button:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -3525,6 +3547,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <div class="modal-overlay" id="modal-pomodoro-iniciar">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>¿Empezar a estudiar?</h3>
+    <div class="pomodoro-banner-repaso" id="pomodoro-aviso-repaso"></div>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-si">Sí, empezar</button>
     <button class="boton-mini" id="btn-pomodoro-iniciar-historial">🧠 Ver historial de retención</button>
     <button class="modal-cancelar" id="btn-pomodoro-iniciar-cancelar">Cancelar</button>
@@ -3939,6 +3962,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="opcion-modo-detalle">Emparejá conceptos con sus rutas</span>
       </button>
     </div>
+    <label class="opcion-demostraciones-wrap" id="wrap-modo-demostraciones" for="chk-modo-demostraciones">
+      <input type="checkbox" id="chk-modo-demostraciones">
+      <span>📐 Modo Demostraciones (símbolos y operadores)</span>
+    </label>
     <button class="boton-principal" id="btn-otros-modos-comenzar">Comenzar</button>
     <button class="modal-cancelar" id="btn-otros-modos-cancelar">Cancelar</button>
   </div>
@@ -4261,14 +4288,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     _guardadosPendientes.forEach((d) => d.flush());
   });
 
-  // ---------------- RELOJ LÓGICO LOCAL ----------------
-  // Un backup importado desde un dispositivo con el reloj desincronizado puede traer
-  // timestamps (t / modificada) más "nuevos" que los de este dispositivo sin serlo en
-  // realidad, y entonces "gana el más reciente" elegiría mal. Para evitar eso, además
-  // del timestamp de pared, cada edición local guarda un número de revisión (`rev`)
-  // tomado de un contador local que SOLO avanza (nunca retrocede, no depende del reloj
-  // del sistema). Al fusionar, si ambos lados traen `rev`, se compara por `rev` en vez
-  // de por timestamp; si alguno no lo trae (backup viejo), se cae al timestamp como antes.
   const CLAVE_RELOJ_LOGICO = 'reloj_logico_v1';
   let relojLogicoLocal = (function () {
     try {
@@ -4286,16 +4305,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     guardarRelojLogico();
     return relojLogicoLocal;
   }
-  // Tras ver una rev ajena (al fusionar un backup), el reloj local se adelanta para que
-  // cualquier edición local posterior quede, con seguridad, por delante de lo importado.
+
   function registrarRevVista(revExterna) {
     if (typeof revExterna === 'number' && revExterna > relojLogicoLocal) {
       relojLogicoLocal = revExterna;
       guardarRelojLogico();
     }
   }
-  // Decide si "entrante" es más reciente que "local". Preferí el reloj lógico (inmune al
-  // desfasaje de reloj) cuando ambos lo tienen; si no, cae al timestamp de pared de siempre.
+
   function entranteEsMasReciente(entranteRev, entranteTs, localRev, localTs) {
     if (typeof entranteRev === 'number' && typeof localRev === 'number') {
       return entranteRev > localRev;
@@ -4465,6 +4482,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else if (zona === 'retencion') {
       retencionRutas = retencionRutas.filter((r) => !setIds.has(r.id));
       guardarRetencionRutas();
+      recalcularYGuardarSAjustadoPomodoro();
       estadisticasConstruidas = false;
       curvaOlvidoConstruido = false;
       subtRepasarConstruido = false;
@@ -4818,8 +4836,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elBtnConfirmacionCancelar = document.getElementById('btn-confirmacion-cancelar');
   let _resolverConfirmacion = null;
 
-  // Reemplazo de window.confirm() por un modal propio (modal-overlay / modal-caja).
-  // Uso: if (!(await confirmarAccion('¿Mensaje?'))) return;
   function confirmarAccion(mensaje) {
     return new Promise((resolve) => {
       elModalConfirmacionTexto.textContent = mensaje;
@@ -6255,8 +6271,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     else { vidasMaximas = 0; }
   }
 
-let modoEspecial = null;
+  let modoEspecial = null;
   let modoEspecialPendiente = null;
+  let modoDemostracionesCloze = false;
+  let modoDemostracionesPendiente = false;
+  let estadoDemostracionesModal = false;
   let otroModoElegidoEnModal = 'cloze';
   let datosClozeSesion = [];
   let rondasMatching = [];
@@ -6264,8 +6283,16 @@ let modoEspecial = null;
   let asociacionesTempMatching = new Set();
 
   const elModalOtrosModos = document.getElementById('modal-otros-modos');
+  const elChkModoDemostraciones = document.getElementById('chk-modo-demostraciones');
+  const elWrapModoDemostraciones = document.getElementById('wrap-modo-demostraciones');
   const elTituloModalModo = document.querySelector('#modal-modo h3');
   const elOpcionModoExamen = document.getElementById('opcion-modo-examen');
+
+  elChkModoDemostraciones.addEventListener('change', () => {
+    if (!elChkModoDemostraciones.disabled) {
+      estadoDemostracionesModal = elChkModoDemostraciones.checked;
+    }
+  });
 
   function codigoModoHistorial() {
     if (srsSesionActiva) return 'srs';
@@ -6298,6 +6325,16 @@ let modoEspecial = null;
     document.querySelectorAll('#modal-otros-modos .opcion-modo').forEach((el) => {
       el.classList.toggle('seleccionada', el.dataset.otroModo === tipo);
     });
+    if (tipo === 'cloze') {
+      elChkModoDemostraciones.disabled = false;
+      elChkModoDemostraciones.checked = estadoDemostracionesModal;
+      elWrapModoDemostraciones.classList.remove('deshabilitado');
+      elWrapModoDemostraciones.style.display = 'flex';
+    } else {
+      elChkModoDemostraciones.disabled = true;
+      elChkModoDemostraciones.checked = false;
+      elWrapModoDemostraciones.classList.add('deshabilitado');
+    }
   }
 
   function obtenerTarjetasBaseSeleccionadas() {
@@ -6308,15 +6345,25 @@ let modoEspecial = null;
     return [...tarjetasCompletas];
   }
 
+  function resetearCheckboxDemostracionesModal() {
+    estadoDemostracionesModal = false;
+    elChkModoDemostraciones.checked = false;
+    elChkModoDemostraciones.disabled = false;
+    elWrapModoDemostraciones.classList.remove('deshabilitado');
+  }
+
   function abrirModalOtrosModos() {
     if (modoObservador) return;
+    resetearCheckboxDemostracionesModal();
     seleccionarOtroModoEnModal('cloze');
     elModalOtrosModos.classList.add('abierto');
   }
 
   function cerrarModalOtrosModos() {
     elModalOtrosModos.classList.remove('abierto');
+    resetearCheckboxDemostracionesModal();
     modoEspecialPendiente = null;
+    modoDemostracionesPendiente = false;
   }
 
   async function confirmarOtrosModos() {
@@ -6324,23 +6371,28 @@ let modoEspecial = null;
     if (otroModoElegidoEnModal === 'cloze') {
       const calificadas = base.filter((t) => t.segundo && t.segundo.trim() !== '' && rutasValidasDe(t).length > 0);
       if (calificadas.length === 0) {
-        elModalOtrosModos.classList.remove('abierto');
+        cerrarModalOtrosModos();
         await avisar('No hay tarjetas calificadas (con segundo término y rutas válidas) en los temas seleccionados para iniciar Cloze Deletion.');
         return;
       }
+      const demoActivo = !!elChkModoDemostraciones.checked;
       elModalOtrosModos.classList.remove('abierto');
+      resetearCheckboxDemostracionesModal();
       modoEspecialPendiente = 'cloze';
+      modoDemostracionesPendiente = demoActivo;
       const lista = modoAleatorio ? mezclar(calificadas) : calificadas;
       abrirModalSeleccionModo(lista, 'cloze');
     } else if (otroModoElegidoEnModal === 'matching') {
       const rondas = construirRondasMatching(base);
       if (rondas.length === 0) {
-        elModalOtrosModos.classList.remove('abierto');
+        cerrarModalOtrosModos();
         await avisar('No hay subtemas con tarjetas que tengan rutas válidas para iniciar Matching Pairs.');
         return;
       }
       elModalOtrosModos.classList.remove('abierto');
+      resetearCheckboxDemostracionesModal();
       modoEspecialPendiente = 'matching';
+      modoDemostracionesPendiente = false;
       rondasMatching = rondas;
       abrirModalSeleccionModo(rondas, 'matching');
     }
@@ -6351,7 +6403,6 @@ let modoEspecial = null;
   document.getElementById('opcion-otro-matching').addEventListener('click', () => seleccionarOtroModoEnModal('matching'));
   document.getElementById('btn-otros-modos-comenzar').addEventListener('click', () => confirmarOtrosModos());
   document.getElementById('btn-otros-modos-cancelar').addEventListener('click', () => cerrarModalOtrosModos());
-
   function actualizarBarraGamificacion() {
     if (modoObservador) return;
 
@@ -6430,6 +6481,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     elModalModo.classList.remove('abierto');
     listaPendienteInicio = null;
     modoEspecialPendiente = null;
+    modoDemostracionesPendiente = false;
     elTituloModalModo.textContent = 'Elegí el modo de juego';
     elOpcionModoExamen.style.display = '';
   }
@@ -6437,12 +6489,14 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
   function confirmarModoYComenzar() {
     const lista = listaPendienteInicio;
     const especial = modoEspecialPendiente;
+    const demoPendiente = modoDemostracionesPendiente;
     elModalModo.classList.remove('abierto');
     elTituloModalModo.textContent = 'Elegí el modo de juego';
     elOpcionModoExamen.style.display = '';
     if (!lista) {
       listaPendienteInicio = null;
       modoEspecialPendiente = null;
+      modoDemostracionesPendiente = false;
       return;
     }
     if (!especial && modoElegidoEnModal === 'examen') {
@@ -6451,7 +6505,9 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     }
     listaPendienteInicio = null;
     modoEspecialPendiente = null;
+    modoDemostracionesPendiente = false;
     modoEspecial = especial;
+    modoDemostracionesCloze = (especial === 'cloze') ? demoPendiente : false;
     configurarModoJuego(modoElegidoEnModal);
     if (modoEspecial === 'cloze') {
       iniciarSesionCloze(lista);
@@ -6462,19 +6518,43 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     }
   }
 
+  const REGEX_PALABRAS_CLOZE = /[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g;
+  const REGEX_SIMBOLOS_CLOZE = /[+\\-*/=<>≤≥±∑∫∂∇√∞∈∉⊂⊆⊇∪∩∧∨¬⇒⇐⇔→←↔∀∃α-ωΑ-Ω]+/g;
+  const REGEX_SOLO_OPERADOR_SIMBOLO = /^[+\\-*/=<>≤≥±∑∫∂∇√∞∈∉⊂⊆⊇∪∩∧∨¬⇒⇐⇔→←↔∀∃]+$/;
+  const NOMBRES_OPERADORES_EXTRA_CLOZE = {
+    '+': 'mas',
+    '-': 'menos',
+    '*': 'por',
+    '/': 'dividido',
+  };
+
+  function obtenerNombreSimboloClozeNorm(simbolo) {
+    if (!simbolo) return null;
+    const nombre = SIMBOLOS_ESPECIALES[simbolo] || SIMBOLOS_ESPECIALES[simbolo.toLowerCase()] || NOMBRES_OPERADORES_EXTRA_CLOZE[simbolo];
+    return nombre ? normalizarPalabra(nombre) : null;
+  }
+
+  function esTokenSimboloCloze(valor) {
+    return REGEX_SOLO_OPERADOR_SIMBOLO.test(valor) || Object.prototype.hasOwnProperty.call(SIMBOLOS_ESPECIALES, valor);
+  }
+
   function tokenizarTextoParaCloze(texto) {
     const tokens = [];
-    const regex = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g;
+    const regex = modoDemostracionesCloze
+      ? new RegExp(REGEX_PALABRAS_CLOZE.source + '|' + REGEX_SIMBOLOS_CLOZE.source, 'g')
+      : new RegExp(REGEX_PALABRAS_CLOZE.source, 'g');
     let ultimoIndice = 0;
     let match;
     while ((match = regex.exec(texto)) !== null) {
       if (match.index > ultimoIndice) {
         tokens.push({ tipo: 'texto', valor: texto.slice(ultimoIndice, match.index) });
       }
+      const valor = match[0];
+      const esSimbolo = modoDemostracionesCloze && esTokenSimboloCloze(valor);
       tokens.push({
-        tipo: 'palabra',
-        valor: match[0],
-        norm: normalizarPalabra(match[0]),
+        tipo: esSimbolo ? 'simbolo' : 'palabra',
+        valor: valor,
+        norm: normalizarPalabra(valor),
       });
       ultimoIndice = regex.lastIndex;
     }
@@ -6486,7 +6566,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
 
   function extraerPalabrasValidasSegundo(segundo) {
     const set = new Set();
-    const m = (segundo || '').match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g) || [];
+    const m = (segundo || '').match(REGEX_PALABRAS_CLOZE) || [];
     m.forEach((p) => {
       const norm = normalizarPalabra(p);
       if (norm.length > 0 && !STOPWORDS.has(norm)) set.add(norm);
@@ -6498,6 +6578,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     const idsRutas = rutasValidasDe(tarjeta);
     const palabrasSegundo = extraerPalabrasValidasSegundo(tarjeta.segundo);
     let totalCaracteres = 0;
+    let totalTokensTokenizables = 0;
 
     const candidatasPorRuta = new Map();
     const maxHuecosPorRuta = new Map();
@@ -6512,12 +6593,18 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
       lineas.forEach((linea) => {
         if (esImagen(linea)) return;
         totalCaracteres += linea.length;
-        const m = linea.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g) || [];
-        m.forEach((palabra) => {
-          const norm = normalizarPalabra(palabra);
-          if (!STOPWORDS.has(norm)) {
-            todasPalabrasRuta.add(norm);
-            if (norm.length > 4) candidatasMasDe4.add(norm);
+        const tokensLinea = tokenizarTextoParaCloze(linea);
+        tokensLinea.forEach((tk) => {
+          if (tk.tipo === 'texto') return;
+          totalTokensTokenizables++;
+          if (tk.tipo === 'simbolo') {
+            todasPalabrasRuta.add(tk.norm);
+            candidatasMasDe4.add(tk.norm);
+          } else if (!STOPWORDS.has(tk.norm)) {
+            todasPalabrasRuta.add(tk.norm);
+            if (tk.norm.length > 4 || (modoDemostracionesCloze && /\\d/.test(tk.norm))) {
+              candidatasMasDe4.add(tk.norm);
+            }
           }
         });
       });
@@ -6527,7 +6614,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
         listaFinal = mezclar(Array.from(candidatasMasDe4));
       } else {
         const respaldo = Array.from(todasPalabrasRuta).filter((norm) => palabrasSegundo.has(norm));
-        listaFinal = mezclar(respaldo);
+        listaFinal = respaldo.length > 0 ? mezclar(respaldo) : (modoDemostracionesCloze ? mezclar(Array.from(todasPalabrasRuta)) : []);
       }
 
       candidatasPorRuta.set(idRuta, listaFinal);
@@ -6539,11 +6626,18 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     let topeGlobalRutas = 0;
     maxHuecosPorRuta.forEach((tope) => { topeGlobalRutas += tope; });
 
-    const esCorto = totalCaracteres < 80;
-    const minBase = esCorto ? 1 : 4;
-    const maxBase = esCorto ? 3 : 6;
-    const aleatorioBase = Math.floor(Math.random() * (maxBase - minBase + 1)) + minBase;
-    const cantidadObjetivo = Math.min(aleatorioBase, topeGlobalRutas);
+    let cantidadObjetivo;
+    if (modoDemostracionesCloze) {
+      const pctNivel = modoJuego === 'tryhard' ? 0.40 : (modoJuego === 'normal' ? 0.30 : 0.20);
+      const objetivoDemo = Math.min(15, Math.max(4, Math.round(totalTokensTokenizables * pctNivel)));
+      cantidadObjetivo = Math.min(objetivoDemo, topeGlobalRutas);
+    } else {
+      const esCorto = totalCaracteres < 80;
+      const minBase = esCorto ? 1 : 4;
+      const maxBase = esCorto ? 3 : 6;
+      const aleatorioBase = Math.floor(Math.random() * (maxBase - minBase + 1)) + minBase;
+      cantidadObjetivo = Math.min(aleatorioBase, topeGlobalRutas);
+    }
 
     const palabrasOcultas = new Set();
     const cursores = new Map(idsRutas.map((id) => [id, 0]));
@@ -6591,16 +6685,24 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
           return { tipo: 'imagen', src: linea.substring(4) };
         }
         const tokens = tokenizarTextoParaCloze(linea);
+        let ultimoTokenFueHueco = false;
         const segmentos = tokens.map((tk) => {
-          if (tk.tipo === 'palabra' && palabrasOcultas.has(tk.norm)) {
-            const idHueco = contadorHueco++;
-            originalesPorHueco.push(tk.valor);
-            return {
-              tipo: 'hueco',
-              indiceHueco: idHueco,
-              original: tk.valor,
-              norm: tk.norm,
-            };
+          if (tk.tipo === 'palabra' || tk.tipo === 'simbolo') {
+            if (!ultimoTokenFueHueco && palabrasOcultas.has(tk.norm)) {
+              ultimoTokenFueHueco = true;
+              const idHueco = contadorHueco++;
+              originalesPorHueco.push(tk.valor);
+              return {
+                tipo: 'hueco',
+                indiceHueco: idHueco,
+                original: tk.valor,
+                norm: tk.norm,
+                esSimbolo: tk.tipo === 'simbolo',
+                nombreSimboloNorm: tk.tipo === 'simbolo' ? obtenerNombreSimboloClozeNorm(tk.valor) : null,
+              };
+            }
+            ultimoTokenFueHueco = false;
+            return { tipo: 'texto', valor: tk.valor };
           }
           return { tipo: 'texto', valor: tk.valor };
         });
@@ -6775,8 +6877,11 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
         if (lineaObj.tipo !== 'texto') return;
         lineaObj.segmentos.forEach((seg) => {
           if (seg.tipo !== 'hueco') return;
-          const resp = normalizarPalabra((clozeData.respuestasUsuario[seg.indiceHueco] || '').trim());
-          const ok = resp !== '' && resp === seg.norm;
+          const crudo = (clozeData.respuestasUsuario[seg.indiceHueco] || '').trim();
+          const resp = normalizarPalabra(crudo).replace(/\\s+/g, ' ');
+          const coincideDirecto = resp !== '' && (resp === seg.norm || crudo === seg.original);
+          const coincideNombreSimbolo = resp !== '' && !!seg.nombreSimboloNorm && resp === seg.nombreSimboloNorm;
+          const ok = coincideDirecto || coincideNombreSimbolo;
           clozeData.aciertosDetalle[seg.indiceHueco] = ok;
           if (ok) aciertos++;
           palabrasCorrectas.push(seg.original);
@@ -7521,6 +7626,8 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
   function limpiarModoEspecialAlSalir() {
     modoEspecial = null;
     modoEspecialPendiente = null;
+    modoDemostracionesCloze = false;
+    modoDemostracionesPendiente = false;
     datosClozeSesion = [];
     rondasMatching = [];
     primeroSeleccionadoMatching = null;
@@ -9848,6 +9955,7 @@ const ZONAS_SYNC_GIST = [
         if (r.espacio === viejo) { r.espacio = ESPACIO_HASH; n++; }
       });
       guardarRetencionRutas();
+      recalcularYGuardarSAjustadoPomodoro();
       estadisticasConstruidas = false;
       curvaOlvidoConstruido = false;
       subtRepasarConstruido = false;
@@ -12003,6 +12111,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       retencionRutas = retencionRutas.filter((r) => r.id !== entrada.id);
       siguienteRev();
       guardarRetencionRutas();
+      recalcularYGuardarSAjustadoPomodoro();
       estadisticasConstruidas = false;
       curvaOlvidoConstruido = false;
       subtRepasarConstruido = false;
@@ -12013,7 +12122,6 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   }
 
   function filaRetencionHistorial(entrada) {
-    // NUEVO: <details> con render lazy del cuerpo, igual que análisis de sesión (filaAnalisisGuardado).
     const det = document.createElement('details');
     det.className = 'retencion-entrada';
     const sum = document.createElement('summary');
@@ -12040,6 +12148,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       retencionRutas = retencionRutas.filter((r) => r.id !== entrada.id);
       siguienteRev();
       guardarRetencionRutas();
+      recalcularYGuardarSAjustadoPomodoro();
       renderRetencionHistorial();
     }));
     div.appendChild(acc);
@@ -12100,7 +12209,6 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   }
 
   function renderRetencionHistorial() {
-    // NUEVO: ya no pagina — el registro propio está topado en MAX_RETENCION_RUTAS, igual que análisis de sesión.
     const propias = retencionPropias().slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     const elLista = document.getElementById('retencion-historial-lista');
     const elVacio = document.getElementById('retencion-historial-vacio');
@@ -12137,6 +12245,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     retencionRutas = [];
     siguienteRev();
     guardarRetencionRutas();
+    recalcularYGuardarSAjustadoPomodoro();
     estadisticasConstruidas = false;
     curvaOlvidoConstruido = false;
     subtRepasarConstruido = false;
@@ -12166,6 +12275,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     });
     limitarRetencionRutas();
     guardarRetencionRutas();
+    recalcularYGuardarSAjustadoPomodoro();
     estadisticasConstruidas = false;
     curvaOlvidoConstruido = false;
     subtRepasarConstruido = false;
@@ -12336,6 +12446,18 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     }
   }
 
+  function formatearFechaCompletaGrafico(iso) {
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return String(iso || '');
+      return String(d.getDate()).padStart(2, '0') + '/' +
+        String(d.getMonth() + 1).padStart(2, '0') + '/' +
+        d.getFullYear();
+    } catch (e) {
+      return String(iso || '');
+    }
+  }
+
   function construirGraficoLineaNotas(puntos) {
     const w = 600, h = 220, padL = 32, padR = 14, padT = 16, padB = 30;
     const innerW = w - padL - padR, innerH = h - padT - padB;
@@ -12367,6 +12489,13 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       etqX.textContent = formatearFechaCortaGrafico(puntos[i].fecha);
       svg.appendChild(etqX);
     });
+
+    const lineasTooltip = puntos
+      .slice()
+      .reverse()
+      .map((p) => formatearFechaCompletaGrafico(p.fecha) + ' — ' + p.nota + '/10');
+    svg.setAttribute('data-tooltip-texto', lineasTooltip.join('\\n'));
+    vincularEventosTooltipLineaSvg(svg, mostrarTooltipTextoSvg);
 
     return svg;
   }
@@ -12621,9 +12750,45 @@ let estadisticasConstruidas = false;
     }, { passive: true });
   }
 
-  function mostrarTooltipCurvaOlvido(evento, circ) {
+function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
+    const circulos = Array.from(svg.querySelectorAll('circle[data-bucket-etiqueta]'));
+    if (circulos.length === 0) return null;
+    const rect = svg.getBoundingClientRect();
+    const vbWidth = (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width) ? svg.viewBox.baseVal.width : 600;
+    const xSvg = rect.width > 0 ? ((clientX - rect.left) / rect.width) * vbWidth : 0;
+    let mejor = circulos[0];
+    let mejorDist = Math.abs(parseFloat(mejor.getAttribute('cx') || '0') - xSvg);
+    for (let i = 1; i < circulos.length; i++) {
+      const dist = Math.abs(parseFloat(circulos[i].getAttribute('cx') || '0') - xSvg);
+      if (dist < mejorDist) {
+        mejorDist = dist;
+        mejor = circulos[i];
+      }
+    }
+    return mejor;
+  }
+
+  function mostrarTooltipTextoSvg(evento, svg) {
+    const texto = svg.getAttribute('data-tooltip-texto') || '';
+    if (!texto) return;
     ocultarTooltipStackedBar();
-    rectActivoStacked = circ;
+    rectActivoStacked = svg;
+    const tip = asegurarTooltipEstadisticas();
+    tip.textContent = texto;
+    tip.style.display = 'block';
+    const coords = coordenadasDeEvento(evento);
+    posicionarTooltipEstadisticas(coords.x, coords.y);
+  }
+
+  function mostrarTooltipCurvaOlvido(evento, elem) {
+    const coords = coordenadasDeEvento(evento);
+    const svg = (elem.tagName && elem.tagName.toLowerCase() === 'svg') ? elem : elem.ownerSVGElement;
+    const circ = (elem.tagName && elem.tagName.toLowerCase() === 'circle')
+      ? elem
+      : (svg ? obtenerCirculoMasCercanoEnSvg(svg, coords.x) : null);
+    if (!circ) return;
+    ocultarTooltipStackedBar();
+    rectActivoStacked = svg || circ;
     const lineas = [
       'Bucket: ' + (circ.getAttribute('data-bucket-etiqueta') || ''),
       'SubT evaluados: ' + (circ.getAttribute('data-subt-evaluados') || '0'),
@@ -12633,49 +12798,89 @@ let estadisticasConstruidas = false;
     const tip = asegurarTooltipEstadisticas();
     tip.textContent = lineas.join('\\n');
     tip.style.display = 'block';
-    const coords = coordenadasDeEvento(evento);
     posicionarTooltipEstadisticas(coords.x, coords.y);
   }
 
-  function vincularEventosTooltipCurva(circ) {
-    circ.style.cursor = 'pointer';
-    circ.addEventListener('mouseenter', (ev) => {
-      if (ES_DISPOSITIVO_TACTIL) return;
-      mostrarTooltipCurvaOlvido(ev, circ);
+  function vincularEventosTooltipLineaSvg(svg, mostrarFn) {
+    svg.style.cursor = 'pointer';
+    let touchStartPos = null;
+
+    svg.addEventListener('contextmenu', (ev) => {
+      if (ES_DISPOSITIVO_TACTIL || touchTimerTooltip !== null || rectActivoStacked === svg) {
+        ev.preventDefault();
+      }
     });
-    circ.addEventListener('mousemove', (ev) => {
-      if (ES_DISPOSITIVO_TACTIL || rectActivoStacked !== circ) return;
+
+    svg.addEventListener('mouseenter', (ev) => {
+      if (ES_DISPOSITIVO_TACTIL) return;
+      mostrarFn(ev, svg);
+    });
+
+    svg.addEventListener('mousemove', (ev) => {
+      if (ES_DISPOSITIVO_TACTIL) return;
+      if (rectActivoStacked !== svg) {
+        mostrarFn(ev, svg);
+        return;
+      }
+      if (svg.getAttribute('data-tipo-tooltip') === 'curva') {
+        const circ = obtenerCirculoMasCercanoEnSvg(svg, ev.clientX);
+        if (circ) {
+          const lineas = [
+            'Bucket: ' + (circ.getAttribute('data-bucket-etiqueta') || ''),
+            'SubT evaluados: ' + (circ.getAttribute('data-subt-evaluados') || '0'),
+            'Retenidas: ' + (circ.getAttribute('data-retenidas-pct') || '0') + '%',
+            'Olvidadas: ' + (circ.getAttribute('data-olvidadas-pct') || '0') + '%',
+          ];
+          const tip = asegurarTooltipEstadisticas();
+          tip.textContent = lineas.join('\\n');
+        }
+      }
       posicionarTooltipEstadisticas(ev.clientX, ev.clientY);
     });
-    circ.addEventListener('mouseleave', () => {
+
+    svg.addEventListener('mouseleave', () => {
       if (ES_DISPOSITIVO_TACTIL) return;
       ocultarTooltipStackedBar();
     });
-    circ.addEventListener('touchstart', (ev) => {
+
+    svg.addEventListener('touchstart', (ev) => {
       if (touchTimerTooltip) clearTimeout(touchTimerTooltip);
-      const touch = ev.touches && ev.touches[0] ? { clientX: ev.touches[0].clientX, clientY: ev.touches[0].clientY } : { clientX: 0, clientY: 0 };
+      const t = ev.touches && ev.touches[0];
+      const touch = t ? { clientX: t.clientX, clientY: t.clientY } : { clientX: 0, clientY: 0 };
+      touchStartPos = touch;
       touchTimerTooltip = setTimeout(() => {
         touchTimerTooltip = null;
-        mostrarTooltipCurvaOlvido({ touches: [touch] }, circ);
+        mostrarFn({ touches: [touch] }, svg);
       }, 500);
     }, { passive: true });
-    circ.addEventListener('touchmove', () => {
-      if (touchTimerTooltip) {
+
+    svg.addEventListener('touchmove', (ev) => {
+      if (!touchTimerTooltip || !touchStartPos) return;
+      const t = ev.touches && ev.touches[0];
+      if (!t) return;
+      const dx = t.clientX - touchStartPos.clientX;
+      const dy = t.clientY - touchStartPos.clientY;
+      if (Math.hypot(dx, dy) > 10) {
         clearTimeout(touchTimerTooltip);
         touchTimerTooltip = null;
+        touchStartPos = null;
       }
     }, { passive: true });
-    circ.addEventListener('touchend', () => {
+
+    svg.addEventListener('touchend', () => {
       if (touchTimerTooltip) {
         clearTimeout(touchTimerTooltip);
         touchTimerTooltip = null;
       }
+      touchStartPos = null;
     }, { passive: true });
-    circ.addEventListener('touchcancel', () => {
+
+    svg.addEventListener('touchcancel', () => {
       if (touchTimerTooltip) {
         clearTimeout(touchTimerTooltip);
         touchTimerTooltip = null;
       }
+      touchStartPos = null;
     }, { passive: true });
   }
 
@@ -12935,6 +13140,125 @@ let estadisticasConstruidas = false;
     return resultado;
   }
 
+  const CLAVE_S_AJUSTADO_POMODORO = 's_ajustado_pomodoro';
+
+  function guardarSAjustadoPomodoro(sValor) {
+    try {
+      let mapa = {};
+      const crudo = localStorage.getItem(CLAVE_S_AJUSTADO_POMODORO);
+      if (crudo) {
+        const parsed = JSON.parse(crudo);
+        if (parsed && typeof parsed === 'object') mapa = parsed;
+      }
+      mapa[ESPACIO_HASH] = (typeof sValor === 'number' && Number.isFinite(sValor)) ? sValor : null;
+      localStorage.setItem(CLAVE_S_AJUSTADO_POMODORO, JSON.stringify(mapa));
+    } catch (e) {}
+  }
+
+  function leerSAjustadoPomodoro() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_S_AJUSTADO_POMODORO);
+      if (!crudo) return undefined;
+      const parsed = JSON.parse(crudo);
+      if (typeof parsed === 'number' && Number.isFinite(parsed)) return parsed;
+      if (parsed && typeof parsed === 'object' && Object.prototype.hasOwnProperty.call(parsed, ESPACIO_HASH)) {
+        return parsed[ESPACIO_HASH];
+      }
+      return undefined;
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  function recalcularYGuardarSAjustadoPomodoro() {
+    const buckets = obtenerBucketsDeRetencion();
+    const sesionesValidas = buckets._meta ? buckets._meta.sesionesValidas : 0;
+    const hayDatos = BUCKETS_OLVIDO_DEF.some((def) => {
+      const b = buckets[def.clave];
+      return b && (b.retenidas + b.olvidadas) > 0 && b.pctRetenidas !== null;
+    });
+    const sAjustado = (sesionesValidas >= 3 && hayDatos) ? ajustarS_a_datos(buckets) : null;
+    guardarSAjustadoPomodoro(sAjustado);
+    return sAjustado;
+  }
+
+  function obtenerSAjustadoActual() {
+    const guardado = leerSAjustadoPomodoro();
+    if (guardado !== undefined) return guardado;
+    return recalcularYGuardarSAjustadoPomodoro();
+  }
+
+  function obtenerUltimoPomodoroCompleto() {
+    const totalCitadas = todasLasRutasCitadas().length;
+    if (totalCitadas === 0) return null;
+    const propias = retencionPropias()
+      .slice()
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    for (let i = 0; i < propias.length; i++) {
+      const rutasEntrada = Array.isArray(propias[i].rutas) ? propias[i].rutas : [];
+      if (rutasEntrada.length / totalCitadas >= 0.80) {
+        return propias[i];
+      }
+    }
+    return null;
+  }
+
+  function formatearTiempoTranscurridoDias(dias) {
+    const d = Math.floor(dias);
+    if (d <= 0) return 'hoy';
+    if (d === 1) return 'hace 1 día';
+    return 'hace ' + d + ' días';
+  }
+
+  function formatearCuandoProximoPomodoro(diasRestantes) {
+    if (diasRestantes <= 0) return 'hoy';
+    if (diasRestantes < 1) {
+      const ahora = new Date();
+      const objetivo = new Date(ahora.getTime() + diasRestantes * 86400000);
+      const mismoDia = ahora.getFullYear() === objetivo.getFullYear() &&
+        ahora.getMonth() === objetivo.getMonth() &&
+        ahora.getDate() === objetivo.getDate();
+      return mismoDia ? 'hoy' : 'mañana';
+    }
+    const diasRedondeados = Math.round(diasRestantes);
+    if (diasRedondeados <= 1) return 'mañana';
+    return 'en ' + diasRedondeados + ' días';
+  }
+
+  function renderAvisoRepasoPomodoro() {
+    const elBanner = document.getElementById('pomodoro-aviso-repaso');
+    if (!elBanner) return;
+    elBanner.innerHTML = '';
+
+    const ultimoCompleto = obtenerUltimoPomodoroCompleto();
+    if (!ultimoCompleto) {
+      elBanner.appendChild(document.createTextNode('Hacé tu primer Pomodoro '));
+      const strong = document.createElement('strong');
+      strong.textContent = 'completo';
+      elBanner.appendChild(strong);
+      elBanner.appendChild(document.createTextNode(' (>80% rutas) para empezar a medir tu retención'));
+      elBanner.style.display = 'block';
+      return;
+    }
+
+    const sAjustado = obtenerSAjustadoActual();
+    const S = (typeof sAjustado === 'number' && sAjustado > 0) ? sAjustado : 1;
+    const diasTranscurridos = Math.max(0, (Date.now() - (ultimoCompleto.timestamp || 0)) / 86400000);
+    const tRepaso = -S * Math.log(0.60);
+    const diasRestantes = tRepaso - diasTranscurridos;
+    const retencionPredicha = Math.round(calcularSRetenido(diasTranscurridos, S) * 100);
+
+    const txtUltimo = ultimoCompleto ? ('Último Pomodoro ' + formatearTiempoTranscurridoDias(diasTranscurridos)) : '';
+    const txtPredicha = 'Retención predicha: ' + retencionPredicha + '%';
+    const txtCuando = formatearCuandoProximoPomodoro(diasRestantes);
+
+    elBanner.appendChild(document.createTextNode(txtUltimo + ' · ' + txtPredicha + ' · '));
+    const strong = document.createElement('strong');
+    strong.textContent = 'Te conviene hacer el próximo: ' + txtCuando;
+    elBanner.appendChild(strong);
+    elBanner.style.display = 'block';
+  }
+
   function construirCurvaOlvido() {
     const cont = document.getElementById('curva-olvido-contenedor');
     if (!cont) return;
@@ -12955,6 +13279,7 @@ let estadisticasConstruidas = false;
     });
 
     if (sesionesValidas < 3 || !hayAlgunBucket) {
+      guardarSAjustadoPomodoro(null);
       const p = document.createElement('p');
       p.className = 'grafico-vacio';
       p.textContent = 'Sin datos suficientes (mínimo 3 sesiones con ≥80% de rutas)';
@@ -12995,6 +13320,7 @@ let estadisticasConstruidas = false;
     svg.appendChild(elSvg('path', { d: dTeorica, fill: 'none', stroke: '#9ca3af', 'stroke-width': 2, 'stroke-dasharray': '5,4' }));
 
     const sAjustado = ajustarS_a_datos(buckets);
+    guardarSAjustadoPomodoro(sAjustado);
     if (sAjustado !== null) {
       const coordsAjustada = BUCKETS_OLVIDO_DEF.map((def, i) => ({
         x: xDeBucket(i),
@@ -13034,9 +13360,11 @@ let estadisticasConstruidas = false;
         'data-retenidas-pct': String(p.pctRetenidas),
         'data-olvidadas-pct': String(p.pctOlvidadas),
       });
-      vincularEventosTooltipCurva(circ);
       svg.appendChild(circ);
     });
+
+    svg.setAttribute('data-tipo-tooltip', 'curva');
+    vincularEventosTooltipLineaSvg(svg, mostrarTooltipCurvaOlvido);
 
     wrap.appendChild(svg);
 
@@ -13207,8 +13535,6 @@ let estadisticasConstruidas = false;
   }
 
   function sesionesSrsDeLista(nombre) {
-    // NUEVO: una sesión cuenta para esta lista si fue solo de esta lista (listado === nombre)
-    // o si fue una sesión "SRS Múltiple" que incluyó esta lista (niveles_srs[nombre] presente).
     return gamificacion.historial
       .filter((s) => espacioDeSesion(s) === ESPACIO_HASH && s.modo === 'srs' &&
         (s.listado === nombre || (s.niveles_srs && typeof s.niveles_srs[nombre] === 'number')))
@@ -13227,8 +13553,6 @@ let estadisticasConstruidas = false;
     const nombresConHistoria = new Set();
     gamificacion.historial.forEach((s) => {
       if (espacioDeSesion(s) !== ESPACIO_HASH || s.modo !== 'srs') return;
-      // NUEVO: una sesión "SRS Múltiple" guarda el nivel de cada lista en niveles_srs,
-      // así que también debe alimentar el gráfico de línea de cada una de esas listas.
       if (s.niveles_srs && typeof s.niveles_srs === 'object') {
         Object.keys(s.niveles_srs).forEach((nombre) => nombresConHistoria.add(nombre));
       } else if (s.listado && s.listado !== 'SRS Múltiple') {
@@ -13712,20 +14036,19 @@ let estadisticasConstruidas = false;
 
       puntos.forEach((p) => {
         const circ = elSvg('circle', { cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: 3, fill: item.color });
-        if (!ES_DISPOSITIVO_TACTIL) {
-          const title = elSvg('title');
-          title.textContent = item.nombre + ' — Sesión ' + p.numSesion + ': ' + p.score;
-          circ.appendChild(title);
-        }
         svg.appendChild(circ);
       });
     });
+
+    const paraLeyenda = elegibles.slice().sort((a, b) => a.nombre.localeCompare(b.nombre));
+    const lineasTooltip = paraLeyenda.map((item) => item.nombre + ' — ' + item.scoreActual + '/100');
+    svg.setAttribute('data-tooltip-texto', lineasTooltip.join('\\n'));
+    vincularEventosTooltipLineaSvg(svg, mostrarTooltipTextoSvg);
 
     wrap.appendChild(svg);
 
     const leyenda = document.createElement('div');
     leyenda.className = 'velocidad-leyenda-chips';
-    const paraLeyenda = elegibles.slice().sort((a, b) => a.nombre.localeCompare(b.nombre));
     paraLeyenda.forEach((item) => {
       const chip = document.createElement('span');
       chip.className = 'chip-razon chico';
@@ -14646,7 +14969,7 @@ let estadisticasConstruidas = false;
 
     const linea2 = document.createElement('div');
     linea2.textContent = 'coincidencia con el contenido: ' + Math.round(ev.sim * 100) + '%' +
-      ' (tu respuesta: ' + ev.totalEscritas + ' distintas, contenido: ' + ev.totalReferencia + ')' +
+      ' (tu respuesta: ' + ev.totalEscritas + ' escritas, contenido: ' + ev.totalReferencia + ')' +
       (ev.conPista && ev.clavesTotal > 0
         ? ' — usaste la pista: para "Bien" se exige más de ' + Math.round(SIM_CON_PISTA * 100) + '%' : '');
     elResultadoEval.appendChild(linea2);
@@ -16073,6 +16396,7 @@ let estadisticasConstruidas = false;
   }
 
   function abrirModalPomodoroIniciar() {
+    renderAvisoRepasoPomodoro();
     elModalPomodoroIniciar.classList.add('abierto');
   }
   function cerrarModalPomodoroIniciar() {
@@ -16172,6 +16496,7 @@ let estadisticasConstruidas = false;
       retencionRutas.push(entradaRetencion);
       limitarRetencionRutas();
       guardarRetencionRutas();
+      recalcularYGuardarSAjustadoPomodoro();
       estadisticasConstruidas = false;
       curvaOlvidoConstruido = false;
       subtRepasarConstruido = false;
@@ -16205,8 +16530,6 @@ let estadisticasConstruidas = false;
 </body>
 </html>
 """
-
-# ---------------- CONFIGURACIÓN ----------------
 
 try:
     from tkinter import Toplevel, Label, Frame, Button
@@ -16344,8 +16667,6 @@ def preguntar_resaltado(raiz):
     
     return eleccion["aplicar"]
 
-# ---------------- PIPELINE (compartido por el modo interactivo y --config) ----------------
-
 def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_imagen_mapa=None, propagar=False):
     try:
         if colores in PALETA_COLORES:
@@ -16366,7 +16687,6 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
         tarjetas = parsear_recordatorio(recordatorio)
         reportar_asociaciones(tarjetas, rutas)
 
-        #--- Resaltado del drawio (según la elección) ---
         if resaltar:
             fn_mapa = cargar_generador_respuestas()
             if fn_mapa is not None:
@@ -16396,8 +16716,6 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
             raise
         return False, f"{type(error).__name__}: {error}"
     return True, ""
-
-# ---------------- MODO --config (sin ninguna UI) ----------------
 
 CAMPOS_CONFIG = {
     "recordatorio": str,
@@ -16546,7 +16864,6 @@ def validar_entrada(entrada, carpeta_config):
     return valores, errores, avisos
 
 def _etiqueta_entrada(entrada, numero):
-    """Nombre para la consola: stem de su respuestas.txt, o 'entrada N' si no se puede saber."""
     if isinstance(entrada, dict):
         resp = entrada.get("respuestas")
         if isinstance(resp, str) and resp.strip():
@@ -16554,7 +16871,6 @@ def _etiqueta_entrada(entrada, numero):
     return f"entrada {numero}"
 
 def ejecutar_config(ruta_config):
-    """Procesa TODAS las entradas aunque alguna falle. Devuelve el código de salida (0 = todo OK)."""
     try:
         entradas, avisos_globales = leer_config(ruta_config)
     except ErrorConfig as error:
@@ -16621,8 +16937,6 @@ def ejecutar_config(ruta_config):
     print(f"{total - fallos} de {total} evaluadores generados.")
     return 1 if fallos else 0
 
-# ---------------- MODO INTERACTIVO (el flujo de siempre) ----------------
-
 def main_interactivo():
     if Tk is None or filedialog is None:
         print("ERROR: tkinter no está disponible en este Python. Usá --config RUTA para correr sin ventanas.")
@@ -16631,13 +16945,11 @@ def main_interactivo():
     raiz = Tk()
     raiz.withdraw()
 
-    # --- Diálogo 1: recordatorio.txt (tarjetas) ---
     txt = filedialog.askopenfilename(
         title="Selecciona el archivo recordatorio.txt",
         filetypes=[("Archivo de Texto", "*.txt"), ("Todos los archivos", "*.*")]
     )
 
-    # --- Diálogo 2: respuestas.txt (rutas del diagrama) ---
     txt_respuestas = filedialog.askopenfilename(
         title="Selecciona el archivo respuestas.txt",
         filetypes=[("Archivo de Texto", "*.txt"), ("Todos los archivos", "*.*")]
@@ -16648,7 +16960,6 @@ def main_interactivo():
         raiz.destroy()
         raise SystemExit
 
-    #--- Diálogo 3: drawio (AHORA OBLIGATORIO) ---
     ruta_drawio = filedialog.askopenfilename(
         title="Selecciona el archivo .drawio (Obligatorio)",
         filetypes=[("Diagrama drawio", ".drawio"), ("Todos los archivos", ".*")]
@@ -16658,7 +16969,6 @@ def main_interactivo():
         raiz.destroy()
         raise SystemExit
 
-    #--- Ventana de elección de color ---
     opciones = elegir_color(raiz, PALETA_COLORES, COLOR_DEFAULT)
     print(f"Color elegido: {opciones}")
 
@@ -16671,7 +16981,6 @@ def main_interactivo():
     else:
         print("No se seleccionó imagen del mapa: el botón 🗺️ se genera deshabilitado.")
 
-    #--- Ventana personalizada para preguntar por el resaltado ---
     aplicar_resaltado = preguntar_resaltado(raiz)
     print(f"Resaltado en drawio: {'Sí' if aplicar_resaltado else 'No'}")
 
