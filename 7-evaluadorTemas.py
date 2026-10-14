@@ -3903,7 +3903,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
     <div id="estadisticas-pane-diagramas">
       <div id="estadisticas-contenido"></div>
-      <div id="curva-olvido-contenedor"></div>
     </div>
     <div id="estadisticas-pane-srs" style="display:none;">
       <div id="srs-tab-contenido"></div>
@@ -3911,6 +3910,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div id="estadisticas-pane-subt" style="display:none;">
       <div id="subt-repasar-lista"></div>
       <div id="subt-velocidad-contenedor"></div>
+      <div id="curva-olvido-contenedor"></div>
       <div class="sync-seccion-titulo">Análisis de Sesión</div>
       <div id="analisis-guardados-lista"></div>
       <p class="nota-dificiles" id="analisis-guardados-vacio" style="display:none;">Todavía no guardaste ningún análisis de sesión.</p>
@@ -13395,16 +13395,16 @@ let estadisticasConstruidas = false;
         construirEstadisticas();
         estadisticasConstruidas = true;
       }
-      if (!curvaOlvidoConstruido) {
-        construirCurvaOlvido();
-        curvaOlvidoConstruido = true;
-      }
     } else if (tab === 'subt') {
       if (!subtRepasarConstruido || !sesgoConfianzaConstruido) {
         construirListaSubtRepasar();
         construirGraficoVelocidadAprendizaje();
         subtRepasarConstruido = true;
         sesgoConfianzaConstruido = true;
+      }
+      if (!curvaOlvidoConstruido) {
+        construirCurvaOlvido();
+        curvaOlvidoConstruido = true;
       }
       renderAnalisisGuardadosLista();
     } else if (tab === 'srs') {
