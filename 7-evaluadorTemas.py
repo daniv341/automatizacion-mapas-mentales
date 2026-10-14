@@ -11366,8 +11366,8 @@ const ZONAS_SYNC_GIST = [
     renderListaNotasEvaluador();
   }
 
-function esCategoriaDudaRuta(codigo) {
-    return typeof codigo === 'string' && /^duda_ruta_\d+$/.test(codigo);
+  function esCategoriaDudaRuta(codigo) {
+    return typeof codigo === 'string' && /^duda_ruta_\\d+$/.test(codigo);
   }
 
   function obtenerDefCategoriaNotaEval(codigo) {
