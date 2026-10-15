@@ -1159,6 +1159,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .cronometro.congelado { color: #e0574c; font-weight: 600; }
+  .cronometro.global-examen { color: var(--color-boton); font-weight: 600; }
+  .cronometro.global-examen.urgente { color: #e0574c; }
 
   .barra-progreso {
     width: 100%;
@@ -2017,7 +2019,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .estado-marca.casi { color: #e0a030; }
   .punto-casi { background: #e0a030; }
 
-  .grupo-cronometro { display: flex; align-items: center; gap: 10px; }
+  .grupo-cronometro { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 
   .badge-nota-actual {
     width: 50px;
@@ -2172,6 +2174,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .opcion-modo.seleccionada { border-color: var(--color-boton); background: #fff3ea; }
+  .opcion-modo:disabled { opacity: 0.45; cursor: not-allowed; }
   .opcion-modo-icono { font-size: 22px; }
   .opcion-modo-nombre { font-weight: 700; color: var(--texto-principal); margin-right: auto; }
   .opcion-modo-detalle { font-size: 12px; color: var(--texto-suave); }
@@ -3694,6 +3697,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-secundario" id="btn-mapa-descargar">⬇ Descargar</button>
       <button class="boton-secundario" id="btn-mapa-volver">☰ Volver a observador</button>
     </div>
+  </div>
 
   <div id="pantalla-tienda" style="display:none;">
     <p class="subtitulo">Tienda</p>
@@ -3747,6 +3751,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="grupo-cronometro">
           <div class="cronometro" id="cronometro">⏱ 00:00</div>
           <div class="cronometro" id="countdown-examen" style="display:none;"></div>
+          <div class="cronometro global-examen" id="countdown-global-examen" style="display:none;"></div>
           <button class="boton-pausa" id="btn-pausa" title="Pausar el cronómetro">⏸ Pausar</button>
           <div class="badge-nota-actual" id="badge-nota-actual" title="Nota actual de la sesión">—</div>
         </div>
@@ -3850,6 +3855,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <button class="boton-icono-circular boton-analisis-sesion" id="btn-analisis-sesion" title="Análisis de la sesión" style="display:none;">📊</button>
     <h2>Resumen de la sesión</h2>
     <div class="nota-sesion" id="nota-sesion">🎓 Nota de la sesión: 0.0 / 10</div>
+    <p class="modal-ayuda" id="aviso-tiempo-global-resumen" style="display:none; text-align:center;"></p>
     <div class="nota-listado" id="nota-listado" style="display:none;"></div>
 
     <div class="listas-resumen" id="resumen-gamificacion" style="display:none;">
@@ -4419,6 +4425,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="opcion-modo-nombre">45s</span>
       </button>
     </div>
+    <label class="opcion-demostraciones-wrap" id="wrap-examen-tiempo-global" for="chk-examen-tiempo-global">
+      <input type="checkbox" id="chk-examen-tiempo-global">
+      <span>⏳ Tiempo global de examen</span>
+    </label>
+    <p class="modal-ayuda" id="examen-tiempo-global-detalle" style="display:none; text-align:center;"></p>
     <button class="boton-principal" id="btn-examen-opciones-comenzar">Comenzar</button>
     <button class="modal-cancelar" id="btn-examen-opciones-cancelar">Cancelar</button>
   </div>
@@ -4605,6 +4616,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let countdownExamenId = null;
   let countdownExamenRestante = 0;
   let countdownIndiceActivo = -1;
+  let tiempoGlobalExamen = false;          // opción del modal: un solo reloj para todo el examen
+  let globalExamenIntervalId = null;
+  let globalExamenRestanteMs = 0;
+  let globalExamenUltimoTick = 0;
+  let globalExamenPendientesAlVencer = 0;  // >0 si el tiempo global venció con tarjetas sin responder
   let vidasMaximas = 0;
   let vidasActuales = 0;
   let puntosSesion = 0;
@@ -5370,6 +5386,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elResumenGamificacion = document.getElementById('resumen-gamificacion');
   const elBtnPausa = document.getElementById('btn-pausa');
   const elCountdownExamen = document.getElementById('countdown-examen');
+  const elCountdownGlobalExamen = document.getElementById('countdown-global-examen');
   const elOverlayPausa = document.getElementById('overlay-pausa');
   const elBtnReanudar = document.getElementById('btn-reanudar');
   const elBtnRevisar = document.getElementById('btn-revisar');
@@ -5486,6 +5503,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     if (nombre !== 'estudio') {
       detenerCronometro();
+      detenerCountdownGlobalExamen();
     }
 
     reubicarBadgePomodoro(nombre);
@@ -7481,6 +7499,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return;
     }
     if (!especial && modoElegidoEnModal === 'examen') {
+      refrescarOpcionTiempoGlobalExamen();
       elModalExamenOpciones.classList.add('abierto');
       return;
     }
@@ -8583,12 +8602,55 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (modoEspecial !== null) {
       elBtnResumenGuardarLista.style.display = 'none';
       elBtnAnalisisSesion.style.display = 'none';
-      document.getElementById('btn-continuar-pendientes').style.display = 'none';
-      document.getElementById('btn-repasar-no').style.display = 'none';
       renderResumenMatchingPersonalizado();
     } else {
       renderResumenMatchingPersonalizado();
     }
+  }
+
+  // Tarjetas base de las rondas de Matching cuyo índice cumple el predicado.
+  function tarjetasBaseDeRondasMatching(predicado) {
+    const base = [];
+    rondasMatching.forEach((ronda, i) => {
+      if (predicado(i)) ronda.primeros.forEach((p) => base.push(p.tarjeta));
+    });
+    return base;
+  }
+
+  // Deja una ronda de Matching como nueva (para retomarla desde cero).
+  function resetearRondaMatching(ronda) {
+    if (!ronda) return;
+    ronda.completada = false;
+    ronda.erroresTotales = 0;
+    ronda.detalleErroresRonda = [];
+    ronda.rutasBloqueadas.clear();
+    ronda.rutaEstadoResultado.clear();
+    ronda.primeros.forEach((p) => {
+      p.evaluado = false;
+      p.saltado = false;
+      p.cantidadErrores = 0;
+      p.erroresDetalle = [];
+      p.asociadasUsuario = [];
+    });
+  }
+
+  // Nueva sesión especial solo con las tarjetas/rondas que cumplen el predicado.
+  // Devuelve true si el modo actual es Cloze o Matching (la sesión ya quedó gestionada).
+  function iniciarSesionEspecialFiltrada(predicado) {
+    if (modoEspecial === 'cloze') {
+      let lista = tarjetasSesion.filter((_, i) => predicado(i));
+      if (lista.length === 0) return true;
+      if (modoAleatorio) lista = mezclar(lista);
+      iniciarSesionCloze(lista);
+      return true;
+    }
+    if (modoEspecial === 'matching') {
+      const nuevasRondas = construirRondasMatching(tarjetasBaseDeRondasMatching(predicado));
+      if (nuevasRondas.length === 0) return true;
+      iniciarSesionMatching(nuevasRondas);
+      return true;
+    }
+    return false;
   }
 
   function reiniciarSesionActual() {
@@ -8651,6 +8713,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('opcion-examen-t45').addEventListener('click', (ev) => {
     segundosPorTarjetaExamen = 45; seleccionarEnGrupo(ev.currentTarget);
   });
+  const elChkExamenTiempoGlobal = document.getElementById('chk-examen-tiempo-global');
+  const elDetalleTiempoGlobal = document.getElementById('examen-tiempo-global-detalle');
+  function refrescarOpcionTiempoGlobalExamen() {
+    elChkExamenTiempoGlobal.checked = tiempoGlobalExamen;
+    ['opcion-examen-t15', 'opcion-examen-t30', 'opcion-examen-t45'].forEach((id) => {
+      document.getElementById(id).disabled = tiempoGlobalExamen;
+    });
+    if (!tiempoGlobalExamen) {
+      elDetalleTiempoGlobal.style.display = 'none';
+      return;
+    }
+    const n = listaPendienteInicio ? listaPendienteInicio.length : 0;
+    elDetalleTiempoGlobal.style.display = 'block';
+    elDetalleTiempoGlobal.textContent = n > 0
+      ? 'Tiempo total: ' + formatearTiempo(totalSegundosGlobalExamen(n) * 1000) + ' (' + n + ' tarjetas × 30 s + 25 %)'
+      : '30 s por tarjeta + 25 %';
+  }
+  elChkExamenTiempoGlobal.addEventListener('change', () => {
+    tiempoGlobalExamen = elChkExamenTiempoGlobal.checked;
+    refrescarOpcionTiempoGlobalExamen();
+  });
   document.getElementById('btn-examen-opciones-cancelar').addEventListener('click', () => {
     elModalExamenOpciones.classList.remove('abierto');
     listaPendienteInicio = null;
@@ -8666,6 +8749,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     repasoInteligenteActivo = inteligentePendiente;
     configurarModoJuego('examen');
     iniciarSesion(lista);
+    if (tiempoGlobalExamen && lista.length > 0) iniciarCountdownGlobalExamen(lista.length);
   });
 
   function dispararGameOver() {
@@ -15515,6 +15599,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function iniciarSesion(lista) {
     detenerCountdownExamen();
+    detenerCountdownGlobalExamen();
+    globalExamenPendientesAlVencer = 0;
     modoObservador = false;
     elAreaTarjeta.classList.remove('observador');
     tarjetasSesion = lista;
@@ -15712,6 +15798,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     renderRutas(actual);
 
     actualizarCountdownExamen();
+    if (globalExamenIntervalId !== null && !quedanPendientes()) detenerCountdownGlobalExamen();
 
     elTarjeta.style.animation = 'none';
     void elTarjeta.offsetWidth;
@@ -16213,8 +16300,66 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
   }
 
+  function totalSegundosGlobalExamen(totalTarjetas) {
+    return Math.ceil(totalTarjetas * 30 * 1.25);   // 30 s por tarjeta + 25 %
+  }
+
+  function renderCountdownGlobalExamen() {
+    const seg = Math.ceil(Math.max(0, globalExamenRestanteMs) / 1000);
+    elCountdownGlobalExamen.textContent = '⏳ Tiempo restante: ' + formatearTiempo(seg * 1000);
+    elCountdownGlobalExamen.classList.toggle('urgente', seg <= 60);
+  }
+
+  function detenerCountdownGlobalExamen() {
+    if (globalExamenIntervalId !== null) { clearInterval(globalExamenIntervalId); globalExamenIntervalId = null; }
+    elCountdownGlobalExamen.style.display = 'none';
+  }
+
+  function iniciarCountdownGlobalExamen(totalTarjetas) {
+    detenerCountdownGlobalExamen();
+    globalExamenRestanteMs = totalSegundosGlobalExamen(totalTarjetas) * 1000;
+    globalExamenUltimoTick = Date.now();
+    elCountdownGlobalExamen.style.display = 'inline-block';
+    renderCountdownGlobalExamen();
+    globalExamenIntervalId = setInterval(tickCountdownGlobalExamen, 500);
+  }
+
+  function tickCountdownGlobalExamen() {
+    const ahora = Date.now();
+    const delta = ahora - globalExamenUltimoTick;
+    globalExamenUltimoTick = ahora;
+    if (pausaManual) return;   // en pausa manual el reloj global no avanza
+    globalExamenRestanteMs -= delta;
+    if (globalExamenRestanteMs <= 0) {
+      globalExamenRestanteMs = 0;
+      renderCountdownGlobalExamen();
+      venceTiempoGlobalExamen();
+      return;
+    }
+    renderCountdownGlobalExamen();
+  }
+
+  async function venceTiempoGlobalExamen() {
+    detenerCountdownGlobalExamen();
+    if (modoJuego !== 'examen' || !quedanPendientes()) return;
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elTextoEval);
+    if (cronometroActivo && !cronometroCongelado()) acumularTiempo();   // antes de cerrar paneles
+    let pendientes = 0;
+    for (let i = 0; i < resultados.length; i++) {
+      if (resultados[i] === null) {
+        resultados[i] = 'no';
+        revelado[i] = true;
+        pendientes++;
+      }
+    }
+    globalExamenPendientesAlVencer = pendientes;
+    resetPanelesUI();
+    actualizarBadgeNotaActual();
+    await finalizarSesion({ forzar: true });
+  }
+
   function actualizarCountdownExamen() {
-    if (modoJuego !== 'examen') { detenerCountdownExamen(); return; }
+    if (modoJuego !== 'examen' || tiempoGlobalExamen) { detenerCountdownExamen(); return; }
     if (resultados[indiceActual] !== null) { detenerCountdownExamen(); return; }
     if (countdownIndiceActivo === indiceActual && countdownExamenId) return;
     detenerCountdownExamen();
@@ -16917,9 +17062,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
   }
 
-  async function finalizarSesion() {
-    if (!(await confirmarDescartarBorrador())) return;
+  async function finalizarSesion(opciones) {
+    const forzar = !!(opciones && opciones.forzar === true);   // vencimiento del tiempo global: sin diálogos
+    if (!forzar && !(await confirmarDescartarBorrador())) return;
     detenerCountdownExamen();
+    detenerCountdownGlobalExamen();
     if (cronometroActivo && !cronometroCongelado()) {
       acumularTiempo();
     }
@@ -17107,6 +17254,15 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const nota = calcularNota();
     const elNota = document.getElementById('nota-sesion');
     elNota.textContent = '🎓 Nota de la sesión: ' + nota.toFixed(1) + ' / 10';
+    const elAvisoGlobal = document.getElementById('aviso-tiempo-global-resumen');
+    if (globalExamenPendientesAlVencer > 0) {
+      elAvisoGlobal.style.display = 'block';
+      elAvisoGlobal.textContent = '⏰ Se agotó el tiempo global: ' + globalExamenPendientesAlVencer +
+        (globalExamenPendientesAlVencer === 1 ? ' tarjeta sin responder se marcó' : ' tarjetas sin responder se marcaron') +
+        ' como no entendidas.';
+    } else {
+      elAvisoGlobal.style.display = 'none';
+    }
     elNota.className = 'nota-sesion ' + (nota >= 6 ? 'aprobado' : 'desaprobado');
 
     document.getElementById('etq-si').textContent = 'Entendidas (' + conteos.si + ')';
@@ -17138,6 +17294,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const paraRepaso = (i) => resultados[i] === 'no' || resultados[i] === 'casi' || primerIntentoFallido.has(i);
     elBtnRepasarNo.style.display = tarjetasSesion.some((_, i) => paraRepaso(i)) ? 'block' : 'none';
     elBtnRepasarNo.onclick = () => {
+      if (iniciarSesionEspecialFiltrada(modoEspecial === 'matching'
+        ? (i) => resultados[i] === 'no' || resultados[i] === 'casi'
+        : paraRepaso)) return;
       let pendientes = tarjetasSesion.filter((_, i) => paraRepaso(i));
       if (modoAleatorio) pendientes = mezclar(pendientes);
       iniciarSesion(pendientes);
@@ -17167,7 +17326,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function abrirModalContinuar() {
     const n = resultados.filter((r) => r === 'saltar').length;
     document.getElementById('modal-continuar-texto').textContent =
-      n + ' tarjeta(s) quedaron sin responder. ¿Cómo querés seguir?';
+      n + (modoEspecial === 'matching' ? ' ronda(s)' : ' tarjeta(s)') + ' quedaron sin responder. ¿Cómo querés seguir?';
     elModalContinuar.classList.add('abierto');
   }
 
@@ -17184,8 +17343,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       if (r === 'saltar') {
         resultados[i] = null;
         revelado[i] = !!pistaMostrada[i];
+        if (modoEspecial === 'matching') resetearRondaMatching(rondasMatching[i]);
       }
     });
+    if (modoEspecial === 'matching') {
+      primeroSeleccionadoMatching = null;
+      asociacionesTempMatching.clear();
+    }
     const primera = resultados.findIndex((r) => r === null);
     indiceActual = primera >= 0 ? primera : 0;
     cronometroActivo = primera >= 0;
@@ -17202,6 +17366,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function iniciarNuevaRondaPendientes() {
     cerrarModalContinuar();
+    if (iniciarSesionEspecialFiltrada((i) => resultados[i] === 'saltar')) return;
     let pendientes = tarjetasSesion.filter((_, i) => resultados[i] === 'saltar');
     if (modoAleatorio) pendientes = mezclar(pendientes);
     iniciarSesion(pendientes);
