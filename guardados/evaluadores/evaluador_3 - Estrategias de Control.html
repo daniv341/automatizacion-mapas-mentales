@@ -1426,8 +1426,10 @@
 
   .galeria-imagen-wrap { display: flex; justify-content: center; }
   #mapa-imagen-wrap {
+    position: relative;
     overflow: hidden;
     flex: 1 1 auto;
+    height: calc(100vh - clamp(24px, 8vw, 48px) * 2 - 80px);
     min-height: 0;
     min-width: 0;
     align-items: center;
@@ -1930,7 +1932,73 @@
   #pantalla-mapa {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - clamp(24px, 8vw, 48px) * 2);
+    min-height: calc(100vh - clamp(24px, 8vw, 48px) * 2);
+  }
+
+  .mapa-svg-overlay {
+    position: absolute;
+    pointer-events: none;
+    transform-origin: center center;
+    z-index: 2;
+    overflow: visible;
+  }
+  .mapa-hit-rect {
+    fill: transparent;
+    stroke: none;
+    pointer-events: all;
+    cursor: pointer;
+  }
+  .mapa-borde-resaltado {
+    fill: none;
+    stroke-width: var(--mapa-stroke, 2px);
+    pointer-events: none;
+    vector-effect: non-scaling-stroke;
+    stroke-linejoin: round;
+  }
+
+  .mapa-listado-contenedor {
+    margin-top: 14px;
+    text-align: left;
+    max-height: 35vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .mapa-item-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--color-borde-suave);
+    font-size: 14px;
+    color: var(--texto-cabecera);
+    cursor: pointer;
+  }
+  .mapa-item-check:last-child { border-bottom: none; }
+  .mapa-item-check input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--color-boton);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .mapa-item-nombre {
+    flex: 1;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .mapa-item-indicadores {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .mapa-dot-estado {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1.5px solid rgba(0,0,0,0.18);
   }
 
   .mapa-zoom-controles {
@@ -2409,6 +2477,76 @@
     margin-top: 6px;
     font-style: italic;
   }
+
+  .ri-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    justify-content: center;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    background: var(--bg-superficie-alt);
+    border: 1.5px solid var(--color-borde-medio);
+  }
+  .ri-filtro-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--texto-cabecera);
+    cursor: pointer;
+    user-select: none;
+  }
+  .ri-filtro-item input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-boton);
+    cursor: pointer;
+  }
+  .ri-lista-subt {
+    max-height: 48vh;
+    overflow-y: auto;
+    border: 1px solid var(--color-borde);
+    border-radius: 10px;
+    padding: 4px 12px;
+    margin-bottom: 10px;
+    background: var(--bg-superficie);
+    text-align: left;
+  }
+  .ri-fila-subt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 2px;
+    border-bottom: 1px solid var(--color-borde-suave);
+    font-size: 14px;
+    color: var(--texto-cabecera);
+    cursor: pointer;
+  }
+  .ri-fila-subt:last-child { border-bottom: none; }
+  .ri-fila-subt input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--color-boton);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .ri-subt-nombre {
+    flex: 1;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .ri-subt-iconos {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+</style>
 </style>
 </head>
 <body>
@@ -2442,7 +2580,7 @@
 
     <div class="zona-modos">
       <button class="boton-modo" id="btn-modo-completo" title="Estudia todas las tarjetas, ignora los temas marcados">Evaluación completa</button>
-      <button class="boton-modo" id="btn-modo-dificiles" title="Estudia solo las tarjetas marcadas como difíciles en sesiones anteriores" disabled>Repasar difíciles (0)</button>
+      <button class="boton-modo" id="btn-modo-dificiles" title="Armá una sesión combinando subtemas por difíciles, sobreconfianza, olvido o urgencia">Repaso inteligente (0)</button>
       <button class="boton-modo" id="btn-modo-observador" title="Recorrer las tarjetas sin evaluarte: ver, editar notas, marcar difíciles">👁 Modo observador</button>
       <button class="boton-modo" id="btn-otros-modos" title="Jugar modos Cloze Deletion o Matching Pairs">🎮 Otros Modos</button>
     </div>
@@ -2638,6 +2776,29 @@
     </div>
 
     <div class="galeria-imagen-wrap" id="mapa-imagen-wrap"></div>
+
+    <div class="lista-temas mapa-listado-contenedor" id="mapa-listado-acordeones">
+      <details class="grupo-tema" id="det-mapa-rutas">
+        <summary><span id="suma-mapa-rutas">🟢 Rutas (0)</span></summary>
+        <div class="cuerpo-grupo" id="lista-mapa-rutas" style="padding-left:0;"></div>
+      </details>
+      <details class="grupo-tema" id="det-mapa-dificiles">
+        <summary><span id="suma-mapa-dificiles">🟡 Rutas difíciles (0)</span></summary>
+        <div class="cuerpo-grupo" id="lista-mapa-dificiles" style="padding-left:0;"></div>
+      </details>
+      <details class="grupo-tema" id="det-mapa-sobreconfianza">
+        <summary><span id="suma-mapa-sobreconfianza">🟠 SubT sobreconfianza (0)</span></summary>
+        <div class="cuerpo-grupo" id="lista-mapa-sobreconfianza" style="padding-left:0;"></div>
+      </details>
+      <details class="grupo-tema" id="det-mapa-olvido">
+        <summary><span id="suma-mapa-olvido">🔵 SubT próximos a olvido (0)</span></summary>
+        <div class="cuerpo-grupo" id="lista-mapa-olvido" style="padding-left:0;"></div>
+      </details>
+      <details class="grupo-tema" id="det-mapa-urgentes">
+        <summary><span id="suma-mapa-urgentes">🔴 SubT urgentes (0)</span></summary>
+        <div class="cuerpo-grupo" id="lista-mapa-urgentes" style="padding-left:0;"></div>
+      </details>
+    </div>
 
     <div class="navegacion" style="margin-top:20px;">
       <button class="boton-secundario" id="btn-mapa-descargar">⬇ Descargar</button>
@@ -3190,13 +3351,6 @@
   <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
     <h3>🧠 Retención de rutas</h3>
 
-    <div id="retencion-sesion-seccion" style="display:none;">
-      <p class="modal-ayuda">Marcá qué rutas retuviste en esta sesión de Pomodoro.</p>
-      <div id="retencion-subt-lista"></div>
-      <div class="retencion-lista-scroll" id="retencion-sesion-lista"></div>
-      <p class="galeria-vacia" id="retencion-sesion-vacia" style="display:none;">No hay rutas citadas en las tarjetas de este evaluador.</p>
-    </div>
-
     <div class="sync-seccion-titulo">Registro histórico</div>
     <div id="retencion-historial-lista"></div>
     <p class="nota-dificiles" id="retencion-historial-vacio" style="display:none;">Todavía no hay sesiones de retención guardadas.</p>
@@ -3207,6 +3361,17 @@
       <div id="lista-retencion-otras"></div>
       <button class="boton-mini" id="btn-vincular-retencion" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
     </details>
+
+    <div class="sync-seccion-titulo">📉 SubT próximos a olvidarse</div>
+    <div id="retencion-subt-olvido-lista"></div>
+    <p class="nota-dificiles" id="retencion-subt-olvido-vacio" style="display:none;"></p>
+
+    <div id="retencion-sesion-seccion" style="display:none;">
+      <p class="modal-ayuda">Marcá qué rutas retuviste en esta sesión de Pomodoro.</p>
+      <div id="retencion-subt-lista"></div>
+      <div class="retencion-lista-scroll" id="retencion-sesion-lista"></div>
+      <p class="galeria-vacia" id="retencion-sesion-vacia" style="display:none;">No hay rutas citadas en las tarjetas de este evaluador.</p>
+    </div>
 
     <div class="panel-razones-acciones" style="margin-top:14px; justify-content: space-between;">
       <button class="boton-mini boton-mini-peligro" id="btn-vaciar-retencion" style="display:none;">Vaciar todas</button>
@@ -3261,6 +3426,22 @@
       <button class="boton-mini boton-mini-peligro" id="btn-vaciar-analisis" style="display:none; margin-top:10px;">Vaciar todas</button>
     </div>
     <button class="modal-cancelar" id="btn-estadisticas-cerrar">Cerrar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-repaso-inteligente">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>🧠 Repaso inteligente</h3>
+    <div class="ri-filtros">
+      <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-dificiles" checked> ☆ Difíciles</label>
+      <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-sobreconfianza" checked> ⚠️ Sobreconfianza</label>
+      <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-olvido" checked> 😵‍ Olvido</label>
+      <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-urgentes" checked> 🔴 Urgentes</label>
+    </div>
+    <div class="ri-lista-subt" id="ri-lista-subt" style="display:none;"></div>
+    <p class="galeria-vacia" id="ri-estado-vacio" style="display:none;">Ningún subT cumple con las características seleccionadas</p>
+    <button class="boton-principal" id="btn-repaso-inteligente-comenzar">Comenzar sesión</button>
+    <button class="modal-cancelar" id="btn-repaso-inteligente-cancelar">Cancelar</button>
   </div>
 </div>
 
@@ -3396,6 +3577,7 @@
 
 <script>
   const datos = {"tarjetas": [{"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que es un PID?", "segundo": "control, desviacion, correctiva, error", "rutas": [1], "claves": ["control", "desviacion", "correctiva", "error"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "banda proporcional", "segundo": "reaccion", "rutas": [2], "claves": ["reaccion"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "tiempo integral", "segundo": "correcion, suficiente", "rutas": [3], "claves": ["correcion", "suficiente"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "tiempo derivativo", "segundo": "velocidad, produce", "rutas": [4], "claves": ["velocidad", "produce"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que hacen en conjunto?", "segundo": "suma, ajustar", "rutas": [5], "claves": ["suma", "ajustar"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que logro al ajustar estos parametros?", "segundo": "proveer, eficiente, requiera", "rutas": [6], "claves": ["proveer", "eficiente", "requiera"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "como puedo describir respuesta controlador?", "segundo": "grado, velocidad, oscilacion", "rutas": [9], "claves": ["grado", "velocidad", "oscilacion"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que no garantiza?", "segundo": "control, estabilidad", "rutas": [10], "claves": ["control", "estabilidad"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "controladores PI", "segundo": "sensible, deseado", "rutas": [11], "claves": ["sensible", "deseado"], "nota": ""}, {"tema": "FUNCIONAMIENTO PID", "primero": "que se necesita para correcto funcionamiento?", "segundo": "sensor, controlador, actuador", "rutas": [12, 13, 14], "claves": ["sensor", "controlador", "actuador"], "nota": ""}, {"tema": "PASOS PID", "primero": "1 paso", "segundo": "lee", "rutas": [15], "claves": ["lee"], "nota": ""}, {"tema": "PASOS PID", "primero": "2 paso", "segundo": "naturaleza", "rutas": [16], "claves": ["naturaleza"], "nota": ""}, {"tema": "PASOS PID", "primero": "3 paso", "segundo": "resta, deseado", "rutas": [17], "claves": ["resta", "deseado"], "nota": ""}, {"tema": "PASOS PID", "primero": "4 paso", "segundo": "señal error", "rutas": [18], "claves": ["senal", "error"], "nota": ""}, {"tema": "PASOS PID", "primero": "5 paso", "segundo": "tres sumadas, gobernar", "rutas": [19], "claves": ["tres", "sumadas", "gobernar"], "nota": ""}, {"tema": "PASOS PID", "primero": "6 paso", "segundo": "variable manipulada, transformada", "rutas": [20], "claves": ["variable", "manipulada", "transformada"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "en que consiste?", "segundo": "producto, estacionario", "rutas": [21], "claves": ["producto", "estacionario"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "existe un limite?", "segundo": "algunos, a deseados, sobreoscilacion", "rutas": [22], "claves": ["algunos", "deseados", "sobreoscilacion"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "considera el tiempo?", "segundo": "estacionario, variacion, incluyendo", "rutas": [23], "claves": ["estacionario", "variacion", "incluyendo"], "nota": ""}, {"tema": "ACCION INTEGRAL", "primero": "cual es su proposito?", "segundo": "disminuir, estado estacionario", "rutas": [24], "claves": ["disminuir", "estado", "estacionario"], "nota": ""}, {"tema": "ACCION INTEGRAL", "primero": "cuando actua?", "segundo": "persiste, desviacion, promediarlo", "rutas": [25], "claves": ["persiste", "desviacion", "promediarlo"], "nota": ""}, {"tema": "ACCION INTEGRAL", "primero": "una vez obtenida la integral del error, que hago?", "segundo": "I, adicionada, estable", "rutas": [27], "claves": ["i", "adicionada", "estable"], "nota": ""}, {"tema": "ACCION INTEGRAL", "primero": "por que se caracteriza?", "segundo": "repeticiones, reciproca", "rutas": [28], "claves": ["repeticiones", "reciproca"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "cuando se manifiesta?", "segundo": "cambio, absoluto", "rutas": [29], "claves": ["cambio", "absoluto"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "que es un error?", "segundo": "desviacion existente", "rutas": [30], "claves": ["desviacion", "existente"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "cual es su funcion respecto al error?", "segundo": "mantener, velocidad", "rutas": [31], "claves": ["mantener", "velocidad"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "como es el proceso de este controlador?", "segundo": "deriva, multiplica, suma", "rutas": [32], "claves": ["deriva", "multiplica", "suma"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "por que debo adaptar respuesta?", "segundo": "derivativa, rapido", "rutas": [33], "claves": ["derivativa", "rapido"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "por que se caracteriza el controlador derivativo?", "segundo": "derivada, inestabilidad, oscila", "rutas": [34, 35, 36], "claves": ["derivada", "inestabilidad", "oscila"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "cuando es adecuada accion derivativa?", "segundo": "retraso, repercusion", "rutas": [37], "claves": ["retraso", "repercusion"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "por que no se la usa mucho?", "segundo": "sensibilidad, complicaciones", "rutas": [38], "claves": ["sensibilidad", "complicaciones"], "nota": ""}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "siempre es eficiente?", "segundo": "ineficiente", "rutas": [39], "claves": ["ineficiente"], "nota": ""}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "como mejorarlo?", "segundo": "combinando, lazo abierto", "rutas": [40], "claves": ["combinando", "lazo", "abierto"], "nota": ""}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "cuando puede dar desempeño inadecuado", "segundo": "reducida, no dispare", "rutas": [41], "claves": ["reducida", "no", "dispare"], "nota": ""}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "en donde se desempeña mejor?", "segundo": "lineales, variable", "rutas": [42], "claves": ["lineales", "variable"], "nota": ""}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "que afecta a la parte derivativa?", "segundo": "ruido, pequeñas", "rutas": [43], "claves": ["ruido", "pequenas"], "nota": ""}, {"tema": "APLICACIONES PID", "primero": "para que fueron inventados?", "segundo": "simplificar, mejor", "rutas": [44], "claves": ["simplificar", "mejor"], "nota": ""}, {"tema": "APLICACIONES PID", "primero": "donde se lo utiliza mucho?", "segundo": "presion, fuerza, quimica", "rutas": [45], "claves": ["presion", "fuerza", "quimica"], "nota": ""}], "rutas": {"1": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Un Controlador PID", "(Proporcional Integral Derivativo)", "es 1 Mecanismo Control", "por Realimentación", "que calcula", "desviación o error", "entre", "1 valor medido y valor que se quiere obtener", "de manera poder aplicar", "una acción correctiva", "(Acción Control)", "que ajuste Proceso", "a fin", "minimizar o anular", "error"]}, "2": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["algoritmo cálculo del control PID", "se da", "en tres parámetros distintos:", "Banda Proporcional", "(Acción Proporcional),", "valor Banda Proporcional", "determina reacción", "conforme", "al error actual", "IMG:data:image/png;base64,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", "IMG:data:image/png;base64,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"]}, "3": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Tiempo Integral", "(Acción Integral)", "Tiempo Integral", "genera una corrección proporcional", "a la integral del error,", "esto nos asegura", "que aplicando", "1 esfuerzo control suficiente,", "error seguimiento", "se reduce a cero"]}, "4": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Tiempo Derivativo", "(Acción Derivativa)", "Tiempo Derivativo", "determina reacción", "en función del tiempo o velocidad", "en que se produce error"]}, "5": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["suma estas tres acciones,", "es usada", "para ajustar al proceso", "vía", "1 elemento control"]}, "6": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Ajustando estas tres variables", "en algoritmo control del PID,", "controlador puede proveer", "una respuesta eficiente", "conforme", "a que se requiera realizar", "en proceso"]}, "7": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["respuesta del controlador", "puede ser descrita", "en términos de:", "a", "grado o magnitud", "Acción Control", "ante 1 desvío", "con respecto al Set Point"]}, "8": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["b", "velocidad al cual", "controlador", "llega al Set Point,"]}, "9": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["c", "grado oscilación", "del sistema"]}, "10": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["uso del PID", "para Control,", "no garantiza", "Control Óptimo del Sistema o", "Estabilidad del mismo"]}, "11": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["controladores PI", "son particularmente comunes,", "ya que acción derivativa", "es muy sensible al ruido,", "y ausencia acción integral", "puede evitar", "que se alcance al valor deseado", "debido a acción control"]}, "12": {"tema": "FUNCIONAMIENTO PID", "lineas": ["Para correcto funcionamiento", "1 controlador PID", "que regule", "1 proceso o sistema", "se necesita al menos:", "a", "un sensor o un transmisor,", "que determine", "estado del sistema"]}, "13": {"tema": "FUNCIONAMIENTO PID", "lineas": ["b", "un controlador,", "que genere señal", "que gobierna al actuador"]}, "14": {"tema": "FUNCIONAMIENTO PID", "lineas": ["c", "un actuador o elemento final control,", "que modifique al sistema", "manera controlada"]}, "15": {"tema": "PASOS PID", "lineas": ["1", "controlador", "lee una señal externa", "que representa valor", "que se desea alcanzar"]}, "16": {"tema": "PASOS PID", "lineas": ["2", "Esta señal", "recibe nombre", "punto consigna", "el cual es misma naturaleza y", "tiene mismo rango valores", "que señal", "que proporciona sensor"]}, "17": {"tema": "PASOS PID", "lineas": ["3", "controlador", "resta señal actual", "a señal punto", "consigna,", "obteniendo así", "señal error,", "que determina en cada instante", "diferencia que hay", "entre", "valor deseado y", "valor medido"]}, "18": {"tema": "PASOS PID", "lineas": ["4", "señal error", "es utilizada", "por cada uno", "tres componentes", "del controlador PID"]}, "19": {"tema": "PASOS PID", "lineas": ["5", "tres señales", "sumadas,", "componen señal salida", "que controlador", "va a utilizar", "para gobernar al actuador"]}, "20": {"tema": "PASOS PID", "lineas": ["6", "señal resultante", "suma estas tres", "se llama variable manipulada y", "no se aplica directamente", "sobre actuador,", "sino que", "debe ser transformada", "para ser compatible", "con actuador utilizado"]}, "21": {"tema": "ACCION PROPORCIONAL", "lineas": ["consiste en producto", "entre", "Constante Proporcionalidad", "(recíproca K o G, Ganancia) señal error y", "como para que produzca", "que error", "en estado estacionario", "sea casi nulo"]}, "22": {"tema": "ACCION PROPORCIONAL", "lineas": ["Sin embargo,", "existe también", "1 valor límite", "en Constante Proporcionalidad", "a partir del cual,", "en algunos casos,", "sistema alcanza", "valores superiores a deseados", "Este fenómeno se llama", "sobreoscilación"]}, "23": {"tema": "ACCION PROPORCIONAL", "lineas": ["Acción Proporcional", "no considera tiempo,", "por tanto,", "es la mejor manera", "solucionar el error permanente", "en estado estacionario", "(error Offset)", "y de hacer", "que sistema contenga", "alguna componente", "que contemple variación", "respecto al tiempo,", "es incluyendo y", "configurando acciones", "integral y", "derivativa"]}, "24": {"tema": "ACCION INTEGRAL", "lineas": ["tiene como propósito", "disminuir y eliminar", "error en estado estacionario", "(error Offset),", "generado al aplicar", "Acción Proporcional"]}, "25": {"tema": "ACCION INTEGRAL", "lineas": ["Control Integral", "actúa cuando persiste", "una desviación entre", "variable y punto consigna,", "integrando esta desviación", "en tiempo y", "sumándola", "a acción proporcional"]}, "26": {"tema": "ACCION INTEGRAL", "lineas": ["error es integrado,", "el cual tiene función", "promediarlo o sumarlo", "por 1 período determinado"]}, "27": {"tema": "ACCION INTEGRAL", "lineas": ["Luego es multiplicado", "por una constante I", "Posteriormente,", "respuesta integral", "es adicionada", "al modo Proporcional", "para formar", "control PI", "con propósito obtener", "una respuesta estable del sistema,", "sin error Offset", "en estado estacionario"]}, "28": {"tema": "ACCION INTEGRAL", "lineas": ["Control Integral", "se caracteriza", "por tiempo entre", "repeticiones de Banda Proporcional", "en minutos entre repeticiones", "o su recíproca,", "repeticiones por minuto"]}, "29": {"tema": "ACCION DERIVATIVA", "lineas": ["se manifiesta", "cuando hay 1 cambio", "en valor absoluto", "del error;", "(si error es constante,", "solamente actúan", "modos", "proporcional e", "integral)"]}, "30": {"tema": "ACCION DERIVATIVA", "lineas": ["error,", "es desviación existente", "entre", "punto medida y", "valor consigna,"]}, "31": {"tema": "ACCION DERIVATIVA", "lineas": ["Su funcion", "es mantener error al mínimo", "corrigiéndolo proporcionalmente", "a velocidad que este se produce;", "consiguiéndose esta manera", "evitar que error", "se incremente"]}, "32": {"tema": "ACCION DERIVATIVA", "lineas": ["se", "deriva", "con respecto al tiempo y", "se multiplica", "por una constante D y", "luego se suma", "a señales anteriores (PI)"]}, "33": {"tema": "ACCION DERIVATIVA", "lineas": ["Es importante", "adaptar respuesta control", "a cambios en sistema", "ya que una mayor  accion derivativa", "corresponde", "a 1 cambio más rápido y", "controlador puede responder", "acordemente"]}, "34": {"tema": "ACCION DERIVATIVA", "lineas": ["Control Derivativo", "se caracteriza", "por tiempo acción derivada", "en minutos anticipo", "Cuando tiempo acción derivada", "es grande,", "hay inestabilidad en proceso"]}, "35": {"tema": "ACCION DERIVATIVA", "lineas": ["Cuando tiempo acción derivada", "es pequeño", "variable oscila demasiado", "con relación", "al punto consigna"]}, "36": {"tema": "ACCION DERIVATIVA", "lineas": ["tiempo óptimo", "acción derivativa", "es el que retorna a la variable", "al punto consigna", "con mínimas oscilaciones"]}, "37": {"tema": "ACCION DERIVATIVA", "lineas": ["acción derivada", "es adecuada", "cuando hay retraso", "entre", "movimiento válvula control y", "su repercusión", "a variable controlada"]}, "38": {"tema": "ACCION DERIVATIVA", "lineas": ["Suele ser poco utilizada", "debido a sensibilidad", "al ruido que manifiesta y", "a complicaciones", "que ello conlleva"]}, "39": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["pueden ser ineficientes", "en otras aplicaciones"]}, "40": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["desempeño del Sistema Control", "puede ser mejorado", "combinando", "lazo cerrado con 1 control PID", "con 1 lazo abierto"]}, "41": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["a", "pueden dar 1 desempeño inadecuado", "si ganancia del lazo del PID", "debe ser reducida", "para que respuesta de este", "no se dispare u oscile", "sobre valor del Set Point"]}, "42": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["b", "Principal desempeño", "controladores PID", "sistemas lineales", "en Sistemas No Lineales", "es variable"]}, "43": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["c", "en parte derivativa,", "ruido", "puede afectar al sistema,", "haciendo que esas", "pequeñas variaciones,", "hagan que cambio en salida", "sea muy grande"]}, "44": {"tema": "APLICACIONES", "lineas": ["fueron inventados", "para simplificar", "labores de operadores y", "ejercer un mejor control", "sobre operaciones"]}, "45": {"tema": "APLICACIONES", "lineas": ["se utiliza", "en aplicaciones más críticas", "tales como", "Control", "Presión,", "Flujo,", "Fuerza,", "Velocidad,", "en muchas aplicaciones química"]}, "46": {"tema": "APLICACIONES", "lineas": ["a", "Lazos de Temperatura", "(Aire acondicionado,", "Calentadores,", "Refrigeradores, etc.)"]}, "47": {"tema": "APLICACIONES", "lineas": ["b", "Lazos de Nivel", "(Nivel en tanques de líquidos", "como agua,", "lácteos,", "mezclas,", "crudo, etc.)"]}, "48": {"tema": "APLICACIONES", "lineas": ["c", "Lazos de Presión", "(para mantener una presión predeterminada", "en tanques,", "tubos,", "recipientes, etc.)"]}, "49": {"tema": "APLICACIONES", "lineas": ["d", "Lazos de Flujo", "(mantienen la cantidad de flujo dentro de", "una línea", "o tubo)"]}}, "descripciones_rutas": {}};
+  const MAPA_RUTAS_COORDS = {"1": {"x": 0.0, "y": 12.04, "w": 12.21, "h": 81.02, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "2": {"x": 3.57, "y": 18.98, "w": 7.38, "h": 48.15, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "3": {"x": 4.75, "y": 37.04, "w": 0.94, "h": 50.46, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "4": {"x": 5.94, "y": 37.04, "w": 1.53, "h": 30.09, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "5": {"x": 11.19, "y": 18.98, "w": 0.94, "h": 23.15, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "6": {"x": 12.38, "y": 18.98, "w": 1.08, "h": 43.06, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "7": {"x": 13.71, "y": 18.98, "w": 2.98, "h": 44.24, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "8": {"x": 16.06, "y": 37.04, "w": 0.92, "h": 20.16, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "9": {"x": 17.23, "y": 37.04, "w": 0.92, "h": 14.14, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "10": {"x": 18.09, "y": 18.98, "w": 2.13, "h": 18.06, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "11": {"x": 20.46, "y": 18.98, "w": 1.08, "h": 49.54, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "12": {"x": 21.79, "y": 12.04, "w": 6.98, "h": 55.53, "subT": "FUNCIONAMIENTO PID"}, "13": {"x": 24.28, "y": 49.07, "w": 1.0, "h": 18.5, "subT": "FUNCIONAMIENTO PID"}, "14": {"x": 25.52, "y": 49.07, "w": 1.26, "h": 18.5, "subT": "FUNCIONAMIENTO PID"}, "15": {"x": 27.03, "y": 25.93, "w": 1.12, "h": 22.48, "subT": "PASOS PID"}, "16": {"x": 28.4, "y": 25.93, "w": 1.12, "h": 37.76, "subT": "PASOS PID"}, "17": {"x": 29.08, "y": 25.93, "w": 2.49, "h": 47.94, "subT": "PASOS PID"}, "18": {"x": 31.14, "y": 25.93, "w": 1.12, "h": 27.57, "subT": "PASOS PID"}, "19": {"x": 32.5, "y": 25.93, "w": 1.12, "h": 27.57, "subT": "PASOS PID"}, "20": {"x": 33.87, "y": 25.93, "w": 1.12, "h": 47.94, "subT": "PASOS PID"}, "21": {"x": 35.24, "y": 18.98, "w": 3.83, "h": 40.28, "subT": "ACCION PROPORCIONAL"}, "22": {"x": 37.62, "y": 25.93, "w": 2.4, "h": 49.54, "subT": "ACCION PROPORCIONAL"}, "23": {"x": 39.67, "y": 25.93, "w": 2.13, "h": 74.07, "subT": "ACCION PROPORCIONAL"}, "24": {"x": 41.46, "y": 18.98, "w": 5.59, "h": 35.19, "subT": "ACCION INTEGRAL"}, "25": {"x": 43.25, "y": 25.93, "w": 2.8, "h": 45.83, "subT": "ACCION INTEGRAL"}, "26": {"x": 45.6, "y": 31.94, "w": 1.74, "h": 23.61, "subT": "ACCION INTEGRAL"}, "27": {"x": 48.25, "y": 25.93, "w": 0.92, "h": 69.91, "subT": "ACCION INTEGRAL"}, "28": {"x": 49.43, "y": 25.93, "w": 2.13, "h": 28.24, "subT": "ACCION INTEGRAL"}, "29": {"x": 51.21, "y": 18.98, "w": 10.34, "h": 45.37, "subT": "ACCION DERIVATIVA"}, "30": {"x": 53.59, "y": 46.3, "w": 2.4, "h": 23.61, "subT": "ACCION DERIVATIVA"}, "31": {"x": 55.57, "y": 25.93, "w": 0.94, "h": 33.33, "subT": "ACCION DERIVATIVA"}, "32": {"x": 56.76, "y": 25.93, "w": 3.28, "h": 15.74, "subT": "ACCION DERIVATIVA"}, "33": {"x": 60.29, "y": 25.93, "w": 0.94, "h": 38.43, "subT": "ACCION DERIVATIVA"}, "34": {"x": 61.48, "y": 25.93, "w": 2.18, "h": 34.44, "subT": "ACCION DERIVATIVA"}, "35": {"x": 62.72, "y": 46.3, "w": 1.0, "h": 25.0, "subT": "ACCION DERIVATIVA"}, "36": {"x": 63.97, "y": 46.3, "w": 0.94, "h": 23.15, "subT": "ACCION DERIVATIVA"}, "37": {"x": 65.15, "y": 25.93, "w": 2.13, "h": 28.24, "subT": "ACCION DERIVATIVA"}, "38": {"x": 67.18, "y": 25.93, "w": 2.4, "h": 17.13, "subT": "ACCION DERIVATIVA"}, "39": {"x": 69.56, "y": 12.04, "w": 4.06, "h": 17.59, "subT": "LIMITACION DE UN CONTROL PID"}, "40": {"x": 70.89, "y": 18.98, "w": 1.08, "h": 30.09, "subT": "LIMITACION DE UN CONTROL PID"}, "41": {"x": 72.21, "y": 18.98, "w": 1.62, "h": 34.89, "subT": "LIMITACION DE UN CONTROL PID"}, "42": {"x": 74.7, "y": 18.98, "w": 1.0, "h": 29.42, "subT": "LIMITACION DE UN CONTROL PID"}, "43": {"x": 75.95, "y": 18.98, "w": 1.0, "h": 40.35, "subT": "LIMITACION DE UN CONTROL PID"}, "44": {"x": 77.19, "y": 12.04, "w": 11.82, "h": 24.07, "subT": "APLICACIONES PID"}, "45": {"x": 79.84, "y": 18.98, "w": 6.88, "h": 18.06, "subT": "APLICACIONES PID"}, "46": {"x": 86.35, "y": 18.98, "w": 3.32, "h": 12.94, "subT": "APLICACIONES"}, "47": {"x": 89.56, "y": 18.98, "w": 4.5, "h": 18.31, "subT": "APLICACIONES"}, "48": {"x": 94.31, "y": 18.98, "w": 3.32, "h": 18.31, "subT": "APLICACIONES"}, "49": {"x": 97.87, "y": 18.98, "w": 2.13, "h": 18.31, "subT": "APLICACIONES"}};
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
   const modoAleatorio = true;
@@ -5199,24 +5381,490 @@
     mostrarPantalla('observador');
   }
 
+  const COLORES_ESTADO_MAPA = {
+    normal: { codigo: 'normal', emoji: '🟢', hex: '#22c55e', stroke: '#22c55e' },
+    dificil: { codigo: 'dificil', emoji: '🟡', hex: '#eab308', stroke: '#eab308' },
+    sobreconfianza: { codigo: 'sobreconfianza', emoji: '🟠', hex: '#f97316', stroke: '#f97316' },
+    olvido: { codigo: 'olvido', emoji: '🔵', hex: '#3b82f6', stroke: '#3b82f6' },
+    urgente: { codigo: 'urgente', emoji: '🔴', hex: '#ef4444', stroke: '#ef4444' },
+  };
+
+  let elMapaSvgOverlay = null;
+  let datosRutasMapa = [];
+  let mapaSubtMetricaCache = {};
+  let seleccionMapa = {
+    rutas: new Set(),
+    dificiles: new Set(),
+    sobreconfianza: new Set(),
+    olvido: new Set(),
+    urgentes: new Set(),
+  };
+  let posDownMapaClick = null;
+
+  const GROSOR_BORDE_PX = 2; // grosor deseado EN PANTALLA
+
+  function actualizarGrosorBordeMapa() {
+    if (!elMapaImg || !elMapaSvgOverlay) return;
+    const escala = elMapaImg.getBoundingClientRect().width / elMapaImg.offsetWidth || 1;
+    elMapaSvgOverlay.style.setProperty('--mapa-stroke', (GROSOR_BORDE_PX / escala) + 'px');
+  }
+
+  function sincronizarGeometriaSvgMapa() {
+    if (!elMapaImg || !elMapaSvgOverlay) return;
+    const cs = getComputedStyle(elMapaImg);
+    const num = (v) => parseFloat(v) || 0;
+
+    // Insets reales (borde + padding) para quedarnos solo con el área del contenido
+    const insL = num(cs.borderLeftWidth) + num(cs.paddingLeft);
+    const insT = num(cs.borderTopWidth) + num(cs.paddingTop);
+    const insR = num(cs.borderRightWidth) + num(cs.paddingRight);
+    const insB = num(cs.borderBottomWidth) + num(cs.paddingBottom);
+
+    const w = elMapaImg.offsetWidth - insL - insR;
+    const h = elMapaImg.offsetHeight - insT - insB;
+    if (w <= 0 || h <= 0) return;
+
+    elMapaSvgOverlay.style.left = (elMapaImg.offsetLeft + insL) + 'px';
+    elMapaSvgOverlay.style.top = (elMapaImg.offsetTop + insT) + 'px';
+    elMapaSvgOverlay.style.width = w + 'px';
+    elMapaSvgOverlay.style.height = h + 'px';
+
+    // Mismo transform y mismo origen que la imagen (origen en px, relativo al overlay)
+    elMapaSvgOverlay.style.transformOrigin =
+      (elMapaImg.offsetWidth / 2 - insL) + 'px ' + (elMapaImg.offsetHeight / 2 - insT) + 'px';
+    elMapaSvgOverlay.style.transform = elMapaImg.style.transform;
+    actualizarGrosorBordeMapa();
+
+    // Grosor constante en pantalla: compensar el zoom aplicado al <svg> exterior
+    actualizarGrosorBordeMapa();
+  }
+
+  window.addEventListener('resize', () => {
+    if (elMapaImg && elMapaSvgOverlay) sincronizarGeometriaSvgMapa();
+  });
+
+  function calcularDatosEstadoMapa() {
+    const sAjustado = obtenerSAjustadoActual();
+    const sValido = sAjustado !== null && typeof sAjustado === 'number' && sAjustado > 0;
+    const rutaASubt = mapaRutaASubtema();
+
+    const rutasDificilesSet = new Set();
+    tarjetasCompletas.forEach((t) => {
+      if (!esDificil(t)) return;
+      rutasValidasDe(t).forEach((idRuta) => rutasDificilesSet.add(Number(idRuta)));
+    });
+
+    const todosLosSubt = new Set();
+    agruparRutasPorSubtema().forEach((s) => todosLosSubt.add(s.nombre));
+    Object.keys(MAPA_RUTAS_COORDS).forEach((k) => {
+      const c = MAPA_RUTAS_COORDS[k];
+      if (c && c.subT) todosLosSubt.add(c.subT);
+    });
+
+    mapaSubtMetricaCache = {};
+    todosLosSubt.forEach((nombreSubt) => {
+      const score = calcularScoreSubtema(nombreSubt);
+      const sesgo = calcularSesgoSubT(nombreSubt);
+      const esSobreconfianza = (sesgo.pctAnalisis - sesgo.pctRetencion) > 20;
+      const esUrgente = score >= 75;
+      let esOlvido = false;
+      if (sValido) {
+        const pctNoRet = pctNoRetenidaPorSubtema(nombreSubt);
+        const retActual = 1 - ((pctNoRet || 0) / 100);
+        const t = retActual > 0 ? (-sAjustado * Math.log(0.60 / retActual)) : -Infinity;
+        if (t <= 1) esOlvido = true;
+      }
+      mapaSubtMetricaCache[nombreSubt] = {
+        nombre: nombreSubt,
+        score: score,
+        sobreconfianza: esSobreconfianza,
+        olvido: esOlvido,
+        urgente: esUrgente,
+        coords: null,
+      };
+    });
+
+    const idsRutasSet = new Set(Object.keys(rutasDisp).map(Number));
+    Object.keys(MAPA_RUTAS_COORDS).forEach((k) => {
+      const n = Number(k);
+      if (!isNaN(n)) idsRutasSet.add(n);
+    });
+    const idsOrdenados = Array.from(idsRutasSet).sort((a, b) => a - b);
+
+    datosRutasMapa = idsOrdenados.map((idRuta) => {
+      const coord = MAPA_RUTAS_COORDS[String(idRuta)] || null;
+      const subT = rutaASubt[idRuta] || (coord && coord.subT) || (rutasDisp[idRuta] && rutasDisp[idRuta].tema) || '(Sin tema)';
+      const infoSubt = mapaSubtMetricaCache[subT] || { sobreconfianza: false, olvido: false, urgente: false };
+      const esRutaDificil = rutasDificilesSet.has(idRuta);
+
+      const estados = [];
+      if (esRutaDificil) estados.push('dificil');
+      if (infoSubt.sobreconfianza) estados.push('sobreconfianza');
+      if (infoSubt.olvido) estados.push('olvido');
+      if (infoSubt.urgente) estados.push('urgente');
+      if (estados.length === 0) estados.push('normal');
+
+      return {
+        idRuta: idRuta,
+        subT: subT,
+        estados: estados,
+        estado: estados[0],
+        esDificil: esRutaDificil,
+        esSobreconfianza: infoSubt.sobreconfianza,
+        esOlvido: infoSubt.olvido,
+        esUrgente: infoSubt.urgente,
+        coords: (coord && typeof coord.x === 'number' && typeof coord.y === 'number' && typeof coord.w === 'number' && typeof coord.h === 'number')
+          ? { x: coord.x, y: coord.y, w: coord.w, h: coord.h }
+          : null,
+      };
+    });
+
+    const geomsPorSubt = {};
+    datosRutasMapa.forEach((item) => {
+      if (!item.coords) return;
+      if (!geomsPorSubt[item.subT]) geomsPorSubt[item.subT] = [];
+      geomsPorSubt[item.subT].push(item.coords);
+    });
+    Object.keys(geomsPorSubt).forEach((nombreSubt) => {
+      const lista = geomsPorSubt[nombreSubt];
+      if (!lista || lista.length === 0 || !mapaSubtMetricaCache[nombreSubt]) return;
+      const x0 = Math.min.apply(null, lista.map((g) => g.x));
+      const y0 = Math.min.apply(null, lista.map((g) => g.y));
+      const x1 = Math.max.apply(null, lista.map((g) => g.x + g.w));
+      const y1 = Math.max.apply(null, lista.map((g) => g.y + g.h));
+      mapaSubtMetricaCache[nombreSubt].coords = {
+        x: x0,
+        y: y0,
+        w: x1 - x0,
+        h: y1 - y0,
+      };
+    });
+  }
+
+  function agregarRectanguloSvgMapa(grupoBordes, coords, strokeColor, pad) {
+    if (!coords) return;
+    const p = pad || 0;
+    const rx = Math.max(0, coords.x - p);
+    const ry = Math.max(0, coords.y - p);
+    const rw = Math.min(100 - rx, coords.w + p * 2);
+    const rh = Math.min(100 - ry, coords.h + p * 2);
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('class', 'mapa-borde-resaltado');
+    rect.setAttribute('x', rx.toFixed(2));
+    rect.setAttribute('y', ry.toFixed(2));
+    rect.setAttribute('width', Math.max(0.5, rw).toFixed(2));
+    rect.setAttribute('height', Math.max(0.5, rh).toFixed(2));
+    rect.setAttribute('stroke', strokeColor);
+    rect.setAttribute('stroke-width', '1');
+    grupoBordes.appendChild(rect);
+  }
+
+  function renderBordesSvgMapa() {
+    if (!elMapaSvgOverlay) return;
+    const grupoBordes = elMapaSvgOverlay.querySelector('#mapa-svg-bordes');
+    if (!grupoBordes) return;
+    grupoBordes.innerHTML = '';
+
+    datosRutasMapa.forEach((item) => {
+      if (!item.coords) return;
+      if (seleccionMapa.rutas.has(item.idRuta)) {
+        agregarRectanguloSvgMapa(grupoBordes, item.coords, COLORES_ESTADO_MAPA.normal.stroke, 0);
+      }
+      if (seleccionMapa.dificiles.has(item.idRuta) && item.esDificil) {
+        agregarRectanguloSvgMapa(grupoBordes, item.coords, COLORES_ESTADO_MAPA.dificil.stroke, 0.18);
+      }
+    });
+
+    Object.values(mapaSubtMetricaCache).forEach((infoSubt) => {
+      if (!infoSubt.coords) return;
+      if (seleccionMapa.sobreconfianza.has(infoSubt.nombre) && infoSubt.sobreconfianza) {
+        agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.sobreconfianza.stroke, 0.45);
+      }
+      if (seleccionMapa.olvido.has(infoSubt.nombre) && infoSubt.olvido) {
+        agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.olvido.stroke, 0.65);
+      }
+      if (seleccionMapa.urgentes.has(infoSubt.nombre) && infoSubt.urgente) {
+        agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.urgente.stroke, 0.85);
+      }
+    });
+  }
+
+  function sincronizarCheckboxesDomMapa() {
+    document.querySelectorAll('#lista-mapa-rutas input[data-id-ruta]').forEach((chk) => {
+      chk.checked = seleccionMapa.rutas.has(Number(chk.dataset.idRuta));
+    });
+    document.querySelectorAll('#lista-mapa-dificiles input[data-id-ruta]').forEach((chk) => {
+      chk.checked = seleccionMapa.dificiles.has(Number(chk.dataset.idRuta));
+    });
+    document.querySelectorAll('#lista-mapa-sobreconfianza input[data-subt]').forEach((chk) => {
+      chk.checked = seleccionMapa.sobreconfianza.has(chk.dataset.subt);
+    });
+    document.querySelectorAll('#lista-mapa-olvido input[data-subt]').forEach((chk) => {
+      chk.checked = seleccionMapa.olvido.has(chk.dataset.subt);
+    });
+    document.querySelectorAll('#lista-mapa-urgentes input[data-subt]').forEach((chk) => {
+      chk.checked = seleccionMapa.urgentes.has(chk.dataset.subt);
+    });
+  }
+
+  function alHacerClicEnRutaMapa(itemRuta) {
+    const id = itemRuta.idRuta;
+    const detRutas = document.getElementById('det-mapa-rutas');
+    const detDificiles = document.getElementById('det-mapa-dificiles');
+
+    if (seleccionMapa.rutas.has(id) || seleccionMapa.dificiles.has(id)) {
+      seleccionMapa.rutas.delete(id);
+      seleccionMapa.dificiles.delete(id);
+    } else if (itemRuta.esDificil && detDificiles && detDificiles.open && (!detRutas || !detRutas.open)) {
+      seleccionMapa.dificiles.add(id);
+    } else if (itemRuta.esDificil && (!detRutas || !detRutas.open)) {
+      seleccionMapa.dificiles.add(id);
+    } else {
+      seleccionMapa.rutas.add(id);
+    }
+
+    sincronizarCheckboxesDomMapa();
+    renderBordesSvgMapa();
+  }
+
+  function crearSvgOverlayMapa() {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 'mapa-svg-overlay';
+    svg.setAttribute('class', 'mapa-svg-overlay');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    svg.setAttribute('preserveAspectRatio', 'none');
+
+    const grupoHits = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    grupoHits.id = 'mapa-svg-hits';
+
+    datosRutasMapa.forEach((item) => {
+      if (!item.coords) return;
+      const hit = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      hit.setAttribute('class', 'mapa-hit-rect');
+      hit.setAttribute('x', item.coords.x.toFixed(2));
+      hit.setAttribute('y', item.coords.y.toFixed(2));
+      hit.setAttribute('width', item.coords.w.toFixed(2));
+      hit.setAttribute('height', item.coords.h.toFixed(2));
+
+      hit.addEventListener('pointerdown', (e) => {
+        posDownMapaClick = { x: e.clientX, y: e.clientY };
+      });
+      hit.addEventListener('click', (e) => {
+        if (posDownMapaClick) {
+          const dx = e.clientX - posDownMapaClick.x;
+          const dy = e.clientY - posDownMapaClick.y;
+          if (Math.hypot(dx, dy) > 5) return;
+        }
+        e.stopPropagation();
+        alHacerClicEnRutaMapa(item);
+      });
+
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      title.textContent = 'Ruta ' + item.idRuta + ' (' + item.subT + ')';
+      hit.appendChild(title);
+      grupoHits.appendChild(hit);
+    });
+
+    const grupoBordes = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    grupoBordes.id = 'mapa-svg-bordes';
+
+    svg.appendChild(grupoHits);
+    svg.appendChild(grupoBordes);
+    return svg;
+  }
+
+  function crearIndicadoresColorMapa(codigosEstados) {
+    const span = document.createElement('span');
+    span.className = 'mapa-item-indicadores';
+    codigosEstados.forEach((cod) => {
+      const def = COLORES_ESTADO_MAPA[cod] || COLORES_ESTADO_MAPA.normal;
+      const dot = document.createElement('span');
+      dot.className = 'mapa-dot-estado';
+      dot.style.backgroundColor = def.hex;
+      dot.title = def.emoji;
+      span.appendChild(dot);
+    });
+    return span;
+  }
+
+  const lazyMapaAcordeones = {};
+
+  function inicializarAcordeonesMapaLazy() {
+    const detRutas = document.getElementById('det-mapa-rutas');
+    const detDificiles = document.getElementById('det-mapa-dificiles');
+    const detSobreconfianza = document.getElementById('det-mapa-sobreconfianza');
+    const detOlvido = document.getElementById('det-mapa-olvido');
+    const detUrgentes = document.getElementById('det-mapa-urgentes');
+
+    lazyMapaAcordeones.rutas = prepararDetallesLazy(detRutas, () => {
+      const cont = document.getElementById('lista-mapa-rutas');
+      cont.innerHTML = '';
+      if (datosRutasMapa.length === 0) {
+        cont.innerHTML = '<div class="lista-vacia">No hay rutas registradas.</div>';
+        return;
+      }
+      datosRutasMapa.forEach((item) => {
+        const label = document.createElement('label');
+        label.className = 'mapa-item-check';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.dataset.idRuta = String(item.idRuta);
+        chk.checked = seleccionMapa.rutas.has(item.idRuta);
+        chk.addEventListener('change', () => {
+          if (chk.checked) seleccionMapa.rutas.add(item.idRuta);
+          else seleccionMapa.rutas.delete(item.idRuta);
+          renderBordesSvgMapa();
+        });
+        const nombre = document.createElement('span');
+        nombre.className = 'mapa-item-nombre';
+        nombre.textContent = 'Ruta ' + item.idRuta + (item.subT ? ' — ' + item.subT : '');
+        label.appendChild(chk);
+        label.appendChild(nombre);
+        label.appendChild(crearIndicadoresColorMapa(item.estados));
+        cont.appendChild(label);
+      });
+    });
+
+    lazyMapaAcordeones.dificiles = prepararDetallesLazy(detDificiles, () => {
+      const cont = document.getElementById('lista-mapa-dificiles');
+      cont.innerHTML = '';
+      const filtradas = datosRutasMapa.filter((r) => r.esDificil);
+      if (filtradas.length === 0) {
+        cont.innerHTML = '<div class="lista-vacia">No hay rutas difíciles.</div>';
+        return;
+      }
+      filtradas.forEach((item) => {
+        const label = document.createElement('label');
+        label.className = 'mapa-item-check';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.dataset.idRuta = String(item.idRuta);
+        chk.checked = seleccionMapa.dificiles.has(item.idRuta);
+        chk.addEventListener('change', () => {
+          if (chk.checked) seleccionMapa.dificiles.add(item.idRuta);
+          else seleccionMapa.dificiles.delete(item.idRuta);
+          renderBordesSvgMapa();
+        });
+        const nombre = document.createElement('span');
+        nombre.className = 'mapa-item-nombre';
+        nombre.textContent = 'Ruta ' + item.idRuta + (item.subT ? ' — ' + item.subT : '');
+        label.appendChild(chk);
+        label.appendChild(nombre);
+        label.appendChild(crearIndicadoresColorMapa(['dificil']));
+        cont.appendChild(label);
+      });
+    });
+
+    const construirListaSubtMapa = (idContenedor, campoFiltro, setSeleccion, codColor) => {
+      const cont = document.getElementById(idContenedor);
+      cont.innerHTML = '';
+      const subts = Object.values(mapaSubtMetricaCache)
+        .filter((s) => s[campoFiltro])
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      if (subts.length === 0) {
+        cont.innerHTML = '<div class="lista-vacia">Ningún subT en esta categoría.</div>';
+        return;
+      }
+      subts.forEach((infoSubt) => {
+        const label = document.createElement('label');
+        label.className = 'mapa-item-check';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.dataset.subt = infoSubt.nombre;
+        chk.checked = setSeleccion.has(infoSubt.nombre);
+        chk.addEventListener('change', () => {
+          if (chk.checked) setSeleccion.add(infoSubt.nombre);
+          else setSeleccion.delete(infoSubt.nombre);
+          renderBordesSvgMapa();
+        });
+        const nombre = document.createElement('span');
+        nombre.className = 'mapa-item-nombre';
+        nombre.textContent = infoSubt.nombre;
+        label.appendChild(chk);
+        label.appendChild(nombre);
+        label.appendChild(crearIndicadoresColorMapa([codColor]));
+        cont.appendChild(label);
+      });
+    };
+
+    lazyMapaAcordeones.sobreconfianza = prepararDetallesLazy(detSobreconfianza, () => {
+      construirListaSubtMapa('lista-mapa-sobreconfianza', 'sobreconfianza', seleccionMapa.sobreconfianza, 'sobreconfianza');
+    });
+
+    lazyMapaAcordeones.olvido = prepararDetallesLazy(detOlvido, () => {
+      construirListaSubtMapa('lista-mapa-olvido', 'olvido', seleccionMapa.olvido, 'olvido');
+    });
+
+    lazyMapaAcordeones.urgentes = prepararDetallesLazy(detUrgentes, () => {
+      construirListaSubtMapa('lista-mapa-urgentes', 'urgente', seleccionMapa.urgentes, 'urgente');
+    });
+  }
+  inicializarAcordeonesMapaLazy();
+
+  function prepararListadoAcordeonesMapa() {
+    const nRutas = datosRutasMapa.length;
+    const nDificiles = datosRutasMapa.filter((r) => r.esDificil).length;
+    const listaSubts = Object.values(mapaSubtMetricaCache);
+    const nSobreconfianza = listaSubts.filter((s) => s.sobreconfianza).length;
+    const nOlvido = listaSubts.filter((s) => s.olvido).length;
+    const nUrgentes = listaSubts.filter((s) => s.urgente).length;
+
+    document.getElementById('suma-mapa-rutas').textContent = '🟢 Rutas (' + nRutas + ')';
+    document.getElementById('suma-mapa-dificiles').textContent = '🟡 Rutas difíciles (' + nDificiles + ')';
+    document.getElementById('suma-mapa-sobreconfianza').textContent = '🟠 SubT sobreconfianza (' + nSobreconfianza + ')';
+    document.getElementById('suma-mapa-olvido').textContent = '🔵 SubT próximos a olvido (' + nOlvido + ')';
+    document.getElementById('suma-mapa-urgentes').textContent = '🔴 SubT urgentes (' + nUrgentes + ')';
+
+    ['rutas', 'dificiles', 'sobreconfianza', 'olvido', 'urgentes'].forEach((clave) => {
+      const det = document.getElementById('det-mapa-' + clave);
+      const listaEl = document.getElementById('lista-mapa-' + clave);
+      if (det) det.open = false;
+      if (listaEl) listaEl.innerHTML = '';
+      if (lazyMapaAcordeones[clave]) lazyMapaAcordeones[clave].invalidar();
+    });
+  }
+
   function abrirMapa() {
-    if (elBtnObservadorMapa.disabled) return;   // sin imagen: no hace nada (no debería dispararse igual)
+    if (elBtnObservadorMapa.disabled) return;
     mostrarPantalla('mapa');
     elMapaImagenWrap.innerHTML = '';
+
+    seleccionMapa.rutas.clear();
+    seleccionMapa.dificiles.clear();
+    seleccionMapa.sobreconfianza.clear();
+    seleccionMapa.olvido.clear();
+    seleccionMapa.urgentes.clear();
+
+    calcularDatosEstadoMapa();
+    prepararListadoAcordeonesMapa();
+
     const img = document.createElement('img');
     img.id = 'mapa-img';
     img.className = 'mapa-img';
     img.alt = 'Imagen del mapa';
     img.src = elBtnObservadorMapa.dataset.mapaSrc;
     elMapaImagenWrap.appendChild(img);
-    elMapaImg = img;        // NUEVO: referencia para zoom/pan (ver más abajo)
-    resetearZoomMapa();     // NUEVO: siempre arranca en zoom 1, sin pan
+    elMapaImg = img;
+
+    const svg = crearSvgOverlayMapa();
+    elMapaImagenWrap.appendChild(svg);
+    elMapaSvgOverlay = svg;
+
+    const alCargarImg = () => {
+      sincronizarGeometriaSvgMapa();
+      renderBordesSvgMapa();
+    };
+    img.addEventListener('load', alCargarImg);
+    resetearZoomMapa();
+    requestAnimationFrame(alCargarImg);
   }
 
   function cerrarPantallaMapa() {
     elMapaImagenWrap.innerHTML = '';
-    elMapaImg = null;        // NUEVO: libera la referencia de zoom/pan
-    resetearZoomMapa();      // NUEVO: §8 resetea zoom y pan al salir
+    elMapaImg = null;
+    elMapaSvgOverlay = null;
+    resetearZoomMapa();
     mostrarPantalla('observador');
   }
 
@@ -5253,13 +5901,18 @@
 
   const ES_DISPOSITIVO_TACTIL = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
   const ZOOM_MAPA_MIN = 0.5;
-  const ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 20 : 10;     // PC: se mantiene igual que antes
-  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 1 : 0.5;   // PC: se mantiene igual que antes
+  const ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 20 : 20;     // PC: se mantiene igual que antes
+  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 1 : 1;   // PC: se mantiene igual que antes
 
   function aplicarTransformMapa() {
     if (!elMapaImg) return;
-    elMapaImg.style.transform = 'translate(' + panMapa.x + 'px, ' + panMapa.y + 'px) scale(' + zoomMapa + ')';
+    const transformStr = 'translate(' + panMapa.x + 'px, ' + panMapa.y + 'px) scale(' + zoomMapa + ')';
+    elMapaImg.style.transform = transformStr;
     elMapaImg.classList.toggle('mapa-img-pan', zoomMapa > 1);
+    if (elMapaSvgOverlay) {
+      elMapaSvgOverlay.style.transform = transformStr;
+    }
+    actualizarGrosorBordeMapa();
   }
 
   function fijarZoomMapa(nuevoZoom) {
@@ -5590,6 +6243,8 @@
 
   let modoEspecial = null;
   let modoEspecialPendiente = null;
+  let repasoInteligenteActivo = false;
+  let repasoInteligentePendiente = false;
   let modoDemostracionesCloze = false;
   let modoDemostracionesPendiente = false;
   let estadoDemostracionesModal = false;
@@ -5615,6 +6270,7 @@
     if (srsSesionActiva) return 'srs';
     if (modoEspecial === 'cloze') return 'cloze_' + modoJuego;
     if (modoEspecial === 'matching') return 'matching_' + modoJuego;
+    if (repasoInteligenteActivo) return 'inteligente';
     return modoJuego;
   }
 
@@ -5630,6 +6286,7 @@
     if (modo === 'matching_light') return '🔗 Matching Light';
     if (modo === 'matching_normal') return '🔗 Matching Normal';
     if (modo === 'matching_tryhard') return '🔗 Matching Tryhard';
+    if (modo === 'inteligente') return '🧠 Repaso inteligente';
     if (modo === 'srs') return '🧠 SRS';
     if (modo === 'examen') return '📝 Examen';
     if (modo === 'tryhard') return 'Tryhard';
@@ -5776,10 +6433,11 @@
     });
   }
 
-function abrirModalSeleccionModo(lista, tipoEspecial) {
+  function abrirModalSeleccionModo(lista, tipoEspecial, esRepasoInteligente) {
     if (!lista || lista.length === 0) return;
     listaPendienteInicio = lista;
     modoEspecialPendiente = tipoEspecial || null;
+    repasoInteligentePendiente = !!esRepasoInteligente;
     if (modoEspecialPendiente === 'cloze') {
       elTituloModalModo.textContent = 'Elegí el modo de juego — 📝 Cloze';
       elOpcionModoExamen.style.display = 'none';
@@ -5798,6 +6456,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     elModalModo.classList.remove('abierto');
     listaPendienteInicio = null;
     modoEspecialPendiente = null;
+    repasoInteligentePendiente = false;
     modoDemostracionesPendiente = false;
     elTituloModalModo.textContent = 'Elegí el modo de juego';
     elOpcionModoExamen.style.display = '';
@@ -5807,12 +6466,14 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     const lista = listaPendienteInicio;
     const especial = modoEspecialPendiente;
     const demoPendiente = modoDemostracionesPendiente;
+    const inteligentePendiente = repasoInteligentePendiente;
     elModalModo.classList.remove('abierto');
     elTituloModalModo.textContent = 'Elegí el modo de juego';
     elOpcionModoExamen.style.display = '';
     if (!lista) {
       listaPendienteInicio = null;
       modoEspecialPendiente = null;
+      repasoInteligentePendiente = false;
       modoDemostracionesPendiente = false;
       return;
     }
@@ -5822,8 +6483,10 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     }
     listaPendienteInicio = null;
     modoEspecialPendiente = null;
+    repasoInteligentePendiente = false;
     modoDemostracionesPendiente = false;
     modoEspecial = especial;
+    repasoInteligenteActivo = !especial && inteligentePendiente;
     modoDemostracionesCloze = (especial === 'cloze') ? demoPendiente : false;
     configurarModoJuego(modoElegidoEnModal);
     if (modoEspecial === 'cloze') {
@@ -6943,6 +7606,8 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
   function limpiarModoEspecialAlSalir() {
     modoEspecial = null;
     modoEspecialPendiente = null;
+    repasoInteligenteActivo = false;
+    repasoInteligentePendiente = false;
     modoDemostracionesCloze = false;
     modoDemostracionesPendiente = false;
     datosClozeSesion = [];
@@ -6986,12 +7651,16 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
   document.getElementById('btn-examen-opciones-cancelar').addEventListener('click', () => {
     elModalExamenOpciones.classList.remove('abierto');
     listaPendienteInicio = null;
+    repasoInteligentePendiente = false;
   });
   document.getElementById('btn-examen-opciones-comenzar').addEventListener('click', () => {
     const lista = listaPendienteInicio;
+    const inteligentePendiente = repasoInteligentePendiente;
     elModalExamenOpciones.classList.remove('abierto');
     listaPendienteInicio = null;
+    repasoInteligentePendiente = false;
     if (!lista) return;
+    repasoInteligenteActivo = inteligentePendiente;
     configurarModoJuego('examen');
     iniciarSesion(lista);
   });
@@ -9884,6 +10553,7 @@ const ZONAS_SYNC_GIST = [
     if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
     if (elModalGuardarLista.classList.contains('abierto')) { cerrarModalGuardarLista(); return; }
     if (elModalAnalisisSesion.classList.contains('abierto')) { cerrarModalAnalisisSesion(); return; }
+    if (elModalRepasoInteligente.classList.contains('abierto')) { cerrarModalRepasoInteligente(); return; }
     if (elModalModo.classList.contains('abierto')) { cancelarModalModo(); return; }
     if (elModalVincular.classList.contains('abierto')) { cerrarModalVincular(); return; }
     if (elModalPomodoroIniciar.classList.contains('abierto')) { cerrarModalPomodoroIniciar(); return; }
@@ -9916,6 +10586,7 @@ const ZONAS_SYNC_GIST = [
     if (elModalSegunda.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-segunda-si').click(); return; }
     if (elModalGuardarLista.classList.contains('abierto')) { evento.preventDefault(); elBtnGuardarListaAceptar.click(); return; }
     if (elModalVincular.classList.contains('abierto')) { evento.preventDefault(); elBtnVincAceptar.click(); return; }
+    if (elModalRepasoInteligente.classList.contains('abierto')) { evento.preventDefault(); if (!elBtnComenzarRI.disabled) elBtnComenzarRI.click(); return; }
     if (elModalModo.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-modo-confirmar').click(); return; }
     if (elModalGameOver.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-gameover-resumen').click(); return; }
     if (elModalAnalisisSesion.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-analisis-sesion-cerrar').click(); return; }
@@ -10202,10 +10873,184 @@ const ZONAS_SYNC_GIST = [
     abrirModalSeleccionModo(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);  // MODIFICADO: gamificación
   });
 
-  document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
-    const paraRepasar = tarjetasCompletas.filter((t) => esDificil(t));
+  const elModalRepasoInteligente = document.getElementById('modal-repaso-inteligente');
+  const elListaSubtRI = document.getElementById('ri-lista-subt');
+  const elEstadoVacioRI = document.getElementById('ri-estado-vacio');
+  const elBtnComenzarRI = document.getElementById('btn-repaso-inteligente-comenzar');
+  const elChkRIDificiles = document.getElementById('chk-ri-dificiles');
+  const elChkRISobreconfianza = document.getElementById('chk-ri-sobreconfianza');
+  const elChkRIOlvido = document.getElementById('chk-ri-olvido');
+  const elChkRIUrgentes = document.getElementById('chk-ri-urgentes');
+
+  let candidatosRepasoInteligente = [];
+
+  function calcularCandidatosRepasoInteligente() {
+    const sAjustado = obtenerSAjustadoActual();
+    const sValido = sAjustado !== null && typeof sAjustado === 'number' && sAjustado > 0;
+    const subtemasConRutas = new Set(agruparRutasPorSubtema().map((s) => s.nombre));
+    const grupos = agruparPorTema();
+    const lista = [];
+
+    grupos.forEach((g) => {
+      const score = calcularScoreSubtema(g.nombre);
+      const sesgo = calcularSesgoSubT(g.nombre);
+      const tieneDificil = g.indices.some((i) => esDificil(tarjetasCompletas[i]));
+      const tieneSobreconfianza = sesgo.tipo === 'sobreconfianza';
+      const tieneUrgente = score >= 75;
+
+      let tieneOlvido = false;
+      if (sValido && subtemasConRutas.has(g.nombre)) {
+        const pctNoRet = pctNoRetenidaPorSubtema(g.nombre);
+        const retencionActual = 1 - ((pctNoRet || 0) / 100);
+        const t = retencionActual > 0 ? (-sAjustado * Math.log(0.60 / retencionActual)) : -Infinity;
+        if (t <= 1) tieneOlvido = true;
+      }
+
+      if (tieneDificil || tieneSobreconfianza || tieneOlvido || tieneUrgente) {
+        lista.push({
+          nombre: g.nombre,
+          score: score,
+          ordenSesgo: sesgo.ordenSesgo,
+          dificiles: tieneDificil,
+          sobreconfianza: tieneSobreconfianza,
+          olvido: tieneOlvido,
+          urgentes: tieneUrgente,
+          seleccionado: true,
+          manualmenteMarcado: false,
+        });
+      }
+    });
+
+    lista.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (a.ordenSesgo !== b.ordenSesgo) return a.ordenSesgo - b.ordenSesgo;
+      return a.nombre.localeCompare(b.nombre);
+    });
+
+    return lista;
+  }
+
+  function actualizarBotonRepasoInteligente() {
+    const btnD = document.getElementById('btn-modo-dificiles');
+    if (!btnD) return;
+    const n = calcularCandidatosRepasoInteligente().length;
+    btnD.textContent = 'Repaso inteligente (' + n + ')';
+    btnD.disabled = false;
+  }
+
+  function categoriasActivasRI() {
+    return {
+      dificiles: elChkRIDificiles.checked,
+      sobreconfianza: elChkRISobreconfianza.checked,
+      olvido: elChkRIOlvido.checked,
+      urgentes: elChkRIUrgentes.checked,
+    };
+  }
+
+  function cumpleAlgunaCategoriaActivaRI(item, activas) {
+    return (activas.dificiles && item.dificiles) ||
+      (activas.sobreconfianza && item.sobreconfianza) ||
+      (activas.olvido && item.olvido) ||
+      (activas.urgentes && item.urgentes);
+  }
+
+  function actualizarEstadoVacioYBotonRI() {
+    const marcados = candidatosRepasoInteligente.filter((c) => c.seleccionado);
+    const sinSeleccion = marcados.length === 0;
+    elListaSubtRI.style.display = candidatosRepasoInteligente.length > 0 ? 'block' : 'none';
+    elEstadoVacioRI.style.display = sinSeleccion ? 'block' : 'none';
+    elBtnComenzarRI.disabled = sinSeleccion;
+  }
+
+  function renderListaModalRepasoInteligente() {
+    elListaSubtRI.innerHTML = '';
+    candidatosRepasoInteligente.forEach((item) => {
+      const label = document.createElement('label');
+      label.className = 'ri-fila-subt';
+
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.checked = item.seleccionado;
+      chk.addEventListener('change', () => {
+        item.seleccionado = chk.checked;
+        item.manualmenteMarcado = chk.checked;
+        actualizarEstadoVacioYBotonRI();
+      });
+
+      const nombre = document.createElement('span');
+      nombre.className = 'ri-subt-nombre';
+      nombre.textContent = item.nombre;
+
+      const iconos = document.createElement('span');
+      iconos.className = 'ri-subt-iconos';
+      const listaIconos = [];
+      if (item.dificiles) listaIconos.push('☆');
+      if (item.sobreconfianza) listaIconos.push('⚠️');
+      if (item.olvido) listaIconos.push('😵‍');
+      if (item.urgentes) listaIconos.push('🔴');
+      iconos.textContent = listaIconos.join(' ');
+
+      label.appendChild(chk);
+      label.appendChild(nombre);
+      label.appendChild(iconos);
+      elListaSubtRI.appendChild(label);
+    });
+
+    actualizarEstadoVacioYBotonRI();
+  }
+
+  function alCambiarCategoriaRI(categoria, marcado) {
+    const activas = categoriasActivasRI();
+    candidatosRepasoInteligente.forEach((item) => {
+      if (!item[categoria]) return;
+      if (marcado) {
+        item.seleccionado = true;
+      } else {
+        if (!cumpleAlgunaCategoriaActivaRI(item, activas) && !item.manualmenteMarcado) {
+          item.seleccionado = false;
+        }
+      }
+    });
+    renderListaModalRepasoInteligente();
+  }
+
+  function abrirModalRepasoInteligente() {
+    elChkRIDificiles.checked = true;
+    elChkRISobreconfianza.checked = true;
+    elChkRIOlvido.checked = true;
+    elChkRIUrgentes.checked = true;
+    candidatosRepasoInteligente = calcularCandidatosRepasoInteligente();
+    renderListaModalRepasoInteligente();
+    elModalRepasoInteligente.classList.add('abierto');
+  }
+
+  function cerrarModalRepasoInteligente() {
+    elModalRepasoInteligente.classList.remove('abierto');
+  }
+
+  function comenzarSesionRepasoInteligente() {
+    const subtsElegidos = new Set(
+      candidatosRepasoInteligente.filter((c) => c.seleccionado).map((c) => c.nombre)
+    );
+    if (subtsElegidos.size === 0) return;
+    const paraRepasar = tarjetasCompletas.filter((t) => subtsElegidos.has(nombreTema(t)));
     if (paraRepasar.length === 0) return;
-    abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar);  // MODIFICADO: gamificación
+    cerrarModalRepasoInteligente();
+    abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar, null, true);
+  }
+
+  elChkRIDificiles.addEventListener('change', () => alCambiarCategoriaRI('dificiles', elChkRIDificiles.checked));
+  elChkRISobreconfianza.addEventListener('change', () => alCambiarCategoriaRI('sobreconfianza', elChkRISobreconfianza.checked));
+  elChkRIOlvido.addEventListener('change', () => alCambiarCategoriaRI('olvido', elChkRIOlvido.checked));
+  elChkRIUrgentes.addEventListener('change', () => alCambiarCategoriaRI('urgentes', elChkRIUrgentes.checked));
+  elBtnComenzarRI.addEventListener('click', () => comenzarSesionRepasoInteligente());
+  document.getElementById('btn-repaso-inteligente-cancelar').addEventListener('click', () => cerrarModalRepasoInteligente());
+  elModalRepasoInteligente.addEventListener('click', (evento) => {
+    if (evento.target === elModalRepasoInteligente) cerrarModalRepasoInteligente();
+  });
+
+  document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
+    abrirModalRepasoInteligente();
   });
 
   const nodosDificiles = new Map();   // hash -> { fila, grupo: 'propia'|'otros'|'desm' }
@@ -10253,7 +11098,6 @@ const ZONAS_SYNC_GIST = [
   }
 
   function actualizarContadoresDificiles() {
-    const btnD = document.getElementById('btn-modo-dificiles');
     let nAqui = 0, nOtros = 0, nDesm = 0;
     Object.keys(dificiles).forEach((h) => {
       const g = grupoActualDificil(h);
@@ -10265,8 +11109,7 @@ const ZONAS_SYNC_GIST = [
     elSumaDificilesOtros.textContent = 'De otros evaluadores (' + nOtros + ')';
     elDetDificilesDesm.style.display = nDesm > 0 ? 'block' : 'none';
     elSumaDificilesDesm.textContent = 'Desmarcadas (' + nDesm + ')';
-    btnD.textContent = 'Repasar difíciles (' + nAqui + ')';
-    btnD.disabled = nAqui === 0;
+    actualizarBotonRepasoInteligente();
     const total = Object.keys(dificiles).length;
     elNotaDificiles.textContent = total === 0
       ? 'Todavía no marcaste ninguna tarjeta como difícil (botón ☆ Difícil durante el estudio).'
@@ -11466,6 +12309,10 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       siguienteRev();
       guardarRetencionRutas();
       recalcularYGuardarSAjustadoPomodoro();
+      estadisticasConstruidas = false;
+      curvaOlvidoConstruido = false;
+      subtRepasarConstruido = false;
+      sesgoConfianzaConstruido = false;
       renderRetencionHistorial();
     }));
     div.appendChild(acc);
@@ -11525,6 +12372,60 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     lazyRetencionOtras.refrescar();
   }
 
+  function construirListaSubTOlvido() {
+    const elLista = document.getElementById('retencion-subt-olvido-lista');
+    const elVacio = document.getElementById('retencion-subt-olvido-vacio');
+    if (!elLista || !elVacio) return;
+    elLista.innerHTML = '';
+
+    const sAjustado = obtenerSAjustadoActual();
+    if (sAjustado === null || typeof sAjustado !== 'number' || sAjustado <= 0) {
+      elLista.style.display = 'none';
+      elVacio.textContent = 'Sin datos suficientes para predecir olvido';
+      elVacio.style.display = 'block';
+      return;
+    }
+
+    const subtemas = agruparRutasPorSubtema();
+    const candidatos = [];
+
+    subtemas.forEach((s) => {
+      const pctNoRet = pctNoRetenidaPorSubtema(s.nombre);
+      const retencionActual = 1 - ((pctNoRet || 0) / 100);
+      const t = retencionActual > 0 ? (-sAjustado * Math.log(0.60 / retencionActual)) : -Infinity;
+      if (t <= 1) {
+        candidatos.push({
+          nombre: s.nombre,
+          score: calcularScoreSubtema(s.nombre),
+          pctRetencion: Math.round(retencionActual * 100),
+          t: t,
+        });
+      }
+    });
+
+    candidatos.sort((a, b) => {
+      if (a.t !== b.t) return a.t < b.t ? -1 : 1;
+      if (b.score !== a.score) return b.score - a.score;
+      return a.nombre.localeCompare(b.nombre);
+    });
+
+    if (candidatos.length === 0) {
+      elLista.style.display = 'none';
+      elVacio.textContent = 'No hay subT próximos a olvidarse';
+      elVacio.style.display = 'block';
+      return;
+    }
+
+    elVacio.style.display = 'none';
+    elLista.style.display = 'block';
+    candidatos.forEach((item) => {
+      const fila = document.createElement('div');
+      fila.className = 'fila-retencion-ruta';
+      fila.textContent = item.nombre + ' — ' + item.score + '/100 — ' + item.pctRetencion + '%';
+      elLista.appendChild(fila);
+    });
+  }
+
   function renderRetencionHistorial() {
     const propias = retencionPropias().slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     const elLista = document.getElementById('retencion-historial-lista');
@@ -11541,6 +12442,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
 
     document.getElementById('btn-vaciar-retencion').style.display = retencionRutas.length > 0 ? 'inline-block' : 'none';
     renderRetencionOtras();
+    construirListaSubTOlvido();
   }
 
   const elModalRetencionRutas = document.getElementById('modal-retencion-rutas');
@@ -11549,8 +12451,10 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     renderRetencionSesionLista();
     retencionHistorialPaginaActual = 1;
     renderRetencionHistorial();
+    construirListaSubTOlvido();
     elModalRetencionRutas.classList.add('abierto');
   }
+
   function cerrarModalRetencionRutas() {
     elModalRetencionRutas.classList.remove('abierto');
   }

@@ -599,6 +599,161 @@ def extraer_descripciones_drawio(ruta_drawio):
 
     return descripciones
 
+def extraer_coordenadas_drawio(ruta_drawio, tarjetas, rutas, get_routes_id_map=None):
+    if not ruta_drawio:
+        return {}
+    try:
+        tree = ET.parse(ruta_drawio)
+        root = tree.getroot()
+    except Exception as error:
+        print(f"AVISO: no pude leer coordenadas del drawio: {error}")
+        return {}
+
+    diagrams = root.findall("./diagram")
+    alcance = diagrams[INDICE_PAGINA_DRAWIO] if diagrams else root
+
+    celdas_raw = {}
+    ids_por_ruta = {}
+
+    for elem in alcance.iter():
+        tag = elem.tag.split("}")[-1]
+        eid = elem.get("id")
+        if not eid:
+            continue
+
+        mxcell = elem if tag == "mxCell" else None
+        if tag in TAGS_OBJETO_DRAWIO:
+            for hijo in elem:
+                if hijo.tag.split("}")[-1] == "mxCell":
+                    mxcell = hijo
+                    break
+
+        if mxcell is None or mxcell.get("edge") == "1":
+            continue
+
+        geom = None
+        for sub in mxcell:
+            if sub.tag.split("}")[-1] == "mxGeometry":
+                geom = sub
+                break
+
+        if geom is None or geom.get("relative") == "1":
+            continue
+
+        try:
+            w = float(geom.get("width") or 0)
+            h = float(geom.get("height") or 0)
+            x = float(geom.get("x") or 0)
+            y = float(geom.get("y") or 0)
+        except (TypeError, ValueError):
+            continue
+
+        if w <= 0 or h <= 0:
+            continue
+
+        celdas_raw[eid] = {
+            "x": x,
+            "y": y,
+            "w": w,
+            "h": h,
+            "parent": mxcell.get("parent") or "",
+        }
+
+        ruta_attr = elem.get("ruta") if tag in TAGS_OBJETO_DRAWIO else mxcell.get("ruta")
+        if ruta_attr is not None and str(ruta_attr).strip() != "":
+            try:
+                num_ruta = int(str(ruta_attr).strip())
+                ids_por_ruta.setdefault(num_ruta, set()).add(eid)
+            except (TypeError, ValueError):
+                pass
+
+    if not celdas_raw:
+        return {}
+
+    def pos_absoluta(eid, visitados=None):
+        if visitados is None:
+            visitados = set()
+        if eid in visitados or eid not in celdas_raw:
+            return 0.0, 0.0
+        visitados.add(eid)
+        info = celdas_raw[eid]
+        px, py = pos_absoluta(info["parent"], visitados) if info["parent"] in celdas_raw else (0.0, 0.0)
+        return info["x"] + px, info["y"] + py
+
+    celdas_abs = {}
+    for eid, info in celdas_raw.items():
+        ax, ay = pos_absoluta(eid)
+        celdas_abs[eid] = {"x": ax, "y": ay, "w": info["w"], "h": info["h"]}
+
+    min_x = min(c["x"] for c in celdas_abs.values())
+    min_y = min(c["y"] for c in celdas_abs.values())
+    max_x = max(c["x"] + c["w"] for c in celdas_abs.values())
+    max_y = max(c["y"] + c["h"] for c in celdas_abs.values())
+    lienzo_w = max_x - min_x
+    lienzo_h = max_y - min_y
+
+    if lienzo_w <= 0 or lienzo_h <= 0:
+        return {}
+
+    mapa_rutas = {}
+    if get_routes_id_map is not None:
+        try:
+            mapa_rutas = get_routes_id_map(Path(ruta_drawio)) or {}
+        except Exception as error:
+            print(f"AVISO: no pude obtener mapa de rutas para coordenadas: {error}")
+
+    PREFIJO_CONV = "__CONVERGENCE__"
+
+    def resolver_id(id_celda):
+        if id_celda.startswith(PREFIJO_CONV):
+            return [id_celda[len(PREFIJO_CONV):]]
+        return [id_celda]
+
+    for numero, bloque in mapa_rutas.items():
+        for cruda in set((bloque.get("ids") or {}).values()):
+            for id_real in resolver_id(cruda):
+                if id_real in celdas_abs:
+                    ids_por_ruta.setdefault(int(numero), set()).add(id_real)
+
+    subt_por_ruta = {}
+    for t in (tarjetas or []):
+        tema_t = (t.get("tema") or "").strip() or "(Sin tema)"
+        for num in (t.get("rutas") or []):
+            if num not in subt_por_ruta:
+                subt_por_ruta[num] = tema_t
+
+    for num, info_r in (rutas or {}).items():
+        if num not in subt_por_ruta:
+            tema_r = (info_r.get("tema") or "").strip() if isinstance(info_r, dict) else ""
+            if tema_r:
+                subt_por_ruta[num] = tema_r
+
+    for num, bloque in mapa_rutas.items():
+        if num not in subt_por_ruta:
+            tema_m = (bloque.get("tema") or "").strip() if isinstance(bloque, dict) else ""
+            if tema_m:
+                subt_por_ruta[num] = tema_m
+
+    resultado = {}
+    for numero in sorted(ids_por_ruta):
+        geoms = [celdas_abs[eid] for eid in ids_por_ruta[numero] if eid in celdas_abs]
+        if not geoms:
+            continue
+        rx0 = min(g["x"] for g in geoms)
+        ry0 = min(g["y"] for g in geoms)
+        rx1 = max(g["x"] + g["w"] for g in geoms)
+        ry1 = max(g["y"] + g["h"] for g in geoms)
+
+        resultado[str(numero)] = {
+            "x": round(((rx0 - min_x) / lienzo_w) * 100, 2),
+            "y": round(((ry0 - min_y) / lienzo_h) * 100, 2),
+            "w": round(((rx1 - rx0) / lienzo_w) * 100, 2),
+            "h": round(((ry1 - ry0) / lienzo_h) * 100, 2),
+            "subT": subt_por_ruta.get(numero, "(Sin tema)"),
+        }
+
+    return resultado
+
 _FIRMAS_IMAGEN_MAPA = {
     ".png": b"\x89PNG\r\n\x1a\n",
     ".jpg": b"\xff\xd8\xff",
@@ -641,15 +796,17 @@ def _escapar_atributo_html(texto):
         .replace(">", "&gt;")
     )
 
-def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash, descripciones_rutas=None, imagen_mapa=None):
+def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash, descripciones_rutas=None, imagen_mapa=None, mapa_rutas_coords=None):
     datos = {"tarjetas": tarjetas, "rutas": rutas, "descripciones_rutas": descripciones_rutas or {}}
     datos_json = json.dumps(datos, ensure_ascii=False)
+    coords_json = json.dumps(mapa_rutas_coords or {}, ensure_ascii=False)
     nombre_base = Path(txt_respuestas).stem
 
     html = HTML_TEMPLATE
     html = html.replace("__FILL_COLOR__", fill_color)
     html = html.replace("__STROKE_COLOR__", stroke_color)
     html = html.replace("__DATOS_JSON__", datos_json)
+    html = html.replace("__MAPA_RUTAS_COORDS__", coords_json)
     html = html.replace("__MODO_ALEATORIO__", "true" if modo_aleatorio else "false")
     html = html.replace("__UMBRAL_CASI__", str(UMBRAL_CASI))
     html = html.replace("__PRECIO_COMODIN__", str(PRECIO_COMODIN))
@@ -2109,8 +2266,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .galeria-imagen-wrap { display: flex; justify-content: center; }
   #mapa-imagen-wrap {
+    position: relative;
     overflow: hidden;
     flex: 1 1 auto;
+    height: calc(100vh - clamp(24px, 8vw, 48px) * 2 - 80px);
     min-height: 0;
     min-width: 0;
     align-items: center;
@@ -2613,7 +2772,73 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   #pantalla-mapa {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - clamp(24px, 8vw, 48px) * 2);
+    min-height: calc(100vh - clamp(24px, 8vw, 48px) * 2);
+  }
+
+  .mapa-svg-overlay {
+    position: absolute;
+    pointer-events: none;
+    transform-origin: center center;
+    z-index: 2;
+    overflow: visible;
+  }
+  .mapa-hit-rect {
+    fill: transparent;
+    stroke: none;
+    pointer-events: all;
+    cursor: pointer;
+  }
+  .mapa-borde-resaltado {
+    fill: none;
+    stroke-width: var(--mapa-stroke, 2px);
+    pointer-events: none;
+    vector-effect: non-scaling-stroke;
+    stroke-linejoin: round;
+  }
+
+  .mapa-listado-contenedor {
+    margin-top: 14px;
+    text-align: left;
+    max-height: 35vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .mapa-item-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--color-borde-suave);
+    font-size: 14px;
+    color: var(--texto-cabecera);
+    cursor: pointer;
+  }
+  .mapa-item-check:last-child { border-bottom: none; }
+  .mapa-item-check input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--color-boton);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .mapa-item-nombre {
+    flex: 1;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .mapa-item-indicadores {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .mapa-dot-estado {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1.5px solid rgba(0,0,0,0.18);
   }
 
   .mapa-zoom-controles {
@@ -3092,6 +3317,76 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-top: 6px;
     font-style: italic;
   }
+
+  .ri-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    justify-content: center;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    background: var(--bg-superficie-alt);
+    border: 1.5px solid var(--color-borde-medio);
+  }
+  .ri-filtro-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--texto-cabecera);
+    cursor: pointer;
+    user-select: none;
+  }
+  .ri-filtro-item input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-boton);
+    cursor: pointer;
+  }
+  .ri-lista-subt {
+    max-height: 48vh;
+    overflow-y: auto;
+    border: 1px solid var(--color-borde);
+    border-radius: 10px;
+    padding: 4px 12px;
+    margin-bottom: 10px;
+    background: var(--bg-superficie);
+    text-align: left;
+  }
+  .ri-fila-subt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 2px;
+    border-bottom: 1px solid var(--color-borde-suave);
+    font-size: 14px;
+    color: var(--texto-cabecera);
+    cursor: pointer;
+  }
+  .ri-fila-subt:last-child { border-bottom: none; }
+  .ri-fila-subt input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--color-boton);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .ri-subt-nombre {
+    flex: 1;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .ri-subt-iconos {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+</style>
 </style>
 </head>
 <body>
@@ -3125,7 +3420,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <div class="zona-modos">
       <button class="boton-modo" id="btn-modo-completo" title="Estudia todas las tarjetas, ignora los temas marcados">Evaluación completa</button>
-      <button class="boton-modo" id="btn-modo-dificiles" title="Estudia solo las tarjetas marcadas como difíciles en sesiones anteriores" disabled>Repasar difíciles (0)</button>
+      <button class="boton-modo" id="btn-modo-dificiles" title="Armá una sesión combinando subtemas por difíciles, sobreconfianza, olvido o urgencia">Repaso inteligente (0)</button>
       <button class="boton-modo" id="btn-modo-observador" title="Recorrer las tarjetas sin evaluarte: ver, editar notas, marcar difíciles">👁 Modo observador</button>
       <button class="boton-modo" id="btn-otros-modos" title="Jugar modos Cloze Deletion o Matching Pairs">🎮 Otros Modos</button>
     </div>
@@ -3321,6 +3616,29 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <div class="galeria-imagen-wrap" id="mapa-imagen-wrap"></div>
+
+    <div class="lista-temas mapa-listado-contenedor" id="mapa-listado-acordeones">
+      <details class="grupo-tema" id="det-mapa-rutas">
+        <summary><span id="suma-mapa-rutas">🟢 Rutas (0)</span></summary>
+        <div class="cuerpo-grupo" id="lista-mapa-rutas" style="padding-left:0;"></div>
+      </details>
+      <details class="grupo-tema" id="det-mapa-dificiles">
+        <summary><span id="suma-mapa-dificiles">🟡 Rutas difíciles (0)</span></summary>
+        <div class="cuerpo-grupo" id="lista-mapa-dificiles" style="padding-left:0;"></div>
+      </details>
+      <details class="grupo-tema" id="det-mapa-sobreconfianza">
+        <summary><span id="suma-mapa-sobreconfianza">🟠 SubT sobreconfianza (0)</span></summary>
+        <div class="cuerpo-grupo" id="lista-mapa-sobreconfianza" style="padding-left:0;"></div>
+      </details>
+      <details class="grupo-tema" id="det-mapa-olvido">
+        <summary><span id="suma-mapa-olvido">🔵 SubT próximos a olvido (0)</span></summary>
+        <div class="cuerpo-grupo" id="lista-mapa-olvido" style="padding-left:0;"></div>
+      </details>
+      <details class="grupo-tema" id="det-mapa-urgentes">
+        <summary><span id="suma-mapa-urgentes">🔴 SubT urgentes (0)</span></summary>
+        <div class="cuerpo-grupo" id="lista-mapa-urgentes" style="padding-left:0;"></div>
+      </details>
+    </div>
 
     <div class="navegacion" style="margin-top:20px;">
       <button class="boton-secundario" id="btn-mapa-descargar">⬇ Descargar</button>
@@ -3873,13 +4191,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
     <h3>🧠 Retención de rutas</h3>
 
-    <div id="retencion-sesion-seccion" style="display:none;">
-      <p class="modal-ayuda">Marcá qué rutas retuviste en esta sesión de Pomodoro.</p>
-      <div id="retencion-subt-lista"></div>
-      <div class="retencion-lista-scroll" id="retencion-sesion-lista"></div>
-      <p class="galeria-vacia" id="retencion-sesion-vacia" style="display:none;">No hay rutas citadas en las tarjetas de este evaluador.</p>
-    </div>
-
     <div class="sync-seccion-titulo">Registro histórico</div>
     <div id="retencion-historial-lista"></div>
     <p class="nota-dificiles" id="retencion-historial-vacio" style="display:none;">Todavía no hay sesiones de retención guardadas.</p>
@@ -3890,6 +4201,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <div id="lista-retencion-otras"></div>
       <button class="boton-mini" id="btn-vincular-retencion" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
     </details>
+
+    <div class="sync-seccion-titulo">📉 SubT próximos a olvidarse</div>
+    <div id="retencion-subt-olvido-lista"></div>
+    <p class="nota-dificiles" id="retencion-subt-olvido-vacio" style="display:none;"></p>
+
+    <div id="retencion-sesion-seccion" style="display:none;">
+      <p class="modal-ayuda">Marcá qué rutas retuviste en esta sesión de Pomodoro.</p>
+      <div id="retencion-subt-lista"></div>
+      <div class="retencion-lista-scroll" id="retencion-sesion-lista"></div>
+      <p class="galeria-vacia" id="retencion-sesion-vacia" style="display:none;">No hay rutas citadas en las tarjetas de este evaluador.</p>
+    </div>
 
     <div class="panel-razones-acciones" style="margin-top:14px; justify-content: space-between;">
       <button class="boton-mini boton-mini-peligro" id="btn-vaciar-retencion" style="display:none;">Vaciar todas</button>
@@ -3944,6 +4266,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-mini boton-mini-peligro" id="btn-vaciar-analisis" style="display:none; margin-top:10px;">Vaciar todas</button>
     </div>
     <button class="modal-cancelar" id="btn-estadisticas-cerrar">Cerrar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-repaso-inteligente">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>🧠 Repaso inteligente</h3>
+    <div class="ri-filtros">
+      <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-dificiles" checked> ☆ Difíciles</label>
+      <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-sobreconfianza" checked> ⚠️ Sobreconfianza</label>
+      <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-olvido" checked> 😵‍ Olvido</label>
+      <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-urgentes" checked> 🔴 Urgentes</label>
+    </div>
+    <div class="ri-lista-subt" id="ri-lista-subt" style="display:none;"></div>
+    <p class="galeria-vacia" id="ri-estado-vacio" style="display:none;">Ningún subT cumple con las características seleccionadas</p>
+    <button class="boton-principal" id="btn-repaso-inteligente-comenzar">Comenzar sesión</button>
+    <button class="modal-cancelar" id="btn-repaso-inteligente-cancelar">Cancelar</button>
   </div>
 </div>
 
@@ -4079,6 +4417,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 <script>
   const datos = __DATOS_JSON__;
+  const MAPA_RUTAS_COORDS = __MAPA_RUTAS_COORDS__;
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
   const modoAleatorio = __MODO_ALEATORIO__;
@@ -5882,24 +6221,490 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     mostrarPantalla('observador');
   }
 
+  const COLORES_ESTADO_MAPA = {
+    normal: { codigo: 'normal', emoji: '🟢', hex: '#22c55e', stroke: '#22c55e' },
+    dificil: { codigo: 'dificil', emoji: '🟡', hex: '#eab308', stroke: '#eab308' },
+    sobreconfianza: { codigo: 'sobreconfianza', emoji: '🟠', hex: '#f97316', stroke: '#f97316' },
+    olvido: { codigo: 'olvido', emoji: '🔵', hex: '#3b82f6', stroke: '#3b82f6' },
+    urgente: { codigo: 'urgente', emoji: '🔴', hex: '#ef4444', stroke: '#ef4444' },
+  };
+
+  let elMapaSvgOverlay = null;
+  let datosRutasMapa = [];
+  let mapaSubtMetricaCache = {};
+  let seleccionMapa = {
+    rutas: new Set(),
+    dificiles: new Set(),
+    sobreconfianza: new Set(),
+    olvido: new Set(),
+    urgentes: new Set(),
+  };
+  let posDownMapaClick = null;
+
+  const GROSOR_BORDE_PX = 2; // grosor deseado EN PANTALLA
+
+  function actualizarGrosorBordeMapa() {
+    if (!elMapaImg || !elMapaSvgOverlay) return;
+    const escala = elMapaImg.getBoundingClientRect().width / elMapaImg.offsetWidth || 1;
+    elMapaSvgOverlay.style.setProperty('--mapa-stroke', (GROSOR_BORDE_PX / escala) + 'px');
+  }
+
+  function sincronizarGeometriaSvgMapa() {
+    if (!elMapaImg || !elMapaSvgOverlay) return;
+    const cs = getComputedStyle(elMapaImg);
+    const num = (v) => parseFloat(v) || 0;
+
+    // Insets reales (borde + padding) para quedarnos solo con el área del contenido
+    const insL = num(cs.borderLeftWidth) + num(cs.paddingLeft);
+    const insT = num(cs.borderTopWidth) + num(cs.paddingTop);
+    const insR = num(cs.borderRightWidth) + num(cs.paddingRight);
+    const insB = num(cs.borderBottomWidth) + num(cs.paddingBottom);
+
+    const w = elMapaImg.offsetWidth - insL - insR;
+    const h = elMapaImg.offsetHeight - insT - insB;
+    if (w <= 0 || h <= 0) return;
+
+    elMapaSvgOverlay.style.left = (elMapaImg.offsetLeft + insL) + 'px';
+    elMapaSvgOverlay.style.top = (elMapaImg.offsetTop + insT) + 'px';
+    elMapaSvgOverlay.style.width = w + 'px';
+    elMapaSvgOverlay.style.height = h + 'px';
+
+    // Mismo transform y mismo origen que la imagen (origen en px, relativo al overlay)
+    elMapaSvgOverlay.style.transformOrigin =
+      (elMapaImg.offsetWidth / 2 - insL) + 'px ' + (elMapaImg.offsetHeight / 2 - insT) + 'px';
+    elMapaSvgOverlay.style.transform = elMapaImg.style.transform;
+    actualizarGrosorBordeMapa();
+
+    // Grosor constante en pantalla: compensar el zoom aplicado al <svg> exterior
+    actualizarGrosorBordeMapa();
+  }
+
+  window.addEventListener('resize', () => {
+    if (elMapaImg && elMapaSvgOverlay) sincronizarGeometriaSvgMapa();
+  });
+
+  function calcularDatosEstadoMapa() {
+    const sAjustado = obtenerSAjustadoActual();
+    const sValido = sAjustado !== null && typeof sAjustado === 'number' && sAjustado > 0;
+    const rutaASubt = mapaRutaASubtema();
+
+    const rutasDificilesSet = new Set();
+    tarjetasCompletas.forEach((t) => {
+      if (!esDificil(t)) return;
+      rutasValidasDe(t).forEach((idRuta) => rutasDificilesSet.add(Number(idRuta)));
+    });
+
+    const todosLosSubt = new Set();
+    agruparRutasPorSubtema().forEach((s) => todosLosSubt.add(s.nombre));
+    Object.keys(MAPA_RUTAS_COORDS).forEach((k) => {
+      const c = MAPA_RUTAS_COORDS[k];
+      if (c && c.subT) todosLosSubt.add(c.subT);
+    });
+
+    mapaSubtMetricaCache = {};
+    todosLosSubt.forEach((nombreSubt) => {
+      const score = calcularScoreSubtema(nombreSubt);
+      const sesgo = calcularSesgoSubT(nombreSubt);
+      const esSobreconfianza = (sesgo.pctAnalisis - sesgo.pctRetencion) > 20;
+      const esUrgente = score >= 75;
+      let esOlvido = false;
+      if (sValido) {
+        const pctNoRet = pctNoRetenidaPorSubtema(nombreSubt);
+        const retActual = 1 - ((pctNoRet || 0) / 100);
+        const t = retActual > 0 ? (-sAjustado * Math.log(0.60 / retActual)) : -Infinity;
+        if (t <= 1) esOlvido = true;
+      }
+      mapaSubtMetricaCache[nombreSubt] = {
+        nombre: nombreSubt,
+        score: score,
+        sobreconfianza: esSobreconfianza,
+        olvido: esOlvido,
+        urgente: esUrgente,
+        coords: null,
+      };
+    });
+
+    const idsRutasSet = new Set(Object.keys(rutasDisp).map(Number));
+    Object.keys(MAPA_RUTAS_COORDS).forEach((k) => {
+      const n = Number(k);
+      if (!isNaN(n)) idsRutasSet.add(n);
+    });
+    const idsOrdenados = Array.from(idsRutasSet).sort((a, b) => a - b);
+
+    datosRutasMapa = idsOrdenados.map((idRuta) => {
+      const coord = MAPA_RUTAS_COORDS[String(idRuta)] || null;
+      const subT = rutaASubt[idRuta] || (coord && coord.subT) || (rutasDisp[idRuta] && rutasDisp[idRuta].tema) || '(Sin tema)';
+      const infoSubt = mapaSubtMetricaCache[subT] || { sobreconfianza: false, olvido: false, urgente: false };
+      const esRutaDificil = rutasDificilesSet.has(idRuta);
+
+      const estados = [];
+      if (esRutaDificil) estados.push('dificil');
+      if (infoSubt.sobreconfianza) estados.push('sobreconfianza');
+      if (infoSubt.olvido) estados.push('olvido');
+      if (infoSubt.urgente) estados.push('urgente');
+      if (estados.length === 0) estados.push('normal');
+
+      return {
+        idRuta: idRuta,
+        subT: subT,
+        estados: estados,
+        estado: estados[0],
+        esDificil: esRutaDificil,
+        esSobreconfianza: infoSubt.sobreconfianza,
+        esOlvido: infoSubt.olvido,
+        esUrgente: infoSubt.urgente,
+        coords: (coord && typeof coord.x === 'number' && typeof coord.y === 'number' && typeof coord.w === 'number' && typeof coord.h === 'number')
+          ? { x: coord.x, y: coord.y, w: coord.w, h: coord.h }
+          : null,
+      };
+    });
+
+    const geomsPorSubt = {};
+    datosRutasMapa.forEach((item) => {
+      if (!item.coords) return;
+      if (!geomsPorSubt[item.subT]) geomsPorSubt[item.subT] = [];
+      geomsPorSubt[item.subT].push(item.coords);
+    });
+    Object.keys(geomsPorSubt).forEach((nombreSubt) => {
+      const lista = geomsPorSubt[nombreSubt];
+      if (!lista || lista.length === 0 || !mapaSubtMetricaCache[nombreSubt]) return;
+      const x0 = Math.min.apply(null, lista.map((g) => g.x));
+      const y0 = Math.min.apply(null, lista.map((g) => g.y));
+      const x1 = Math.max.apply(null, lista.map((g) => g.x + g.w));
+      const y1 = Math.max.apply(null, lista.map((g) => g.y + g.h));
+      mapaSubtMetricaCache[nombreSubt].coords = {
+        x: x0,
+        y: y0,
+        w: x1 - x0,
+        h: y1 - y0,
+      };
+    });
+  }
+
+  function agregarRectanguloSvgMapa(grupoBordes, coords, strokeColor, pad) {
+    if (!coords) return;
+    const p = pad || 0;
+    const rx = Math.max(0, coords.x - p);
+    const ry = Math.max(0, coords.y - p);
+    const rw = Math.min(100 - rx, coords.w + p * 2);
+    const rh = Math.min(100 - ry, coords.h + p * 2);
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('class', 'mapa-borde-resaltado');
+    rect.setAttribute('x', rx.toFixed(2));
+    rect.setAttribute('y', ry.toFixed(2));
+    rect.setAttribute('width', Math.max(0.5, rw).toFixed(2));
+    rect.setAttribute('height', Math.max(0.5, rh).toFixed(2));
+    rect.setAttribute('stroke', strokeColor);
+    rect.setAttribute('stroke-width', '1');
+    grupoBordes.appendChild(rect);
+  }
+
+  function renderBordesSvgMapa() {
+    if (!elMapaSvgOverlay) return;
+    const grupoBordes = elMapaSvgOverlay.querySelector('#mapa-svg-bordes');
+    if (!grupoBordes) return;
+    grupoBordes.innerHTML = '';
+
+    datosRutasMapa.forEach((item) => {
+      if (!item.coords) return;
+      if (seleccionMapa.rutas.has(item.idRuta)) {
+        agregarRectanguloSvgMapa(grupoBordes, item.coords, COLORES_ESTADO_MAPA.normal.stroke, 0);
+      }
+      if (seleccionMapa.dificiles.has(item.idRuta) && item.esDificil) {
+        agregarRectanguloSvgMapa(grupoBordes, item.coords, COLORES_ESTADO_MAPA.dificil.stroke, 0.18);
+      }
+    });
+
+    Object.values(mapaSubtMetricaCache).forEach((infoSubt) => {
+      if (!infoSubt.coords) return;
+      if (seleccionMapa.sobreconfianza.has(infoSubt.nombre) && infoSubt.sobreconfianza) {
+        agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.sobreconfianza.stroke, 0.45);
+      }
+      if (seleccionMapa.olvido.has(infoSubt.nombre) && infoSubt.olvido) {
+        agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.olvido.stroke, 0.65);
+      }
+      if (seleccionMapa.urgentes.has(infoSubt.nombre) && infoSubt.urgente) {
+        agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.urgente.stroke, 0.85);
+      }
+    });
+  }
+
+  function sincronizarCheckboxesDomMapa() {
+    document.querySelectorAll('#lista-mapa-rutas input[data-id-ruta]').forEach((chk) => {
+      chk.checked = seleccionMapa.rutas.has(Number(chk.dataset.idRuta));
+    });
+    document.querySelectorAll('#lista-mapa-dificiles input[data-id-ruta]').forEach((chk) => {
+      chk.checked = seleccionMapa.dificiles.has(Number(chk.dataset.idRuta));
+    });
+    document.querySelectorAll('#lista-mapa-sobreconfianza input[data-subt]').forEach((chk) => {
+      chk.checked = seleccionMapa.sobreconfianza.has(chk.dataset.subt);
+    });
+    document.querySelectorAll('#lista-mapa-olvido input[data-subt]').forEach((chk) => {
+      chk.checked = seleccionMapa.olvido.has(chk.dataset.subt);
+    });
+    document.querySelectorAll('#lista-mapa-urgentes input[data-subt]').forEach((chk) => {
+      chk.checked = seleccionMapa.urgentes.has(chk.dataset.subt);
+    });
+  }
+
+  function alHacerClicEnRutaMapa(itemRuta) {
+    const id = itemRuta.idRuta;
+    const detRutas = document.getElementById('det-mapa-rutas');
+    const detDificiles = document.getElementById('det-mapa-dificiles');
+
+    if (seleccionMapa.rutas.has(id) || seleccionMapa.dificiles.has(id)) {
+      seleccionMapa.rutas.delete(id);
+      seleccionMapa.dificiles.delete(id);
+    } else if (itemRuta.esDificil && detDificiles && detDificiles.open && (!detRutas || !detRutas.open)) {
+      seleccionMapa.dificiles.add(id);
+    } else if (itemRuta.esDificil && (!detRutas || !detRutas.open)) {
+      seleccionMapa.dificiles.add(id);
+    } else {
+      seleccionMapa.rutas.add(id);
+    }
+
+    sincronizarCheckboxesDomMapa();
+    renderBordesSvgMapa();
+  }
+
+  function crearSvgOverlayMapa() {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 'mapa-svg-overlay';
+    svg.setAttribute('class', 'mapa-svg-overlay');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    svg.setAttribute('preserveAspectRatio', 'none');
+
+    const grupoHits = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    grupoHits.id = 'mapa-svg-hits';
+
+    datosRutasMapa.forEach((item) => {
+      if (!item.coords) return;
+      const hit = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      hit.setAttribute('class', 'mapa-hit-rect');
+      hit.setAttribute('x', item.coords.x.toFixed(2));
+      hit.setAttribute('y', item.coords.y.toFixed(2));
+      hit.setAttribute('width', item.coords.w.toFixed(2));
+      hit.setAttribute('height', item.coords.h.toFixed(2));
+
+      hit.addEventListener('pointerdown', (e) => {
+        posDownMapaClick = { x: e.clientX, y: e.clientY };
+      });
+      hit.addEventListener('click', (e) => {
+        if (posDownMapaClick) {
+          const dx = e.clientX - posDownMapaClick.x;
+          const dy = e.clientY - posDownMapaClick.y;
+          if (Math.hypot(dx, dy) > 5) return;
+        }
+        e.stopPropagation();
+        alHacerClicEnRutaMapa(item);
+      });
+
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      title.textContent = 'Ruta ' + item.idRuta + ' (' + item.subT + ')';
+      hit.appendChild(title);
+      grupoHits.appendChild(hit);
+    });
+
+    const grupoBordes = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    grupoBordes.id = 'mapa-svg-bordes';
+
+    svg.appendChild(grupoHits);
+    svg.appendChild(grupoBordes);
+    return svg;
+  }
+
+  function crearIndicadoresColorMapa(codigosEstados) {
+    const span = document.createElement('span');
+    span.className = 'mapa-item-indicadores';
+    codigosEstados.forEach((cod) => {
+      const def = COLORES_ESTADO_MAPA[cod] || COLORES_ESTADO_MAPA.normal;
+      const dot = document.createElement('span');
+      dot.className = 'mapa-dot-estado';
+      dot.style.backgroundColor = def.hex;
+      dot.title = def.emoji;
+      span.appendChild(dot);
+    });
+    return span;
+  }
+
+  const lazyMapaAcordeones = {};
+
+  function inicializarAcordeonesMapaLazy() {
+    const detRutas = document.getElementById('det-mapa-rutas');
+    const detDificiles = document.getElementById('det-mapa-dificiles');
+    const detSobreconfianza = document.getElementById('det-mapa-sobreconfianza');
+    const detOlvido = document.getElementById('det-mapa-olvido');
+    const detUrgentes = document.getElementById('det-mapa-urgentes');
+
+    lazyMapaAcordeones.rutas = prepararDetallesLazy(detRutas, () => {
+      const cont = document.getElementById('lista-mapa-rutas');
+      cont.innerHTML = '';
+      if (datosRutasMapa.length === 0) {
+        cont.innerHTML = '<div class="lista-vacia">No hay rutas registradas.</div>';
+        return;
+      }
+      datosRutasMapa.forEach((item) => {
+        const label = document.createElement('label');
+        label.className = 'mapa-item-check';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.dataset.idRuta = String(item.idRuta);
+        chk.checked = seleccionMapa.rutas.has(item.idRuta);
+        chk.addEventListener('change', () => {
+          if (chk.checked) seleccionMapa.rutas.add(item.idRuta);
+          else seleccionMapa.rutas.delete(item.idRuta);
+          renderBordesSvgMapa();
+        });
+        const nombre = document.createElement('span');
+        nombre.className = 'mapa-item-nombre';
+        nombre.textContent = 'Ruta ' + item.idRuta + (item.subT ? ' — ' + item.subT : '');
+        label.appendChild(chk);
+        label.appendChild(nombre);
+        label.appendChild(crearIndicadoresColorMapa(item.estados));
+        cont.appendChild(label);
+      });
+    });
+
+    lazyMapaAcordeones.dificiles = prepararDetallesLazy(detDificiles, () => {
+      const cont = document.getElementById('lista-mapa-dificiles');
+      cont.innerHTML = '';
+      const filtradas = datosRutasMapa.filter((r) => r.esDificil);
+      if (filtradas.length === 0) {
+        cont.innerHTML = '<div class="lista-vacia">No hay rutas difíciles.</div>';
+        return;
+      }
+      filtradas.forEach((item) => {
+        const label = document.createElement('label');
+        label.className = 'mapa-item-check';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.dataset.idRuta = String(item.idRuta);
+        chk.checked = seleccionMapa.dificiles.has(item.idRuta);
+        chk.addEventListener('change', () => {
+          if (chk.checked) seleccionMapa.dificiles.add(item.idRuta);
+          else seleccionMapa.dificiles.delete(item.idRuta);
+          renderBordesSvgMapa();
+        });
+        const nombre = document.createElement('span');
+        nombre.className = 'mapa-item-nombre';
+        nombre.textContent = 'Ruta ' + item.idRuta + (item.subT ? ' — ' + item.subT : '');
+        label.appendChild(chk);
+        label.appendChild(nombre);
+        label.appendChild(crearIndicadoresColorMapa(['dificil']));
+        cont.appendChild(label);
+      });
+    });
+
+    const construirListaSubtMapa = (idContenedor, campoFiltro, setSeleccion, codColor) => {
+      const cont = document.getElementById(idContenedor);
+      cont.innerHTML = '';
+      const subts = Object.values(mapaSubtMetricaCache)
+        .filter((s) => s[campoFiltro])
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      if (subts.length === 0) {
+        cont.innerHTML = '<div class="lista-vacia">Ningún subT en esta categoría.</div>';
+        return;
+      }
+      subts.forEach((infoSubt) => {
+        const label = document.createElement('label');
+        label.className = 'mapa-item-check';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.dataset.subt = infoSubt.nombre;
+        chk.checked = setSeleccion.has(infoSubt.nombre);
+        chk.addEventListener('change', () => {
+          if (chk.checked) setSeleccion.add(infoSubt.nombre);
+          else setSeleccion.delete(infoSubt.nombre);
+          renderBordesSvgMapa();
+        });
+        const nombre = document.createElement('span');
+        nombre.className = 'mapa-item-nombre';
+        nombre.textContent = infoSubt.nombre;
+        label.appendChild(chk);
+        label.appendChild(nombre);
+        label.appendChild(crearIndicadoresColorMapa([codColor]));
+        cont.appendChild(label);
+      });
+    };
+
+    lazyMapaAcordeones.sobreconfianza = prepararDetallesLazy(detSobreconfianza, () => {
+      construirListaSubtMapa('lista-mapa-sobreconfianza', 'sobreconfianza', seleccionMapa.sobreconfianza, 'sobreconfianza');
+    });
+
+    lazyMapaAcordeones.olvido = prepararDetallesLazy(detOlvido, () => {
+      construirListaSubtMapa('lista-mapa-olvido', 'olvido', seleccionMapa.olvido, 'olvido');
+    });
+
+    lazyMapaAcordeones.urgentes = prepararDetallesLazy(detUrgentes, () => {
+      construirListaSubtMapa('lista-mapa-urgentes', 'urgente', seleccionMapa.urgentes, 'urgente');
+    });
+  }
+  inicializarAcordeonesMapaLazy();
+
+  function prepararListadoAcordeonesMapa() {
+    const nRutas = datosRutasMapa.length;
+    const nDificiles = datosRutasMapa.filter((r) => r.esDificil).length;
+    const listaSubts = Object.values(mapaSubtMetricaCache);
+    const nSobreconfianza = listaSubts.filter((s) => s.sobreconfianza).length;
+    const nOlvido = listaSubts.filter((s) => s.olvido).length;
+    const nUrgentes = listaSubts.filter((s) => s.urgente).length;
+
+    document.getElementById('suma-mapa-rutas').textContent = '🟢 Rutas (' + nRutas + ')';
+    document.getElementById('suma-mapa-dificiles').textContent = '🟡 Rutas difíciles (' + nDificiles + ')';
+    document.getElementById('suma-mapa-sobreconfianza').textContent = '🟠 SubT sobreconfianza (' + nSobreconfianza + ')';
+    document.getElementById('suma-mapa-olvido').textContent = '🔵 SubT próximos a olvido (' + nOlvido + ')';
+    document.getElementById('suma-mapa-urgentes').textContent = '🔴 SubT urgentes (' + nUrgentes + ')';
+
+    ['rutas', 'dificiles', 'sobreconfianza', 'olvido', 'urgentes'].forEach((clave) => {
+      const det = document.getElementById('det-mapa-' + clave);
+      const listaEl = document.getElementById('lista-mapa-' + clave);
+      if (det) det.open = false;
+      if (listaEl) listaEl.innerHTML = '';
+      if (lazyMapaAcordeones[clave]) lazyMapaAcordeones[clave].invalidar();
+    });
+  }
+
   function abrirMapa() {
-    if (elBtnObservadorMapa.disabled) return;   // sin imagen: no hace nada (no debería dispararse igual)
+    if (elBtnObservadorMapa.disabled) return;
     mostrarPantalla('mapa');
     elMapaImagenWrap.innerHTML = '';
+
+    seleccionMapa.rutas.clear();
+    seleccionMapa.dificiles.clear();
+    seleccionMapa.sobreconfianza.clear();
+    seleccionMapa.olvido.clear();
+    seleccionMapa.urgentes.clear();
+
+    calcularDatosEstadoMapa();
+    prepararListadoAcordeonesMapa();
+
     const img = document.createElement('img');
     img.id = 'mapa-img';
     img.className = 'mapa-img';
     img.alt = 'Imagen del mapa';
     img.src = elBtnObservadorMapa.dataset.mapaSrc;
     elMapaImagenWrap.appendChild(img);
-    elMapaImg = img;        // NUEVO: referencia para zoom/pan (ver más abajo)
-    resetearZoomMapa();     // NUEVO: siempre arranca en zoom 1, sin pan
+    elMapaImg = img;
+
+    const svg = crearSvgOverlayMapa();
+    elMapaImagenWrap.appendChild(svg);
+    elMapaSvgOverlay = svg;
+
+    const alCargarImg = () => {
+      sincronizarGeometriaSvgMapa();
+      renderBordesSvgMapa();
+    };
+    img.addEventListener('load', alCargarImg);
+    resetearZoomMapa();
+    requestAnimationFrame(alCargarImg);
   }
 
   function cerrarPantallaMapa() {
     elMapaImagenWrap.innerHTML = '';
-    elMapaImg = null;        // NUEVO: libera la referencia de zoom/pan
-    resetearZoomMapa();      // NUEVO: §8 resetea zoom y pan al salir
+    elMapaImg = null;
+    elMapaSvgOverlay = null;
+    resetearZoomMapa();
     mostrarPantalla('observador');
   }
 
@@ -5936,13 +6741,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   const ES_DISPOSITIVO_TACTIL = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
   const ZOOM_MAPA_MIN = 0.5;
-  const ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 20 : 10;     // PC: se mantiene igual que antes
-  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 1 : 0.5;   // PC: se mantiene igual que antes
+  const ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 20 : 20;     // PC: se mantiene igual que antes
+  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 1 : 1;   // PC: se mantiene igual que antes
 
   function aplicarTransformMapa() {
     if (!elMapaImg) return;
-    elMapaImg.style.transform = 'translate(' + panMapa.x + 'px, ' + panMapa.y + 'px) scale(' + zoomMapa + ')';
+    const transformStr = 'translate(' + panMapa.x + 'px, ' + panMapa.y + 'px) scale(' + zoomMapa + ')';
+    elMapaImg.style.transform = transformStr;
     elMapaImg.classList.toggle('mapa-img-pan', zoomMapa > 1);
+    if (elMapaSvgOverlay) {
+      elMapaSvgOverlay.style.transform = transformStr;
+    }
+    actualizarGrosorBordeMapa();
   }
 
   function fijarZoomMapa(nuevoZoom) {
@@ -6273,6 +7083,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   let modoEspecial = null;
   let modoEspecialPendiente = null;
+  let repasoInteligenteActivo = false;
+  let repasoInteligentePendiente = false;
   let modoDemostracionesCloze = false;
   let modoDemostracionesPendiente = false;
   let estadoDemostracionesModal = false;
@@ -6298,6 +7110,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (srsSesionActiva) return 'srs';
     if (modoEspecial === 'cloze') return 'cloze_' + modoJuego;
     if (modoEspecial === 'matching') return 'matching_' + modoJuego;
+    if (repasoInteligenteActivo) return 'inteligente';
     return modoJuego;
   }
 
@@ -6313,6 +7126,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (modo === 'matching_light') return '🔗 Matching Light';
     if (modo === 'matching_normal') return '🔗 Matching Normal';
     if (modo === 'matching_tryhard') return '🔗 Matching Tryhard';
+    if (modo === 'inteligente') return '🧠 Repaso inteligente';
     if (modo === 'srs') return '🧠 SRS';
     if (modo === 'examen') return '📝 Examen';
     if (modo === 'tryhard') return 'Tryhard';
@@ -6459,10 +7273,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
   }
 
-function abrirModalSeleccionModo(lista, tipoEspecial) {
+  function abrirModalSeleccionModo(lista, tipoEspecial, esRepasoInteligente) {
     if (!lista || lista.length === 0) return;
     listaPendienteInicio = lista;
     modoEspecialPendiente = tipoEspecial || null;
+    repasoInteligentePendiente = !!esRepasoInteligente;
     if (modoEspecialPendiente === 'cloze') {
       elTituloModalModo.textContent = 'Elegí el modo de juego — 📝 Cloze';
       elOpcionModoExamen.style.display = 'none';
@@ -6481,6 +7296,7 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     elModalModo.classList.remove('abierto');
     listaPendienteInicio = null;
     modoEspecialPendiente = null;
+    repasoInteligentePendiente = false;
     modoDemostracionesPendiente = false;
     elTituloModalModo.textContent = 'Elegí el modo de juego';
     elOpcionModoExamen.style.display = '';
@@ -6490,12 +7306,14 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     const lista = listaPendienteInicio;
     const especial = modoEspecialPendiente;
     const demoPendiente = modoDemostracionesPendiente;
+    const inteligentePendiente = repasoInteligentePendiente;
     elModalModo.classList.remove('abierto');
     elTituloModalModo.textContent = 'Elegí el modo de juego';
     elOpcionModoExamen.style.display = '';
     if (!lista) {
       listaPendienteInicio = null;
       modoEspecialPendiente = null;
+      repasoInteligentePendiente = false;
       modoDemostracionesPendiente = false;
       return;
     }
@@ -6505,8 +7323,10 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
     }
     listaPendienteInicio = null;
     modoEspecialPendiente = null;
+    repasoInteligentePendiente = false;
     modoDemostracionesPendiente = false;
     modoEspecial = especial;
+    repasoInteligenteActivo = !especial && inteligentePendiente;
     modoDemostracionesCloze = (especial === 'cloze') ? demoPendiente : false;
     configurarModoJuego(modoElegidoEnModal);
     if (modoEspecial === 'cloze') {
@@ -7626,6 +8446,8 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
   function limpiarModoEspecialAlSalir() {
     modoEspecial = null;
     modoEspecialPendiente = null;
+    repasoInteligenteActivo = false;
+    repasoInteligentePendiente = false;
     modoDemostracionesCloze = false;
     modoDemostracionesPendiente = false;
     datosClozeSesion = [];
@@ -7669,12 +8491,16 @@ function abrirModalSeleccionModo(lista, tipoEspecial) {
   document.getElementById('btn-examen-opciones-cancelar').addEventListener('click', () => {
     elModalExamenOpciones.classList.remove('abierto');
     listaPendienteInicio = null;
+    repasoInteligentePendiente = false;
   });
   document.getElementById('btn-examen-opciones-comenzar').addEventListener('click', () => {
     const lista = listaPendienteInicio;
+    const inteligentePendiente = repasoInteligentePendiente;
     elModalExamenOpciones.classList.remove('abierto');
     listaPendienteInicio = null;
+    repasoInteligentePendiente = false;
     if (!lista) return;
+    repasoInteligenteActivo = inteligentePendiente;
     configurarModoJuego('examen');
     iniciarSesion(lista);
   });
@@ -10567,6 +11393,7 @@ const ZONAS_SYNC_GIST = [
     if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
     if (elModalGuardarLista.classList.contains('abierto')) { cerrarModalGuardarLista(); return; }
     if (elModalAnalisisSesion.classList.contains('abierto')) { cerrarModalAnalisisSesion(); return; }
+    if (elModalRepasoInteligente.classList.contains('abierto')) { cerrarModalRepasoInteligente(); return; }
     if (elModalModo.classList.contains('abierto')) { cancelarModalModo(); return; }
     if (elModalVincular.classList.contains('abierto')) { cerrarModalVincular(); return; }
     if (elModalPomodoroIniciar.classList.contains('abierto')) { cerrarModalPomodoroIniciar(); return; }
@@ -10599,6 +11426,7 @@ const ZONAS_SYNC_GIST = [
     if (elModalSegunda.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-segunda-si').click(); return; }
     if (elModalGuardarLista.classList.contains('abierto')) { evento.preventDefault(); elBtnGuardarListaAceptar.click(); return; }
     if (elModalVincular.classList.contains('abierto')) { evento.preventDefault(); elBtnVincAceptar.click(); return; }
+    if (elModalRepasoInteligente.classList.contains('abierto')) { evento.preventDefault(); if (!elBtnComenzarRI.disabled) elBtnComenzarRI.click(); return; }
     if (elModalModo.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-modo-confirmar').click(); return; }
     if (elModalGameOver.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-gameover-resumen').click(); return; }
     if (elModalAnalisisSesion.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-analisis-sesion-cerrar').click(); return; }
@@ -10885,10 +11713,184 @@ const ZONAS_SYNC_GIST = [
     abrirModalSeleccionModo(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);  // MODIFICADO: gamificación
   });
 
-  document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
-    const paraRepasar = tarjetasCompletas.filter((t) => esDificil(t));
+  const elModalRepasoInteligente = document.getElementById('modal-repaso-inteligente');
+  const elListaSubtRI = document.getElementById('ri-lista-subt');
+  const elEstadoVacioRI = document.getElementById('ri-estado-vacio');
+  const elBtnComenzarRI = document.getElementById('btn-repaso-inteligente-comenzar');
+  const elChkRIDificiles = document.getElementById('chk-ri-dificiles');
+  const elChkRISobreconfianza = document.getElementById('chk-ri-sobreconfianza');
+  const elChkRIOlvido = document.getElementById('chk-ri-olvido');
+  const elChkRIUrgentes = document.getElementById('chk-ri-urgentes');
+
+  let candidatosRepasoInteligente = [];
+
+  function calcularCandidatosRepasoInteligente() {
+    const sAjustado = obtenerSAjustadoActual();
+    const sValido = sAjustado !== null && typeof sAjustado === 'number' && sAjustado > 0;
+    const subtemasConRutas = new Set(agruparRutasPorSubtema().map((s) => s.nombre));
+    const grupos = agruparPorTema();
+    const lista = [];
+
+    grupos.forEach((g) => {
+      const score = calcularScoreSubtema(g.nombre);
+      const sesgo = calcularSesgoSubT(g.nombre);
+      const tieneDificil = g.indices.some((i) => esDificil(tarjetasCompletas[i]));
+      const tieneSobreconfianza = sesgo.tipo === 'sobreconfianza';
+      const tieneUrgente = score >= 75;
+
+      let tieneOlvido = false;
+      if (sValido && subtemasConRutas.has(g.nombre)) {
+        const pctNoRet = pctNoRetenidaPorSubtema(g.nombre);
+        const retencionActual = 1 - ((pctNoRet || 0) / 100);
+        const t = retencionActual > 0 ? (-sAjustado * Math.log(0.60 / retencionActual)) : -Infinity;
+        if (t <= 1) tieneOlvido = true;
+      }
+
+      if (tieneDificil || tieneSobreconfianza || tieneOlvido || tieneUrgente) {
+        lista.push({
+          nombre: g.nombre,
+          score: score,
+          ordenSesgo: sesgo.ordenSesgo,
+          dificiles: tieneDificil,
+          sobreconfianza: tieneSobreconfianza,
+          olvido: tieneOlvido,
+          urgentes: tieneUrgente,
+          seleccionado: true,
+          manualmenteMarcado: false,
+        });
+      }
+    });
+
+    lista.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (a.ordenSesgo !== b.ordenSesgo) return a.ordenSesgo - b.ordenSesgo;
+      return a.nombre.localeCompare(b.nombre);
+    });
+
+    return lista;
+  }
+
+  function actualizarBotonRepasoInteligente() {
+    const btnD = document.getElementById('btn-modo-dificiles');
+    if (!btnD) return;
+    const n = calcularCandidatosRepasoInteligente().length;
+    btnD.textContent = 'Repaso inteligente (' + n + ')';
+    btnD.disabled = false;
+  }
+
+  function categoriasActivasRI() {
+    return {
+      dificiles: elChkRIDificiles.checked,
+      sobreconfianza: elChkRISobreconfianza.checked,
+      olvido: elChkRIOlvido.checked,
+      urgentes: elChkRIUrgentes.checked,
+    };
+  }
+
+  function cumpleAlgunaCategoriaActivaRI(item, activas) {
+    return (activas.dificiles && item.dificiles) ||
+      (activas.sobreconfianza && item.sobreconfianza) ||
+      (activas.olvido && item.olvido) ||
+      (activas.urgentes && item.urgentes);
+  }
+
+  function actualizarEstadoVacioYBotonRI() {
+    const marcados = candidatosRepasoInteligente.filter((c) => c.seleccionado);
+    const sinSeleccion = marcados.length === 0;
+    elListaSubtRI.style.display = candidatosRepasoInteligente.length > 0 ? 'block' : 'none';
+    elEstadoVacioRI.style.display = sinSeleccion ? 'block' : 'none';
+    elBtnComenzarRI.disabled = sinSeleccion;
+  }
+
+  function renderListaModalRepasoInteligente() {
+    elListaSubtRI.innerHTML = '';
+    candidatosRepasoInteligente.forEach((item) => {
+      const label = document.createElement('label');
+      label.className = 'ri-fila-subt';
+
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.checked = item.seleccionado;
+      chk.addEventListener('change', () => {
+        item.seleccionado = chk.checked;
+        item.manualmenteMarcado = chk.checked;
+        actualizarEstadoVacioYBotonRI();
+      });
+
+      const nombre = document.createElement('span');
+      nombre.className = 'ri-subt-nombre';
+      nombre.textContent = item.nombre;
+
+      const iconos = document.createElement('span');
+      iconos.className = 'ri-subt-iconos';
+      const listaIconos = [];
+      if (item.dificiles) listaIconos.push('☆');
+      if (item.sobreconfianza) listaIconos.push('⚠️');
+      if (item.olvido) listaIconos.push('😵‍');
+      if (item.urgentes) listaIconos.push('🔴');
+      iconos.textContent = listaIconos.join(' ');
+
+      label.appendChild(chk);
+      label.appendChild(nombre);
+      label.appendChild(iconos);
+      elListaSubtRI.appendChild(label);
+    });
+
+    actualizarEstadoVacioYBotonRI();
+  }
+
+  function alCambiarCategoriaRI(categoria, marcado) {
+    const activas = categoriasActivasRI();
+    candidatosRepasoInteligente.forEach((item) => {
+      if (!item[categoria]) return;
+      if (marcado) {
+        item.seleccionado = true;
+      } else {
+        if (!cumpleAlgunaCategoriaActivaRI(item, activas) && !item.manualmenteMarcado) {
+          item.seleccionado = false;
+        }
+      }
+    });
+    renderListaModalRepasoInteligente();
+  }
+
+  function abrirModalRepasoInteligente() {
+    elChkRIDificiles.checked = true;
+    elChkRISobreconfianza.checked = true;
+    elChkRIOlvido.checked = true;
+    elChkRIUrgentes.checked = true;
+    candidatosRepasoInteligente = calcularCandidatosRepasoInteligente();
+    renderListaModalRepasoInteligente();
+    elModalRepasoInteligente.classList.add('abierto');
+  }
+
+  function cerrarModalRepasoInteligente() {
+    elModalRepasoInteligente.classList.remove('abierto');
+  }
+
+  function comenzarSesionRepasoInteligente() {
+    const subtsElegidos = new Set(
+      candidatosRepasoInteligente.filter((c) => c.seleccionado).map((c) => c.nombre)
+    );
+    if (subtsElegidos.size === 0) return;
+    const paraRepasar = tarjetasCompletas.filter((t) => subtsElegidos.has(nombreTema(t)));
     if (paraRepasar.length === 0) return;
-    abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar);  // MODIFICADO: gamificación
+    cerrarModalRepasoInteligente();
+    abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar, null, true);
+  }
+
+  elChkRIDificiles.addEventListener('change', () => alCambiarCategoriaRI('dificiles', elChkRIDificiles.checked));
+  elChkRISobreconfianza.addEventListener('change', () => alCambiarCategoriaRI('sobreconfianza', elChkRISobreconfianza.checked));
+  elChkRIOlvido.addEventListener('change', () => alCambiarCategoriaRI('olvido', elChkRIOlvido.checked));
+  elChkRIUrgentes.addEventListener('change', () => alCambiarCategoriaRI('urgentes', elChkRIUrgentes.checked));
+  elBtnComenzarRI.addEventListener('click', () => comenzarSesionRepasoInteligente());
+  document.getElementById('btn-repaso-inteligente-cancelar').addEventListener('click', () => cerrarModalRepasoInteligente());
+  elModalRepasoInteligente.addEventListener('click', (evento) => {
+    if (evento.target === elModalRepasoInteligente) cerrarModalRepasoInteligente();
+  });
+
+  document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
+    abrirModalRepasoInteligente();
   });
 
   const nodosDificiles = new Map();   // hash -> { fila, grupo: 'propia'|'otros'|'desm' }
@@ -10936,7 +11938,6 @@ const ZONAS_SYNC_GIST = [
   }
 
   function actualizarContadoresDificiles() {
-    const btnD = document.getElementById('btn-modo-dificiles');
     let nAqui = 0, nOtros = 0, nDesm = 0;
     Object.keys(dificiles).forEach((h) => {
       const g = grupoActualDificil(h);
@@ -10948,8 +11949,7 @@ const ZONAS_SYNC_GIST = [
     elSumaDificilesOtros.textContent = 'De otros evaluadores (' + nOtros + ')';
     elDetDificilesDesm.style.display = nDesm > 0 ? 'block' : 'none';
     elSumaDificilesDesm.textContent = 'Desmarcadas (' + nDesm + ')';
-    btnD.textContent = 'Repasar difíciles (' + nAqui + ')';
-    btnD.disabled = nAqui === 0;
+    actualizarBotonRepasoInteligente();
     const total = Object.keys(dificiles).length;
     elNotaDificiles.textContent = total === 0
       ? 'Todavía no marcaste ninguna tarjeta como difícil (botón ☆ Difícil durante el estudio).'
@@ -12149,6 +13149,10 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       siguienteRev();
       guardarRetencionRutas();
       recalcularYGuardarSAjustadoPomodoro();
+      estadisticasConstruidas = false;
+      curvaOlvidoConstruido = false;
+      subtRepasarConstruido = false;
+      sesgoConfianzaConstruido = false;
       renderRetencionHistorial();
     }));
     div.appendChild(acc);
@@ -12208,6 +13212,60 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     lazyRetencionOtras.refrescar();
   }
 
+  function construirListaSubTOlvido() {
+    const elLista = document.getElementById('retencion-subt-olvido-lista');
+    const elVacio = document.getElementById('retencion-subt-olvido-vacio');
+    if (!elLista || !elVacio) return;
+    elLista.innerHTML = '';
+
+    const sAjustado = obtenerSAjustadoActual();
+    if (sAjustado === null || typeof sAjustado !== 'number' || sAjustado <= 0) {
+      elLista.style.display = 'none';
+      elVacio.textContent = 'Sin datos suficientes para predecir olvido';
+      elVacio.style.display = 'block';
+      return;
+    }
+
+    const subtemas = agruparRutasPorSubtema();
+    const candidatos = [];
+
+    subtemas.forEach((s) => {
+      const pctNoRet = pctNoRetenidaPorSubtema(s.nombre);
+      const retencionActual = 1 - ((pctNoRet || 0) / 100);
+      const t = retencionActual > 0 ? (-sAjustado * Math.log(0.60 / retencionActual)) : -Infinity;
+      if (t <= 1) {
+        candidatos.push({
+          nombre: s.nombre,
+          score: calcularScoreSubtema(s.nombre),
+          pctRetencion: Math.round(retencionActual * 100),
+          t: t,
+        });
+      }
+    });
+
+    candidatos.sort((a, b) => {
+      if (a.t !== b.t) return a.t < b.t ? -1 : 1;
+      if (b.score !== a.score) return b.score - a.score;
+      return a.nombre.localeCompare(b.nombre);
+    });
+
+    if (candidatos.length === 0) {
+      elLista.style.display = 'none';
+      elVacio.textContent = 'No hay subT próximos a olvidarse';
+      elVacio.style.display = 'block';
+      return;
+    }
+
+    elVacio.style.display = 'none';
+    elLista.style.display = 'block';
+    candidatos.forEach((item) => {
+      const fila = document.createElement('div');
+      fila.className = 'fila-retencion-ruta';
+      fila.textContent = item.nombre + ' — ' + item.score + '/100 — ' + item.pctRetencion + '%';
+      elLista.appendChild(fila);
+    });
+  }
+
   function renderRetencionHistorial() {
     const propias = retencionPropias().slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     const elLista = document.getElementById('retencion-historial-lista');
@@ -12224,6 +13282,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
 
     document.getElementById('btn-vaciar-retencion').style.display = retencionRutas.length > 0 ? 'inline-block' : 'none';
     renderRetencionOtras();
+    construirListaSubTOlvido();
   }
 
   const elModalRetencionRutas = document.getElementById('modal-retencion-rutas');
@@ -12232,8 +13291,10 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     renderRetencionSesionLista();
     retencionHistorialPaginaActual = 1;
     renderRetencionHistorial();
+    construirListaSubTOlvido();
     elModalRetencionRutas.classList.add('abierto');
   }
+
   function cerrarModalRetencionRutas() {
     elModalRetencionRutas.classList.remove('abierto');
   }
@@ -16696,14 +17757,14 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
         tarjetas = parsear_recordatorio(recordatorio)
         reportar_asociaciones(tarjetas, rutas)
 
+        fn_mapa = cargar_generador_respuestas()
         if resaltar:
-            fn_mapa = cargar_generador_respuestas()
             if fn_mapa is not None:
                 try:
                     resaltar_drawio(drawio, fn_mapa, tarjetas)
                 except Exception as error:
                     print(f"AVISO: falló el resaltado del drawio: {error}")
-                    print("       Se continúa con la generación del evaluador.")
+                    print("        Se continúa con la generación del evaluador.")
             else:
                 print("AVISO: No se pudo cargar el módulo para resaltar el drawio.")
         else:
@@ -16712,6 +17773,9 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
         descripciones_rutas = extraer_descripciones_drawio(drawio)
         print(f"Rutas con descripciones de imagen extraídas del drawio: {len(descripciones_rutas)}")
 
+        mapa_rutas_coords = extraer_coordenadas_drawio(drawio, tarjetas, rutas, fn_mapa)
+        print(f"Rutas con coordenadas extraídas del drawio: {len(mapa_rutas_coords)}")
+
         imagen_mapa = None
         if ruta_imagen_mapa:
             imagen_mapa = cargar_imagen_mapa_base64(ruta_imagen_mapa)
@@ -16719,7 +17783,7 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
                 print(f"Imagen del mapa incluida: {ruta_imagen_mapa}")
 
         generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, respuestas, Path(respuestas).stem,
-                     descripciones_rutas, imagen_mapa=imagen_mapa)
+                     descripciones_rutas, imagen_mapa=imagen_mapa, mapa_rutas_coords=mapa_rutas_coords)
     except Exception as error:
         if propagar:
             raise
