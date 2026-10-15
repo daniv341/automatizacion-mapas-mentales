@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
-# v1.5 — Flujo en dos fases sobre el mismo archivo. Al iniciar, un modal ofrece:
-#   [Curso normal]       FASE 1 (reemplazarInicio) -> modal "¿avanzar a la fase 2?" -> FASE 2
-#   [Fase 2 directamente] salta la fase 1 y aplica solo la FASE 2 (se presume la fase 1 ya aplicada)
-#   FASE 1  reemplazarInicio : repite la palabra clave en cada línea de su bloque.
-#   (pausa) modal            : aquí agregas a mano los ~ y ^ y guardas el archivo.
-#   FASE 2  marcarBifurcaciones : detecta bifurcaciones (*, +) y uniones ($, @).
+# v1.6 — Flujo en dos fases sobre el mismo archivo. Al iniciar, un modal ofrece:
+#   [Curso normal]       FASE 1 (reemplazarInicio + ^ en subT y ~ en 1er renglón) -> modal -> FASE 2
+#   [Fase 2 directamente] salta la fase 1 y aplica FASE 2 (asegurando ^ en subT y ~ en 1er renglón)
 # Antes de aplicar la fase 2 (en cualquiera de los dos caminos) el archivo se copia a
 # <archivo>_reemplazo.txt como respaldo.
 # Sin CLI: solo correr el script.
@@ -13,10 +10,46 @@ import re, os, sys, shutil, importlib.util
 # ==================== PARÁMETROS GENERALES ====================
 nombre_archivo = "modificables/borrador.txt"   # mismo archivo para las dos fases
 simbolos = {"temaP", "clasP", "temaS", "subT", "textS", "deF", "imP", "cuR", "clasS", "caR", "ejeM", "recoR", "nuM", "pasoS", "preG", "comP"}
+ETIQ_TITULO = {"temaP", "clasP", "temaS", "subT"}
 
 # ==================== FASE 1 ====================
-def procesar_lineas_con_simbolos(nombre_archivo, simbolos):
+def aplicar_prefijos_bloque_y_subt(lineas):
+    """Agrega '^' a subT y '~' al primer renglón de cada bloque de texto sin duplicar."""
+    salida = []
+    en_bloque = False
 
+    for linea in lineas:
+        limpia = linea.strip()
+        if not limpia:
+            en_bloque = False
+            salida.append(linea)
+            continue
+
+        sin_pre = limpia.lstrip("~^*+$@")
+        es_subt = sin_pre.startswith("subT") and (len(sin_pre) == 4 or sin_pre[4].isspace())
+        es_otro_titulo = any(
+            sin_pre.startswith(t) and (len(sin_pre) == len(t) or sin_pre[len(t)].isspace())
+            for t in (ETIQ_TITULO - {"subT"})
+        )
+
+        if es_subt:
+            en_bloque = False
+            if not limpia.startswith("^"):
+                linea = "^" + linea.lstrip()
+            salida.append(linea)
+        elif es_otro_titulo or limpia.startswith("^"):
+            en_bloque = False
+            salida.append(linea)
+        else:
+            if not en_bloque:
+                if not limpia.startswith("~"):
+                    linea = "~" + linea.lstrip()
+                en_bloque = True
+            salida.append(linea)
+
+    return salida
+
+def procesar_lineas_con_simbolos(nombre_archivo, simbolos):
     with open(nombre_archivo, "r", encoding="utf-8") as archivo:
         lineas = archivo.readlines()
 
@@ -25,24 +58,29 @@ def procesar_lineas_con_simbolos(nombre_archivo, simbolos):
 
     for linea in lineas:
         linea_limpia = linea.strip()
+        sin_pre = linea_limpia.lstrip("~^")
 
         if simbolo_actual:
-            if linea_limpia == "" or any(linea_limpia.startswith(simbolo) for simbolo in simbolos if simbolo != simbolo_actual):
+            if linea_limpia == "" or any(sin_pre.startswith(s) for s in simbolos if s != simbolo_actual):
                 simbolo_actual = None
-            else:
-                linea = f"{simbolo_actual} {linea}"
+            elif not sin_pre.startswith(simbolo_actual):
+                pref = linea_limpia[:len(linea_limpia) - len(sin_pre)]
+                resto = linea.lstrip()[len(pref):]
+                linea = f"{pref}{simbolo_actual} {resto}"
 
         for simbolo in simbolos:
-            if linea_limpia.startswith(simbolo):
+            if sin_pre.startswith(simbolo) and (len(sin_pre) == len(simbolo) or sin_pre[len(simbolo)].isspace()):
                 simbolo_actual = simbolo
                 break
 
         resultado.append(linea)
 
+    resultado = aplicar_prefijos_bloque_y_subt(resultado)
+
     with open(nombre_archivo, "w", encoding="utf-8") as archivo:
         archivo.writelines(resultado)
 
-    print(f"Archivo procesado y guardado en '{nombre_archivo}'.")
+    print(f"Fase 1: archivo procesado con etiquetas, '^subT' y '~' en '{nombre_archivo}'.")
 
 # ==================== FASE 2 ====================
 MAX_LINEAS_HOJA = 2            # una hoja intermedia ocupa como máximo N líneas
@@ -51,7 +89,6 @@ REPORTAR_DUDAS = True          # imprime las decisiones por heurística débil
 
 ETIQUETAS = ["temaP","clasP","temaS","subT","textS","deF","imP","cuR","clasS",
              "caR","ejeM","recoR","nuM","pasoS","preG","comP"]
-ETIQ_TITULO = {"temaP","clasP","temaS","subT"}
 ETIQ_LISTA  = {"caR"}
 
 # ----- listas lingüísticas (ampliables) -----
@@ -104,7 +141,9 @@ RE_LINEA = re.compile(r"^(?P<pre>[~^*+$@]*)(?:(?P<tag>" + "|".join(ETIQUETAS) + 
 
 def parsear(linea):
     m = RE_LINEA.match(linea.strip())
-    pre = m.group("pre").replace("*","").replace("+","").replace("$","").replace("@","")
+    pre_raw = m.group("pre")
+    # Conserva únicamente ~ y ^ sin duplicados
+    pre = ("^" if "^" in pre_raw else "") + ("~" if "~" in pre_raw else "")
     return {"pre": pre, "tag": m.group("tag"), "txt": m.group("txt").strip()}
 
 def palabras(l):  return [w.strip("()\".,;:").lower() for w in l["txt"].split()]
@@ -420,6 +459,9 @@ def procesar(entrada):
     salida, bloque = [], []
     def volcar():
         if not bloque: return
+        # Asegura '~' estrictamente en el primer renglón de cada bloque sin duplicar
+        if "~" not in bloque[0]["pre"]:
+            bloque[0]["pre"] += "~"
         dudas = []
         marcas = detectar(bloque, dudas)
         for i, l in enumerate(bloque):
@@ -436,18 +478,24 @@ def procesar(entrada):
             volcar(); salida.append(""); continue
         titulo = l["tag"] in ETIQ_TITULO or "^" in l["pre"]
         if titulo:
-            volcar(); salida.append(f"{l['pre']}{(l['tag']+' ') if l['tag'] else ''}{l['txt']}".rstrip()); continue
+            volcar()
+            # Solo subT recibe '^' automáticamente (sin duplicar si ya existía)
+            if l["tag"] == "subT" and "^" not in l["pre"]:
+                l["pre"] = "^" + l["pre"]
+            salida.append(f"{l['pre']}{(l['tag']+' ') if l['tag'] else ''}{l['txt']}".rstrip())
+            continue
         if "~" in l["pre"]: volcar()
         bloque.append(l)
     volcar()
     with open(entrada, "w", encoding="utf-8") as f:
         f.write("\n".join(salida).rstrip() + "\n")
-    print(f"Fase 2: {entrada} reescrito con bifurcaciones y uniones.")
+    print(f"Fase 2: {entrada} reescrito con '^subT', '~', bifurcaciones y uniones.")
 
 # ==================== MODAL + FLUJO ====================
 def preguntar_fase2():
-    msg = ("Fase 1 terminada.\n\n"
-           "Agrega tus ~ y ^ en el archivo, guárdalo y luego pulsa Sí.\n"
+    msg = ("Fase 1 terminada (con '^subT' y '~' en el primer renglón de cada bloque).\n\n"
+           "Si quieres ajustar o agregar algún ~ o ^ extra a mano en el archivo, "
+           "hazlo ahora, guárdalo y luego pulsa Sí.\n"
            "Antes de aplicar la fase 2 se guardará un respaldo en borrador_reemplazo.txt.\n\n"
            "¿Avanzar a la fase 2?")
     try:

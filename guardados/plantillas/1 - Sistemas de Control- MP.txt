@@ -1,19 +1,19 @@
 subT DEFINICIONES
-SISTEMAS
+imP SISTEMAS
 Ordenamiento componentes físicos,
 unidos o
 relacionados
 tal manera
-que forman y/o actúan
+que forman ydeF o actúan
 como una unidad completa
 
-CONTROL
+imP CONTROL
 Proceso para asegurar
 que actividades reales
 se ajusten a
 actividades planificadas
 
-SISTEMAS CONTROL
+imP SISTEMAS CONTROL
 Es 1 ordenamiento componentes físicos
 unidos o
 relacionados
@@ -23,7 +23,7 @@ dirigen o
 regulan
 al mismo sistema o a otro
 
-ENTRADA
+imP ENTRADA
 estímulo o
 excitación
 que se aplica
@@ -34,12 +34,12 @@ con fin producir,
 una respuesta específica
 del sistema control
 
-SALIDA
+imP SALIDA
 Es respuesta real
 que se obtiene
 1 sistema control
 
-Puede ser o no igual
+cuR Puede ser o no igual
 a respuesta implícita
 especificada por entrada,
 entradas y
@@ -47,7 +47,7 @@ salidas
 pueden tener
 muchas formas diferentes
 
-por ej pueden ser
+ejeM por ej pueden ser
 variables físicas o
 cantidades más abstractas
 tales como
@@ -56,12 +56,12 @@ ajuste o
 deseados
 para salida del sistema control
 
-PROPÓSITOS DEL SISTEMA CONTROL
+imP PROPÓSITOS DEL SISTEMA CONTROL
 Identificar o
 definir
 entrada y salida
 
-Si se dan
+cuR Si se dan
 entrada y salida,
 es posible
 identificar
@@ -69,7 +69,7 @@ delinear o
 definir
 naturaleza componentes
 
-SUBSISTEMA CONTROL
+imP SUBSISTEMA CONTROL
 Un Subsistema Control
 es 1 Sistema Control
 que se encuentra
@@ -79,41 +79,41 @@ entradas y salidas
 son variables internas
 del Sistema Control mayor
 
-ANCHO BANDA
+imP ANCHO BANDA
 es una medida frecuencia
 que bien responde o
 filtra
 las variaciones señal entrada
 
 subT TIPOS SISTEMAS CONTROL segun Naturaleza
-Naturales
-señalar 1 objeto con dedo,
+deF Naturales
+ejeM señalar 1 objeto con dedo,
 transpiración
 
-Artificiales
-Calentador
+deF Artificiales
+ejeM Calentador
 horno termostático (calefactor),
 interruptor eléctrico
 
-Mixto
-Un hombre conduciendo 1 automóvil
+deF Mixto
+ejeM Un hombre conduciendo 1 automóvil
 
 subT Importancia del Control
-1
-Establece medidas
+nuM 1
+caR Establece medidas
 para corregir actividades,
 tal forma
 que se alcancen objetivos
 exitosamente
 
-2
-Se aplica a todo:
+nuM 2
+imP Se aplica a todo:
 a cosas,
 a personas y
 a actos
 
-3
-Determina y
+nuM 3
+caR Determina y
 analiza
 rápidamente causas
 que pueden originar desviaciones
@@ -121,13 +121,13 @@ para que no vuelvan
 a presentarse
 en futuro
 
-4
-Reduce costos y
+nuM 4
+cuR Reduce costos y
 ahorra tiempo
 al evitar errores
 
 subT TIPOS SISTEMAS CONTROL segun Malla
-distinción se determina
+deF distinción se determina
 mediante acción control
 (es cantidad responsable
 activar sistema
@@ -137,7 +137,7 @@ cambio,
 movimiento o
 actividad
 
-MALLA ABIERTA
+imP MALLA ABIERTA
 sistemas control
 en donde salida
 no tiene efecto
@@ -145,7 +145,7 @@ sobre acción control
 <imagen>
 
 subT MALLA ABIERTA
-No existe acción retroalimentación,
+deF No existe acción retroalimentación,
 para comparar señal salida
 con entrada referencia,
 por tanto,
@@ -153,40 +153,39 @@ es necesario
 medir variable salida
 
 subT Caracteristicas
-a
-Para cada entrada referencia
+nuM a
+caR Para cada entrada referencia
 corresponde una condición
 de operación establecida
 
-b
-exactitud del sistema
+nuM b
+caR exactitud del sistema
 depende calibración
 del elemento medición
 
-c
-En presencia perturbaciones
+nuM c
+caR En presencia perturbaciones
 no cumple su función asignada
 debido a que
 no se adapta a cambios
 
-d
-Sólo se debe usar
+nuM d
+caR Sólo se debe usar
 cuando se conoce relación
 entre entrada y salida
 del sistema, y
-
 si no hay perturbaciones
 ni internas
 ni externas
 
-e
-Generalmente depende
+nuM e
+caR Generalmente depende
 del criterio y
 estimación
 del hombre
 
 subT TIPOS SISTEMAS CONTROL segun Malla
-MALLA CERRADA
+imP MALLA CERRADA
 Son aquellos
 en que acción control
 depende alguna manera,
@@ -196,7 +195,7 @@ sistemas control retroalimentados
 <imagen>
 
 subT MALLA CERRADA
-RETROALIMENTACION
+imP RETROALIMENTACION
 Es propiedad 1 sistema malla cerrada
 que permite
 que salida se compare
@@ -208,64 +207,64 @@ entrada y
 salida
 
 subT Caracteristicas
-a
-Aumento exactitud
+nuM a
+caR Aumento exactitud
 (habilidad para reproducir
 entrada fielmente)
 
-b
-Sensibilidad reducida
+nuM b
+caR Sensibilidad reducida
 en la razón(division)
 salida a entrada
 frente a variaciones
 en características del sistema
 
-c
-Ancho banda aumentado
+nuM c
+caR Ancho banda aumentado
 
 subT TIPOS SISTEMAS CONTROL segun su Señal
-señales en 1 sistema control
+deF señales en 1 sistema control
 son funciones
 alguna variable independiente,
 usualmente tiempo,
 denotada por t
 
-SEÑAL ANALÓGICA:
+imP SEÑAL ANALÓGICA:
 Una señal dependiente
 1 continuum valores
 variable independiente t
 
-se llama
+deF se llama
 señal continua en tiempo o
 señal datos continuos o
 señal analógica
 
-SEÑAL DIGITAL:
+imP SEÑAL DIGITAL:
 Una señal
 definida o
 interés solamente
 en instantes discretos
 variable independiente t
 
-se llama
+deF se llama
 señal discreta en tiempo,
 datos discretos,
 datos muestreados o digital
 
 subT OTRAS DEFINICIONES
-OBJETIVO INGENIERIA SISTEMAS CONTROL
+imP OBJETIVO INGENIERIA SISTEMAS CONTROL
 ingeniería sistemas control
 consiste
 en análisis y
 diseño
 configuraciones sistemas control
 
-a
-análisis es investigación
+nuM a
+deF análisis es investigación
 propiedades 1 sistema existente
 
-b
-diseño es
+nuM b
+deF diseño es
 elección y
 ordenamiento
 componentes del sistema
@@ -273,20 +272,20 @@ para desempeñar
 una tarea específica
 Existen dos métodos
 para diseño:
-Diseño por Análisis
+caR Diseño por Análisis
 se efectúa al modificar
 características de configuración
 1 sistema
 existente o
 estándar
 
-Diseño por Síntesis
+caR Diseño por Síntesis
 se efectua al definir
 forma del sistema
 directamente de sus especificaciones
 
 subT MODELOS O REPRESENTACIONES SISTEMAS CONTROL
-Para resolver 1 problema con Sistema Control,
+imP Para resolver 1 problema con Sistema Control,
 se debe
 especificar o
 describir
@@ -298,23 +297,23 @@ que facilite
 análisis o
 diseño
 
-Modelos representativos
-a
-Modelos Matemáticos
+deF Modelos representativos
+nuM a
+deF Modelos Matemáticos
 Estos modelos son necesarios
 cuando se requieren
 relaciones cuantitativas
 
 subT Modelos representativos
-tambien
+deF tambien
 Dependen del área aplicación
 del sistema control y
 complejidad tales modelos
 varía ampliamente
 
-b
-Diagramas Bloques
+nuM b
+deF Diagramas Bloques
 
-c
-Grafos Flujos Señales
+nuM c
+deF Grafos Flujos Señales
 

@@ -22,9 +22,9 @@ donde ζ
 es relación amortiguamiento o
 amortiguamiento relativo
 es decir
-*ángulo existente entre
-+origen y
-+Polo
+ángulo existente entre
+origen y
+Polo
 
 ωn es
 frecuencia angular oscilación natural,
@@ -46,12 +46,12 @@ a cual sistema oscila
 cuando amortiguamiento
 es distinto cero
 
-*Es importante discutir valores
-+en que se mueven
-@estos parámetros y
-+diferentes comportamientos
-@que adoptan sistemas
-$conforme varian
+Es importante discutir valores
+en que se mueven
+estos parámetros y
+diferentes comportamientos
+que adoptan sistemas
+conforme varian
 ζ y ωn
 afectan
 raíces ecuación característica
@@ -64,10 +64,10 @@ donde
 1
 ζ = cos φ,
 siendo φ ángulo
-*entre
-+@origen y
-+@Polo;
-$s1, s2= sigma ± jω
+entre
+origen y
+Polo;
+s1, s2= sigma ± jω
 
 2
 ωn es distancia
@@ -86,13 +86,13 @@ raices s1, s2 ,
 pueden reescribirse
 en términos
 forma binómica variable compleja s,
-*donde ζ ω
-+representa parte real y
-+parte imaginaria
+donde ζ ω
+representa parte real y
+parte imaginaria
 
-*parámetro ωd representa
-+representa parte real y
-+parte imaginaria
+parámetro ωd representa
+representa parte real y
+parte imaginaria
 
 subT Ubicación Geométrica ζ y su magnitud
 1
@@ -133,10 +133,10 @@ a 1 amortiguamiento nulo
 amortiguamiento cero
 resulta
 en una respuesta oscilación permanente,
-*y sistema se denomina
-+@marginalmente estable o
-+@marginalmente inestable
-$y corresponde
+y sistema se denomina
+marginalmente estable o
+marginalmente inestable
+y corresponde
 a Polos Imaginarios puros,
 es decir
 su parte real
@@ -148,19 +148,19 @@ subT Ubicación Geométrica Raices 1 Sistema 2º Orden conforme varía ζ
 Si ζ > 1
 entonces respuesta del sistema
 es sobreamortiguada,
-*corresponde a polos
-+reales y
-+distintos
+corresponde a polos
+reales y
+distintos
 
 2
 Si ζ = 1
 entonces respuesta del sistema
 es críticamente amortiguada,
 corresponde por lo menos
-*a 1 par polos
-+@reales e
-+@iguales
-$presentando
+a 1 par polos
+reales e
+iguales
+presentando
 Raices Reales Múltiples
 
 3
@@ -188,9 +188,9 @@ desempeño
 se estudia en base
 a respuesta transitoria
 a una entrada escalón unitario,
-*ya que
-+es fácil generarla y
-+muy drástica
+ya que
+es fácil generarla y
+muy drástica
 
 Es decir,
 si responde bien
@@ -254,10 +254,10 @@ sobreimpulso porcentual máximo
 Tiempo Establecimiento ts:
 Es tiempo que
 curva respuesta requiere
-*para
-+@alcanzar y
-+@mantenerse
-$en 1 rango alrededor
+para
+alcanzar y
+mantenerse
+en 1 rango alrededor
 del valor final
 con una magnitud especificada
 por porcentaje absoluto
@@ -291,9 +291,9 @@ responde lentamente
 
 Un sistema control
 debe tener
-*como requisito fundamental
-+@su rapidez respuesta y
-+@un adecuado amortiguamiento
-$(incluso en algunas aplicaciones
+como requisito fundamental
+su rapidez respuesta y
+un adecuado amortiguamiento
+(incluso en algunas aplicaciones
 no se tolera ninguna oscilación)
 

@@ -1,27 +1,19 @@
-accion1: copias y pegas el pdf que del cual quieras extraer la informacion y las imagenes en la carpeta donde se encuentran los programas
-accion2: ejecutas el programa "extraerInformacionPDF.py" cambiando el nombre del primer parametro de la funcion "procesar_pdf" por el nombre del pdf a utilizar
-accion3: ejecutas primero "eliminarSobrantes.py" para que elimine de primera aquello que no te sirve y tambien caracteres que provoquen errores al convertirse al diagrama
-accion4: al generarte el txt de salida eliminas los conectores que creas necesario y separas con enter cuando se trate de otra rama, 2 enter si se trata de otro tema
-accion5: usas simbolos especiales primero si quieres para no tener que poner la palabra clave directamente, despues lo reemplazas con "ctrl F"
-accion6: le agregas las palabras claves a los renglones solamente al inicio de un parrafo(el parrafo termina en un enter) para que cambie su forma en el diagrama con "reemplazarInicio.py", 
-accion7: agregas los conectores con los cuales se separan y unen las flechas, para identificar donde van buscas las letras "y" "o" ","
-accion8: una vez hecho esto con "ctrl F" reemplazas el simbolo que representa la rama por la rama y un salto de linea al inicio, ejemplo "\+" -> "\n+" (activar expresiones regulares)
-accion9: lo mismo en el caso de unir las flechas, reemplazas el simbolo donde se unen por dicho simbolo y un salto de linea ejemplo "\$" -> "\n$" (activar expresiones regulares)
-accion10: eliminar las letras "y"
-accion11: ejecutas el programa "mapaMental.py", pero antes de ellos puedes cambiar la variable "opciones"  al color que desees
-accion12: lo importas en drawio al archivo "diagrama.xml"
-accion13: mueves los cuadros que sean necesarios luego los unes con las flechas que creas necesarias
-accion14: vas a la pestaña "organizar" en la opcion "diseño" eliges "arbol vertical" para que te forme el diagrama de forma automatica
-
-adiconal: puedes decirle a chat gpt que te resuma el texto, antes mandandole el msj de la siguiente forma:
-
-forma1: necesito que hagas 2 cosas con este texto que te dare a continuacion, primero que separes el texto en oraciones(cada oracion separada por un salto de linea), de tal forma que pueda entenderse aun con los saltos linea y segundo que elimines los conectores necesarios pero sin que se pierda la comprension del texto:(pasas el texto)
-
-forma2(recomendable): necesito que hagas 2 cosas con este texto que te dare a continuacion, primero que separes el texto en oraciones(cada oracion separada por un salto de linea), de tal forma que pueda entenderse aun con los saltos linea y segundo que elimines los articulos (la las lo los) que sean necesarios pero sin que se pierda la comprension del texto:(pasas el texto)
+accion1: ejecutas el programa "extraerInformacionPDF.py"
+accion2: ejecutas primero "eliminarSobrantes.py" para que elimine de primera aquello que no te sirve y haga los saltos de linea necesarios para que quede de la forma normalizada
+accion3: al generarte el txt de salida separas con enter cuando se trate de otra rama, 2 enter si se trata de otro subT
+accion4: usas el primer prompt para poder normalizar el txt agregando las palabras reservadas segun los criterios semanticos
+accion5: despues de agregadas las palabras reservadas ejecutas "reemplazarInicio.py" presionando el boton "curso normal" para que aplique la palabra clave a todo el bloque o hasta donde cambie la clave dentro del bloque
+accion6: cancelas la fase 2 si gustas para agregar los simbolos ^ y ~ a los subT y a los bloques
+accion7: ejecutas nuevamente"reemplazarInicio.py" pero presionando "fase 2" para que aplique los simbolos de bifurcacion (* y +) y de union (@ y $)
+accion8: una vez hecho esto con "ctrl F" reemplazas el simbolo para que haga un salto de linea antes de este(solo para + y $) ejemplo "\+" -> "\n+" (activar expresiones regulares)
+accion9: ejecutas el programa "mapaMental.py" para generar el mapa mental "diagrama.xml" y luego importarlo en drawio para verlo
+accion10: verificas que las ramas esten bien separadas y las bifurcaciones y uniones bien aplicadas
+accion11: vas a pestaña "organizar" opcion "personalizado" y pegas el diseño adjuntado abajo luego en aplicar
+accion12: armas recordario.txt con primera(trata de que sea una pregunta) y segunda(palabras clave que destaquen a la ruta en cuestion, no mas de 4 por cada renglon o primera)
+accion13: ejecutas "generadorRespuestas", seleccionas el drawio con el mapa y recordatorio para que haga la asociacion de rutas de forma automatica, de paso asiganara la etiqueta de ruta a cada ruta de forma numerada y sencuencial
+accion14: ejecutas "evaluadorTemas" seleccionas el drawio recordatorio.txt respuestas.txt para que genere el evaluador correspondiente con todas las rutas asociadas, primera y segunda para poder evaluarte en lo estudiado
 
 nota: no usar '<', '>', '“', '”', '"', '&' y tambien fjarte en las letras VOCALES MAYUSCULAS CON ACENTO en el texto, provoca error en el codigo
-
-conectores que puedes eliminar: en, el, la, las, de, del, un, una, que
 
 palabras reservadas:
 temaP 
@@ -42,23 +34,262 @@ preG
 comP 
 tarJ 
 
---Como Evaluarte con Tarjetas
-1- extrae las tarjetas de un drawio o xml con "extractorTarjetas.py" que se guardara en "recordatorio.txt"
-2- genera las tarjetas extrayendo la informacion de un txt con "5-generadorTarjetas.py" que se guardara en "tarjetas.xml"
-3- genera el evaluador extrayendo la informacion de un drawio o xml con "6-evaluadorTemas" que se guardara en "evaluadorTemas.html" que podras ejecutar, existen 2 modos 1 secuencual y 2 aleatorio
 
+estilo de diseño para el mapa, nota: deberas seleccionar todos los bordes ir a fomato -> puntos de referencia -> recto para lograr la forma a la que nos acostumbramos
+[
+  {
+    "layout": "elkTree",
+    "config": {
+      "elk.spacing.nodeNode": "25",
+      "elk.mrtree.weighting": "DESCENDANTS",
+      "elk.direction": "DOWN",
+      "edgeStyle": "keep",
+      "corners": "straight",
+      "resizeNodes": false,
+      "preserveOrigin": true
+    }
+  }
+]
 
-instruccion para agente que deba extraer informacion de imagen de mapa mental:
-Actúa como un extractor de texto y estructurador de datos visuales. Analiza la imagen del mapa mental adjunto y realiza lo siguiente:
+{
+# ROL Y OBJETIVO
+Actúa como un analizador semántico experto en estructuración de apuntes técnicos de estudio. 
+Te entregaré un archivo o texto en formato `.txt` que ya está resumido, recortado en frases cortas por línea (estilo telegráfico) y separado en bloques mediante saltos de línea en blanco.
 
-1. Extrae únicamente el texto contenido en el gráfico, respetando fielmente las palabras de la imagen.
-2. Jerarquiza la información en niveles (Rama Principal → Ramas Secundarias → Ramas Terciarias → Ramas Finales / Hojas).
-3. Formato de salida estricto:
-   - Utiliza exclusivamente texto plano dentro de un bloque de código.
-   - NO incluyas ningún tipo de aditamento, como viñetas (*, -, •), símbolos, prefijos ("Rama 1:", "Sub-rama:"), etiquetas HTML o formato Markdown (como negritas).
-   - Mantén el texto limpio línea por línea.
-4. Espaciado y saltos de línea:
-   - Deja UN salto de línea doble (una línea en blanco) entre cada sub-rama/rama terciaria para delimitarlas visualmente.
-   - Deja DOS saltos de línea dobles (dos líneas en blanco) al cambiar de una rama secundaria principal a la siguiente.
-   - Dentro de un mismo bloque final (hojas agrupadas), coloca cada elemento en una nueva línea sin saltos en blanco intermedios.
-5 Por ultimo al inicio de cada renglon con contenido le agregas "comP ", no elimines ningun salto de linea
+Tu única tarea es agregar al inicio de las líneas correspondientes la **palabra clave (etiqueta)** que clasifique semánticamente ese fragmento, respetando estrictamente el texto original y las reglas de formato.
+
+---
+
+# 1. REGLAS INQUEBRANTABLES DE FORMATO E INTEGRIDAD
+1. **Prohibido alterar el texto:** NO modifiques, NO resumas, NO corrijas la gramática, NO agregues artículos omitidos, NO cambies números como `1` por "un/una", y NO alteres marcadores como `<imagen>`. Conserva exactamente los mismos saltos de línea y bloques del texto original.
+2. **Formato de la etiqueta:** Escribe la palabra clave respetando exactamente sus mayúsculas y minúsculas, seguida de **un único espacio en blanco** antes del primer carácter del renglón:
+   `[etiqueta] [texto original de la línea]`
+3. **Continuación de idea:** La etiqueta solo se coloca en la primera línea donde comienza esa unidad semántica (concepto, definición, característica, etc.). Las líneas siguientes que continúan la misma frase o idea NO llevan etiqueta hasta que cambie el rol semántico dentro del bloque o inicie un nuevo bloque.
+4. **Convivencia en un mismo bloque:** En un mismo bloque (sin líneas en blanco de por medio) pueden convivir varias etiquetas en distintas líneas si cambia la función del texto (por ejemplo: empezar con `imP`, seguir abajo con `deF`, luego `caR` o `ejeM`).
+
+---
+
+# 2. DICCIONARIO DE ETIQUETAS
+
+## A) Etiquetas Exclusivas del Usuario (PROHIBIDO AGREGAR O BORRAR)
+Estas etiquetas ya vienen escritas en el `.txt` de entrada. **Debes conservarlas intactas exactamente donde están y NUNCA agregarlas por tu cuenta:**
+* `temaP`: Tema principal.
+* `temaS`: Tema secundario.
+* `subT`: Subtema.
+* `recoR`: Recordatorio personal.
+
+## B) Etiquetas que DEBES Asignar
+* `imP`: **Importante / Definición Fundamental.** Se usa para conceptos pilares, títulos de conceptos clave o afirmaciones críticas que deben tomarse muy en cuenta. Reemplaza a `deF` cuando se trata de una definición fundamental.
+* `deF`: **Definición.** Se usa para definiciones estándar, para la explicación inmediata debajo de un título marcado con `imP`, o para aclaraciones terminológicas/sinónimos dentro de un bloque (ej. "se llama...", "equivale a...").
+* `clasP`: **Clasificación Principal.** Se usa cuando un bloque bajo un `subT` trata directamente sobre una clasificación o tipos de un tema importante (nivel subtema). Se coloca en el enunciado clasificatorio o en cada categoría principal de esa clasificación.
+* `clasS`: **Clasificación Simple.** Se usa cuando aparece una sub-clasificación pequeña o secundaria anidada dentro de un `imP`, `deF`, `caR`, etc. (ej. "Existen dos métodos para...").
+* `caR`: **Característica o Componente.** Propiedad, cualidad, condición de operación o listado de elementos que componen a un sistema o concepto.
+* `cuR`: **Curiosidad o Nota.** Dato complementario, ventaja/desventaja, observación particular o contraste entre conceptos ("A menudo...", "Puede ser o no...", "Ventajas:").
+* `ejeM`: **Ejemplo.** Caso práctico, ilustración concreta o aplicación real ("por ej...", casos concretos de una categoría).
+* `nuM`: **Numeración o Inciso.** Identificador de lista o apartado (`1`, `2`, `3`, `a`, `b`, `c`, `1.1`, `1.a`, `A.1`, etc.).
+* `pasoS`: **Paso.** Instrucción secuencial o etapa de un algoritmo/procedimiento concreto para realizar algo.
+* `comP`: **Comprensión.** Explicación lógica, deducción o fundamento teórico que el estudiante debe comprender a fondo para asimilar el tema.
+* `preG`: **Pregunta.** Cuestionamiento directo o pregunta de estudio.
+* `textS`: **Texto Simple.** Texto introductorio, de transición o de contexto menor que forma parte del contenido pero no tiene peso de definición, importancia ni característica.
+
+---
+
+# 3. REGLAS ESPECÍFICAS DE JERARQUÍA Y DESEMPATE
+
+1. **Criterio entre `imP` y `deF`:**
+   * **Definición Fundamental (`imP` solo):** Si un bloque define un concepto base o pilar desde su primera línea (título del concepto en mayúsculas o concepto central seguido de su definición directa), etiqueta la primera línea con `imP ` y no pongas `deF` debajo.
+   * **Binomio `imP` + `deF`:** Si la primera línea nombra una variante/elemento importante (`imP `) y en la línea siguiente se desglosa su comportamiento técnico, matemático o una definición secundaria ("se llama..."), usa `imP ` en el encabezado y `deF ` en la línea donde inicia esa explicación o denominación.
+2. **Criterio entre `clasP` y `clasS`:**
+   * Si el `subT` actual es una clasificación (ej. `subT TIPOS DE...` o `subT CLASIFICACIÓN DE...`), el bloque introductorio de la clasificación y/o las categorías principales que lo dividen llevan `clasP `.
+   * Si estando dentro de un `imP` o un `deF` se mencionan tipos o variantes menores de ese punto (ej. "Existen dos métodos..."), usa `clasS `.
+3. **Regla obligatoria para `nuM`:**
+   * Cada vez que aparezca un número o letra de inciso solo en una línea (ej. `1`, `a`, `1.1`), antepón `nuM ` (ej. `nuM 1`, `nuM a`).
+   * **REGLA ESTRICTA:** La línea inmediatamente inferior a un `nuM` **SIEMPRE** debe llevar una etiqueta semántica (`imP `, `deF `, `caR `, `cuR `, `pasoS `, `comP `, etc.). Nunca dejes el renglón siguiente a un `nuM` sin etiquetar.
+
+---
+
+# 4. EJEMPLOS DE APLICACIÓN (ENTRADA -> SALIDA ESPERADA)
+
+### Ejemplo 1: Definición fundamental (`imP`), curiosidad (`cuR`) y ejemplo (`ejeM`)
+**ENTRADA:**
+```text
+subT DEFINICIONES
+SALIDA
+Es respuesta real
+que se obtiene
+1 sistema control
+
+Puede ser o no igual
+a respuesta implícita
+especificada por entrada
+
+por ej pueden ser
+variables físicas o
+valores referencia
+
+```
+
+**SALIDA ESPERADA:**
+
+```text
+subT DEFINICIONES
+imP SALIDA
+Es respuesta real
+que se obtiene
+1 sistema control
+
+cuR Puede ser o no igual
+a respuesta implícita
+especificada por entrada
+
+ejeM por ej pueden ser
+variables físicas o
+valores referencia
+
+```
+
+### Ejemplo 2: Clasificación Principal (`clasP`) bajo un `subT` vs Clasificación Simple (`clasS`) dentro de un inciso
+
+**ENTRADA:**
+
+```text
+subT TIPOS SISTEMAS segun Naturaleza
+Naturales
+señalar 1 objeto con dedo,
+transpiración
+
+Artificiales
+Calentador,
+interruptor eléctrico
+
+subT OTRAS DEFINICIONES
+b
+diseño es
+elección y
+ordenamiento
+componentes del sistema
+Existen dos métodos
+para diseño:
+Diseño por Análisis
+se efectúa al modificar
+características 1 sistema existente
+
+Diseño por Síntesis
+se efectua al definir
+forma del sistema
+directamente de sus especificaciones
+
+```
+
+**SALIDA ESPERADA:**
+
+```text
+subT TIPOS SISTEMAS segun Naturaleza
+clasP Naturales
+ejeM señalar 1 objeto con dedo,
+transpiración
+
+clasP Artificiales
+ejeM Calentador,
+interruptor eléctrico
+
+subT OTRAS DEFINICIONES
+nuM b
+deF diseño es
+elección y
+ordenamiento
+componentes del sistema
+clasS Existen dos métodos
+para diseño:
+caR Diseño por Análisis
+se efectúa al modificar
+características 1 sistema existente
+
+caR Diseño por Síntesis
+se efectua al definir
+forma del sistema
+directamente de sus especificaciones
+
+```
+
+### Ejemplo 3: Regla obligatoria de `nuM` + combinación `imP`, `deF`, `caR` y `cuR`
+
+**ENTRADA:**
+
+```text
+subT Caracteristicas
+a
+Aumento exactitud
+(habilidad para reproducir
+entrada fielmente)
+
+4
+elementos anticipativos control,
+son componentes
+trayectoria directa
+requeridos para generar
+señal control apropiada
+Entre estos se encuentran
+controladores,
+compensadores o
+amplificadores
+
+10
+señal actuante o error,
+es suma algebraica
+entrada referencia
+más o menos
+retroalimentación primaria b
+En 1 sistema malla abierta,
+señal actuante
+es igual a r
+acción control
+se genera en función
+del valor dado por
+señal actuante
+
+```
+
+**SALIDA ESPERADA:**
+
+```text
+subT Caracteristicas
+nuM a
+caR Aumento exactitud
+(habilidad para reproducir
+entrada fielmente)
+
+nuM 4
+imP elementos anticipativos control,
+son componentes
+trayectoria directa
+requeridos para generar
+señal control apropiada
+caR Entre estos se encuentran
+controladores,
+compensadores o
+amplificadores
+
+nuM 10
+imP señal actuante o error,
+es suma algebraica
+entrada referencia
+más o menos
+retroalimentación primaria b
+cuR En 1 sistema malla abierta,
+señal actuante
+es igual a r
+deF acción control
+se genera en función
+del valor dado por
+señal actuante
+
+```
+
+---
+
+# 5. INSTRUCCIÓN DE ENTREGA
+
+Devuelve **únicamente** el contenido completo del archivo `.txt` procesado dentro de un bloque de código de texto plano, sin introducciones, sin resúmenes y sin omitir ninguna línea del texto original. A continuación te paso el texto a etiquetar:
+
+}
