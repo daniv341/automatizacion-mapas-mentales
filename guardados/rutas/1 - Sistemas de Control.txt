@@ -175,21 +175,21 @@ es necesario
 medir variable salida
 
 RUTA 22
-Caracteristicas
+Caracteristicas Malla abierta
 a
 Para cada entrada referencia
 corresponde una condición
 de operación establecida
 
 RUTA 23
-Caracteristicas
+Caracteristicas Malla abierta
 b
 exactitud del sistema
 depende calibración
 del elemento medición
 
 RUTA 24
-Caracteristicas
+Caracteristicas Malla abierta
 c
 En presencia perturbaciones
 no cumple su función asignada
@@ -197,7 +197,7 @@ debido a que
 no se adapta a cambios
 
 RUTA 25
-Caracteristicas
+Caracteristicas Malla abierta
 d
 Sólo se debe usar
 cuando se conoce relación
@@ -205,13 +205,13 @@ entre entrada y salida
 del sistema, y
 
 RUTA 26
-Caracteristicas
+Caracteristicas Malla abierta
 si no hay perturbaciones
 ni internas
 ni externas
 
 RUTA 27
-Caracteristicas
+Caracteristicas Malla abierta
 e
 Generalmente depende
 del criterio y estimación
@@ -241,14 +241,14 @@ entrada y
 salida
 
 RUTA 30
-Caracteristicas
+Caracteristicas Malla Cerrada
 a
 Aumento exactitud
 (habilidad para reproducir
 entrada fielmente)
 
 RUTA 31
-Caracteristicas
+Caracteristicas Malla Cerrada
 b
 Sensibilidad reducida
 en la razón(division)
@@ -257,7 +257,7 @@ frente a variaciones
 en características del sistema
 
 RUTA 32
-Caracteristicas
+Caracteristicas Malla Cerrada
 c
 Ancho banda aumentado
 

@@ -1640,21 +1640,24 @@ def preguntar_export_jpg(root) -> bool:
 
 def _ejecutar_export_drawio(ejecutable: str, salida: Path, drawio_path: Path,
                             indice_pagina: int):
-    """v4.21.1: corre el comando de export con el indice de pagina dado.
-    -o recibe la ruta COMPLETA del jpg (misma carpeta que el drawio, mismo
-    nombre): draw.io no acepta una carpeta sola como destino."""
+    """v4.21.1: corre el comando de export con el indice de pagina dado."""
     comando = [
         ejecutable,
-        "-x", "-f", "jpg", "-q", "100", "-p", str(indice_pagina),
+        "-x",
+        "-f", "jpg",
+        "-q", "100",
+        "-b", "20",              # Agrega 20px de margen alrededor para no cortar bordes
+        "-s", "0.75",            # Escala al 75% para no superar el límite de 16384px de Chromium
+        "-p", str(indice_pagina),
         "-o", str(salida),
         str(drawio_path),
+        "--disable-gpu",         # Evita que el límite de textura de la GPU recorte el lienzo ancho
     ]
     return subprocess.run(
         comando, capture_output=True, text=True,
         encoding="utf-8", errors="replace",
         timeout=DRAWIO_TIMEOUT_SEG,
     )
-
 
 def exportar_mapa_jpg(root, drawio_path: Path) -> None:
     """v4.21: pregunta al usuario y, si acepta, exporta la Pagina 1 del

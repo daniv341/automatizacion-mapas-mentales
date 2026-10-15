@@ -1,0 +1,326 @@
+RUTA 1
+ITIL
+ITIL
+Es 1 conjunto
+buenas prácticas
+para gestión servicios
+tecnologías información
+
+RUTA 2
+Etapas del ciclo vida del servicio ITIL
+marco ITIL se estructura
+en varias etapas
+que conforman ciclo vida del servicio,
+permitiendo a empresas
+gestionar sus servicios TI
+manera
+ordenada y
+eficaz
+
+RUTA 3
+Estrategia del servicio
+define
+objetivos y valor
+que servicios TI
+aportarán al negocio
+
+RUTA 4
+Estrategia del servicio
+En esta etapa,
+se identifican servicios clave,
+
+RUTA 5
+Estrategia del servicio
+se analizan
+costes y
+riesgos,
+
+RUTA 6
+Estrategia del servicio
+y se planifican
+capacidades necesarias
+para su entrega correcta
+
+RUTA 7
+Fundamentos ITIL
+Para implementar ITIL
+manera efectiva,
+es fundamental comprender
+sus principios clave
+
+RUTA 8
+Fundamentos ITIL
+1
+Gestión del cambio
+permite introducir modificaciones
+en servicios TI
+minimizando riesgos
+
+RUTA 9
+Fundamentos ITIL
+Se
+evalúan impactos y se planifican implementaciones
+manera controlada
+
+RUTA 10
+Fundamentos ITIL
+2
+Gestión incidencias
+busca restaurar servicios
+más rápido posible
+ante fallos,
+asegurando una atención óptima
+a usuarios
+
+RUTA 11
+Fundamentos ITIL
+3
+Gestión problemas
+Mientras que gestión incidencias
+resuelve problemas inmediatos,
+gestión problemas
+se enfoca en
+identificar y eliminar
+causa raíz fallos
+para prevenir
+futuras incidencias
+
+RUTA 12
+Proposito itil
+ITIL tiene como fin
+creación valor a empresa
+En gestión moderna,
+es vital no confundir
+entregar 1 software con
+entregar 1 servicio
+
+RUTA 13
+Proposito itil
+1 producto es
+una configuración recursos organización
+(personas, tecnología, etc)
+diseñada para ofrecer valor
+En cambio,
+un servicio es medio
+para permitir cocreación valor,
+facilitando resultados
+que clientes
+quieren alcanzar
+sin tener que
+gestionar costes y
+riesgos específicos
+
+RUTA 14
+sistema valor ITIL
+sistema valor
+es modelo que integra
+todos
+componentes y actividades
+una organización
+para facilitar
+cocreación valor
+
+RUTA 15
+sistema valor ITIL
+A
+Entradas (Inputs):
+sistema se activa
+por Oportunidad
+(una posibilidad aportar valor) y
+
+RUTA 16
+sistema valor ITIL
+Demanda
+(la necesidad
+productos
+y servicios)
+
+RUTA 17
+sistema valor ITIL
+B
+Procesamiento:
+en centro, un conjunto
+componentes interconectados
+procesa esas entradas
+
+RUTA 18
+sistema valor ITIL
+C
+Salida (Output):
+resultado del procesamiento
+, que seria generación Valor
+para
+organización y
+sus clientes
+
+RUTA 19
+Definición COBIT
+COBIT
+marco COBIT
+(Objetivos control
+para
+información y tecnología
+relacionada)
+está diseñado
+para facilitar
+forma en que se
+desarrolla, mejora, implementa y administra
+tecnología información
+
+RUTA 20
+¿Cuáles son principios del marco COBIT?
+principios rectores
+desempeñan 1 papel clave
+para garantizar
+que soluciones TI
+apoyen eficazmente
+a una organización
+Existen cinco principios rectores COBIT
+
+RUTA 21
+¿Cuáles son principios del marco COBIT?
+1
+Principios rectores (Guiding Principles):
+recomendaciones universales
+que guían a organización
+en cualquier circunstancia
+
+RUTA 22
+¿Cuáles son principios del marco COBIT?
+2
+Gobernanza (Governance):
+sistema por el que
+organización
+se dirige y
+controla
+
+RUTA 23
+¿Cuáles son principios del marco COBIT?
+3
+Cadena valor del servicio (Service Value Chain):
+Representa
+1 conjunto actividades interconectadas
+que organización realiza
+para
+crear y
+entregar
+
+RUTA 24
+¿Cuáles son principios del marco COBIT?
+4
+Prácticas gestión (Management Practices):
+conjunto recursos organizativos
+diseñados para
+realizar 1 trabajo
+
+RUTA 25
+¿Cuáles son principios del marco COBIT?
+5
+Mejora continua (Continual Improvement):
+una actividad recurrente
+a todos niveles
+para asegurar
+que rendimiento
+cumple forma constante
+segun expectativas
+
+RUTA 26
+Marco
+marco COBIT organiza
+objetivos gobernanza
+1 sistema TI,
+así como prácticas utilizadas
+para lograrlos
+
+RUTA 27
+Marco
+También conecta estas medidas
+con necesidades empresa
+
+RUTA 28
+Marco
+ayuda a gerentes
+a asignar responsabilidades
+organizar objetivos
+evaluar 
+rendimiento y
+
+RUTA 29
+Marco
+establecer 
+conexiones
+entre procesos
+que interactúan 
+entre sí
+
+RUTA 30
+Objetivos del marco COBIT
+1
+Intercambio de información simplificado
+COBIT simplifica
+el proceso
+de compartir información
+entre
+gerentes TI,
+trabajadores y
+partes interesadas clave
+
+RUTA 31
+Objetivos del marco COBIT
+2
+Combinación equilibrada de estrategias de TI
+se combinan
+estrategias comerciales y metodologías de TI,
+trabajando en conjunto
+en lugar de por separado
+
+RUTA 32
+Objetivos del marco COBIT
+3
+Optimización de costos
+marcos COBIT
+pueden optimizar los costos
+al reducir
+la redundancia en
+sistemas y
+capital humano.
+
+RUTA 33
+Diferencias ambas
+Una diferencias clave
+entre
+ITIL y COBIT es
+que mientras
+COBIT describe
+que se debe hacer,
+ITIL describe
+formas hacerlo
+
+RUTA 34
+Diferencias ambas
+Con cada iteración ITIL,
+profesionales TI
+obtienen pasos
+concretos y procesables
+que pueden implementar
+para mejorar
+su prestación servicios
+
+RUTA 35
+Diferencias ambas
+¿Pueden
+COBIT e ITIL
+funcionar en conjunto?
+Sí Una formas más fáciles
+es identificar
+una forma mejorar servicios
+utilizando COBIT y
+
+RUTA 36
+Diferencias ambas
+luego utilizar ITIL
+para definir
+estructura y procesos
+que utilizará
+para realizar las mejoras.
+

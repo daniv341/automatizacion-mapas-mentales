@@ -613,6 +613,8 @@ def extraer_coordenadas_drawio(ruta_drawio, tarjetas, rutas, get_routes_id_map=N
     alcance = diagrams[INDICE_PAGINA_DRAWIO] if diagrams else root
 
     celdas_raw = {}
+    predecesores = {}
+    sucesores = {}
     ids_por_ruta = {}
 
     for elem in alcance.iter():
@@ -628,7 +630,14 @@ def extraer_coordenadas_drawio(ruta_drawio, tarjetas, rutas, get_routes_id_map=N
                     mxcell = hijo
                     break
 
-        if mxcell is None or mxcell.get("edge") == "1":
+        if mxcell is None:
+            continue
+
+        if mxcell.get("edge") == "1":
+            origen, destino = mxcell.get("source"), mxcell.get("target")
+            if origen and destino:
+                predecesores.setdefault(destino, set()).add(origen)
+                sucesores.setdefault(origen, set()).add(destino)
             continue
 
         geom = None
@@ -709,11 +718,41 @@ def extraer_coordenadas_drawio(ruta_drawio, tarjetas, rutas, get_routes_id_map=N
             return [id_celda[len(PREFIJO_CONV):]]
         return [id_celda]
 
+    def alcanzables(inicio, grafo):
+        vistos = set()
+        pila = list(inicio)
+        while pila:
+            n = pila.pop()
+            for m in grafo.get(n, ()):
+                if m not in vistos:
+                    vistos.add(m)
+                    pila.append(m)
+        return vistos
+
+    anclas = {n: set(ids) for n, ids in ids_por_ruta.items()}
+
     for numero, bloque in mapa_rutas.items():
         for cruda in set((bloque.get("ids") or {}).values()):
             for id_real in resolver_id(cruda):
                 if id_real in celdas_abs:
                     ids_por_ruta.setdefault(int(numero), set()).add(id_real)
+
+    for numero, anc in anclas.items():
+        if not anc:
+            continue
+        desc = alcanzables(anc, sucesores)
+        antepasados = alcanzables(anc, predecesores)
+        fuera = antepasados - desc - anc
+        ids_por_ruta[numero] -= fuera
+
+    for numero in list(ids_por_ruta):
+        base = set(ids_por_ruta[numero])
+        descendientes = alcanzables(base, sucesores)
+        extra = set()
+        for destino in base:
+            ancestros = alcanzables([destino], predecesores)
+            extra |= (descendientes & ancestros)
+        ids_por_ruta[numero] |= {n for n in extra if n in celdas_abs}
 
     subt_por_ruta = {}
     for t in (tarjetas or []):
@@ -4203,6 +4242,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </details>
 
     <div class="sync-seccion-titulo">📉 SubT próximos a olvidarse</div>
+    <p class="nota-dificiles" style="margin:-4px 0 8px;">Cada fila: subT — score/100 — % retención actual (histórica)</p>
     <div id="retencion-subt-olvido-lista"></div>
     <p class="nota-dificiles" id="retencion-subt-olvido-vacio" style="display:none;"></p>
 
@@ -6283,10 +6323,38 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (elMapaImg && elMapaSvgOverlay) sincronizarGeometriaSvgMapa();
   });
 
+function normalizarSubT(nombre) {
+    return normalizarPalabra(String(nombre || '')).replace(/\s+/g, ' ').trim();
+  }
+
+  function construirMapaSubTCanonicos() {
+    const canonicos = new Map();
+    agruparPorTema().forEach((g) => {
+      const clave = normalizarSubT(g.nombre);
+      if (clave && !canonicos.has(clave)) canonicos.set(clave, g.nombre);
+    });
+    agruparRutasPorSubtema().forEach((s) => {
+      const clave = normalizarSubT(s.nombre);
+      if (clave && !canonicos.has(clave)) canonicos.set(clave, s.nombre);
+    });
+    return canonicos;
+  }
+
+  function resolverSubTCanonico(nombreCrudo, mapaCanonicos) {
+    const limpio = String(nombreCrudo || '').trim();
+    if (!limpio) return '(Sin tema)';
+    const clave = normalizarSubT(limpio);
+    if (!clave) return '(Sin tema)';
+    if (mapaCanonicos.has(clave)) return mapaCanonicos.get(clave);
+    mapaCanonicos.set(clave, clave);
+    return clave;
+  }
+
   function calcularDatosEstadoMapa() {
     const sAjustado = obtenerSAjustadoActual();
     const sValido = sAjustado !== null && typeof sAjustado === 'number' && sAjustado > 0;
     const rutaASubt = mapaRutaASubtema();
+    const mapaCanonicos = construirMapaSubTCanonicos();
 
     const rutasDificilesSet = new Set();
     tarjetasCompletas.forEach((t) => {
@@ -6295,10 +6363,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
 
     const todosLosSubt = new Set();
-    agruparRutasPorSubtema().forEach((s) => todosLosSubt.add(s.nombre));
+    agruparRutasPorSubtema().forEach((s) => {
+      todosLosSubt.add(resolverSubTCanonico(s.nombre, mapaCanonicos));
+    });
     Object.keys(MAPA_RUTAS_COORDS).forEach((k) => {
       const c = MAPA_RUTAS_COORDS[k];
-      if (c && c.subT) todosLosSubt.add(c.subT);
+      if (c && c.subT) {
+        todosLosSubt.add(resolverSubTCanonico(c.subT, mapaCanonicos));
+      }
     });
 
     mapaSubtMetricaCache = {};
@@ -6333,7 +6405,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     datosRutasMapa = idsOrdenados.map((idRuta) => {
       const coord = MAPA_RUTAS_COORDS[String(idRuta)] || null;
-      const subT = rutaASubt[idRuta] || (coord && coord.subT) || (rutasDisp[idRuta] && rutasDisp[idRuta].tema) || '(Sin tema)';
+      const subTCrudo = rutaASubt[idRuta] || (coord && coord.subT) || (rutasDisp[idRuta] && rutasDisp[idRuta].tema) || '(Sin tema)';
+      const subT = resolverSubTCanonico(subTCrudo, mapaCanonicos);
       const infoSubt = mapaSubtMetricaCache[subT] || { sobreconfianza: false, olvido: false, urgente: false };
       const esRutaDificil = rutasDificilesSet.has(idRuta);
 
@@ -6362,8 +6435,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const geomsPorSubt = {};
     datosRutasMapa.forEach((item) => {
       if (!item.coords) return;
-      if (!geomsPorSubt[item.subT]) geomsPorSubt[item.subT] = [];
-      geomsPorSubt[item.subT].push(item.coords);
+      const subTCanon = resolverSubTCanonico(item.subT, mapaCanonicos);
+      if (!geomsPorSubt[subTCanon]) geomsPorSubt[subTCanon] = [];
+      geomsPorSubt[subTCanon].push(item.coords);
     });
     Object.keys(geomsPorSubt).forEach((nombreSubt) => {
       const lista = geomsPorSubt[nombreSubt];
