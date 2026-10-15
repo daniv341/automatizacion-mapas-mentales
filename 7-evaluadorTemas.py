@@ -2505,7 +2505,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .fila-acciones-historial button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  #zona-historial-otros details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: var(--texto-cabecera); }
+  #zona-historial-otros details > summary,
+  #zona-dificiles details > summary,
+  #zona-razones details > summary,
+  #zona-imagenes details > summary,
+  #modal-listas details > summary,
+  #modal-notas-evaluador details > summary,
+  #modal-retencion-rutas details > summary,
+  #modal-estadisticas details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: var(--texto-cabecera); }
   .grupo-historial-otro {
     display: flex;
     justify-content: space-between;
@@ -3472,7 +3479,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <details id="det-dificiles-otros" style="display:none">
         <summary id="suma-dificiles-otros">De otros evaluadores</summary>
         <div id="lista-dificiles-otros"></div>
-        <button class="boton-mini" id="btn-vincular-dificiles" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
       </details>
       <details id="det-dificiles-desm" style="display:none">
         <summary id="suma-dificiles-desm">Desmarcadas (0)</summary>
@@ -3493,7 +3499,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <details id="det-notas-otras" style="display:none">
         <summary id="suma-notas-otras">De otros evaluadores</summary>
         <div id="lista-notas-otras"></div>
-        <button class="boton-mini" id="btn-vincular-notas" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
       </details>
       <p class="nota-dificiles" id="nota-notas"></p>
       <button class="boton-mini" id="btn-vaciar-notas" style="display:none;">Vaciar todas</button>
@@ -3521,7 +3526,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <details id="det-razones-otras" style="display:none">
         <summary id="suma-razones-otras">De otros evaluadores</summary>
         <div id="lista-razones-otras"></div>
-        <button class="boton-mini" id="btn-vincular-razones" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
       </details>
       <p class="nota-dificiles" id="nota-razones"></p>
       <button class="boton-mini" id="btn-vaciar-razones" style="display:none;">Vaciar todas</button>
@@ -3569,7 +3573,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <details id="det-imagenes" style="display:none">
         <summary id="suma-imagenes">Con nota o marcadas difícil</summary>
         <div id="lista-imagenes-guardadas"></div>
-        <button class="boton-mini" id="btn-vincular-imagenes" style="margin: 6px 0 8px 16px; display:none;">Vincular a este evaluador</button>
+      </details>
+      <details id="det-imagenes-otras" style="display:none">
+        <summary id="suma-imagenes-otras">De otros evaluadores</summary>
+        <div id="lista-imagenes-otras"></div>
       </details>
       <p class="nota-dificiles" id="nota-imagenes"></p>
       <button class="boton-mini" id="btn-vaciar-imagenes" style="display:none;">Vaciar todas</button>
@@ -3658,7 +3665,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <div class="lista-temas mapa-listado-contenedor" id="mapa-listado-acordeones">
       <details class="grupo-tema" id="det-mapa-rutas">
-        <summary><span id="suma-mapa-rutas">🟢 Rutas (0)</span></summary>
+        <summary><span id="suma-mapa-rutas">Rutas (0)</span></summary>
         <div class="cuerpo-grupo" id="lista-mapa-rutas" style="padding-left:0;"></div>
       </details>
       <details class="grupo-tema" id="det-mapa-dificiles">
@@ -3679,11 +3686,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </details>
     </div>
 
-    <div class="navegacion" style="margin-top:20px;">
+    <div style="display:flex; justify-content:center; margin-top:6px;">
+      <button type="button" class="boton-mini" id="btn-mapa-limpiar-seleccion">Limpiar selección</button>
+    </div>
+
+    <div class="navegacion" style="margin-top:14px;">
       <button class="boton-secundario" id="btn-mapa-descargar">⬇ Descargar</button>
       <button class="boton-secundario" id="btn-mapa-volver">☰ Volver a observador</button>
     </div>
-  </div>
 
   <div id="pantalla-tienda" style="display:none;">
     <p class="subtitulo">Tienda</p>
@@ -4121,7 +4131,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <details id="det-listas-otras" style="display:none">
       <summary id="suma-listas-otras">De otros evaluadores</summary>
       <div id="lista-listas-otras"></div>
-      <button class="boton-mini" id="btn-listas-vincular" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
     </details>
     <button class="modal-cancelar" id="btn-listas-cerrar">Cerrar</button>
   </div>
@@ -4216,7 +4225,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <details id="det-notaseval-otras" style="display:none">
       <summary id="suma-notaseval-otras">De otros evaluadores</summary>
       <div id="lista-notaseval-otras"></div>
-      <button class="boton-mini" id="btn-vincular-notaseval" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
     </details>
 
     <div class="panel-razones-acciones" style="margin-top:14px; justify-content: space-between;">
@@ -4238,7 +4246,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <details id="det-retencion-otras" style="display:none">
       <summary id="suma-retencion-otras">De otros evaluadores</summary>
       <div id="lista-retencion-otras"></div>
-      <button class="boton-mini" id="btn-vincular-retencion" style="margin: 6px 0 8px 16px;">Vincular a este evaluador</button>
     </details>
 
     <div class="sync-seccion-titulo">📉 SubT próximos a olvidarse</div>
@@ -6323,8 +6330,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (elMapaImg && elMapaSvgOverlay) sincronizarGeometriaSvgMapa();
   });
 
-function normalizarSubT(nombre) {
-    return normalizarPalabra(String(nombre || '')).replace(/\s+/g, ' ').trim();
+  function normalizarSubT(nombre) {
+    return normalizarPalabra(String(nombre || '')).replace(/\\s+/g, ' ').trim();
   }
 
   function construirMapaSubTCanonicos() {
@@ -6474,15 +6481,38 @@ function normalizarSubT(nombre) {
     grupoBordes.appendChild(rect);
   }
 
+  function agruparDatosRutasMapaPorSubT() {
+    const mapa = new Map();
+    datosRutasMapa.forEach((item) => {
+      const st = item.subT || '(Sin tema)';
+      if (!mapa.has(st)) mapa.set(st, []);
+      mapa.get(st).push(item);
+    });
+    return mapa;
+  }
+
   function renderBordesSvgMapa() {
     if (!elMapaSvgOverlay) return;
     const grupoBordes = elMapaSvgOverlay.querySelector('#mapa-svg-bordes');
     if (!grupoBordes) return;
     grupoBordes.innerHTML = '';
 
+    const rutasPorSubt = agruparDatosRutasMapaPorSubT();
+    const subtsCompletos = new Set();
+
+    rutasPorSubt.forEach((listaRutas, nombreSubt) => {
+      if (listaRutas.length > 0 && listaRutas.every((r) => seleccionMapa.rutas.has(r.idRuta))) {
+        const infoSubt = mapaSubtMetricaCache[nombreSubt];
+        if (infoSubt && infoSubt.coords) {
+          subtsCompletos.add(nombreSubt);
+          agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.normal.stroke, 0);
+        }
+      }
+    });
+
     datosRutasMapa.forEach((item) => {
       if (!item.coords) return;
-      if (seleccionMapa.rutas.has(item.idRuta)) {
+      if (seleccionMapa.rutas.has(item.idRuta) && !subtsCompletos.has(item.subT)) {
         agregarRectanguloSvgMapa(grupoBordes, item.coords, COLORES_ESTADO_MAPA.normal.stroke, 0);
       }
       if (seleccionMapa.dificiles.has(item.idRuta) && item.esDificil) {
@@ -6504,10 +6534,25 @@ function normalizarSubT(nombre) {
     });
   }
 
+  function actualizarEstadoChecksSubtRutasMapa() {
+    const rutasPorSubt = agruparDatosRutasMapaPorSubT();
+    document.querySelectorAll('#lista-mapa-rutas input[data-subt-grupo]').forEach((chkGrupo) => {
+      const nombreSubt = chkGrupo.dataset.subtGrupo;
+      const lista = rutasPorSubt.get(nombreSubt) || [];
+      const total = lista.length;
+      const marcadas = lista.filter((r) => seleccionMapa.rutas.has(r.idRuta)).length;
+      chkGrupo.checked = total > 0 && marcadas === total;
+      chkGrupo.indeterminate = marcadas > 0 && marcadas < total;
+      const cuentaEl = chkGrupo.parentElement ? chkGrupo.parentElement.querySelector('.cuenta-grupo') : null;
+      if (cuentaEl) cuentaEl.textContent = marcadas + '/' + total;
+    });
+  }
+
   function sincronizarCheckboxesDomMapa() {
     document.querySelectorAll('#lista-mapa-rutas input[data-id-ruta]').forEach((chk) => {
       chk.checked = seleccionMapa.rutas.has(Number(chk.dataset.idRuta));
     });
+    actualizarEstadoChecksSubtRutasMapa();
     document.querySelectorAll('#lista-mapa-dificiles input[data-id-ruta]').forEach((chk) => {
       chk.checked = seleccionMapa.dificiles.has(Number(chk.dataset.idRuta));
     });
@@ -6618,26 +6663,70 @@ function normalizarSubT(nombre) {
         cont.innerHTML = '<div class="lista-vacia">No hay rutas registradas.</div>';
         return;
       }
-      datosRutasMapa.forEach((item) => {
-        const label = document.createElement('label');
-        label.className = 'mapa-item-check';
-        const chk = document.createElement('input');
-        chk.type = 'checkbox';
-        chk.dataset.idRuta = String(item.idRuta);
-        chk.checked = seleccionMapa.rutas.has(item.idRuta);
-        chk.addEventListener('change', () => {
-          if (chk.checked) seleccionMapa.rutas.add(item.idRuta);
-          else seleccionMapa.rutas.delete(item.idRuta);
+      const rutasPorSubt = agruparDatosRutasMapaPorSubT();
+      rutasPorSubt.forEach((listaRutas, nombreSubt) => {
+        const detSubt = document.createElement('details');
+        detSubt.className = 'grupo-tema';
+
+        const sumSubt = document.createElement('summary');
+        const chkGrupo = document.createElement('input');
+        chkGrupo.type = 'checkbox';
+        chkGrupo.className = 'check-grupo';
+        chkGrupo.dataset.subtGrupo = nombreSubt;
+        chkGrupo.addEventListener('click', (e) => e.stopPropagation());
+
+        const spanNombre = document.createElement('span');
+        spanNombre.textContent = nombreSubt;
+
+        const spanCuenta = document.createElement('span');
+        spanCuenta.className = 'cuenta-grupo';
+
+        sumSubt.appendChild(chkGrupo);
+        sumSubt.appendChild(spanNombre);
+        sumSubt.appendChild(spanCuenta);
+        detSubt.appendChild(sumSubt);
+
+        const cuerpo = document.createElement('div');
+        cuerpo.className = 'cuerpo-grupo';
+
+        listaRutas.forEach((item) => {
+          const label = document.createElement('label');
+          label.className = 'mapa-item-check';
+          const chk = document.createElement('input');
+          chk.type = 'checkbox';
+          chk.dataset.idRuta = String(item.idRuta);
+          chk.checked = seleccionMapa.rutas.has(item.idRuta);
+          chk.addEventListener('change', () => {
+            if (chk.checked) seleccionMapa.rutas.add(item.idRuta);
+            else seleccionMapa.rutas.delete(item.idRuta);
+            actualizarEstadoChecksSubtRutasMapa();
+            renderBordesSvgMapa();
+          });
+          const nombre = document.createElement('span');
+          nombre.className = 'mapa-item-nombre';
+          nombre.textContent = 'Ruta ' + item.idRuta;
+          label.appendChild(chk);
+          label.appendChild(nombre);
+          label.appendChild(crearIndicadoresColorMapa(item.estados));
+          cuerpo.appendChild(label);
+        });
+
+        chkGrupo.addEventListener('change', () => {
+          listaRutas.forEach((item) => {
+            if (chkGrupo.checked) seleccionMapa.rutas.add(item.idRuta);
+            else seleccionMapa.rutas.delete(item.idRuta);
+          });
+          cuerpo.querySelectorAll('input[data-id-ruta]').forEach((c) => {
+            c.checked = chkGrupo.checked;
+          });
+          actualizarEstadoChecksSubtRutasMapa();
           renderBordesSvgMapa();
         });
-        const nombre = document.createElement('span');
-        nombre.className = 'mapa-item-nombre';
-        nombre.textContent = 'Ruta ' + item.idRuta + (item.subT ? ' — ' + item.subT : '');
-        label.appendChild(chk);
-        label.appendChild(nombre);
-        label.appendChild(crearIndicadoresColorMapa(item.estados));
-        cont.appendChild(label);
+
+        detSubt.appendChild(cuerpo);
+        cont.appendChild(detSubt);
       });
+      actualizarEstadoChecksSubtRutasMapa();
     });
 
     lazyMapaAcordeones.dificiles = prepararDetallesLazy(detDificiles, () => {
@@ -7835,7 +7924,7 @@ function normalizarSubT(nombre) {
       tarjetasSubt.forEach((t) => rutasValidasDe(t).forEach((rId) => rutasSubtCitadas.add(rId)));
 
       const rutasUsadasSubt = new Set();
-      let pendientes = modoAleatorio ? mezclar(tarjetasSubt) : [...tarjetasSubt];
+      let pendientes = mezclar(tarjetasSubt);
 
       while (pendientes.length > 0) {
         const frecuenciaRuta = new Map();
@@ -8161,7 +8250,7 @@ function normalizarSubT(nombre) {
       det.dataset.rutaId = String(idRuta);
 
       const sum = document.createElement('summary');
-      sum.textContent = 'Ruta ' + idRuta;
+      sum.textContent = 'Ruta #';
       det.appendChild(sum);
 
       prepararDetallesLazy(det, () => {
@@ -8987,39 +9076,17 @@ function normalizarSubT(nombre) {
       elListaListasGuardadas.appendChild(fila);
     });
 
-    elListaListasOtras.innerHTML = '';
-    const otrasOrdenadas = listasDeOtros.slice().sort((a, b) => b.creada - a.creada);
-    elDetListasOtras.style.display = otrasOrdenadas.length > 0 ? 'block' : 'none';
-    elSumaListasOtras.textContent = 'De otros evaluadores (' + otrasOrdenadas.length + ')';
-    otrasOrdenadas.forEach((lista) => {
-      const fila = document.createElement('div');
-      fila.className = 'fila-lista-guardada';
-
-      const cabecera = document.createElement('div');
-      cabecera.className = 'lista-fila-cabecera';
-      const nombre = document.createElement('span');
-      nombre.className = 'lista-nombre-btn';
-      nombre.textContent = lista.nombre + ' (' + etiquetaEspacio(lista.espacio) + ')';
-      cabecera.appendChild(nombre);
-      fila.appendChild(cabecera);
-
-      const acciones = document.createElement('div');
-      acciones.className = 'lista-acciones';
-      const btnBorrar = document.createElement('button');
-      btnBorrar.type = 'button';
-      btnBorrar.textContent = '🗑️ Borrar';
-      btnBorrar.addEventListener('click', () => borrarLista(lista.nombre, lista.espacio));   // NUEVO: scoped a SU espacio
-      acciones.appendChild(btnBorrar);
-      fila.appendChild(acciones);
-
-      const detalle = document.createElement('div');
-      detalle.className = 'lista-detalle';
-      detalle.textContent = lista.hashes.length + ' tarjeta(s) · creada: ' + formatearFechaLista(lista.creada) +
-        ' · modificada: ' + formatearFechaLista(lista.modificada);
-      fila.appendChild(detalle);
-
-      elListaListasOtras.appendChild(fila);
-    });
+    renderGruposOtrosEvaluadores(
+      elDetListasOtras,
+      elSumaListasOtras,
+      elListaListasOtras,
+      listasDeOtros,
+      (l) => l.espacio || '',
+      'lista(s)',
+      'listas',
+      () => cerrarModalListas(),
+      'De otros evaluadores'
+    );
   }
 
   function abrirModalListas() {
@@ -9537,60 +9604,18 @@ function normalizarSubT(nombre) {
 
   let _otrosAnalisisPendientes = [];
 
-  function construirAnalisisOtrosLazy() {
-    const otras = _otrosAnalisisPendientes;
-    const elLista = document.getElementById('lista-analisis-otros');
-    elLista.innerHTML = '';
-    if (otras.length === 0) return;
-    const mapa = new Map();
-    otras.forEach((a) => {
-      if (!mapa.has(a.espacio)) mapa.set(a.espacio, []);
-      mapa.get(a.espacio).push(a);
-    });
-    const grupos = Array.from(mapa.entries()).map(([esp, lista]) => {
-      let ultima = '';
-      lista.forEach((a) => { const f = String(a.fecha || ''); if (f > ultima) ultima = f; });
-      return { esp: esp, cantidad: lista.length, ultima: ultima };
-    });
-    grupos.sort((a, b) => (a.ultima < b.ultima ? 1 : (a.ultima > b.ultima ? -1 : 0)));
-
-    grupos.forEach((g) => {
-      const fila = document.createElement('div');
-      fila.className = 'grupo-historial-otro';
-
-      const info = document.createElement('div');
-      const titulo = document.createElement('span');
-      titulo.className = 'grupo-titulo';
-      titulo.textContent = etiquetaEspacio(g.esp);
-      const detalle = document.createElement('span');
-      detalle.className = 'grupo-detalle';
-      detalle.textContent = g.cantidad + ' análisis(s) · último: ' + (g.ultima ? formatearFechaLista(Date.parse(g.ultima) || 0) : '—');
-      info.appendChild(titulo);
-      info.appendChild(detalle);
-
-      const btn = document.createElement('button');
-      btn.className = 'boton-mini';
-      btn.textContent = 'Vincular a este evaluador';
-      btn.addEventListener('click', () => abrirModalVincular('analisisSesion', g.esp));
-
-      fila.appendChild(info);
-      fila.appendChild(btn);
-      elLista.appendChild(fila);
-    });
-  }
-  const lazyAnalisisOtros = prepararDetallesLazy(document.getElementById('det-analisis-otros'), construirAnalisisOtrosLazy);
-
   function renderAnalisisOtros() {
-    const otras = analisisDeOtros();
-    _otrosAnalisisPendientes = otras;
-    const det = document.getElementById('det-analisis-otros');
-    if (otras.length === 0) {
-      det.style.display = 'none';
-      return;
-    }
-    document.getElementById('suma-analisis-otros').textContent = 'De otros evaluadores (' + otras.length + ')';
-    det.style.display = 'block';
-    lazyAnalisisOtros.refrescar();
+    renderGruposOtrosEvaluadores(
+      document.getElementById('det-analisis-otros'),
+      document.getElementById('suma-analisis-otros'),
+      document.getElementById('lista-analisis-otros'),
+      analisisDeOtros(),
+      (a) => a.espacio || '',
+      'análisis',
+      'analisisSesion',
+      () => cerrarModalEstadisticas(),
+      'De otros evaluadores'
+    );
   }
 
   function renderAnalisisGuardadosLista() {
@@ -10408,24 +10433,25 @@ const ZONAS_SYNC_GIST = [
     el.appendChild(btnSiguiente);
   }
 
-  let _otrasSesionesPendientes = [];
+  function renderGruposOtrosEvaluadores(elDet, elSuma, elLista, items, fnEspacio, etiquetaUnidad, zonaVinculo, antesDeAbrir, prefijoSuma) {
+    if (!elDet || !elSuma || !elLista) return;
+    elLista.innerHTML = '';
+    if (!items || items.length === 0) {
+      elDet.style.display = 'none';
+      return;
+    }
+    elSuma.textContent = (prefijoSuma || 'De otros evaluadores') + ' (' + items.length + ')';
+    elDet.style.display = 'block';
 
-  function construirHistorialOtrosLazy() {
-    const otras = _otrasSesionesPendientes;
-    elListaHistorialOtros.innerHTML = '';
-    if (otras.length === 0) return;
     const mapa = new Map();
-    otras.forEach((s) => {
-      const esp = espacioDeSesion(s);
-      if (!mapa.has(esp)) mapa.set(esp, []);
-      mapa.get(esp).push(s);
+    items.forEach((item) => {
+      const esp = fnEspacio(item) || '';
+      mapa.set(esp, (mapa.get(esp) || 0) + 1);
     });
-    const grupos = Array.from(mapa.entries()).map(([esp, lista]) => {
-      let ultima = '';
-      lista.forEach((s) => { const f = String(s.fecha || ''); if (f > ultima) ultima = f; });
-      return { esp: esp, cantidad: lista.length, ultima: ultima };
-    });
-    grupos.sort((a, b) => (a.ultima < b.ultima ? 1 : (a.ultima > b.ultima ? -1 : 0)));
+
+    const grupos = Array.from(mapa.entries())
+      .map(([esp, cantidad]) => ({ esp: esp, cantidad: cantidad }))
+      .sort((a, b) => etiquetaEspacio(a.esp).localeCompare(etiquetaEspacio(b.esp)));
 
     grupos.forEach((g) => {
       const fila = document.createElement('div');
@@ -10437,32 +10463,43 @@ const ZONAS_SYNC_GIST = [
       titulo.textContent = etiquetaEspacio(g.esp);
       const detalle = document.createElement('span');
       detalle.className = 'grupo-detalle';
-      detalle.textContent = g.cantidad + ' sesión(es) · última: ' + (g.ultima ? formatearFechaHistorial(g.ultima) : '—');
+      detalle.textContent = g.cantidad + ' ' + etiquetaUnidad;
       info.appendChild(titulo);
       info.appendChild(detalle);
 
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'boton-mini';
       btn.textContent = 'Vincular a este evaluador';
-      btn.addEventListener('click', () => abrirModalVincular('sesiones', g.esp));
+      btn.addEventListener('click', () => {
+        if (antesDeAbrir) antesDeAbrir();
+        abrirModalVincular(zonaVinculo, g.esp ? g.esp : undefined);
+      });
 
       fila.appendChild(info);
       fila.appendChild(btn);
-      elListaHistorialOtros.appendChild(fila);
+      elLista.appendChild(fila);
     });
   }
-  const lazyHistorialOtros = prepararDetallesLazy(elDetHistorialOtros, construirHistorialOtrosLazy);
 
   function renderHistorialOtros(otras) {
-    _otrasSesionesPendientes = otras;
     if (otras.length === 0) {
       elZonaHistorialOtros.style.display = 'none';
       elListaHistorialOtros.innerHTML = '';
       return;
     }
-    elSumaHistorialOtros.textContent = 'Sesiones de otros evaluadores (' + otras.length + ')';
     elZonaHistorialOtros.style.display = 'block';
-    lazyHistorialOtros.refrescar();
+    renderGruposOtrosEvaluadores(
+      elDetHistorialOtros,
+      elSumaHistorialOtros,
+      elListaHistorialOtros,
+      otras,
+      (s) => espacioDeSesion(s),
+      'sesión(es)',
+      'sesiones',
+      null,
+      'Sesiones de otros evaluadores'
+    );
   }
 
   function construirExportGamificacion() {
@@ -10882,9 +10919,11 @@ const ZONAS_SYNC_GIST = [
     const tomadas = movs.map((m) => ({ a: m.a, v: almacen[m.de] }));
     movs.forEach((m) => { delete almacen[m.de]; });
     tomadas.forEach((x) => {
-      almacen[x.a] = tieneClave(almacen, x.a)
+      const fusionada = tieneClave(almacen, x.a)
         ? fusionarEntradaVinculo(almacen[x.a], x.v, z.explicitas)
         : x.v;
+      fusionada.espacio = ESPACIO_HASH;
+      almacen[x.a] = fusionada;
     });
     z.guardar();
     z.repintar();
@@ -11226,11 +11265,6 @@ const ZONAS_SYNC_GIST = [
   elBtnVincAceptar.addEventListener('click', () => aceptarVinculo());
   document.getElementById('btn-vinc-cancelar').addEventListener('click', () => cerrarModalVincular());
 
-  ['dificiles', 'notas', 'razones', 'imagenes'].forEach((zona) => {
-    document.getElementById('btn-vincular-' + zona).addEventListener('click', () => abrirModalVincular(zona));
-  });
-  document.getElementById('btn-listas-vincular').addEventListener('click', () => abrirModalVincular('listas'));
-
   actualizarBarraGamificacion();
 
   function debounce(fn, ms) {
@@ -11565,9 +11599,16 @@ const ZONAS_SYNC_GIST = [
   const elInfoImagenes = document.getElementById('nota-imagenes');
   const elVaciarImagenes = document.getElementById('btn-vaciar-imagenes');
 
+  function esImagenPropia(h) {
+    const e = datosImagenes[h];
+    if (!e) return false;
+    return h === hashImagen(e.ruta, e.indice);
+  }
+
   function construirImagenesLazy() {
     Object.keys(datosImagenes).forEach((h) => {
-      if (nodosImagenes.has(h)) return;   // ya está (incremental previo)
+      if (!esImagenPropia(h)) return;
+      if (nodosImagenes.has(h)) return;
       const fila = filaImagenGuardada(h, datosImagenes[h]);
       elListaImagenesGuardadas.appendChild(fila);
       nodosImagenes.set(h, fila);
@@ -11576,14 +11617,27 @@ const ZONAS_SYNC_GIST = [
   const lazyImagenes = prepararDetallesLazy(elDetImagenes, construirImagenesLazy);
 
   function actualizarContadoresImagenes() {
-    const n = Object.keys(datosImagenes).length;
-    elDetImagenes.style.display = n > 0 ? 'block' : 'none';
-    elSumaImagenes.textContent = 'Con nota o marcadas difícil (' + n + ')';
-    document.getElementById('btn-vincular-imagenes').style.display = contarOtrasImagenes() > 0 ? 'inline-block' : 'none';
-    elInfoImagenes.textContent = n === 0
+    const hashes = Object.keys(datosImagenes);
+    const propias = hashes.filter(esImagenPropia);
+    const otras = hashes.filter((h) => !esImagenPropia(h)).map((h) => datosImagenes[h]);
+    const total = hashes.length;
+    elDetImagenes.style.display = propias.length > 0 ? 'block' : 'none';
+    elSumaImagenes.textContent = 'Con nota o marcadas difícil (' + propias.length + ')';
+    renderGruposOtrosEvaluadores(
+      document.getElementById('det-imagenes-otras'),
+      document.getElementById('suma-imagenes-otras'),
+      document.getElementById('lista-imagenes-otras'),
+      otras,
+      (img) => img.espacio || '',
+      'imagen(es)',
+      'imagenes',
+      null,
+      'De otros evaluadores'
+    );
+    elInfoImagenes.textContent = total === 0
       ? 'Todavía no marcaste ni anotaste ninguna imagen (galería del modo observador).'
-      : 'Guardadas en este navegador: ' + n;
-    elVaciarImagenes.style.display = n > 0 ? 'inline-block' : 'none';
+      : 'Guardadas en este navegador: ' + total;
+    elVaciarImagenes.style.display = total > 0 ? 'inline-block' : 'none';
   }
 
   function actualizarFilaImagenIndividual(h) {
@@ -11766,7 +11820,27 @@ const ZONAS_SYNC_GIST = [
       elBtnObservadorMapa.title = 'No se seleccionó imagen del mapa';
     }
   })();
+  function haySeleccionActivaMapa() {
+    return seleccionMapa.rutas.size > 0 ||
+      seleccionMapa.dificiles.size > 0 ||
+      seleccionMapa.sobreconfianza.size > 0 ||
+      seleccionMapa.olvido.size > 0 ||
+      seleccionMapa.urgentes.size > 0;
+  }
+
+  function limpiarSeleccionMapa() {
+    if (!haySeleccionActivaMapa()) return;
+    seleccionMapa.rutas.clear();
+    seleccionMapa.dificiles.clear();
+    seleccionMapa.sobreconfianza.clear();
+    seleccionMapa.olvido.clear();
+    seleccionMapa.urgentes.clear();
+    sincronizarCheckboxesDomMapa();
+    renderBordesSvgMapa();
+  }
+
   elBtnObservadorMapa.addEventListener('click', () => abrirMapa());
+  document.getElementById('btn-mapa-limpiar-seleccion').addEventListener('click', () => limpiarSeleccionMapa());
   document.getElementById('btn-mapa-volver').addEventListener('click', () => cerrarPantallaMapa());
   document.getElementById('btn-mapa-descargar').addEventListener('click', () => descargarImagenMapa());
   document.getElementById('btn-galeria-anterior').addEventListener('click', () => navegarGaleria(-1));
@@ -11978,49 +12052,55 @@ const ZONAS_SYNC_GIST = [
   const elSumaDificilesDesm = document.getElementById('suma-dificiles-desm');
   const elNotaDificiles = document.getElementById('nota-dificiles');
 
-  function construirGrupoDificilesLazy(grupo) {
-    const elLista = grupo === 'otros' ? elListaDificilesOtros : elListaDificilesDesm;
+  function construirGrupoDificilesLazy() {
     Object.keys(dificiles).forEach((h) => {
-      const g = grupoActualDificil(h);
-      if (g !== grupo) return;
+      if (grupoActualDificil(h) !== 'desm') return;
       const cache = nodosDificiles.get(h);
-      if (cache && cache.grupo === grupo) return;   // ya está (incremental previo)
+      if (cache && cache.grupo === 'desm') return;
       const v = dificiles[h] || {};
       let p = v.p || '', s = v.s || '';
       const enEste = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
       if (enEste) { p = enEste.primero || ''; s = enEste.segundo || ''; }
-      const fila = filaDificil(h, p, s, grupo !== 'desm', grupo === 'otros' ? v.espacio : null);
-      elLista.appendChild(fila);
-      nodosDificiles.set(h, { fila: fila, grupo: grupo });
+      const fila = filaDificil(h, p, s, false);
+      elListaDificilesDesm.appendChild(fila);
+      nodosDificiles.set(h, { fila: fila, grupo: 'desm' });
     });
   }
 
-  const lazyDificilesOtros = prepararDetallesLazy(elDetDificilesOtros, () => construirGrupoDificilesLazy('otros'));
-  const lazyDificilesDesm = prepararDetallesLazy(elDetDificilesDesm, () => construirGrupoDificilesLazy('desm'));
+  const lazyDificilesDesm = prepararDetallesLazy(elDetDificilesDesm, construirGrupoDificilesLazy);
 
   function grupoActualDificil(h) {
     const v = dificiles[h];
-    if (!v) return null;   // ya no existe
+    if (!v) return null;
     if (!v.activa) return 'desm';
     return tarjetasCompletas.some((t) => hashTarjeta(t) === h) ? 'propia' : 'otros';
   }
 
   function contenedorDeGrupoDificil(grupo) {
     if (grupo === 'propia') return document.getElementById('lista-dificiles');
-    if (grupo === 'otros') return document.getElementById('lista-dificiles-otros');
     return document.getElementById('lista-dificiles-desm');
   }
 
   function actualizarContadoresDificiles() {
-    let nAqui = 0, nOtros = 0, nDesm = 0;
+    let nAqui = 0, nDesm = 0;
+    const otrosItems = [];
     Object.keys(dificiles).forEach((h) => {
       const g = grupoActualDificil(h);
       if (g === 'propia') nAqui++;
-      else if (g === 'otros') nOtros++;
+      else if (g === 'otros') otrosItems.push(dificiles[h]);
       else if (g === 'desm') nDesm++;
     });
-    elDetDificilesOtros.style.display = nOtros > 0 ? 'block' : 'none';
-    elSumaDificilesOtros.textContent = 'De otros evaluadores (' + nOtros + ')';
+    renderGruposOtrosEvaluadores(
+      elDetDificilesOtros,
+      elSumaDificilesOtros,
+      elListaDificilesOtros,
+      otrosItems,
+      (d) => d.espacio || '',
+      'difícil(es)',
+      'dificiles',
+      null,
+      'De otros evaluadores'
+    );
     elDetDificilesDesm.style.display = nDesm > 0 ? 'block' : 'none';
     elSumaDificilesDesm.textContent = 'Desmarcadas (' + nDesm + ')';
     actualizarBotonRepasoInteligente();
@@ -12033,7 +12113,7 @@ const ZONAS_SYNC_GIST = [
   function actualizarFilaDificilIndividual(h) {
     const cache = nodosDificiles.get(h);
     const nuevoGrupo = grupoActualDificil(h);
-    if (!nuevoGrupo) {
+    if (!nuevoGrupo || nuevoGrupo === 'otros') {
       if (cache) { cache.fila.remove(); nodosDificiles.delete(h); }
       actualizarContadoresDificiles();
       return;
@@ -12049,13 +12129,13 @@ const ZONAS_SYNC_GIST = [
     const enTarjetas = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
     const p = enTarjetas ? (enTarjetas.primero || '') : (v.p || '');
     const s = enTarjetas ? (enTarjetas.segundo || '') : (v.s || '');
-    const fila = filaDificil(h, p, s, nuevoGrupo !== 'desm', nuevoGrupo === 'otros' ? v.espacio : null);
+    const fila = filaDificil(h, p, s, nuevoGrupo !== 'desm');
     contenedorDeGrupoDificil(nuevoGrupo).appendChild(fila);
     nodosDificiles.set(h, { fila: fila, grupo: nuevoGrupo });
     actualizarContadoresDificiles();
   }
 
-  function filaDificil(h, p, s, activa, espacioOtro) {
+  function filaDificil(h, p, s, activa) {
     const label = document.createElement('label');
     label.className = 'item-tema-check';
 
@@ -12094,22 +12174,18 @@ const ZONAS_SYNC_GIST = [
     Array.from(nodosDificiles.entries()).forEach(([h, info]) => {
       if (info.grupo !== 'propia') nodosDificiles.delete(h);
     });
-    elListaDificilesOtros.innerHTML = '';
     elListaDificilesDesm.innerHTML = '';
 
-    let nAqui = 0;
     tarjetasCompletas.forEach((t) => {
       const h = hashTarjeta(t);
       const e = dificiles[h];
       if (!e || !e.activa) return;
-      nAqui++;
       const fila = filaDificil(h, t.primero || '', t.segundo || '', true);
       elListaDificiles.appendChild(fila);
       nodosDificiles.set(h, { fila: fila, grupo: 'propia' });
     });
 
     actualizarContadoresDificiles();
-    lazyDificilesOtros.refrescar();
     lazyDificilesDesm.refrescar();
   }
 
@@ -12241,50 +12317,49 @@ const ZONAS_SYNC_GIST = [
   const elSumaNotasOtras = document.getElementById('suma-notas-otras');
   const elInfoNotas = document.getElementById('nota-notas');
 
-  function construirGrupoNotasLazy(grupo) {
-    const elLista = contenedorDeGrupoNota(grupo);
-    if (grupo === 'dif') {
-      const vistos = new Set();
-      tarjetasCompletas.forEach((t) => {
-        const h = hashTarjeta(t);
-        if (vistos.has(h)) return;
-        vistos.add(h);
-        if (grupoActualNota(h) !== 'dif') return;
-        const cache = nodosNotas.get(h);
-        if (cache && cache.grupo === 'dif') return;   // ya está (incremental previo)
-        const fila = filaNotaDif(t, estadoNotaDe(t));
-        elLista.appendChild(fila);
-        nodosNotas.set(h, { fila: fila, grupo: 'dif' });
-      });
-    } else {
-      Object.keys(notasLocales).forEach((h) => {
-        if (grupoActualNota(h) !== 'otras') return;
-        const cache = nodosNotas.get(h);
-        if (cache && cache.grupo === 'otras') return;
-        const fila = filaNotaOtra(h, notasLocales[h] || {});
-        elLista.appendChild(fila);
-        nodosNotas.set(h, { fila: fila, grupo: 'otras' });
-      });
-    }
+  function construirGrupoNotasLazy() {
+    const vistos = new Set();
+    tarjetasCompletas.forEach((t) => {
+      const h = hashTarjeta(t);
+      if (vistos.has(h)) return;
+      vistos.add(h);
+      if (grupoActualNota(h) !== 'dif') return;
+      const cache = nodosNotas.get(h);
+      if (cache && cache.grupo === 'dif') return;
+      const fila = filaNotaDif(t, estadoNotaDe(t));
+      elListaNotasDif.appendChild(fila);
+      nodosNotas.set(h, { fila: fila, grupo: 'dif' });
+    });
   }
 
-  const lazyNotasDif = prepararDetallesLazy(elDetNotasDif, () => construirGrupoNotasLazy('dif'));
-  const lazyNotasOtras = prepararDetallesLazy(elDetNotasOtras, () => construirGrupoNotasLazy('otras'));
+  const lazyNotasDif = prepararDetallesLazy(elDetNotasDif, construirGrupoNotasLazy);
 
   function actualizarContadoresNotas() {
     const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
-    let nDif = 0, nConflicto = 0, nOtras = 0;
+    let nDif = 0, nConflicto = 0;
+    const otrasItems = [];
     tarjetasCompletas.forEach((t) => {
       const est = estadoNotaDe(t);
       if (est === 'igual') return;
       nDif++;
       if (est === 'conflicto') nConflicto++;
     });
-    Object.keys(notasLocales).forEach((h) => { if (!hashesAqui.has(h)) nOtras++; });
+    Object.keys(notasLocales).forEach((h) => {
+      if (!hashesAqui.has(h)) otrasItems.push(notasLocales[h]);
+    });
     elDetNotasDif.style.display = nDif > 0 ? 'block' : 'none';
     elSumaNotasDif.textContent = 'Distintas a las del txt (' + nDif + ')' + (nConflicto > 0 ? ' — ' + nConflicto + ' con conflicto' : '');
-    elDetNotasOtras.style.display = nOtras > 0 ? 'block' : 'none';
-    elSumaNotasOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
+    renderGruposOtrosEvaluadores(
+      elDetNotasOtras,
+      elSumaNotasOtras,
+      elListaNotasOtras,
+      otrasItems,
+      (n) => n.espacio || '',
+      'nota(s)',
+      'notas',
+      null,
+      'De otros evaluadores'
+    );
     const total = Object.keys(notasLocales).length;
     elInfoNotas.textContent = total === 0
       ? 'Todavía no editaste ninguna nota (botón 💡 durante el estudio).'
@@ -12295,17 +12370,15 @@ const ZONAS_SYNC_GIST = [
   function actualizarFilaNotaIndividual(h) {
     const cache = nodosNotas.get(h);
     const nuevoGrupo = grupoActualNota(h);
-    if (!nuevoGrupo) {
+    if (!nuevoGrupo || nuevoGrupo === 'otras') {
       if (cache) { cache.fila.remove(); nodosNotas.delete(h); }
       actualizarContadoresNotas();
       return;
     }
     if (cache) cache.fila.remove();
-    const fila = nuevoGrupo === 'dif'
-      ? filaNotaDif(tarjetaPorHash(h), estadoNotaDe(tarjetaPorHash(h)))
-      : filaNotaOtra(h, notasLocales[h] || {});
-    contenedorDeGrupoNota(nuevoGrupo).appendChild(fila);
-    nodosNotas.set(h, { fila: fila, grupo: nuevoGrupo });
+    const fila = filaNotaDif(tarjetaPorHash(h), estadoNotaDe(tarjetaPorHash(h)));
+    elListaNotasDif.appendChild(fila);
+    nodosNotas.set(h, { fila: fila, grupo: 'dif' });
     actualizarContadoresNotas();
   }
 
@@ -12334,46 +12407,23 @@ const ZONAS_SYNC_GIST = [
     if (est === 'conflicto') {
       acc.appendChild(botonMini('Quedarme con la mía', () => {
         conservarMiNota(t);
-        actualizarFilaNotaIndividual(hashTarjeta(t));   // CORREGIDO: solo esta fila, no todo el listado
+        actualizarFilaNotaIndividual(hashTarjeta(t));
       }));
     }
     acc.appendChild(botonMini('Usar la del txt', async () => {
       if (!(await confirmarAccion('Se descarta tu versión y se usa la del txt. ¿Continuar?'))) return;
       descartarNotaLocal(t);
-      actualizarFilaNotaIndividual(hashTarjeta(t));   // CORREGIDO: solo esta fila, no todo el listado
+      actualizarFilaNotaIndividual(hashTarjeta(t));
     }));
     det.appendChild(acc);
     return det;
   }
 
-  function filaNotaOtra(h, v) {
-    const div = document.createElement('div');
-    div.className = 'item-nota-otra';
-    const titulo = document.createElement('div');
-    titulo.textContent = (v.p || '(sin texto)') + (v.s ? ' — ' + v.s : '');
-    div.appendChild(titulo);
-    const nota = v.nota || '';
-    div.appendChild(bloqueVersion('Mi nota', nota !== '' ? nota : '(nota borrada)', false, nota === ''));
-    const acc = document.createElement('div');
-    acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', async () => {
-      if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
-      delete notasLocales[h];
-      siguienteRev();
-      guardarNotas();
-      actualizarFilaNotaIndividual(h);
-    }));
-    div.appendChild(acc);
-    return div;
-  }
-
   function renderNotasPreview() {
     nodosNotas.clear();
     elListaNotasDif.innerHTML = '';
-    elListaNotasOtras.innerHTML = '';
     actualizarContadoresNotas();
     lazyNotasDif.refrescar();
-    lazyNotasOtras.refrescar();
   }
 
   function fusionarNotasLista(lista) {
@@ -12686,36 +12736,6 @@ const ZONAS_SYNC_GIST = [
     renderListaNotasEvaluador();
   }
 
-  function filaNotaEvaluadorOtra(nota) {
-    const div = document.createElement('div');
-    div.className = 'item-nota-otra';
-    const titulo = document.createElement('div');
-    const vacia = !nota.texto || nota.texto.trim() === '';
-    titulo.textContent = '(' + etiquetaEspacio(nota.espacio) + ') ' + (vacia ? '(sin nota)' : nota.texto);
-    div.appendChild(titulo);
-    const def = obtenerDefCategoriaNotaEval(nota.categoria);
-    if (def) {
-      const chips = document.createElement('div');
-      chips.className = 'fila-chips-mini';
-      const chip = document.createElement('span');
-      chip.className = 'chip-razon chico';
-      chip.textContent = def.texto;
-      chip.style.backgroundColor = hexToRgba(def.color, 0.15);
-      chip.style.borderColor = def.color;
-      chip.style.color = def.color;
-      chips.appendChild(chip);
-      div.appendChild(chips);
-    }
-    const acc = document.createElement('div');
-    acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', async () => {
-      if (!(await confirmarAccion('¿Borrar esta nota guardada? No se puede deshacer.'))) return;
-      borrarNotaEvaluador(nota.id);
-    }));
-    div.appendChild(acc);
-    return div;
-  }
-
   function renderNotasEvaluadorPaginacion(totalPaginas) {
     const el = document.getElementById('notaseval-paginacion');
     el.innerHTML = '';
@@ -12745,16 +12765,17 @@ const ZONAS_SYNC_GIST = [
   }
 
   function renderNotasEvaluadorOtras() {
-    const otras = notasEvaluadorDeOtros();
-    const det = document.getElementById('det-notaseval-otras');
-    const elLista = document.getElementById('lista-notaseval-otras');
-    elLista.innerHTML = '';
-    det.style.display = otras.length > 0 ? 'block' : 'none';
-    document.getElementById('suma-notaseval-otras').textContent = 'De otros evaluadores (' + otras.length + ')';
-    if (otras.length === 0) return;
-    otras.slice().sort((a, b) => (b.modificada || b.creada || 0) - (a.modificada || a.creada || 0)).forEach((nota) => {
-      elLista.appendChild(filaNotaEvaluadorOtra(nota));
-    });
+    renderGruposOtrosEvaluadores(
+      document.getElementById('det-notaseval-otras'),
+      document.getElementById('suma-notaseval-otras'),
+      document.getElementById('lista-notaseval-otras'),
+      notasEvaluadorDeOtros(),
+      (n) => n.espacio || '',
+      'nota(s)',
+      'notasEvaluador',
+      () => cerrarNotasEvaluador(),
+      'De otros evaluadores'
+    );
   }
 
   function renderListaNotasEvaluador() {
@@ -12825,11 +12846,6 @@ const ZONAS_SYNC_GIST = [
     siguienteRev();
     guardarNotasEvaluador();
     renderListaNotasEvaluador();
-  });
-
-  document.getElementById('btn-vincular-notaseval').addEventListener('click', () => {
-    elModalNotasEvaluador.classList.remove('abierto');
-    abrirModalVincular('notasEvaluador');
   });
 
   function construirExportNotasEvaluador() {
@@ -13208,31 +13224,6 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     return det;
   }
 
-  function filaRetencionHistorialOtra(entrada) {
-    const div = document.createElement('div');
-    div.className = 'item-nota-otra';
-    const titulo = document.createElement('div');
-    titulo.textContent = '(' + etiquetaEspacio(entrada.espacio) + ') ' + formatearFechaLista(entrada.timestamp || 0) +
-      ' — ✅' + entrada.pctRetenidas + '% ❌' + entrada.pctNoRetenidas + '% ⚠️' + entrada.pctDificiles + '%';
-    div.appendChild(titulo);
-    const acc = document.createElement('div');
-    acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', async () => {
-      if (!(await confirmarAccion('¿Borrar esta entrada guardada? No se puede deshacer.'))) return;
-      retencionRutas = retencionRutas.filter((r) => r.id !== entrada.id);
-      siguienteRev();
-      guardarRetencionRutas();
-      recalcularYGuardarSAjustadoPomodoro();
-      estadisticasConstruidas = false;
-      curvaOlvidoConstruido = false;
-      subtRepasarConstruido = false;
-      sesgoConfianzaConstruido = false;
-      renderRetencionHistorial();
-    }));
-    div.appendChild(acc);
-    return div;
-  }
-
   function renderRetencionHistorialPaginacion(totalPaginas) {
     const el = document.getElementById('retencion-historial-paginacion');
     el.innerHTML = '';
@@ -13261,29 +13252,18 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     el.appendChild(btnSiguiente);
   }
 
-  let _retencionOtrasPendientes = [];
-
-  function construirRetencionOtrasLazy() {
-    const otras = _retencionOtrasPendientes;
-    const elLista = document.getElementById('lista-retencion-otras');
-    elLista.innerHTML = '';
-    otras.slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).forEach((entrada) => {
-      elLista.appendChild(filaRetencionHistorialOtra(entrada));
-    });
-  }
-  const lazyRetencionOtras = prepararDetallesLazy(document.getElementById('det-retencion-otras'), construirRetencionOtrasLazy);
-
   function renderRetencionOtras() {
-    const otras = retencionDeOtros();
-    _retencionOtrasPendientes = otras;
-    const det = document.getElementById('det-retencion-otras');
-    det.style.display = otras.length > 0 ? 'block' : 'none';
-    if (otras.length === 0) {
-      document.getElementById('lista-retencion-otras').innerHTML = '';
-      return;
-    }
-    document.getElementById('suma-retencion-otras').textContent = 'De otros evaluadores (' + otras.length + ')';
-    lazyRetencionOtras.refrescar();
+    renderGruposOtrosEvaluadores(
+      document.getElementById('det-retencion-otras'),
+      document.getElementById('suma-retencion-otras'),
+      document.getElementById('lista-retencion-otras'),
+      retencionDeOtros(),
+      (r) => r.espacio || '',
+      'retención(es)',
+      'retencionRutas',
+      () => cerrarModalRetencionRutas(),
+      'De otros evaluadores'
+    );
   }
 
   function construirListaSubTOlvido() {
@@ -13386,11 +13366,6 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     subtRepasarConstruido = false;
     sesgoConfianzaConstruido = false;
     renderRetencionHistorial();
-  });
-
-  document.getElementById('btn-vincular-retencion').addEventListener('click', () => {
-    cerrarModalRetencionRutas();
-    abrirModalVincular('retencionRutas');
   });
 
   function construirExportRetencion() {
@@ -15313,30 +15288,41 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const elInfoRazones = document.getElementById('nota-razones');
   const elVaciarRazones = document.getElementById('btn-vaciar-razones');
 
-  function construirGrupoRazonesLazy(grupo) {
-    const elLista = contenedorDeGrupoRazon(grupo);
+  function construirGrupoRazonesLazy() {
     Object.keys(razonesGuardadas).forEach((h) => {
-      if (grupoActualRazon(h) !== grupo) return;
+      if (grupoActualRazon(h) !== 'aqui') return;
       const cache = nodosRazones.get(h);
-      if (cache && cache.grupo === grupo) return;   // ya está (incremental previo)
+      if (cache && cache.grupo === 'aqui') return;
       const fila = filaRazonGuardada(h, razonesGuardadas[h]);
-      elLista.appendChild(fila);
-      nodosRazones.set(h, { fila: fila, grupo: grupo });
+      elListaRazonesAqui.appendChild(fila);
+      nodosRazones.set(h, { fila: fila, grupo: 'aqui' });
     });
   }
 
-  const lazyRazonesAqui = prepararDetallesLazy(elDetRazonesAqui, () => construirGrupoRazonesLazy('aqui'));
-  const lazyRazonesOtras = prepararDetallesLazy(elDetRazonesOtras, () => construirGrupoRazonesLazy('otras'));
+  const lazyRazonesAqui = prepararDetallesLazy(elDetRazonesAqui, construirGrupoRazonesLazy);
 
   function actualizarContadoresRazones() {
     const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
-    let nAqui = 0, nOtras = 0;
-    Object.keys(razonesGuardadas).forEach((h) => { hashesAqui.has(h) ? nAqui++ : nOtras++; });
+    let nAqui = 0;
+    const otrasItems = [];
+    Object.keys(razonesGuardadas).forEach((h) => {
+      if (hashesAqui.has(h)) nAqui++;
+      else otrasItems.push(razonesGuardadas[h]);
+    });
     elDetRazonesAqui.style.display = nAqui > 0 ? 'block' : 'none';
     elSumaRazonesAqui.textContent = 'De este evaluador (' + nAqui + ')';
-    elDetRazonesOtras.style.display = nOtras > 0 ? 'block' : 'none';
-    elSumaRazonesOtras.textContent = 'De otros evaluadores (' + nOtras + ')';
-    const total = nAqui + nOtras;
+    renderGruposOtrosEvaluadores(
+      elDetRazonesOtras,
+      elSumaRazonesOtras,
+      elListaRazonesOtras,
+      otrasItems,
+      (r) => r.espacio || '',
+      'razón(es)',
+      'razones',
+      null,
+      'De otros evaluadores'
+    );
+    const total = nAqui + otrasItems.length;
     elInfoRazones.textContent = total === 0
       ? 'Todavía no guardaste razones (botón 🏷 durante el estudio).'
       : 'Guardadas en este navegador: ' + total;
@@ -15346,15 +15332,15 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function actualizarFilaRazonIndividual(h) {
     const cache = nodosRazones.get(h);
     const nuevoGrupo = grupoActualRazon(h);
-    if (!nuevoGrupo) {
+    if (!nuevoGrupo || nuevoGrupo === 'otras') {
       if (cache) { cache.fila.remove(); nodosRazones.delete(h); }
       actualizarContadoresRazones();
       return;
     }
     if (cache) cache.fila.remove();
     const fila = filaRazonGuardada(h, razonesGuardadas[h]);
-    contenedorDeGrupoRazon(nuevoGrupo).appendChild(fila);
-    nodosRazones.set(h, { fila: fila, grupo: nuevoGrupo });
+    elListaRazonesAqui.appendChild(fila);
+    nodosRazones.set(h, { fila: fila, grupo: 'aqui' });
     actualizarContadoresRazones();
   }
 
@@ -15413,10 +15399,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function renderRazonesPreview() {
     nodosRazones.clear();
     elListaRazonesAqui.innerHTML = '';
-    elListaRazonesOtras.innerHTML = '';
     actualizarContadoresRazones();
     lazyRazonesAqui.refrescar();
-    lazyRazonesOtras.refrescar();
   }
 
   function fusionarRazonesLista(lista) {
