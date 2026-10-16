@@ -24,6 +24,9 @@ PRECIO_ESCUDO_RACHA = 90
 PRECIO_SEGUNDA_OPORTUNIDAD = 70
 FACTOR_RECOMPENSA_REINTENTO = 0.5
 
+DURACION_PRETEST_SEG = 5 * 60
+DURACION_SKIMMING_SEG = 5 * 60
+DURACION_DESCANSO_LARGO_SEG = 10 * 60
 DURACION_LECTURA_SEG = 25 * 60
 DURACION_DESCANSO_SEG = 5 * 60
 
@@ -853,6 +856,9 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     html = html.replace("__PRECIO_ESCUDO_RACHA__", str(PRECIO_ESCUDO_RACHA))
     html = html.replace("__PRECIO_SEGUNDA_OPORTUNIDAD__", str(PRECIO_SEGUNDA_OPORTUNIDAD))
     html = html.replace("__FACTOR_RECOMPENSA_REINTENTO__", str(FACTOR_RECOMPENSA_REINTENTO))
+    html = html.replace("__DURACION_PRETEST_SEG__", str(DURACION_PRETEST_SEG))
+    html = html.replace("__DURACION_SKIMMING_SEG__", str(DURACION_SKIMMING_SEG))
+    html = html.replace("__DURACION_DESCANSO_LARGO_SEG__", str(DURACION_DESCANSO_LARGO_SEG))
     html = html.replace("__DURACION_LECTURA_SEG__", str(DURACION_LECTURA_SEG))
     html = html.replace("__DURACION_DESCANSO_SEG__", str(DURACION_DESCANSO_SEG))
     html = html.replace("__SIM_ALTA__", str(SIM_ALTA))
@@ -2882,12 +2888,33 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-size: 13px;
     flex-shrink: 0;
   }
-  .mapa-dot-estado {
+.mapa-dot-estado {
     width: 11px;
     height: 11px;
     border-radius: 50%;
     display: inline-block;
     border: 1.5px solid rgba(0,0,0,0.18);
+  }
+  .mapa-btn-ubicar {
+    border: 1.5px solid var(--color-borde-medio);
+    background: var(--bg-superficie-alt);
+    color: var(--texto-principal);
+    border-radius: 8px;
+    padding: 2px 7px;
+    font-size: 12px;
+    line-height: 1.2;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: inherit;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .mapa-btn-ubicar:hover:not(:disabled) {
+    border-color: var(--color-boton);
+    background: var(--bg-superficie-hover);
+  }
+  .mapa-btn-ubicar:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
   }
 
   .mapa-zoom-controles {
@@ -2940,6 +2967,35 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .pomodoro-badge.fase-lectura { background: #d4edda; color: #155724; }
   .pomodoro-badge.fase-retencion { background: #fff3cd; color: #856404; }
   .pomodoro-badge.fase-descanso { background: #d1ecf1; color: #0c5460; }
+
+  .hoja-notaseval {
+    background: #FFF8DC;
+    border: 1px dashed #e6d38a;
+    border-left: 6px solid #F2C94C;
+    border-radius: 4px 10px 10px 4px;
+    padding: 14px 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 14px;
+    text-align: left;
+  }
+  .hoja-notaseval-editor {
+    width: 100%;
+    min-height: 240px;
+    resize: vertical;
+    border: 1.5px solid #e6d38a;
+    border-radius: 8px;
+    padding: 10px 42px 10px 12px;
+    font-family: inherit;
+    font-size: 14.5px;
+    line-height: 1.55;
+    background: #fffdf2;
+    color: #4d4216;
+    display: block;
+  }
+  .hoja-notaseval-editor:focus {
+    outline: 2px solid #F2C94C;
+    outline-offset: 1px;
+  }
   .pomodoro-badge-info { flex: 1 1 auto; }
   .pomodoro-badge-info.ultimo-minuto { color: #e0574c; animation: parpadeoPomodoro 1s infinite; }
   @keyframes parpadeoPomodoro { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
@@ -3552,7 +3608,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="pomodoro-badge-botones">
           <button class="boton-mini" id="btn-pomodoro-cancelar">Cancelar</button>
           <button class="boton-mini" id="btn-pomodoro-pausar">⏸ Pausar</button>
+          <button class="boton-mini" id="btn-pomodoro-skimming" style="display:none;">⏭ Saltar a skimming</button>
           <button class="boton-mini" id="btn-pomodoro-retencion">🧠 Retención</button>
+          <button class="boton-mini" id="btn-pomodoro-braindump" style="display:none;">🧠 Braindump</button>
         </span>
       </div>
     </div>
@@ -3921,7 +3979,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>¿Empezar a estudiar?</h3>
     <div class="pomodoro-banner-repaso" id="pomodoro-aviso-repaso"></div>
-    <button class="boton-reiniciar" id="btn-pomodoro-iniciar-si">Sí, empezar</button>
+    <button class="boton-reiniciar" id="btn-pomodoro-iniciar-normal">Normal</button>
+    <button class="boton-secundario" id="btn-pomodoro-iniciar-dificil">Difícil</button>
     <button class="boton-mini" id="btn-pomodoro-iniciar-historial">🧠 Ver historial de retención</button>
     <button class="modal-cancelar" id="btn-pomodoro-iniciar-cancelar">Cancelar</button>
   </div>
@@ -3940,7 +3999,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>📊 Resumen del Pomodoro</h3>
     <div id="pomodoro-resumen-analisis-retencion" style="display:none; white-space:pre-line;"></div>
-    <p>⏱ Tiempo en lectura: <strong id="pomodoro-resumen-lectura"></strong></p>
+    <p>⏱ Tiempo en pretest: <strong id="pomodoro-resumen-lectura"></strong></p>
     <p>🧠 Tiempo en retención: <strong id="pomodoro-resumen-retencion"></strong></p>
     <p>⏱ Tiempo total: <strong id="pomodoro-resumen-total"></strong></p>
     <p>⏲️ Ciclos completados: <strong id="pomodoro-resumen-ciclos"></strong></p>
@@ -4205,33 +4264,77 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 <div class="modal-overlay" id="modal-notas-evaluador">
   <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <div class="pomodoro-badge-slot" id="pomodoro-badge-slot-notaseval"></div>
     <h3>📝 Notas del evaluador</h3>
     <p class="modal-ayuda">Notas generales de este evaluador, independientes de las tarjetas.</p>
 
-    <div class="panel-nota" style="display:block; margin-bottom:14px;">
+    <div class="estadisticas-tabs" id="notaseval-tabs">
+      <button class="boton-mini estadisticas-tab activa" id="tab-notaseval-normales" type="button">Notas</button>
+      <button class="boton-mini estadisticas-tab" id="tab-notaseval-pretest" type="button">Pretest</button>
+      <button class="boton-mini estadisticas-tab" id="tab-notaseval-braindump" type="button">Braindump</button>
+    </div>
+
+    <div class="hoja-notaseval" id="hoja-notaseval-compartida" style="display:none;">
+      <div class="panel-nota-cabecera">
+        <div class="panel-nota-titulo" id="hoja-notaseval-fecha"></div>
+      </div>
       <div class="wrap-dictado">
-        <textarea class="panel-nota-editor" id="notaseval-texto-nueva" style="display:block;" rows="3" placeholder="Escribí una nota nueva (Ctrl+Enter para guardar)"></textarea>
-        <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-notaseval-nueva" data-dictado-target="notaseval-texto-nueva" title="Dictado por voz">🎙</button>
+        <textarea class="hoja-notaseval-editor" id="hoja-notaseval-editor" placeholder="Escribí acá (Ctrl+Enter para guardar)"></textarea>
+        <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-hoja-notaseval" data-dictado-target="hoja-notaseval-editor" title="Dictado por voz">🎙</button>
       </div>
-      <div class="chips-razones" id="notaseval-chips-nueva" style="display:flex;"></div>
       <div class="panel-nota-acciones">
-        <button class="boton-mini" id="btn-notaseval-agregar">➕ Agregar nota</button>
+        <button class="boton-mini" id="btn-hoja-guardar" type="button">Guardar</button>
+        <button class="boton-mini" id="btn-hoja-cancelar" type="button">Cancelar</button>
+        <button class="boton-mini" id="btn-hoja-vaciar" type="button">Vaciar contenido</button>
+        <button class="boton-mini boton-mini-peligro" id="btn-hoja-borrar" type="button">🗑 Borrar nota</button>
       </div>
     </div>
 
-    <div class="wrap-dictado" id="notaseval-editor-compartido-wrap" style="display:none;">
-      <textarea class="panel-nota-editor" id="notaseval-editor-compartido" style="display:block;" placeholder="Escribí tu nota (Ctrl+Enter para guardar)"></textarea>
-      <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-notaseval-editor" data-dictado-target="notaseval-editor-compartido" title="Dictado por voz">🎙</button>
+    <div id="notaseval-pane-normales">
+      <div class="panel-nota" style="display:block; margin-bottom:14px;">
+        <div class="wrap-dictado">
+          <textarea class="panel-nota-editor" id="notaseval-texto-nueva" style="display:block;" rows="3" placeholder="Escribí una nota nueva (Ctrl+Enter para guardar)"></textarea>
+          <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-notaseval-nueva" data-dictado-target="notaseval-texto-nueva" title="Dictado por voz">🎙</button>
+        </div>
+        <div class="chips-razones" id="notaseval-chips-nueva" style="display:flex;"></div>
+        <div class="panel-nota-acciones">
+          <button class="boton-mini" id="btn-notaseval-agregar">➕ Agregar nota</button>
+        </div>
+      </div>
+
+      <div class="wrap-dictado" id="notaseval-editor-compartido-wrap" style="display:none;">
+        <textarea class="panel-nota-editor" id="notaseval-editor-compartido" style="display:block;" placeholder="Escribí tu nota (Ctrl+Enter para guardar)"></textarea>
+        <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-notaseval-editor" data-dictado-target="notaseval-editor-compartido" title="Dictado por voz">🎙</button>
+      </div>
+
+      <div id="lista-notas-evaluador"></div>
+      <p class="nota-dificiles" id="notaseval-vacio" style="display:none;">Todavía no agregaste notas del evaluador.</p>
+      <div class="historial-paginacion" id="notaseval-paginacion" style="display:none;"></div>
+
+      <details id="det-notaseval-otras" style="display:none">
+        <summary id="suma-notaseval-otras">De otros evaluadores</summary>
+        <div id="lista-notaseval-otras"></div>
+      </details>
     </div>
 
-    <div id="lista-notas-evaluador"></div>
-    <p class="nota-dificiles" id="notaseval-vacio" style="display:none;">Todavía no agregaste notas del evaluador.</p>
-    <div class="historial-paginacion" id="notaseval-paginacion" style="display:none;"></div>
+    <div id="notaseval-pane-pretest" style="display:none;">
+      <div class="hoja-notaseval" id="pretest-vacio-wrap" style="display:none; text-align:center;">
+        <p class="nota-dificiles" style="margin-bottom:10px;">Todavía no existe un pretest para este evaluador.</p>
+        <button class="boton-principal" id="btn-pretest-crear" type="button">Crear pretest</button>
+      </div>
+      <div id="pretest-hoja-slot"></div>
+    </div>
 
-    <details id="det-notaseval-otras" style="display:none">
-      <summary id="suma-notaseval-otras">De otros evaluadores</summary>
-      <div id="lista-notaseval-otras"></div>
-    </details>
+    <div id="notaseval-pane-braindump" style="display:none;">
+      <div id="braindump-lista-vista">
+        <div style="margin-bottom:10px;">
+          <button class="boton-mini" id="btn-braindump-nuevo" type="button">➕ Nuevo braindump</button>
+        </div>
+        <div id="lista-braindump-evaluador"></div>
+        <p class="nota-dificiles" id="braindump-vacio" style="display:none;">Todavía no agregaste notas de braindump.</p>
+      </div>
+      <div id="braindump-hoja-slot"></div>
+    </div>
 
     <div class="panel-razones-acciones" style="margin-top:14px; justify-content: space-between;">
       <button class="boton-mini boton-mini-peligro" id="btn-vaciar-notaseval" style="display:none;">Vaciar todas</button>
@@ -4485,6 +4588,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const PRECIO_ESCUDO_RACHA = __PRECIO_ESCUDO_RACHA__;
   const PRECIO_SEGUNDA_OPORTUNIDAD = __PRECIO_SEGUNDA_OPORTUNIDAD__;
   const FACTOR_RECOMPENSA_REINTENTO = __FACTOR_RECOMPENSA_REINTENTO__;
+  const DURACION_PRETEST_SEG = __DURACION_PRETEST_SEG__;
+  const DURACION_SKIMMING_SEG = __DURACION_SKIMMING_SEG__;
+  const DURACION_DESCANSO_LARGO_SEG = __DURACION_DESCANSO_LARGO_SEG__;
   const DURACION_LECTURA_SEG = __DURACION_LECTURA_SEG__;
   const DURACION_DESCANSO_SEG = __DURACION_DESCANSO_SEG__;
   const SIM_ALTA = __SIM_ALTA__;
@@ -4832,6 +4938,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else if (zona === 'notaseval') {
       const entrantes = new Set(lista.filter((x) => x && typeof x.id === 'string' && x.id).map((x) => x.id));
       notasEvaluador.forEach((loc) => {
+        if (loc.categoria === 'pretest') return;
         if (!entrantes.has(loc.id) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.modificada || loc.creada || 0)) {
           idsAEliminar.push(loc.id);
         }
@@ -5121,20 +5228,44 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   const CLAVE_NOTAS_EVALUADOR = 'notas_evaluador_v1';
+
+  function depurarPretestsEnLista(lista) {
+    const mejorPorEspacio = new Map();
+    lista.forEach((n) => {
+      if (!n || n.categoria !== 'pretest') return;
+      const esp = n.espacio || ESPACIO_HASH;
+      const prev = mejorPorEspacio.get(esp);
+      if (!prev || (n.modificada || 0) >= (prev.modificada || 0)) {
+        mejorPorEspacio.set(esp, n);
+      }
+    });
+    return lista.filter((n) => {
+      if (!n || n.categoria !== 'pretest') return true;
+      const esp = n.espacio || ESPACIO_HASH;
+      return mejorPorEspacio.get(esp) === n;
+    });
+  }
+
   let notasEvaluador = cargarNotasEvaluador();
 
   function cargarNotasEvaluador() {
     try {
       const crudo = localStorage.getItem(CLAVE_NOTAS_EVALUADOR);
       const datos = crudo ? JSON.parse(crudo) : [];
-      return Array.isArray(datos) ? datos.filter((n) => n && typeof n.id === 'string' && typeof n.texto === 'string') : [];
+      const validas = Array.isArray(datos) ? datos.filter((n) => n && typeof n.id === 'string' && typeof n.texto === 'string') : [];
+      return depurarPretestsEnLista(validas);
     } catch (e) {
       return [];
     }
   }
 
+  function depurarPretestsDuplicados() {
+    notasEvaluador = depurarPretestsEnLista(notasEvaluador);
+  }
+
   function guardarNotasEvaluador() {
     try {
+      depurarPretestsDuplicados();
       localStorage.setItem(CLAVE_NOTAS_EVALUADOR, JSON.stringify(notasEvaluador));
     } catch (e) {
     }
@@ -5146,6 +5277,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function notasEvaluadorPropias() {
     return notasEvaluador.filter((n) => !n.espacio || n.espacio === ESPACIO_HASH);
+  }
+
+  function notasEvaluadorNormalesPropias() {
+    return notasEvaluadorPropias().filter((n) => n.categoria !== 'pretest' && n.categoria !== 'braindump');
+  }
+
+  function obtenerPretestPropio() {
+    return notasEvaluadorPropias().find((n) => n.categoria === 'pretest') || null;
+  }
+
+  function notasBraindumpPropias() {
+    return notasEvaluadorPropias()
+      .filter((n) => n.categoria === 'braindump')
+      .slice()
+      .sort((a, b) => (b.modificada || b.creada || 0) - (a.modificada || a.creada || 0));
   }
 
   function notasEvaluadorDeOtros() {
@@ -6665,6 +6811,50 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return span;
   }
 
+  function ubicarEnMapa(coords) {
+    if (!coords || !elMapaImg) return;
+    const cs = getComputedStyle(elMapaImg);
+    const num = (v) => parseFloat(v) || 0;
+    const insL = num(cs.borderLeftWidth) + num(cs.paddingLeft);
+    const insT = num(cs.borderTopWidth) + num(cs.paddingTop);
+    const insR = num(cs.borderRightWidth) + num(cs.paddingRight);
+    const insB = num(cs.borderBottomWidth) + num(cs.paddingBottom);
+    const imgW = elMapaImg.offsetWidth - insL - insR;
+    const imgH = elMapaImg.offsetHeight - insT - insB;
+    if (imgW <= 0 || imgH <= 0) return;
+
+    const cxPct = coords.x + coords.w / 2;
+    const cyPct = coords.y + coords.h / 2;
+
+    const wrapW = elMapaImagenWrap.clientWidth || imgW;
+    const wrapH = elMapaImagenWrap.clientHeight || imgH;
+    const boxW = Math.max(1, (coords.w / 100) * imgW);
+    const boxH = Math.max(1, (coords.h / 100) * imgH);
+    const factorMargen = 0.75;
+    const zoomCalculado = Math.min((wrapW * factorMargen) / boxW, (wrapH * factorMargen) / boxH);
+
+    zoomMapa = Math.min(ZOOM_MAPA_MAX, Math.max(1, zoomCalculado));
+    panMapa.x = -(((cxPct - 50) / 100) * imgW) * zoomMapa;
+    panMapa.y = -(((cyPct - 50) / 100) * imgH) * zoomMapa;
+
+    aplicarTransformMapa();
+  }
+
+  function crearBotonUbicarMapa(coords, titulo) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mapa-btn-ubicar';
+    btn.textContent = '🔍';
+    btn.title = titulo || 'Ubicar en mapa';
+    btn.disabled = !coords;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (coords) ubicarEnMapa(coords);
+    });
+    return btn;
+  }
+
   const lazyMapaAcordeones = {};
 
   function inicializarAcordeonesMapaLazy() {
@@ -6699,9 +6889,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         const spanCuenta = document.createElement('span');
         spanCuenta.className = 'cuenta-grupo';
 
+        const infoSubtGrupo = mapaSubtMetricaCache[nombreSubt];
+        const btnUbicarSubt = crearBotonUbicarMapa(
+          infoSubtGrupo ? infoSubtGrupo.coords : null,
+          'Ubicar ' + nombreSubt + ' en mapa'
+        );
+
         sumSubt.appendChild(chkGrupo);
         sumSubt.appendChild(spanNombre);
         sumSubt.appendChild(spanCuenta);
+        sumSubt.appendChild(btnUbicarSubt);
         detSubt.appendChild(sumSubt);
 
         const cuerpo = document.createElement('div');
@@ -6726,6 +6923,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           label.appendChild(chk);
           label.appendChild(nombre);
           label.appendChild(crearIndicadoresColorMapa(item.estados));
+          label.appendChild(crearBotonUbicarMapa(item.coords, 'Ubicar Ruta ' + item.idRuta + ' en mapa'));
           cuerpo.appendChild(label);
         });
 
@@ -6773,6 +6971,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         label.appendChild(chk);
         label.appendChild(nombre);
         label.appendChild(crearIndicadoresColorMapa(['dificil']));
+        label.appendChild(crearBotonUbicarMapa(item.coords, 'Ubicar Ruta ' + item.idRuta + ' en mapa'));
         cont.appendChild(label);
       });
     });
@@ -6805,6 +7004,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         label.appendChild(chk);
         label.appendChild(nombre);
         label.appendChild(crearIndicadoresColorMapa([codColor]));
+        label.appendChild(crearBotonUbicarMapa(infoSubt.coords, 'Ubicar ' + infoSubt.nombre + ' en mapa'));
         cont.appendChild(label);
       });
     };
@@ -10957,6 +11157,7 @@ const ZONAS_SYNC_GIST = [
       notasEvaluador.forEach((nt) => {
         if (nt.espacio === viejo) { nt.espacio = ESPACIO_HASH; n++; }
       });
+      depurarPretestsDuplicados();
       guardarNotasEvaluador();
       renderListaNotasEvaluador();
       return { movidas: n, sin: 0 };
@@ -11574,12 +11775,20 @@ const ZONAS_SYNC_GIST = [
 
   document.addEventListener('keydown', (evento) => {
     if (evento.key !== 'Escape') return;
-    const activo = document.activeElement;
-    if (activo && (activo.tagName === 'INPUT' || activo.tagName === 'TEXTAREA')) return;
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
 
     if (elModalConfirmacion.classList.contains('abierto')) { cerrarModalConfirmacion(false); return; }
     if (elModalAviso.classList.contains('abierto')) { cerrarModalAviso(); return; }
+
+    if (elModalNotasEvaluador.classList.contains('abierto') && (modoHojaNotasEval === 'pretest' || modoHojaNotasEval === 'braindump')) {
+      evento.preventDefault();
+      cancelarHojaCompartida();
+      return;
+    }
+
+    const activo = document.activeElement;
+    if (activo && (activo.tagName === 'INPUT' || activo.tagName === 'TEXTAREA')) return;
+
     if (elModalNotasEvaluador.classList.contains('abierto')) { cerrarNotasEvaluador(); return; }
     if (elModalSync.classList.contains('abierto')) { elModalSync.classList.remove('abierto'); return; }
     if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
@@ -11611,7 +11820,7 @@ const ZONAS_SYNC_GIST = [
 
     if (elModalConfirmacion.classList.contains('abierto')) { evento.preventDefault(); elBtnConfirmacionAceptar.click(); return; }
     if (elModalAviso.classList.contains('abierto')) { evento.preventDefault(); elBtnAvisoAceptar.click(); return; }
-    if (elModalPomodoroIniciar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-iniciar-si').click(); return; }
+    if (elModalPomodoroIniciar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-iniciar-normal').click(); return; }
     if (elModalPomodoroAbandonar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-abandonar-si').click(); return; }
     if (elModalPomodoroResumen.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-resumen-cerrar').click(); return; }
     if (elModalContinuar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-modal-sesion').click(); return; }
@@ -12635,9 +12844,323 @@ const ZONAS_SYNC_GIST = [
   let notasEvalPaginaActual = 1;
   const NOTASEVAL_POR_PAGINA = 15;
 
+  let tabNotasEvalActual = 'normales';
+  let modoHojaNotasEval = null;
+  let braindumpEditandoId = null;
+  let braindumpAbiertoEnHoja = false;
+
   const elModalNotasEvaluador = document.getElementById('modal-notas-evaluador');
   const elNotaEvalTextoNueva = document.getElementById('notaseval-texto-nueva');
   const elNotaEvalChipsNueva = document.getElementById('notaseval-chips-nueva');
+  const elHojaCompartida = document.getElementById('hoja-notaseval-compartida');
+  const elHojaFecha = document.getElementById('hoja-notaseval-fecha');
+  const elHojaEditor = document.getElementById('hoja-notaseval-editor');
+  const elBtnHojaGuardar = document.getElementById('btn-hoja-guardar');
+  const elBtnHojaCancelar = document.getElementById('btn-hoja-cancelar');
+  const elBtnHojaVaciar = document.getElementById('btn-hoja-vaciar');
+  const elBtnHojaBorrar = document.getElementById('btn-hoja-borrar');
+  const elPretestVacioWrap = document.getElementById('pretest-vacio-wrap');
+  const elPretestHojaSlot = document.getElementById('pretest-hoja-slot');
+  const elBraindumpListaVista = document.getElementById('braindump-lista-vista');
+  const elBraindumpHojaSlot = document.getElementById('braindump-hoja-slot');
+  const elListaBraindump = document.getElementById('lista-braindump-evaluador');
+  const elBraindumpVacio = document.getElementById('braindump-vacio');
+
+  function crearPretestPropio(textoInicial) {
+    let existente = obtenerPretestPropio();
+    if (existente) return existente;
+    const ahora = Date.now();
+    const nuevo = {
+      id: generarIdNotaEvaluador(),
+      texto: typeof textoInicial === 'string' ? textoInicial : '',
+      categoria: 'pretest',
+      espacio: ESPACIO_HASH,
+      creada: ahora,
+      modificada: ahora,
+      rev: siguienteRev(),
+    };
+    notasEvaluador.push(nuevo);
+    guardarNotasEvaluador();
+    return nuevo;
+  }
+
+  function detenerDictadoHojaCompartida() {
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') {
+      window.__detenerDictadoSiActivoEn(elHojaEditor);
+    }
+  }
+
+  function renderPretestTab() {
+    const pretest = obtenerPretestPropio();
+    if (!pretest) {
+      elHojaCompartida.style.display = 'none';
+      elPretestVacioWrap.style.display = 'block';
+      modoHojaNotasEval = null;
+      return;
+    }
+    elPretestVacioWrap.style.display = 'none';
+    if (elHojaCompartida.parentElement !== elPretestHojaSlot) {
+      elPretestHojaSlot.appendChild(elHojaCompartida);
+    }
+    modoHojaNotasEval = 'pretest';
+    elHojaCompartida.style.display = 'block';
+    elHojaFecha.textContent = '📝 Pretest · ' + formatearFechaLista(pretest.modificada || pretest.creada);
+    elHojaEditor.value = pretest.texto || '';
+    elBtnHojaVaciar.style.display = 'inline-block';
+    elBtnHojaBorrar.style.display = (pomodoroActivo && pomodoroFase === 'pretest') ? 'none' : 'inline-block';
+  }
+
+  function abrirHojaBraindump(idNota) {
+    braindumpEditandoId = idNota || null;
+    braindumpAbiertoEnHoja = true;
+    modoHojaNotasEval = 'braindump';
+    elBraindumpListaVista.style.display = 'none';
+    if (elHojaCompartida.parentElement !== elBraindumpHojaSlot) {
+      elBraindumpHojaSlot.appendChild(elHojaCompartida);
+    }
+    const nota = idNota ? notasEvaluador.find((n) => n.id === idNota) : null;
+    elHojaFecha.textContent = nota
+      ? ('🧠 Braindump · ' + formatearFechaLista(nota.modificada || nota.creada))
+      : ('🧠 Braindump · ' + formatearFechaLista(Date.now()));
+    elHojaEditor.value = nota ? (nota.texto || '') : '';
+    elBtnHojaVaciar.style.display = 'none';
+    elBtnHojaBorrar.style.display = (nota && !pomodoroEnBraindumpFinal) ? 'inline-block' : 'none';
+    elHojaCompartida.style.display = 'block';
+    setTimeout(() => elHojaEditor.focus(), 0);
+  }
+
+  function cerrarHojaBraindumpALista() {
+    detenerDictadoHojaCompartida();
+    braindumpAbiertoEnHoja = false;
+    braindumpEditandoId = null;
+    if (modoHojaNotasEval === 'braindump') {
+      elHojaCompartida.style.display = 'none';
+      modoHojaNotasEval = null;
+    }
+    elBraindumpListaVista.style.display = 'block';
+    renderListaBraindumpEvaluador();
+  }
+
+  function renderListaBraindumpEvaluador() {
+    const lista = notasBraindumpPropias();
+    elListaBraindump.innerHTML = '';
+    if (lista.length === 0) {
+      elBraindumpVacio.style.display = 'block';
+      return;
+    }
+    elBraindumpVacio.style.display = 'none';
+    lista.forEach((nota) => {
+      const div = document.createElement('div');
+      div.className = 'panel-nota item-nota-evaluador';
+      div.style.display = 'block';
+
+      const cab = document.createElement('div');
+      cab.className = 'panel-nota-cabecera';
+      const fecha = document.createElement('div');
+      fecha.className = 'panel-nota-titulo';
+      fecha.textContent = formatearFechaLista(nota.modificada || nota.creada);
+      cab.appendChild(fecha);
+      div.appendChild(cab);
+
+      const texto = document.createElement('div');
+      const vacia = !nota.texto || nota.texto.trim() === '';
+      texto.className = 'panel-nota-texto' + (vacia ? ' vacio' : '');
+      texto.textContent = vacia ? '(vacío)' : nota.texto;
+      div.appendChild(texto);
+
+      const acc = document.createElement('div');
+      acc.className = 'panel-nota-acciones';
+      acc.appendChild(botonMini('✎ Editar', () => abrirHojaBraindump(nota.id)));
+      acc.appendChild(botonMini('🗑 Borrar nota', async () => {
+        if (!(await confirmarAccion('¿Borrar este braindump? No se puede deshacer.'))) return;
+        notasEvaluador = notasEvaluador.filter((n) => n.id !== nota.id);
+        siguienteRev();
+        guardarNotasEvaluador();
+        renderListaBraindumpEvaluador();
+        actualizarVisibilidadVaciarNotasEval();
+      }));
+      div.appendChild(acc);
+
+      elListaBraindump.appendChild(div);
+    });
+  }
+
+  function renderBraindumpTab() {
+    if (braindumpAbiertoEnHoja) {
+      abrirHojaBraindump(braindumpEditandoId);
+    } else {
+      elHojaCompartida.style.display = 'none';
+      elBraindumpListaVista.style.display = 'block';
+      renderListaBraindumpEvaluador();
+    }
+  }
+
+  function mostrarTabNotasEvaluador(tab) {
+    if (pomodoroActivo && pomodoroFase === 'pretest' && tab !== 'pretest') return;
+    if (pomodoroEnBraindumpFinal && tab !== 'braindump') return;
+
+    detenerDictadoHojaCompartida();
+    tabNotasEvalActual = tab;
+
+    document.getElementById('notaseval-pane-normales').style.display = tab === 'normales' ? 'block' : 'none';
+    document.getElementById('notaseval-pane-pretest').style.display = tab === 'pretest' ? 'block' : 'none';
+    document.getElementById('notaseval-pane-braindump').style.display = tab === 'braindump' ? 'block' : 'none';
+
+    document.getElementById('tab-notaseval-normales').classList.toggle('activa', tab === 'normales');
+    document.getElementById('tab-notaseval-pretest').classList.toggle('activa', tab === 'pretest');
+    document.getElementById('tab-notaseval-braindump').classList.toggle('activa', tab === 'braindump');
+
+    const bloqueadoPretest = pomodoroActivo && pomodoroFase === 'pretest';
+    const bloqueadoBraindump = pomodoroEnBraindumpFinal;
+    document.getElementById('tab-notaseval-normales').disabled = bloqueadoPretest || bloqueadoBraindump;
+    document.getElementById('tab-notaseval-pretest').disabled = bloqueadoBraindump;
+    document.getElementById('tab-notaseval-braindump').disabled = bloqueadoPretest;
+
+    if (tab === 'normales') {
+      elHojaCompartida.style.display = 'none';
+      modoHojaNotasEval = null;
+      renderListaNotasEvaluador();
+    } else if (tab === 'pretest') {
+      renderPretestTab();
+      if (obtenerPretestPropio()) setTimeout(() => elHojaEditor.focus(), 0);
+    } else if (tab === 'braindump') {
+      renderBraindumpTab();
+    }
+    actualizarVisibilidadVaciarNotasEval();
+  }
+
+  function actualizarVisibilidadVaciarNotasEval() {
+    const bloqueado = (pomodoroActivo && pomodoroFase === 'pretest') || pomodoroEnBraindumpFinal;
+    document.getElementById('btn-vaciar-notaseval').style.display = (!bloqueado && notasEvaluador.length > 0) ? 'inline-block' : 'none';
+  }
+
+  function guardarHojaCompartida() {
+    detenerDictadoHojaCompartida();
+    if (modoHojaNotasEval === 'pretest') {
+      const pretest = obtenerPretestPropio();
+      if (!pretest) return;
+      pretest.texto = elHojaEditor.value.trim();
+      pretest.modificada = Date.now();
+      pretest.rev = siguienteRev();
+      guardarNotasEvaluador();
+      elHojaFecha.textContent = '📝 Pretest · ' + formatearFechaLista(pretest.modificada);
+      return;
+    }
+    if (modoHojaNotasEval === 'braindump') {
+      if (pomodoroEnBraindumpFinal) {
+        finalizarBraindumpPomodoro();
+        return;
+      }
+      const texto = elHojaEditor.value.trim();
+      if (braindumpEditandoId) {
+        const nota = notasEvaluador.find((n) => n.id === braindumpEditandoId);
+        if (nota) {
+          nota.texto = texto;
+          nota.modificada = Date.now();
+          nota.rev = siguienteRev();
+          guardarNotasEvaluador();
+        }
+      } else if (texto !== '') {
+        const ahora = Date.now();
+        notasEvaluador.push({
+          id: generarIdNotaEvaluador(),
+          texto: texto,
+          categoria: 'braindump',
+          espacio: ESPACIO_HASH,
+          creada: ahora,
+          modificada: ahora,
+          rev: siguienteRev(),
+        });
+        guardarNotasEvaluador();
+      }
+      cerrarHojaBraindumpALista();
+      actualizarVisibilidadVaciarNotasEval();
+    }
+  }
+
+  function cancelarHojaCompartida() {
+    detenerDictadoHojaCompartida();
+    if (modoHojaNotasEval === 'pretest') {
+      const pretest = obtenerPretestPropio();
+      if (pretest) elHojaEditor.value = pretest.texto || '';
+      cerrarNotasEvaluador({ sinAutoguardarPretest: true });
+      return;
+    }
+    if (modoHojaNotasEval === 'braindump') {
+      if (pomodoroEnBraindumpFinal) {
+        finalizarBraindumpPomodoro();
+        return;
+      }
+      cerrarHojaBraindumpALista();
+    }
+  }
+
+  function vaciarContenidoPretest() {
+    if (modoHojaNotasEval !== 'pretest') return;
+    detenerDictadoHojaCompartida();
+    const pretest = obtenerPretestPropio();
+    if (!pretest) return;
+    pretest.texto = '';
+    pretest.modificada = Date.now();
+    pretest.rev = siguienteRev();
+    guardarNotasEvaluador();
+    elHojaEditor.value = '';
+    elHojaFecha.textContent = '📝 Pretest · ' + formatearFechaLista(pretest.modificada);
+  }
+
+  async function borrarNotaHojaCompartida() {
+    detenerDictadoHojaCompartida();
+    if (modoHojaNotasEval === 'pretest') {
+      const pretest = obtenerPretestPropio();
+      if (!pretest) return;
+      if (!(await confirmarAccion('¿Borrar el pretest de este evaluador? No se puede deshacer.'))) return;
+      notasEvaluador = notasEvaluador.filter((n) => n.id !== pretest.id);
+      siguienteRev();
+      guardarNotasEvaluador();
+      renderPretestTab();
+      actualizarVisibilidadVaciarNotasEval();
+      return;
+    }
+    if (modoHojaNotasEval === 'braindump' && braindumpEditandoId) {
+      if (!(await confirmarAccion('¿Borrar este braindump? No se puede deshacer.'))) return;
+      notasEvaluador = notasEvaluador.filter((n) => n.id !== braindumpEditandoId);
+      siguienteRev();
+      guardarNotasEvaluador();
+      cerrarHojaBraindumpALista();
+      actualizarVisibilidadVaciarNotasEval();
+    }
+  }
+
+  document.getElementById('tab-notaseval-normales').addEventListener('click', () => mostrarTabNotasEvaluador('normales'));
+  document.getElementById('tab-notaseval-pretest').addEventListener('click', () => mostrarTabNotasEvaluador('pretest'));
+  document.getElementById('tab-notaseval-braindump').addEventListener('click', () => mostrarTabNotasEvaluador('braindump'));
+
+  document.getElementById('btn-pretest-crear').addEventListener('click', () => {
+    crearPretestPropio('');
+    renderPretestTab();
+    actualizarVisibilidadVaciarNotasEval();
+    setTimeout(() => elHojaEditor.focus(), 0);
+  });
+
+  document.getElementById('btn-braindump-nuevo').addEventListener('click', () => {
+    abrirHojaBraindump(null);
+  });
+
+  elBtnHojaGuardar.addEventListener('click', () => guardarHojaCompartida());
+  elBtnHojaCancelar.addEventListener('click', () => cancelarHojaCompartida());
+  elBtnHojaVaciar.addEventListener('click', () => vaciarContenidoPretest());
+  elBtnHojaBorrar.addEventListener('click', () => borrarNotaHojaCompartida());
+
+  elHojaEditor.addEventListener('keydown', (evento) => {
+    if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
+      evento.preventDefault();
+      guardarHojaCompartida();
+    } else if (evento.key === 'Escape') {
+      evento.preventDefault();
+      evento.stopPropagation();
+      cancelarHojaCompartida();
+    }
+  });
 
   function refrescarChipsNuevaNotaEvaluador() {
     renderSelectorCategoriaNota(elNotaEvalChipsNueva, notaEvalCategoriaNueva, (cod) => {
@@ -12863,7 +13386,7 @@ const ZONAS_SYNC_GIST = [
   }
 
   function renderListaNotasEvaluador() {
-    const propias = notasEvaluadorPropias().slice().sort((a, b) => (b.modificada || b.creada || 0) - (a.modificada || a.creada || 0));
+    const propias = notasEvaluadorNormalesPropias().slice().sort((a, b) => (b.modificada || b.creada || 0) - (a.modificada || a.creada || 0));
     const elLista = document.getElementById('lista-notas-evaluador');
     const elVacio = document.getElementById('notaseval-vacio');
     const elEditorWrap = document.getElementById('notaseval-editor-compartido-wrap');
@@ -12887,33 +13410,72 @@ const ZONAS_SYNC_GIST = [
       renderNotasEvaluadorPaginacion(totalPaginas);
     }
 
-    document.getElementById('btn-vaciar-notaseval').style.display = notasEvaluador.length > 0 ? 'inline-block' : 'none';
+    actualizarVisibilidadVaciarNotasEval();
     renderNotasEvaluadorOtras();
   }
 
-  function abrirNotasEvaluador() {
+  function nombrePantallaActivaActual() {
+    if (elPantallaGaleria.style.display !== 'none') return 'galeria';
+    if (elPantallaHuerfanas.style.display !== 'none') return 'huerfanas';
+    if (elPantallaMapa.style.display !== 'none') return 'mapa';
+    return 'observador';
+  }
+
+  function abrirNotasEvaluador(tabInicial, idBraindumpForzado) {
     notaEvalEditandoId = null;
     notaEvalCategoriaEdicion = null;
     notaEvalCategoriaNueva = null;
     notasEvalPaginaActual = 1;
     elNotaEvalTextoNueva.value = '';
     refrescarChipsNuevaNotaEvaluador();
-    renderListaNotasEvaluador();
+
+    if (tabInicial === 'braindump' && idBraindumpForzado) {
+      braindumpEditandoId = idBraindumpForzado;
+      braindumpAbiertoEnHoja = true;
+    } else {
+      braindumpEditandoId = null;
+      braindumpAbiertoEnHoja = false;
+    }
+
+    const tabDestino = tabInicial || (pomodoroActivo && pomodoroFase === 'pretest' ? 'pretest' : 'normales');
     elModalNotasEvaluador.classList.add('abierto');
+    if (pomodoroActivo && !pomodoroEnBraindumpFinal) {
+      const slotModal = document.getElementById('pomodoro-badge-slot-notaseval');
+      if (slotModal && elPomodoroBadge.parentElement !== slotModal) {
+        slotModal.appendChild(elPomodoroBadge);
+      }
+    }
+    mostrarTabNotasEvaluador(tabDestino);
   }
 
-  function cerrarNotasEvaluador() {
+  function cerrarNotasEvaluador(opciones) {
+    const opts = opciones || {};
+    if (pomodoroEnBraindumpFinal && !opts.desdeFinalizarBraindump) {
+      finalizarBraindumpPomodoro();
+      return;
+    }
     const textareaNueva = document.getElementById('notaseval-texto-nueva');
     const textareaEditor = document.getElementById('notaseval-editor-compartido');
     if (typeof window.__detenerDictadoSiActivoEn === 'function') {
       window.__detenerDictadoSiActivoEn(textareaNueva);
       window.__detenerDictadoSiActivoEn(textareaEditor);
+      window.__detenerDictadoSiActivoEn(elHojaEditor);
     }
     elModalNotasEvaluador.classList.remove('abierto');
     notaEvalEditandoId = null;
+    braindumpAbiertoEnHoja = false;
+    braindumpEditandoId = null;
+    modoHojaNotasEval = null;
+
+    if (pomodoroActivo) {
+      reubicarBadgePomodoro(nombrePantallaActivaActual());
+      if (pomodoroFase === 'pretest' && !opts.desdeTransicionPomodoro) {
+        saltarDesdePretestPomodoro();
+      }
+    }
   }
 
-  document.getElementById('btn-notas-evaluador').addEventListener('click', () => abrirNotasEvaluador());
+  document.getElementById('btn-notas-evaluador').addEventListener('click', () => abrirNotasEvaluador('normales'));
   document.getElementById('btn-notaseval-cerrar').addEventListener('click', () => cerrarNotasEvaluador());
   document.getElementById('btn-notaseval-agregar').addEventListener('click', () => agregarNotaEvaluador());
   elNotaEvalTextoNueva.addEventListener('keydown', (evento) => {
@@ -12929,10 +13491,11 @@ const ZONAS_SYNC_GIST = [
     notasEvaluador = [];
     siguienteRev();
     guardarNotasEvaluador();
-    renderListaNotasEvaluador();
+    mostrarTabNotasEvaluador(tabNotasEvalActual);
   });
 
   function construirExportNotasEvaluador() {
+    depurarPretestsDuplicados();
     return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), notasEvaluador: notasEvaluador };
   }
 
@@ -12953,6 +13516,28 @@ const ZONAS_SYNC_GIST = [
         rev: typeof item.rev === 'number' ? item.rev : undefined,
       };
       registrarRevVista(entrante.rev);
+
+      if (entrante.categoria === 'pretest') {
+        const localPretest = notasEvaluador.find(
+          (n) => n.categoria === 'pretest' && (n.espacio || ESPACIO_HASH) === entrante.espacio
+        );
+        if (!localPretest) {
+          notasEvaluador.push(entrante);
+          nuevas++;
+        } else if (localPretest.texto === entrante.texto) {
+          if ((entrante.modificada || 0) > (localPretest.modificada || 0)) {
+            Object.assign(localPretest, entrante);
+          }
+          iguales++;
+        } else if ((entrante.modificada || 0) > (localPretest.modificada || 0)) {
+          Object.assign(localPretest, entrante);
+          actualizadas++;
+        } else {
+          conservadas++;
+        }
+        return;
+      }
+
       const local = notasEvaluador.find((n) => n.id === entrante.id);
       if (!local) {
         notasEvaluador.push(entrante);
@@ -12966,8 +13551,13 @@ const ZONAS_SYNC_GIST = [
         conservadas++;
       }
     });
+    depurarPretestsDuplicados();
     guardarNotasEvaluador();
-    renderListaNotasEvaluador();
+    if (elModalNotasEvaluador.classList.contains('abierto')) {
+      mostrarTabNotasEvaluador(tabNotasEvalActual);
+    } else {
+      renderListaNotasEvaluador();
+    }
     return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
   }
 
@@ -13535,7 +14125,8 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       timestamp: timestamp,
       rev: siguienteRev(),
       ciclos: Math.max(0, pomodoroCiclo - 1),
-      tiempoLecturaSeg: pomodoroAcumulado.lectura,
+      tiempoLecturaSeg: pomodoroAcumulado.pretest,
+      tiempoRetencionSeg: pomodoroAcumulado.retencion,
       tiempoRetencionSeg: pomodoroAcumulado.retencion,
       tiempoTotalSeg: totalSeg,
       totalRutas: total,
@@ -17604,11 +18195,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const elPomodoroBadgeInfo = document.getElementById('pomodoro-badge-info');
   const elBtnPomodoroCancelar = document.getElementById('btn-pomodoro-cancelar');
   const elBtnPomodoroPausar = document.getElementById('btn-pomodoro-pausar');
+  const elBtnPomodoroSkimming = document.getElementById('btn-pomodoro-skimming');
   const elBtnPomodoroRetencion = document.getElementById('btn-pomodoro-retencion');
+  const elBtnPomodoroBraindump = document.getElementById('btn-pomodoro-braindump');
   const elSlotPomodoroObservador = document.getElementById('pomodoro-badge-slot-observador');
   const elSlotPomodoroGaleria = document.getElementById('pomodoro-badge-slot-galeria');
   const elSlotPomodoroHuerfanas = document.getElementById('pomodoro-badge-slot-huerfanas');
-  const elSlotPomodoroMapa = document.getElementById('pomodoro-badge-slot-mapa');  // NUEVO
+  const elSlotPomodoroMapa = document.getElementById('pomodoro-badge-slot-mapa');
   const elBtnObservadorSalir = document.getElementById('btn-observador-salir');
   const elModalPomodoroIniciar = document.getElementById('modal-pomodoro-iniciar');
   const elModalPomodoroAbandonar = document.getElementById('modal-pomodoro-abandonar');
@@ -17617,14 +18210,18 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const elTextoPausa = document.getElementById('texto-pausa');
 
   let pomodoroActivo = false;
-  let pomodoroFase = null;              // 'lectura' | 'retencion' | 'descanso'
+  let pomodoroModo = 'normal';
+  let pomodoroFase = null;
   let pomodoroCiclo = 1;
   let pomodoroSegundosRestantes = 0;
   let pomodoroIntervalo = null;
   let pomodoroPausado = false;
-  let pomodoroHoraInicio = 0;           // Date.now() al empezar (para el tiempo total del resumen)
-  let pomodoroAcumulado = { lectura: 0, retencion: 0 };   // segundos transcurridos, para el resumen
+  let pomodoroHoraInicio = 0;
+  let pomodoroAcumulado = { pretest: 0, retencion: 0 };
   let pomodoroRetencionPresionada = false;
+  let pomodoroEnBraindumpFinal = false;
+  let pomodoroTotalSegCongelado = null;
+  let pomodoroBraindumpNotaId = null;
   let retencionSesionToggles = {};
 
   function formatoMMSS(segundos) {
@@ -17636,30 +18233,95 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function reubicarBadgePomodoro(nombrePantalla) {
     if (!pomodoroActivo) return;
+    if (elModalNotasEvaluador && elModalNotasEvaluador.classList.contains('abierto') && !pomodoroEnBraindumpFinal) {
+      const slotModal = document.getElementById('pomodoro-badge-slot-notaseval');
+      if (slotModal && elPomodoroBadge.parentElement !== slotModal) slotModal.appendChild(elPomodoroBadge);
+      return;
+    }
     const slot = nombrePantalla === 'observador' ? elSlotPomodoroObservador
       : nombrePantalla === 'galeria' ? elSlotPomodoroGaleria
       : nombrePantalla === 'huerfanas' ? elSlotPomodoroHuerfanas
-      : nombrePantalla === 'mapa' ? elSlotPomodoroMapa   // NUEVO
+      : nombrePantalla === 'mapa' ? elSlotPomodoroMapa
       : null;
     if (slot && elPomodoroBadge.parentElement !== slot) slot.appendChild(elPomodoroBadge);
   }
 
   function actualizarBadgePomodoro() {
     const etiquetas = {
-      lectura: '📖 Lectura',
+      pretest: '📝 Pretest',
+      skimming: '👀 Skimming',
+      descanso_largo: '☕ Descanso',
       retencion: '🧠 Retención activa',
       descanso: '☕ Descanso',
     };
-    elPomodoroBadge.className = 'pomodoro-badge fase-' + pomodoroFase;
-    elPomodoroBadgeInfo.textContent = etiquetas[pomodoroFase] + ' · ⏲️ Ciclo ' + pomodoroCiclo + ' · ' + formatoMMSS(pomodoroSegundosRestantes);
+    const claseFase = (pomodoroFase === 'pretest' || pomodoroFase === 'skimming')
+      ? 'fase-lectura'
+      : (pomodoroFase === 'retencion' ? 'fase-retencion' : 'fase-descanso');
+    elPomodoroBadge.className = 'pomodoro-badge ' + claseFase;
+
+    const esFaseCiclo = pomodoroFase === 'retencion' || pomodoroFase === 'descanso';
+    const textoCiclo = esFaseCiclo ? (' · ⏲️ Ciclo ' + pomodoroCiclo) : '';
+    elPomodoroBadgeInfo.textContent = (etiquetas[pomodoroFase] || '') + textoCiclo + ' · ' + formatoMMSS(pomodoroSegundosRestantes);
     elPomodoroBadgeInfo.classList.toggle('ultimo-minuto', pomodoroSegundosRestantes <= 60);
-    elBtnPomodoroRetencion.style.display = pomodoroFase === 'lectura' ? 'inline-block' : 'none';
-    elBtnPomodoroPausar.style.display = pomodoroFase === 'descanso' ? 'none' : 'inline-block';
+
+    elBtnPomodoroSkimming.style.display = (pomodoroFase === 'pretest' && pomodoroModo === 'dificil') ? 'inline-block' : 'none';
+    elBtnPomodoroRetencion.style.display = (pomodoroFase === 'pretest' || pomodoroFase === 'skimming' || pomodoroFase === 'descanso_largo') ? 'inline-block' : 'none';
+    elBtnPomodoroPausar.style.display = (pomodoroFase === 'descanso' || pomodoroFase === 'descanso_largo') ? 'none' : 'inline-block';
+    elBtnPomodoroBraindump.style.display = (pomodoroFase === 'retencion' || pomodoroFase === 'descanso') ? 'inline-block' : 'none';
+  }
+
+  function autoguardarYCerrarPretestPomodoro() {
+    detenerDictadoHojaCompartida();
+    const pretest = obtenerPretestPropio();
+    if (pretest && elModalNotasEvaluador.classList.contains('abierto') && modoHojaNotasEval === 'pretest') {
+      pretest.texto = elHojaEditor.value.trim();
+      pretest.modificada = Date.now();
+      pretest.rev = siguienteRev();
+      guardarNotasEvaluador();
+    }
+    if (elModalNotasEvaluador.classList.contains('abierto')) {
+      cerrarNotasEvaluador({ desdeTransicionPomodoro: true });
+    }
+  }
+
+  function entrarFaseRetencionPomodoro() {
+    if (pomodoroFase === 'pretest' && elModalNotasEvaluador.classList.contains('abierto')) {
+      autoguardarYCerrarPretestPomodoro();
+    }
+    pomodoroFase = 'retencion';
+    pomodoroSegundosRestantes = DURACION_LECTURA_SEG;
+    pomodoroRetencionPresionada = true;
+    elBtnPomodoro.disabled = false;
+    reubicarBadgePomodoro(nombrePantallaActivaActual());
+    actualizarBadgePomodoro();
+  }
+
+  function saltarASkimmingPomodoro() {
+    if (!pomodoroActivo || pomodoroFase !== 'pretest' || pomodoroModo !== 'dificil') return;
+    if (elModalNotasEvaluador.classList.contains('abierto')) {
+      autoguardarYCerrarPretestPomodoro();
+    }
+    pomodoroFase = 'skimming';
+    pomodoroSegundosRestantes = DURACION_SKIMMING_SEG;
+    reubicarBadgePomodoro(nombrePantallaActivaActual());
+    actualizarBadgePomodoro();
+  }
+
+  function saltarDesdePretestPomodoro() {
+    if (!pomodoroActivo || pomodoroFase !== 'pretest') return;
+    if (pomodoroModo === 'dificil') {
+      pomodoroFase = 'skimming';
+      pomodoroSegundosRestantes = DURACION_SKIMMING_SEG;
+      reubicarBadgePomodoro(nombrePantallaActivaActual());
+      actualizarBadgePomodoro();
+    } else {
+      entrarFaseRetencionPomodoro();
+    }
   }
 
   function tickPomodoro() {
     pomodoroSegundosRestantes--;
-    if (pomodoroFase === 'lectura') pomodoroAcumulado.lectura++;
+    if (pomodoroFase === 'pretest') pomodoroAcumulado.pretest++;
     else if (pomodoroFase === 'retencion') pomodoroAcumulado.retencion++;
     if (pomodoroSegundosRestantes <= 0) {
       avanzarFasePomodoro();
@@ -17669,14 +18331,32 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function avanzarFasePomodoro() {
-    if (pomodoroFase === 'lectura' || pomodoroFase === 'retencion') {
-      const veniaDeRetencion = pomodoroFase === 'retencion';
+    if (pomodoroFase === 'pretest') {
+      autoguardarYCerrarPretestPomodoro();
+      if (pomodoroModo === 'dificil') {
+        pomodoroFase = 'skimming';
+        pomodoroSegundosRestantes = DURACION_SKIMMING_SEG;
+        reproducirSonido('pomodoro_nuevo_ciclo');
+      } else {
+        entrarFaseRetencionPomodoro();
+        reproducirSonido('pomodoro_nuevo_ciclo');
+        return;
+      }
+    } else if (pomodoroFase === 'skimming') {
+      pomodoroFase = 'descanso_largo';
+      pomodoroSegundosRestantes = DURACION_DESCANSO_LARGO_SEG;
+      reproducirSonido('pomodoro_lectura_a_descanso');
+    } else if (pomodoroFase === 'descanso_largo') {
+      entrarFaseRetencionPomodoro();
+      reproducirSonido('pomodoro_nuevo_ciclo');
+      return;
+    } else if (pomodoroFase === 'retencion') {
       pomodoroFase = 'descanso';
       pomodoroSegundosRestantes = DURACION_DESCANSO_SEG;
-      reproducirSonido(veniaDeRetencion ? 'pomodoro_retencion_a_descanso' : 'pomodoro_lectura_a_descanso');
-    } else {
+      reproducirSonido('pomodoro_retencion_a_descanso');
+    } else if (pomodoroFase === 'descanso') {
       pomodoroCiclo++;
-      pomodoroFase = 'lectura';
+      pomodoroFase = 'retencion';
       pomodoroSegundosRestantes = DURACION_LECTURA_SEG;
       reproducirSonido('pomodoro_nuevo_ciclo');
     }
@@ -17700,46 +18380,104 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (pomodoroRetencionPresionada) { abrirModalRetencionRutas(); }
   });
 
-  function iniciarPomodoro() {
+  function iniciarPomodoro(modo) {
     cerrarModalPomodoroIniciar();
+    pomodoroModo = modo === 'dificil' ? 'dificil' : 'normal';
     pomodoroActivo = true;
-    pomodoroFase = 'lectura';
+    pomodoroFase = 'pretest';
     pomodoroCiclo = 1;
-    pomodoroSegundosRestantes = DURACION_LECTURA_SEG;
+    pomodoroSegundosRestantes = DURACION_PRETEST_SEG;
     pomodoroPausado = false;
     pomodoroHoraInicio = Date.now();
-    pomodoroAcumulado = { lectura: 0, retencion: 0 };
+    pomodoroAcumulado = { pretest: 0, retencion: 0 };
     pomodoroRetencionPresionada = false;
+    pomodoroEnBraindumpFinal = false;
+    pomodoroTotalSegCongelado = null;
+    pomodoroBraindumpNotaId = null;
     retencionSesionToggles = {};
     retencionSubtemasActivos = {};
 
-    obtenerContextoAudio();   // desbloquea audio en este gesto del usuario
+    obtenerContextoAudio();
 
     elBtnPomodoro.disabled = true;
     elPomodoroBadge.style.display = 'flex';
-    elBtnObservadorSalir.disabled = true;   // §6: bloqueo de navegación
+    elBtnObservadorSalir.disabled = true;
+
+    crearPretestPropio('');
+    abrirNotasEvaluador('pretest');
 
     actualizarBadgePomodoro();
     iniciarIntervaloPomodoro();
   }
 
-  document.getElementById('btn-pomodoro-iniciar-si').addEventListener('click', () => iniciarPomodoro());
+  document.getElementById('btn-pomodoro-iniciar-normal').addEventListener('click', () => iniciarPomodoro('normal'));
+  document.getElementById('btn-pomodoro-iniciar-dificil').addEventListener('click', () => iniciarPomodoro('dificil'));
   document.getElementById('btn-pomodoro-iniciar-cancelar').addEventListener('click', () => cerrarModalPomodoroIniciar());
   document.getElementById('btn-pomodoro-iniciar-historial').addEventListener('click', () => {
     cerrarModalPomodoroIniciar();
     abrirModalRetencionRutas();
   });
 
+  elBtnPomodoroSkimming.addEventListener('click', () => saltarASkimmingPomodoro());
+
   elBtnPomodoroRetencion.addEventListener('click', () => {
-    if (pomodoroFase !== 'lectura') return;
-    pomodoroFase = 'retencion';   // el contador NO se reinicia
-    pomodoroRetencionPresionada = true;
-    elBtnPomodoro.disabled = false;
-    actualizarBadgePomodoro();
+    if (!pomodoroActivo) return;
+    if (pomodoroFase !== 'pretest' && pomodoroFase !== 'skimming' && pomodoroFase !== 'descanso_largo') return;
+    entrarFaseRetencionPomodoro();
   });
 
+  function iniciarBraindumpPomodoro() {
+    if (!pomodoroActivo || (pomodoroFase !== 'retencion' && pomodoroFase !== 'descanso')) return;
+    clearInterval(pomodoroIntervalo);
+    if (pomodoroPausado) {
+      pomodoroPausado = false;
+      elOverlayPausa.classList.remove('abierto');
+      elTituloPausa.textContent = '⏸ En pausa';
+      elTextoPausa.textContent = 'El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.';
+    }
+    pomodoroTotalSegCongelado = Math.round((Date.now() - pomodoroHoraInicio) / 1000);
+    pomodoroEnBraindumpFinal = true;
+    elPomodoroBadge.style.display = 'none';
+
+    const ahora = Date.now();
+    const nueva = {
+      id: generarIdNotaEvaluador(),
+      texto: '',
+      categoria: 'braindump',
+      espacio: ESPACIO_HASH,
+      creada: ahora,
+      modificada: ahora,
+      rev: siguienteRev(),
+    };
+    notasEvaluador.push(nueva);
+    guardarNotasEvaluador();
+    pomodoroBraindumpNotaId = nueva.id;
+
+    abrirNotasEvaluador('braindump', nueva.id);
+  }
+
+  function finalizarBraindumpPomodoro() {
+    if (!pomodoroEnBraindumpFinal) return;
+    detenerDictadoHojaCompartida();
+    if (pomodoroBraindumpNotaId) {
+      const nota = notasEvaluador.find((n) => n.id === pomodoroBraindumpNotaId);
+      if (nota) {
+        nota.texto = elHojaEditor.value.trim();
+        nota.modificada = Date.now();
+        nota.rev = siguienteRev();
+        guardarNotasEvaluador();
+      }
+    }
+    pomodoroEnBraindumpFinal = false;
+    pomodoroBraindumpNotaId = null;
+    cerrarNotasEvaluador({ desdeFinalizarBraindump: true, desdeTransicionPomodoro: true });
+    abandonarPomodoro(pomodoroTotalSegCongelado);
+  }
+
+  elBtnPomodoroBraindump.addEventListener('click', () => iniciarBraindumpPomodoro());
+
   function pausarPomodoro() {
-    if (!pomodoroActivo || pomodoroPausado || pomodoroFase === 'descanso') return;
+    if (!pomodoroActivo || pomodoroPausado || pomodoroFase === 'descanso' || pomodoroFase === 'descanso_largo') return;
     pomodoroPausado = true;
     clearInterval(pomodoroIntervalo);
     elTituloPausa.textContent = '⏸ En pausa';
@@ -17770,16 +18508,21 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     abandonarPomodoro();
   });
 
-  function abandonarPomodoro() {
+  function abandonarPomodoro(totalSegForzado) {
     clearInterval(pomodoroIntervalo);
+    if (pomodoroFase === 'pretest' && elModalNotasEvaluador.classList.contains('abierto')) {
+      autoguardarYCerrarPretestPomodoro();
+    }
     if (pomodoroPausado) {
       pomodoroPausado = false;
       elOverlayPausa.classList.remove('abierto');
       elTituloPausa.textContent = '⏸ En pausa';
       elTextoPausa.textContent = 'El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.';
     }
-    const totalSeg = Math.round((Date.now() - pomodoroHoraInicio) / 1000);
-    document.getElementById('pomodoro-resumen-lectura').textContent = formatoMMSS(pomodoroAcumulado.lectura);
+    const totalSeg = typeof totalSegForzado === 'number'
+      ? totalSegForzado
+      : Math.round((Date.now() - pomodoroHoraInicio) / 1000);
+    document.getElementById('pomodoro-resumen-lectura').textContent = formatoMMSS(pomodoroAcumulado.pretest);
     document.getElementById('pomodoro-resumen-retencion').textContent = formatoMMSS(pomodoroAcumulado.retencion);
     document.getElementById('pomodoro-resumen-total').textContent = formatoMMSS(totalSeg);
     document.getElementById('pomodoro-resumen-ciclos').textContent = String(pomodoroCiclo - 1 >= 0 ? pomodoroCiclo - 1 : 0);
@@ -17800,6 +18543,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     pomodoroActivo = false;
     pomodoroRetencionPresionada = false;
+    pomodoroEnBraindumpFinal = false;
+    pomodoroTotalSegCongelado = null;
+    pomodoroBraindumpNotaId = null;
     retencionSesionToggles = {};
     retencionSubtemasActivos = {};
     cerrarModalRetencionRutas();
