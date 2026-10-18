@@ -1306,7 +1306,10 @@
           📋 Reclamar por sesión Pomodoro ≥ 80/80
         </button>
         <button type="button" class="orion-btn-accion" id="btn-comida-tareas">
-          📝 Canjear tareas importantes completadas
+          🍽 Canjear tareas importantes completadas
+        </button>
+        <button type="button" class="orion-btn-accion" id="btn-comida-tareas-normales">
+          📝 Canjear 4 tareas normales completadas
         </button>
       </div>
     </div>
@@ -2587,6 +2590,11 @@
     const btnComidaTareas = document.getElementById('btn-comida-tareas');
     if (btnComidaTareas) btnComidaTareas.disabled = !vivo || contarTareasImportantesCompletadas() === 0;
 
+    const btnComidaTareasNormales = document.getElementById('btn-comida-tareas-normales');
+    if (btnComidaTareasNormales) {
+      btnComidaTareasNormales.disabled =
+        !vivo || contarTareasNormalesCompletadas() < CANTIDAD_CANJE_TAREAS_NORMALES;
+    }
   }
 
   function inicializarVistaOrion() {
@@ -2967,6 +2975,20 @@
     return lista.filter(t => t.importante && t.completada).length;
   }
 
+  const CANTIDAD_CANJE_TAREAS_NORMALES = 4;
+
+  function contarTareasNormalesCompletadas() {
+    const lista = cargarTareas();
+    return lista.filter(t => !t.importante && t.completada).length;
+  }
+
+  function obtenerTareasNormalesCompletadasMasAntiguas(cantidad) {
+    return cargarTareas()
+      .filter(t => !t.importante && t.completada)
+      .sort((a, b) => a.fechaCreacion - b.fechaCreacion) // más antiguas primero
+      .slice(0, cantidad);
+  }
+
   let tareasEstado = [];
   let tareaEditandoId = null;
   let observerTareas = null;
@@ -3223,6 +3245,40 @@
     tareasEstado = cargarTareas().sort((a, b) => b.fechaCreacion - a.fechaCreacion);
     renderizarTareasLazy();
   }
+
+  document.getElementById('btn-comida-tareas-normales').addEventListener('click', () => {
+    if (!orionDatos.activo || orionDatos.estado === 'quep') return;
+
+    const candidatas = obtenerTareasNormalesCompletadasMasAntiguas(CANTIDAD_CANJE_TAREAS_NORMALES);
+    if (candidatas.length < CANTIDAD_CANJE_TAREAS_NORMALES) return;
+
+    abrirModalConfirmacion(
+      `¿Canjear ${CANTIDAD_CANJE_TAREAS_NORMALES} tareas normales completadas por 1 plato de comida? Se eliminarán del listado.`,
+      () => {
+        if (!orionDatos.activo || orionDatos.estado === 'quep') return;
+
+        const aCanjear = obtenerTareasNormalesCompletadasMasAntiguas(CANTIDAD_CANJE_TAREAS_NORMALES);
+        if (aCanjear.length < CANTIDAD_CANJE_TAREAS_NORMALES) return;
+
+        const actuales = cargarTareas();
+        const idsBorrados = new Set(aCanjear.map(t => t.id));
+        const restantes = actuales.filter(t => !idsBorrados.has(t.id));
+
+        guardarTareas(restantes);          // 4. elimina las 4 del array y persiste
+
+        orionDatos.platos += 1;            // 3. suma 1 plato
+        guardarOrion(orionDatos);
+        renderVistaOrion();                // 5a. re-render Orion (contador + estado del botón)
+
+        tareasEstado = restantes.sort((a, b) => b.fechaCreacion - a.fechaCreacion);
+        idsBorrados.forEach(id => {
+          const nodo = elContenedorTareas.querySelector(`.fila-tarea[data-id="${CSS.escape(id)}"]`);
+          if (nodo) nodo.remove();
+        });
+        verificarListaTareasVacia();
+      }
+    );
+  });
 
   document.getElementById('btn-comida-tareas').addEventListener('click', () => {
     if (!orionDatos.activo || orionDatos.estado === 'quep') return;
