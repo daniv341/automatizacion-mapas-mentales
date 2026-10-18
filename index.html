@@ -2463,9 +2463,9 @@
     const ref = datos.ultimaAlimentacion > 0 ? datos.ultimaAlimentacion : datos.fechaNacimiento;
     const horasSinComer = (ahora - ref) / MS_HORA_ORION;
 
-    if (horasSinComer >= 96) return 'quep';
-    if (horasSinComer >= 72) return 'llorando';
-    if (horasSinComer >= 48) return 'triste';
+    if (horasSinComer >= 72) return 'quep';
+    if (horasSinComer >= 48) return 'llorando';
+    if (horasSinComer >= 24) return 'triste';
     if (datos.ultimaAlimentacion > 0 && horasSinComer < 24) return 'satisfecho';
     return 'feliz';
   }
@@ -2560,12 +2560,12 @@
         const ref = orionDatos.ultimaAlimentacion > 0 ? orionDatos.ultimaAlimentacion : orionDatos.fechaNacimiento;
         const horasTranscurridas = (ahora - ref) / MS_HORA_ORION;
 
-        if (horasTranscurridas < 48) {
+        if (horasTranscurridas < 24) {
+          msRestantes = (ref + (24 * MS_HORA_ORION)) - ahora;
+        } else if (horasTranscurridas < 48) {
           msRestantes = (ref + (48 * MS_HORA_ORION)) - ahora;
         } else if (horasTranscurridas < 72) {
           msRestantes = (ref + (72 * MS_HORA_ORION)) - ahora;
-        } else if (horasTranscurridas < 96) {
-          msRestantes = (ref + (96 * MS_HORA_ORION)) - ahora;
         }
       }
 
