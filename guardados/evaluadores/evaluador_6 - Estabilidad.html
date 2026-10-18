@@ -4256,6 +4256,67 @@
   const ESPACIO_HASH = "6 - Estabilidad";
   document.getElementById('nombre-evaluador').textContent = ESPACIO_HASH;
 
+  const CLAVE_REGISTRO_ESPACIOS = 'registro_espacios_v1';
+
+  function cargarRegistroEspacios() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_REGISTRO_ESPACIOS);
+      if (!crudo) return { cantidad_espacios: 0, espacios: {} };
+      const obj = JSON.parse(crudo);
+      if (!obj || typeof obj !== 'object' || typeof obj.espacios !== 'object' || obj.espacios === null || Array.isArray(obj.espacios)) {
+        return { cantidad_espacios: 0, espacios: {} };
+      }
+      const espacios = {};
+      Object.keys(obj.espacios).forEach((k) => {
+        if (typeof obj.espacios[k] === 'number' && Number.isFinite(obj.espacios[k])) {
+          espacios[k] = obj.espacios[k];
+        }
+      });
+      return {
+        cantidad_espacios: Object.keys(espacios).length,
+        espacios: espacios,
+      };
+    } catch (e) {
+      return { cantidad_espacios: 0, espacios: {} };
+    }
+  }
+
+  function guardarRegistroEspacios(espacios) {
+    try {
+      const registro = {
+        cantidad_espacios: Object.keys(espacios).length,
+        espacios: espacios,
+      };
+      localStorage.setItem(CLAVE_REGISTRO_ESPACIOS, JSON.stringify(registro));
+    } catch (e) {
+    }
+  }
+
+  function actualizarRegistroEspacioActual() {
+    const rutasUnicas = new Set();
+    tarjetasCompletas.forEach((t) => {
+      (t.rutas || []).forEach((id) => {
+        if (Object.prototype.hasOwnProperty.call(rutasDisp, id)) {
+          rutasUnicas.add(id);
+        }
+      });
+    });
+    const reg = cargarRegistroEspacios();
+    reg.espacios[ESPACIO_HASH] = rutasUnicas.size;
+    guardarRegistroEspacios(reg.espacios);
+  }
+
+  function eliminarEspacioDeRegistro(espacio) {
+    if (!espacio) return;
+    const reg = cargarRegistroEspacios();
+    if (Object.prototype.hasOwnProperty.call(reg.espacios, espacio)) {
+      delete reg.espacios[espacio];
+      guardarRegistroEspacios(reg.espacios);
+    }
+  }
+
+  actualizarRegistroEspacioActual();
+
   function hashTarjetaCon(espacio, t) {
     const base = espacio + '\u0001' + (t.primero || '') + '\u0000' + (t.segundo || '');
     const norm = normalizarPalabra(base).replace(/\s+/g, ' ').trim();
@@ -10265,9 +10326,18 @@ const ZONAS_SYNC_GIST = [
     };
   }
 
+  function limpiarEspacioDeRegistroSiVacio(viejo) {
+    if (!viejo || mismoEspacioQueActual(viejo)) return;
+    if (!espaciosBorrables().includes(viejo)) {
+      eliminarEspacioDeRegistro(viejo);
+    }
+  }
+
   function ejecutarVinculo(zona, viejo) {
-    if (zona === 'listas') return ejecutarVinculoListas(viejo);
-    if (zona === 'notasEvaluador') {
+    let resultado;
+    if (zona === 'listas') {
+      resultado = ejecutarVinculoListas(viejo);
+    } else if (zona === 'notasEvaluador') {
       let n = 0;
       notasEvaluador.forEach((nt) => {
         if (nt.espacio === viejo) { nt.espacio = ESPACIO_HASH; n++; }
@@ -10275,18 +10345,16 @@ const ZONAS_SYNC_GIST = [
       depurarPretestsDuplicados();
       guardarNotasEvaluador();
       renderListaNotasEvaluador();
-      return { movidas: n, sin: 0 };
-    }
-    if (zona === 'sesiones') {
+      resultado = { movidas: n, sin: 0 };
+    } else if (zona === 'sesiones') {
       let n = 0;
       gamificacion.historial.forEach((s) => {
         if (espacioDeSesion(s) === viejo) { s.espacio = ESPACIO_HASH; n++; }
       });
       guardarGamificacion();
       renderHistorial();
-      return { movidas: n, sin: 0 };
-    }
-    if (zona === 'retencionRutas') {
+      resultado = { movidas: n, sin: 0 };
+    } else if (zona === 'retencionRutas') {
       let n = 0;
       retencionRutas.forEach((r) => {
         if (r.espacio === viejo) { r.espacio = ESPACIO_HASH; n++; }
@@ -10298,9 +10366,8 @@ const ZONAS_SYNC_GIST = [
       subtRepasarConstruido = false;
       sesgoConfianzaConstruido = false;
       renderRetencionHistorial();
-      return { movidas: n, sin: 0 };
-    }
-    if (zona === 'analisisSesion') {
+      resultado = { movidas: n, sin: 0 };
+    } else if (zona === 'analisisSesion') {
       let n = 0;
       analisisGuardados.forEach((a) => {
         if (a.espacio === viejo) { a.espacio = ESPACIO_HASH; n++; }
@@ -10311,23 +10378,26 @@ const ZONAS_SYNC_GIST = [
       subtRepasarConstruido = false;
       sesgoConfianzaConstruido = false;
       renderAnalisisGuardadosLista();
-      return { movidas: n, sin: 0 };
+      resultado = { movidas: n, sin: 0 };
+    } else {
+      const z = ZONAS_VINCULO[zona];
+      const almacen = z.almacen();
+      const movs = movimientosVinculo(zona, viejo);
+      const tomadas = movs.map((m) => ({ a: m.a, v: almacen[m.de] }));
+      movs.forEach((m) => { delete almacen[m.de]; });
+      tomadas.forEach((x) => {
+        const fusionada = tieneClave(almacen, x.a)
+          ? fusionarEntradaVinculo(almacen[x.a], x.v, z.explicitas)
+          : x.v;
+        fusionada.espacio = ESPACIO_HASH;
+        almacen[x.a] = fusionada;
+      });
+      z.guardar();
+      z.repintar();
+      resultado = { movidas: movs.length, sin: contarOtrasZona(zona) };
     }
-    const z = ZONAS_VINCULO[zona];
-    const almacen = z.almacen();
-    const movs = movimientosVinculo(zona, viejo);
-    const tomadas = movs.map((m) => ({ a: m.a, v: almacen[m.de] }));
-    movs.forEach((m) => { delete almacen[m.de]; });
-    tomadas.forEach((x) => {
-      const fusionada = tieneClave(almacen, x.a)
-        ? fusionarEntradaVinculo(almacen[x.a], x.v, z.explicitas)
-        : x.v;
-      fusionada.espacio = ESPACIO_HASH;
-      almacen[x.a] = fusionada;
-    });
-    z.guardar();
-    z.repintar();
-    return { movidas: movs.length, sin: contarOtrasZona(zona) };
+    limpiarEspacioDeRegistroSiVacio(viejo);
+    return resultado;
   }
 
   const ICONOS_ZONA_VINCULO = { dificiles: '☆', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐', notasEvaluador: '📝', retencionRutas: '🧠', analisisSesion: '📑' };
@@ -10543,6 +10613,8 @@ const ZONAS_SYNC_GIST = [
       localStorage.removeItem('ultimo_backup_snapshot_' + espacio);
     } catch (e) {
     }
+
+    eliminarEspacioDeRegistro(espacio);
 
     document.getElementById('lista-borrar-evaluador').style.display = 'none';
     renderHistorial();

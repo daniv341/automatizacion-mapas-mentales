@@ -744,6 +744,144 @@
     color: #a4402f;
     border: 1.5px solid #f0c4bc;
   }
+
+  .orion-controles-vida {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+
+  .orion-escenario {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    margin: 10px 0 18px;
+    position: relative;
+  }
+
+  .orion-img {
+    width: clamp(150px, 42vw, 210px);
+    height: clamp(150px, 42vw, 210px);
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .orion-img.visible {
+    opacity: 1;
+  }
+
+  .orion-estado-badge {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--texto-suave);
+    text-transform: capitalize;
+  }
+
+  .orion-zona-inferior {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .orion-contador-comida {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 2px solid var(--color-borde-medio);
+    background: var(--bg-superficie-hover);
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .orion-plato-drag {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .orion-plato-drag.deshabilitado {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .orion-botones-comida {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .orion-btn-accion {
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1.5px solid var(--color-boton);
+    background: var(--bg-superficie);
+    color: var(--color-boton);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .orion-btn-accion:hover:not(:disabled) {
+    background: var(--color-boton);
+    color: #fff;
+  }
+
+  .orion-btn-accion:disabled {
+    border-color: var(--color-borde-medio);
+    color: var(--texto-tenue);
+    cursor: not-allowed;
+  }
+
+  .orion-modal-honestidad {
+    margin-top: 8px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1.5px solid #e07b00;
+    background: var(--bg-superficie-hover);
+    text-align: center;
+    width: 100%;
+  }
+
+  .orion-modal-honestidad p {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .orion-modal-acciones {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .orion-tiempo-badge {
+    margin-bottom: 8px;
+    padding: 6px 14px;
+    border-radius: 14px;
+    background: #e07b00;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
 </style>
 </head>
 
@@ -753,6 +891,11 @@
   <div class="encabezado">
     <h1>📚 Mis Evaluadores</h1>
     <div class="barra-botones-vistas">
+      <button
+        class="boton-icono-circular"
+        id="btn-abrir-orion"
+        title="Orion"
+      >🐱</button>
       <button
         class="boton-icono-circular"
         id="btn-abrir-srs"
@@ -845,6 +988,55 @@
     <div class="grid-tienda" id="grid-tienda"></div>
     <div class="acciones-tienda">
       <button class="boton-mini-peligro" id="btn-tienda-resetear">♻️ Resetear puntos e inventario</button>
+    </div>
+  </div>
+
+  <div id="vista-orion" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-orion-volver">← Volver (Esc)</button>
+    <p class="subtitulo">🐱 Mascota virtual Orion</p>
+
+    <div class="orion-controles-vida">
+      <button type="button" class="item-tienda-boton" id="btn-orion-activar">Activar Orion</button>
+      <button type="button" class="boton-mini-peligro" id="btn-orion-desactivar">Desactivar Orion</button>
+    </div>
+
+    <div class="orion-escenario" id="orion-escenario">
+      <div class="orion-tiempo-badge" id="orion-tiempo-badge" hidden></div>
+      <img id="orion-imagen" class="orion-img" alt="Orion" hidden>
+      <div class="orion-estado-badge" id="orion-estado-texto"></div>
+    </div>
+
+    <div class="orion-zona-inferior">
+      <div class="orion-contador-comida">
+        <img
+          src="guardados/imagenes/comida.webp"
+          alt="Comida"
+          id="orion-comida-drag"
+          class="orion-plato-drag"
+          draggable="true"
+        >
+        <span id="orion-contador-platos">× 0</span>
+      </div>
+
+      <div class="orion-botones-comida">
+        <button type="button" class="orion-btn-accion" id="btn-comida-puntos">
+          🌟 Canjear por 300 puntos (<span id="orion-pts-disp">0</span> disp.)
+        </button>
+        <button type="button" class="orion-btn-accion" id="btn-comida-evaluador">
+          📝 Reclamar por evaluador nuevo en el repo
+        </button>
+        <button type="button" class="orion-btn-accion" id="btn-comida-pomodoro">
+          📋 Reclamar por sesión Pomodoro ≥ 80/80
+        </button>
+      </div>
+
+      <div class="orion-modal-honestidad" id="orion-modal-honestidad" hidden>
+        <p>¿Estás siendo honesto?</p>
+        <div class="orion-modal-acciones">
+          <button type="button" class="item-tienda-boton" id="btn-honesto-si">Sí</button>
+          <button type="button" class="boton-secundario" id="btn-honesto-no">No</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1160,8 +1352,8 @@
   const elVistaPrincipal = document.getElementById('vista-principal');
   const elVistaSrs = document.getElementById('vista-srs');
   const elVistaTienda = document.getElementById('vista-tienda');
+  const elVistaOrion = document.getElementById('vista-orion');
 
-  /* Guardamos la vista actual para saber si ESC debe volver atrás. */
   let vistaActual = 'principal';
 
   function mostrarVista(nombre) {
@@ -1169,6 +1361,7 @@
     elVistaPrincipal.style.display = nombre === 'principal' ? 'block' : 'none';
     elVistaSrs.style.display = nombre === 'srs' ? 'block' : 'none';
     elVistaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';
+    elVistaOrion.style.display = nombre === 'orion' ? 'block' : 'none';
     window.scrollTo(0, 0);
 
     if (nombre === 'srs') {
@@ -1177,21 +1370,27 @@
     if (nombre === 'tienda') {
       inicializarVistaTienda();
     }
+    if (nombre === 'orion') {
+      inicializarVistaOrion();
+    }
   }
 
   document.getElementById('btn-abrir-srs')
     .addEventListener('click', () => mostrarVista('srs'));
   document.getElementById('btn-abrir-tienda')
     .addEventListener('click', () => mostrarVista('tienda'));
+  document.getElementById('btn-abrir-orion')
+    .addEventListener('click', () => mostrarVista('orion'));
   document.getElementById('btn-srs-volver')
     .addEventListener('click', () => mostrarVista('principal'));
   document.getElementById('btn-tienda-volver')
     .addEventListener('click', () => mostrarVista('principal'));
+  document.getElementById('btn-orion-volver')
+    .addEventListener('click', () => mostrarVista('principal'));
 
-  /* Atajo de teclado — ESC vuelve a la vista principal desde SRS o Tienda. */
   document.addEventListener('keydown', (evento) => {
     const esEscape = evento.key === 'Escape' || evento.key === 'Esc';
-    if (esEscape && (vistaActual === 'srs' || vistaActual === 'tienda')) {
+    if (esEscape && (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion')) {
       evento.preventDefault();
       mostrarVista('principal');
     }
@@ -1869,6 +2068,393 @@
     Object.keys(gamificacionIdx.inventario).forEach((clave) => { gamificacionIdx.inventario[clave] = 0; });
     guardarGamificacionIdx(gamificacionIdx);
     renderTiendaIdx();
+  });
+
+  const CLAVE_ORION = 'orion_v1';
+  const MS_HORA_ORION = 3600000;
+
+  function valoresPorDefectoOrion() {
+    return {
+      fechaNacimiento: 0,
+      ultimaAlimentacion: 0,
+      estado: 'feliz',
+      platos: 0,
+      activo: false,
+      evaluadoresRecompensados: [],
+      sesionesRecompensadas: []
+    };
+  }
+
+  function cargarOrion() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_ORION);
+      if (!crudo) return valoresPorDefectoOrion();
+      const obj = JSON.parse(crudo);
+      if (!obj || typeof obj !== 'object') return valoresPorDefectoOrion();
+      const base = valoresPorDefectoOrion();
+      return {
+        fechaNacimiento: typeof obj.fechaNacimiento === 'number' ? obj.fechaNacimiento : base.fechaNacimiento,
+        ultimaAlimentacion: typeof obj.ultimaAlimentacion === 'number' ? obj.ultimaAlimentacion : base.ultimaAlimentacion,
+        estado: ['feliz', 'triste', 'llorando', 'quep', 'satisfecho'].includes(obj.estado) ? obj.estado : base.estado,
+        platos: typeof obj.platos === 'number' ? obj.platos : base.platos,
+        activo: Boolean(obj.activo),
+        evaluadoresRecompensados: Array.isArray(obj.evaluadoresRecompensados) ? obj.evaluadoresRecompensados : [],
+        sesionesRecompensadas: Array.isArray(obj.sesionesRecompensadas) ? obj.sesionesRecompensadas : []
+      };
+    } catch (e) {
+      return valoresPorDefectoOrion();
+    }
+  }
+
+  function guardarOrion(datos) {
+    try {
+      localStorage.setItem(CLAVE_ORION, JSON.stringify(datos));
+    } catch (e) {}
+  }
+
+  function recalcularEstadoOrion(datos) {
+    if (!datos.activo) return datos.estado;
+    if (datos.estado === 'quep') return 'quep';
+
+    const ahora = Date.now();
+    const ref = datos.ultimaAlimentacion > 0 ? datos.ultimaAlimentacion : datos.fechaNacimiento;
+    const horasSinComer = (ahora - ref) / MS_HORA_ORION;
+
+    if (horasSinComer >= 96) return 'quep';
+    if (horasSinComer >= 72) return 'llorando';
+    if (horasSinComer >= 48) return 'triste';
+    if (datos.ultimaAlimentacion > 0 && horasSinComer < 24) return 'satisfecho';
+    return 'feliz';
+  }
+
+  let orionDatos = cargarOrion();
+  const elOrionImg = document.getElementById('orion-imagen');
+  const elOrionEstadoTxt = document.getElementById('orion-estado-texto');
+  const elOrionPlatos = document.getElementById('orion-contador-platos');
+  const elOrionDrag = document.getElementById('orion-comida-drag');
+  const elOrionPts = document.getElementById('orion-pts-disp');
+  const elBtnOrionActivar = document.getElementById('btn-orion-activar');
+  const elBtnOrionDesactivar = document.getElementById('btn-orion-desactivar');
+  const elBtnComidaPuntos = document.getElementById('btn-comida-puntos');
+  const elBtnComidaEv = document.getElementById('btn-comida-evaluador');
+  const elBtnComidaPomo = document.getElementById('btn-comida-pomodoro');
+  const elModalHonestidad = document.getElementById('orion-modal-honestidad');
+
+  function cambiarImagenOrionConFade(estado, mostrar) {
+    if (!mostrar) {
+      elOrionImg.classList.remove('visible');
+      setTimeout(() => {
+        if (!orionDatos.activo) {
+          elOrionImg.hidden = true;
+          elOrionImg.removeAttribute('src');
+        }
+      }, 350);
+      return;
+    }
+
+    const nuevaRuta = `guardados/imagenes/orion-${estado}.webp`;
+    if (elOrionImg.hidden || !elOrionImg.getAttribute('src')) {
+      elOrionImg.src = nuevaRuta;
+      elOrionImg.hidden = false;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          elOrionImg.classList.add('visible');
+        });
+      });
+    } else if (!elOrionImg.src.endsWith(`orion-${estado}.webp`)) {
+      elOrionImg.classList.remove('visible');
+      setTimeout(() => {
+        elOrionImg.src = nuevaRuta;
+        requestAnimationFrame(() => {
+          elOrionImg.classList.add('visible');
+        });
+      }, 350);
+    } else {
+      elOrionImg.classList.add('visible');
+    }
+  }
+
+  function formatearTiempoRestante(ms) {
+    if (ms <= 0) return '0h 0m';
+    const totalMinutos = Math.floor(ms / 60000);
+    const dias = Math.floor(totalMinutos / 1440);
+    const horas = Math.floor((totalMinutos % 1440) / 60);
+    const minutos = totalMinutos % 60;
+
+    if (dias > 0) {
+      return `${dias}d ${horas}h ${minutos}m`;
+    }
+    return `${horas}h ${minutos}m`;
+  }
+
+  function renderVistaOrion() {
+    const g = cargarGamificacionIdx();
+    const vivo = orionDatos.activo && orionDatos.estado !== 'quep';
+    const muerto = orionDatos.activo && orionDatos.estado === 'quep';
+
+    elBtnOrionActivar.disabled = vivo;
+    elBtnOrionDesactivar.disabled = !orionDatos.activo;
+
+    cambiarImagenOrionConFade(orionDatos.estado, orionDatos.activo);
+    elOrionEstadoTxt.textContent = orionDatos.activo ? `Estado: ${orionDatos.estado}` : 'Orion inactivo';
+
+    const elTiempoBadge = document.getElementById('orion-tiempo-badge');
+    if (!orionDatos.activo) {
+      elTiempoBadge.hidden = true;
+    } else if (muerto) {
+      elTiempoBadge.textContent = 'Fue tu culpa';
+      elTiempoBadge.hidden = false;
+    } else {
+      const ahora = Date.now();
+      let msRestantes = 0;
+      let etiquetaPrefijo = 'Próximo estado en: ';
+
+      if (orionDatos.estado === 'satisfecho') {
+        const tiempoSatisfecho = 24 * MS_HORA_ORION;
+        msRestantes = (orionDatos.ultimaAlimentacion + tiempoSatisfecho) - ahora;
+        etiquetaPrefijo = 'Vuelve a feliz en: ';
+      } else {
+        const ref = orionDatos.ultimaAlimentacion > 0 ? orionDatos.ultimaAlimentacion : orionDatos.fechaNacimiento;
+        const horasTranscurridas = (ahora - ref) / MS_HORA_ORION;
+
+        if (horasTranscurridas < 48) {
+          msRestantes = (ref + (48 * MS_HORA_ORION)) - ahora;
+        } else if (horasTranscurridas < 72) {
+          msRestantes = (ref + (72 * MS_HORA_ORION)) - ahora;
+        } else if (horasTranscurridas < 96) {
+          msRestantes = (ref + (96 * MS_HORA_ORION)) - ahora;
+        }
+      }
+
+      if (msRestantes > 0) {
+        elTiempoBadge.textContent = `${etiquetaPrefijo}${formatearTiempoRestante(msRestantes)}`;
+        elTiempoBadge.hidden = false;
+      } else {
+        elTiempoBadge.hidden = true;
+      }
+    }
+
+    elOrionPlatos.textContent = `× ${orionDatos.platos}`;
+    elOrionPts.textContent = g.puntosTotales;
+
+    const puedeDarComida = vivo && orionDatos.platos > 0;
+    elOrionDrag.classList.toggle('deshabilitado', !puedeDarComida);
+    elOrionDrag.draggable = puedeDarComida;
+
+    elBtnComidaPuntos.disabled = !vivo || g.puntosTotales < 300;
+    elBtnComidaEv.disabled = !vivo;
+    elBtnComidaPomo.disabled = !vivo;
+
+    if (muerto || !orionDatos.activo) {
+      elModalHonestidad.hidden = true;
+    }
+  }
+
+  function inicializarVistaOrion() {
+    orionDatos = cargarOrion();
+    elModalHonestidad.hidden = true;
+    if (orionDatos.activo) {
+      const nuevoEstado = recalcularEstadoOrion(orionDatos);
+      if (nuevoEstado !== orionDatos.estado) {
+        orionDatos.estado = nuevoEstado;
+        guardarOrion(orionDatos);
+      }
+    }
+    renderVistaOrion();
+  }
+
+  elBtnOrionActivar.addEventListener('click', () => {
+    if (orionDatos.activo && orionDatos.estado !== 'quep') return;
+    const ahora = Date.now();
+    const nombresActuales = evaluadores.map(e => e.archivo || e.nombre);
+    orionDatos = {
+      fechaNacimiento: ahora,
+      ultimaAlimentacion: 0,
+      estado: 'feliz',
+      platos: 0,
+      activo: true,
+      evaluadoresRecompensados: nombresActuales,
+      sesionesRecompensadas: []
+    };
+    guardarOrion(orionDatos);
+    renderVistaOrion();
+  });
+
+  elBtnOrionDesactivar.addEventListener('click', () => {
+    if (!orionDatos.activo) return;
+    orionDatos.activo = false;
+    guardarOrion(orionDatos);
+    renderVistaOrion();
+  });
+
+  function alimentarOrion() {
+    if (!orionDatos.activo || orionDatos.estado === 'quep' || orionDatos.platos <= 0) return;
+    orionDatos.platos -= 1;
+    orionDatos.ultimaAlimentacion = Date.now();
+    orionDatos.estado = 'satisfecho';
+    guardarOrion(orionDatos);
+    renderVistaOrion();
+  }
+
+  elBtnComidaPuntos.addEventListener('click', () => {
+    if (!orionDatos.activo || orionDatos.estado === 'quep') return;
+    const g = cargarGamificacionIdx();
+    if (g.puntosTotales < 300) return;
+    g.puntosTotales -= 300;
+    guardarGamificacionIdx(g);
+    orionDatos.platos += 1;
+    guardarOrion(orionDatos);
+    renderVistaOrion();
+  });
+
+  function detectarEvaluadoresNuevos() {
+    const actuales = evaluadores.map(e => e.archivo || e.nombre);
+    const nuevos = actuales.filter(nombre => !orionDatos.evaluadoresRecompensados.includes(nombre));
+    return nuevos;
+  }
+
+  function detectarSesionPomodoroValida() {
+    try {
+      const regCrudo = localStorage.getItem('registro_espacios_v1');
+      const retCrudo = localStorage.getItem('retencionRutas');
+      if (!regCrudo || !retCrudo) return null;
+
+      const reg = JSON.parse(regCrudo);
+      const espacios = (reg && reg.espacios && typeof reg.espacios === 'object') ? reg.espacios : {};
+      const ret = JSON.parse(retCrudo);
+
+      const porEspacio = {};
+      if (Array.isArray(ret)) {
+        ret.forEach(s => {
+          if (s && s.espacio) porEspacio[s.espacio] = s;
+        });
+      } else if (ret && typeof ret === 'object') {
+        Object.keys(ret).forEach(esp => {
+          const val = ret[esp];
+          porEspacio[esp] = Array.isArray(val) ? val[val.length - 1] : val;
+        });
+      }
+
+      for (const nombreEsp of Object.keys(porEspacio)) {
+        const sesion = porEspacio[nombreEsp];
+        const totalEspacio = Number(espacios[nombreEsp]);
+        if (!sesion || !totalEspacio || totalEspacio <= 0) continue;
+
+        const totalRutas = Number(sesion.totalRutas ?? sesion.rutasTotales ?? 0);
+        const retenidas = Number(sesion.rutasRetenidas ?? sesion.retenidas ?? sesion.aciertos ?? 0);
+        const idSesion = String(sesion.id || sesion.fecha || sesion.timestamp || `${nombreEsp}_${totalRutas}_${retenidas}`);
+
+        if (
+          totalRutas >= 0.8 * totalEspacio &&
+          retenidas >= 0.8 * totalRutas &&
+          !orionDatos.sesionesRecompensadas.includes(idSesion)
+        ) {
+          return idSesion;
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  elBtnComidaEv.addEventListener('click', () => {
+    if (!orionDatos.activo || orionDatos.estado === 'quep') return;
+    const nuevos = detectarEvaluadoresNuevos();
+    if (nuevos.length > 0) {
+      orionDatos.evaluadoresRecompensados.push(...nuevos);
+      orionDatos.platos += nuevos.length;
+      guardarOrion(orionDatos);
+      renderVistaOrion();
+    } else {
+      elModalHonestidad.hidden = false;
+    }
+  });
+
+  elBtnComidaPomo.addEventListener('click', () => {
+    if (!orionDatos.activo || orionDatos.estado === 'quep') return;
+    const idSesion = detectarSesionPomodoroValida();
+    if (idSesion) {
+      orionDatos.sesionesRecompensadas.push(idSesion);
+      orionDatos.platos += 1;
+      guardarOrion(orionDatos);
+      renderVistaOrion();
+    } else {
+      elModalHonestidad.hidden = false;
+    }
+  });
+
+  document.getElementById('btn-honesto-si').addEventListener('click', () => {
+    elModalHonestidad.hidden = true;
+    if (!orionDatos.activo || orionDatos.estado === 'quep') return;
+    orionDatos.platos += 1;
+    guardarOrion(orionDatos);
+    renderVistaOrion();
+  });
+
+  document.getElementById('btn-honesto-no').addEventListener('click', () => {
+    elModalHonestidad.hidden = true;
+  });
+
+  elOrionDrag.addEventListener('dragstart', (e) => {
+    if (!orionDatos.activo || orionDatos.estado === 'quep' || orionDatos.platos <= 0) {
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.setData('text/plain', 'comida');
+  });
+
+  elOrionImg.addEventListener('dragover', (e) => {
+    if (orionDatos.activo && orionDatos.estado !== 'quep' && orionDatos.platos > 0) {
+      e.preventDefault();
+    }
+  });
+
+  elOrionImg.addEventListener('drop', (e) => {
+    e.preventDefault();
+    alimentarOrion();
+  });
+
+  let clonTouch = null;
+
+  elOrionDrag.addEventListener('touchstart', (e) => {
+    if (!orionDatos.activo || orionDatos.estado === 'quep' || orionDatos.platos <= 0) return;
+    const touch = e.touches[0];
+    clonTouch = elOrionDrag.cloneNode(true);
+    clonTouch.style.position = 'fixed';
+    clonTouch.style.width = '38px';
+    clonTouch.style.height = '38px';
+    clonTouch.style.pointerEvents = 'none';
+    clonTouch.style.zIndex = '9999';
+    clonTouch.style.left = (touch.clientX - 19) + 'px';
+    clonTouch.style.top = (touch.clientY - 19) + 'px';
+    document.body.appendChild(clonTouch);
+  }, { passive: true });
+
+  elOrionDrag.addEventListener('touchmove', (e) => {
+    if (!clonTouch) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    clonTouch.style.left = (touch.clientX - 19) + 'px';
+    clonTouch.style.top = (touch.clientY - 19) + 'px';
+  }, { passive: false });
+
+  elOrionDrag.addEventListener('touchend', (e) => {
+    if (!clonTouch) return;
+    const touch = e.changedTouches[0];
+    clonTouch.remove();
+    clonTouch = null;
+
+    const rect = elOrionImg.getBoundingClientRect();
+    if (
+      !elOrionImg.hidden &&
+      touch.clientX >= rect.left &&
+      touch.clientX <= rect.right &&
+      touch.clientY >= rect.top &&
+      touch.clientY <= rect.bottom
+    ) {
+      alimentarOrion();
+    }
   });
 </script>
 </body>
