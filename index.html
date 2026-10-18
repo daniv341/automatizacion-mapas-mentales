@@ -882,6 +882,280 @@
     text-align: center;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   }
+
+  .orion-barra-superior {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .orion-barra-superior .btn-volver {
+    padding-bottom: 6px;
+  }
+
+  .form-tareas {
+    border: 1.5px solid var(--color-borde-medio);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--bg-superficie);
+  }
+
+  .form-tareas-fila {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .input-tarea,
+  .select-tarea,
+  .textarea-tarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--color-borde-medio);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--texto-principal);
+    background: var(--bg-superficie);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .input-tarea:focus,
+  .select-tarea:focus,
+  .textarea-tarea:focus {
+    border-color: var(--color-boton);
+  }
+
+  .input-tarea:disabled,
+  .select-tarea:disabled,
+  .textarea-tarea:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: var(--bg-superficie-hover);
+  }
+
+  .select-tarea {
+    flex: 1;
+    min-width: 130px;
+  }
+
+  .textarea-tarea {
+    resize: vertical;
+    min-height: 54px;
+  }
+
+  .check-importante-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texto-principal);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .form-tareas-acciones {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .fila-tarea {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--color-borde-suave);
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: background 0.15s;
+  }
+
+  .fila-tarea:hover {
+    background: var(--bg-superficie-hover);
+  }
+
+  .fila-tarea:last-child {
+    border-bottom: none;
+  }
+
+  .tarea-check {
+    margin-top: 3px;
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: var(--color-boton);
+  }
+
+  .tarea-cuerpo {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tarea-cabecera {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tarea-nombre {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--texto-principal);
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+
+  .fila-tarea.completada .tarea-nombre,
+  .fila-tarea.completada .tarea-desc {
+    text-decoration: line-through;
+    color: var(--texto-tenue);
+  }
+
+  .tarea-badge-cat {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 8px;
+    background: var(--color-borde-medio);
+    color: var(--texto-cabecera);
+    text-transform: capitalize;
+  }
+
+  .tarea-badge-imp {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 8px;
+    background: #e07b00;
+    color: #fff;
+  }
+
+  .tarea-desc {
+    font-size: 12px;
+    color: var(--texto-suave);
+    margin-top: 3px;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .tarea-acciones {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .btn-tarea-mini {
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--color-borde-fuerte);
+    background: var(--bg-superficie);
+    color: var(--texto-principal);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn-tarea-mini:hover:not(:disabled) {
+    border-color: var(--color-boton);
+    color: var(--color-boton);
+  }
+
+  .btn-tarea-mini:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-tarea-mini.peligro:hover:not(:disabled) {
+    border-color: #e0574c;
+    color: #e0574c;
+  }
+
+  #tareas-sentinela {
+    height: 1px;
+  }
+
+  .modal-reutilizable-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.58);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 18px;
+  }
+
+  .modal-reutilizable-overlay[hidden] {
+    display: none;
+  }
+
+  .modal-reutilizable-caja {
+    width: 100%;
+    max-width: 400px;
+    background: var(--bg-superficie);
+    border-radius: 20px;
+    padding: 26px 24px 20px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+    text-align: center;
+  }
+
+  .modal-reutilizable-mensaje {
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--texto-suave);
+    margin-bottom: 22px;
+    line-height: 1.45;
+  }
+
+  .modal-reutilizable-botones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .modal-btn-confirmar {
+    width: 100%;
+    padding: 13px 20px;
+    border-radius: 26px;
+    border: none;
+    background: var(--color-boton);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .modal-btn-confirmar:hover {
+    opacity: 0.92;
+  }
+
+  .modal-btn-cancelar {
+    background: none;
+    border: none;
+    color: var(--texto-tenue);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 12px;
+  }
+
+  .modal-btn-cancelar:hover {
+    color: var(--texto-principal);
+  }
 </style>
 </head>
 
@@ -992,7 +1266,10 @@
   </div>
 
   <div id="vista-orion" class="vista-secundaria">
-    <button type="button" class="btn-volver" id="btn-orion-volver">← Volver (Esc)</button>
+    <div class="orion-barra-superior">
+      <button type="button" class="btn-volver" id="btn-orion-volver">← Volver (Esc)</button>
+      <button type="button" class="boton-icono-circular" id="btn-abrir-tareas" title="Tareas">📋</button>
+    </div>
     <p class="subtitulo">🐱 Mascota virtual Orion</p>
 
     <div class="orion-controles-vida">
@@ -1028,14 +1305,49 @@
         <button type="button" class="orion-btn-accion" id="btn-comida-pomodoro">
           📋 Reclamar por sesión Pomodoro ≥ 80/80
         </button>
+        <button type="button" class="orion-btn-accion" id="btn-comida-tareas">
+          📝 Canjear tareas importantes completadas
+        </button>
       </div>
+    </div>
+  </div>
 
-      <div class="orion-modal-honestidad" id="orion-modal-honestidad" hidden>
-        <p>¿Estás siendo honesto?</p>
-        <div class="orion-modal-acciones">
-          <button type="button" class="item-tienda-boton" id="btn-honesto-si">Sí</button>
-          <button type="button" class="boton-secundario" id="btn-honesto-no">No</button>
-        </div>
+  <div id="vista-tareas" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-tareas-volver">← Volver (Esc)</button>
+    <div class="encabezado">
+      <h1>📋 Tareas</h1>
+    </div>
+    <p class="subtitulo">Organizá tus tareas y canjeá las importantes completadas por comida para Orion</p>
+
+    <form class="form-tareas" id="form-tareas">
+      <input type="text" class="input-tarea" id="tarea-nombre" placeholder="Nombre de la tarea (obligatorio)" required autocomplete="off">
+      <div class="form-tareas-fila">
+        <select class="select-tarea" id="tarea-categoria" required>
+          <option value="personal">Personal</option>
+          <option value="hogar">Hogar</option>
+          <option value="facultad">Facultad</option>
+        </select>
+        <label class="check-importante-label">
+          <input type="checkbox" id="tarea-importante">
+          ⭐ Importante
+        </label>
+      </div>
+      <textarea class="textarea-tarea" id="tarea-descripcion" placeholder="Descripción (opcional)"></textarea>
+      <div class="form-tareas-acciones">
+        <button type="button" class="boton-secundario" id="btn-tarea-cancelar" hidden>Cancelar</button>
+        <button type="submit" class="item-tienda-boton" id="btn-tarea-guardar">Guardar tarea</button>
+      </div>
+    </form>
+
+    <div id="tareas-lista"></div>
+  </div>
+
+  <div class="modal-reutilizable-overlay" id="modal-confirmacion-reutilizable" hidden>
+    <div class="modal-reutilizable-caja">
+      <p class="modal-reutilizable-mensaje" id="modal-confirmacion-mensaje"></p>
+      <div class="modal-reutilizable-botones">
+        <button type="button" class="modal-btn-confirmar" id="modal-confirmacion-aceptar">Confirmar</button>
+        <button type="button" class="modal-btn-cancelar" id="modal-confirmacion-cancelar">Cancelar</button>
       </div>
     </div>
   </div>
@@ -1353,6 +1665,7 @@
   const elVistaSrs = document.getElementById('vista-srs');
   const elVistaTienda = document.getElementById('vista-tienda');
   const elVistaOrion = document.getElementById('vista-orion');
+  const elVistaTareas = document.getElementById('vista-tareas');
 
   let vistaActual = 'principal';
 
@@ -1362,6 +1675,7 @@
     elVistaSrs.style.display = nombre === 'srs' ? 'block' : 'none';
     elVistaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';
     elVistaOrion.style.display = nombre === 'orion' ? 'block' : 'none';
+    elVistaTareas.style.display = nombre === 'tareas' ? 'block' : 'none';
     window.scrollTo(0, 0);
 
     if (nombre === 'srs') {
@@ -1373,6 +1687,9 @@
     if (nombre === 'orion') {
       inicializarVistaOrion();
     }
+    if (nombre === 'tareas') {
+      inicializarVistaTareas();
+    }
   }
 
   document.getElementById('btn-abrir-srs')
@@ -1381,16 +1698,40 @@
     .addEventListener('click', () => mostrarVista('tienda'));
   document.getElementById('btn-abrir-orion')
     .addEventListener('click', () => mostrarVista('orion'));
+  document.getElementById('btn-abrir-tareas')
+    .addEventListener('click', () => mostrarVista('tareas'));
   document.getElementById('btn-srs-volver')
     .addEventListener('click', () => mostrarVista('principal'));
   document.getElementById('btn-tienda-volver')
     .addEventListener('click', () => mostrarVista('principal'));
   document.getElementById('btn-orion-volver')
     .addEventListener('click', () => mostrarVista('principal'));
+  document.getElementById('btn-tareas-volver')
+    .addEventListener('click', () => mostrarVista('orion'));
 
   document.addEventListener('keydown', (evento) => {
     const esEscape = evento.key === 'Escape' || evento.key === 'Esc';
-    if (esEscape && (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion')) {
+    if (!esEscape) return;
+
+    const modalConf = document.getElementById('modal-confirmacion-reutilizable');
+    if (modalConf && !modalConf.hidden) {
+      evento.preventDefault();
+      modalConf.hidden = true;
+      callbackModalConfirmacion = null;
+      return;
+    }
+
+    const modalHonestidad = document.getElementById('orion-modal-honestidad');
+    if (modalHonestidad && !modalHonestidad.hidden) {
+      evento.preventDefault();
+      modalHonestidad.hidden = true;
+      return;
+    }
+
+    if (vistaActual === 'tareas') {
+      evento.preventDefault();
+      mostrarVista('orion');
+    } else if (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion') {
       evento.preventDefault();
       mostrarVista('principal');
     }
@@ -2058,16 +2399,15 @@
   }
 
   document.getElementById('btn-tienda-resetear').addEventListener('click', () => {
-    const ok = window.confirm(
-      '¿Resetear tus puntos y todo tu inventario a 0? Esto no afecta tus sesiones, ' +
-      'difíciles, notas, listas ni otros datos. No se puede deshacer.'
+    abrirModalConfirmacion(
+      '¿Resetear tus puntos y todo tu inventario a 0? Esto no afecta tus sesiones, difíciles, notas, listas ni otros datos. No se puede deshacer.',
+      () => {
+        gamificacionIdx.puntosTotales = 0;
+        Object.keys(gamificacionIdx.inventario).forEach((clave) => { gamificacionIdx.inventario[clave] = 0; });
+        guardarGamificacionIdx(gamificacionIdx);
+        renderTiendaIdx();
+      }
     );
-    if (!ok) return;
-
-    gamificacionIdx.puntosTotales = 0;
-    Object.keys(gamificacionIdx.inventario).forEach((clave) => { gamificacionIdx.inventario[clave] = 0; });
-    guardarGamificacionIdx(gamificacionIdx);
-    renderTiendaIdx();
   });
 
   const CLAVE_ORION = 'orion_v1';
@@ -2244,15 +2584,13 @@
     elBtnComidaPuntos.disabled = !vivo || g.puntosTotales < 300;
     elBtnComidaEv.disabled = !vivo;
     elBtnComidaPomo.disabled = !vivo;
+    const btnComidaTareas = document.getElementById('btn-comida-tareas');
+    if (btnComidaTareas) btnComidaTareas.disabled = !vivo || contarTareasImportantesCompletadas() === 0;
 
-    if (muerto || !orionDatos.activo) {
-      elModalHonestidad.hidden = true;
-    }
   }
 
   function inicializarVistaOrion() {
     orionDatos = cargarOrion();
-    elModalHonestidad.hidden = true;
     if (orionDatos.activo) {
       const nuevoEstado = recalcularEstadoOrion(orionDatos);
       if (nuevoEstado !== orionDatos.estado) {
@@ -2271,26 +2609,49 @@
 
   elBtnOrionActivar.addEventListener('click', () => {
     if (orionDatos.activo && orionDatos.estado !== 'quep') return;
-    const ahora = Date.now();
-    const nombresActuales = obtenerNombresTodosLosEvaluadores();
-    orionDatos = {
-      fechaNacimiento: ahora,
-      ultimaAlimentacion: 0,
-      estado: 'feliz',
-      platos: 0,
-      activo: true,
-      evaluadoresRecompensados: nombresActuales,
-      sesionesRecompensadas: []
-    };
-    guardarOrion(orionDatos);
-    renderVistaOrion();
+    const mensaje = orionDatos.estado === 'quep' && orionDatos.activo
+      ? '¿Revivir a Orion? Se reiniciará su ciclo de vida y el contador de platos a 0.'
+      : '¿Activar a Orion? Comenzará un nuevo ciclo de vida desde cero.';
+
+    abrirModalConfirmacion(mensaje, () => {
+      const previo = cargarOrion();
+      const ahora = Date.now();
+      const nombresActuales = obtenerNombresTodosLosEvaluadores();
+
+      const evPrevios = Array.isArray(previo.evaluadoresRecompensados)
+        ? previo.evaluadoresRecompensados.map(n => String(n).toLowerCase().trim())
+        : [];
+      const evaluadoresUnidos = Array.from(new Set([...evPrevios, ...nombresActuales]));
+
+      const sesPrevias = Array.isArray(previo.sesionesRecompensadas)
+        ? previo.sesionesRecompensadas.map(id => String(id))
+        : [];
+      const sesionesUnidas = Array.from(new Set(sesPrevias));
+
+      orionDatos = {
+        fechaNacimiento: ahora,
+        ultimaAlimentacion: 0,
+        estado: 'feliz',
+        platos: 0,
+        activo: true,
+        evaluadoresRecompensados: evaluadoresUnidos,
+        sesionesRecompensadas: sesionesUnidas
+      };
+      guardarOrion(orionDatos);
+      renderVistaOrion();
+    });
   });
 
   elBtnOrionDesactivar.addEventListener('click', () => {
     if (!orionDatos.activo) return;
-    orionDatos.activo = false;
-    guardarOrion(orionDatos);
-    renderVistaOrion();
+    abrirModalConfirmacion(
+      '¿Desactivar a Orion? Si volvés a activarlo más adelante, su ciclo y sus platos se reiniciarán desde cero.',
+      () => {
+        orionDatos.activo = false;
+        guardarOrion(orionDatos);
+        renderVistaOrion();
+      }
+    );
   });
 
   function alimentarOrion() {
@@ -2444,6 +2805,18 @@
     }
   }
 
+  function pedirConfirmacionHonestidadOrion() {
+    abrirModalConfirmacion(
+      'No se detectó la condición cumplida. ¿Estás siendo honesto al reclamar este plato de comida?',
+      () => {
+        if (!orionDatos.activo || orionDatos.estado === 'quep') return;
+        orionDatos.platos += 1;
+        guardarOrion(orionDatos);
+        renderVistaOrion();
+      }
+    );
+  }
+
   elBtnComidaEv.addEventListener('click', () => {
     if (!orionDatos.activo || orionDatos.estado === 'quep') return;
     const nuevos = detectarEvaluadoresNuevos();
@@ -2453,7 +2826,7 @@
       guardarOrion(orionDatos);
       renderVistaOrion();
     } else {
-      elModalHonestidad.hidden = false;
+      pedirConfirmacionHonestidadOrion();
     }
   });
 
@@ -2466,20 +2839,8 @@
       guardarOrion(orionDatos);
       renderVistaOrion();
     } else {
-      elModalHonestidad.hidden = false;
+      pedirConfirmacionHonestidadOrion();
     }
-  });
-
-  document.getElementById('btn-honesto-si').addEventListener('click', () => {
-    elModalHonestidad.hidden = true;
-    if (!orionDatos.activo || orionDatos.estado === 'quep') return;
-    orionDatos.platos += 1;
-    guardarOrion(orionDatos);
-    renderVistaOrion();
-  });
-
-  document.getElementById('btn-honesto-no').addEventListener('click', () => {
-    elModalHonestidad.hidden = true;
   });
 
   elOrionDrag.addEventListener('dragstart', (e) => {
@@ -2541,6 +2902,357 @@
     ) {
       alimentarOrion();
     }
+  });
+
+  const elModalConfOverlay = document.getElementById('modal-confirmacion-reutilizable');
+  const elModalConfMensaje = document.getElementById('modal-confirmacion-mensaje');
+  const elModalConfAceptar = document.getElementById('modal-confirmacion-aceptar');
+  const elModalConfCancelar = document.getElementById('modal-confirmacion-cancelar');
+  let callbackModalConfirmacion = null;
+
+  function abrirModalConfirmacion(mensaje, alConfirmar) {
+    elModalConfMensaje.textContent = mensaje;
+    callbackModalConfirmacion = alConfirmar;
+    elModalConfOverlay.hidden = false;
+  }
+
+  elModalConfAceptar.addEventListener('click', () => {
+    elModalConfOverlay.hidden = true;
+    if (typeof callbackModalConfirmacion === 'function') {
+      const fn = callbackModalConfirmacion;
+      callbackModalConfirmacion = null;
+      fn();
+    }
+  });
+
+  elModalConfCancelar.addEventListener('click', () => {
+    elModalConfOverlay.hidden = true;
+    callbackModalConfirmacion = null;
+  });
+
+  const CLAVE_TAREAS = 'tareas_v1';
+  const CATEGORIAS_VALIDAS_TAREAS = ['personal', 'hogar', 'facultad'];
+
+  function cargarTareas() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_TAREAS);
+      if (!crudo) return [];
+      const arr = JSON.parse(crudo);
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .filter(t => t && typeof t.id === 'string' && typeof t.nombre === 'string')
+        .map(t => ({
+          id: String(t.id),
+          nombre: String(t.nombre),
+          descripcion: typeof t.descripcion === 'string' ? t.descripcion : '',
+          categoria: CATEGORIAS_VALIDAS_TAREAS.includes(t.categoria) ? t.categoria : 'personal',
+          importante: Boolean(t.importante),
+          completada: Boolean(t.completada),
+          fechaCreacion: typeof t.fechaCreacion === 'number' ? t.fechaCreacion : Date.now()
+        }));
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function guardarTareas(lista) {
+    try {
+      localStorage.setItem(CLAVE_TAREAS, JSON.stringify(lista));
+      renderIndicadorStorage();
+    } catch (e) {}
+  }
+
+  function contarTareasImportantesCompletadas() {
+    const lista = cargarTareas();
+    return lista.filter(t => t.importante && t.completada).length;
+  }
+
+  let tareasEstado = [];
+  let tareaEditandoId = null;
+  let observerTareas = null;
+
+  const elFormTareas = document.getElementById('form-tareas');
+  const elInputTareaNombre = document.getElementById('tarea-nombre');
+  const elSelectTareaCat = document.getElementById('tarea-categoria');
+  const elCheckTareaImp = document.getElementById('tarea-importante');
+  const elInputTareaDesc = document.getElementById('tarea-descripcion');
+  const elBtnTareaGuardar = document.getElementById('btn-tarea-guardar');
+  const elBtnTareaCancelar = document.getElementById('btn-tarea-cancelar');
+  const elContenedorTareas = document.getElementById('tareas-lista');
+
+  function limpiarFormularioTarea() {
+    tareaEditandoId = null;
+    elFormTareas.reset();
+    elSelectTareaCat.value = 'personal';
+    elBtnTareaGuardar.textContent = 'Guardar tarea';
+    elBtnTareaCancelar.hidden = true;
+  }
+
+  function verificarListaTareasVacia() {
+    const filas = elContenedorTareas.querySelectorAll('.fila-tarea');
+    const msgVacio = elContenedorTareas.querySelector('.vacio');
+    if (filas.length === 0 && !msgVacio) {
+      const p = document.createElement('p');
+      p.className = 'vacio';
+      p.textContent = 'No hay tareas registradas.';
+      elContenedorTareas.insertBefore(p, elContenedorTareas.firstChild);
+    } else if (filas.length > 0 && msgVacio) {
+      msgVacio.remove();
+    }
+  }
+
+  function poblarContenidoNodoTarea(fila, tarea) {
+    fila.className = 'fila-tarea' + (tarea.completada ? ' completada' : '');
+    fila.dataset.id = tarea.id;
+    fila.innerHTML = '';
+
+    const check = document.createElement('input');
+    check.type = 'checkbox';
+    check.className = 'tarea-check';
+    check.checked = tarea.completada;
+    check.addEventListener('change', () => alternarCompletadaTarea(tarea.id));
+    fila.appendChild(check);
+
+    const cuerpo = document.createElement('div');
+    cuerpo.className = 'tarea-cuerpo';
+
+    const cabecera = document.createElement('div');
+    cabecera.className = 'tarea-cabecera';
+
+    const nombre = document.createElement('span');
+    nombre.className = 'tarea-nombre';
+    nombre.textContent = tarea.nombre;
+    nombre.addEventListener('click', () => alternarCompletadaTarea(tarea.id));
+    cabecera.appendChild(nombre);
+
+    const badgeCat = document.createElement('span');
+    badgeCat.className = 'tarea-badge-cat';
+    badgeCat.textContent = tarea.categoria;
+    cabecera.appendChild(badgeCat);
+
+    if (tarea.importante) {
+      const badgeImp = document.createElement('span');
+      badgeImp.className = 'tarea-badge-imp';
+      badgeImp.textContent = '⭐ Importante';
+      cabecera.appendChild(badgeImp);
+    }
+
+    cuerpo.appendChild(cabecera);
+
+    if (tarea.descripcion) {
+      const desc = document.createElement('div');
+      desc.className = 'tarea-desc';
+      desc.textContent = tarea.descripcion;
+      cuerpo.appendChild(desc);
+    }
+
+    fila.appendChild(cuerpo);
+
+    const acciones = document.createElement('div');
+    acciones.className = 'tarea-acciones';
+
+    const btnEditar = document.createElement('button');
+    btnEditar.type = 'button';
+    btnEditar.className = 'btn-tarea-mini';
+    btnEditar.textContent = 'Editar';
+    btnEditar.disabled = tarea.completada;
+    btnEditar.title = tarea.completada ? 'Desmarcá la tarea para poder editarla' : 'Editar tarea';
+    btnEditar.addEventListener('click', () => iniciarEdicionTarea(tarea.id));
+    acciones.appendChild(btnEditar);
+
+    const btnEliminar = document.createElement('button');
+    btnEliminar.type = 'button';
+    btnEliminar.className = 'btn-tarea-mini peligro';
+    btnEliminar.textContent = 'Eliminar';
+    btnEliminar.addEventListener('click', () => eliminarTarea(tarea.id));
+    acciones.appendChild(btnEliminar);
+
+    fila.appendChild(acciones);
+  }
+
+  function crearNodoTarea(tarea) {
+    const fila = document.createElement('div');
+    poblarContenidoNodoTarea(fila, tarea);
+    return fila;
+  }
+
+  function mutarNodoTareaExistente(id) {
+    const tarea = tareasEstado.find(t => t.id === id);
+    const nodo = elContenedorTareas.querySelector(`.fila-tarea[data-id="${CSS.escape(id)}"]`);
+    if (nodo && tarea) {
+      poblarContenidoNodoTarea(nodo, tarea);
+    }
+  }
+
+  function alternarCompletadaTarea(id) {
+    const tarea = tareasEstado.find(t => t.id === id);
+    if (!tarea) return;
+    tarea.completada = !tarea.completada;
+    if (tarea.completada && tareaEditandoId === id) {
+      limpiarFormularioTarea();
+    }
+    guardarTareas(tareasEstado);
+    mutarNodoTareaExistente(id);
+  }
+
+  function iniciarEdicionTarea(id) {
+    const tarea = tareasEstado.find(t => t.id === id);
+    if (!tarea || tarea.completada) return;
+    tareaEditandoId = tarea.id;
+    elInputTareaNombre.value = tarea.nombre;
+    elSelectTareaCat.value = tarea.categoria;
+    elCheckTareaImp.checked = tarea.importante;
+    elInputTareaDesc.value = tarea.descripcion;
+    elBtnTareaGuardar.textContent = 'Actualizar tarea';
+    elBtnTareaCancelar.hidden = false;
+    elInputTareaNombre.focus();
+  }
+
+  function eliminarTarea(id) {
+    const tarea = tareasEstado.find(t => t.id === id);
+    if (!tarea) return;
+    abrirModalConfirmacion(
+      `¿Eliminar la tarea "${tarea.nombre}"? Esta acción no se puede deshacer.`,
+      () => {
+        tareasEstado = tareasEstado.filter(t => t.id !== id);
+        guardarTareas(tareasEstado);
+        if (tareaEditandoId === id) {
+          limpiarFormularioTarea();
+        }
+        const nodo = elContenedorTareas.querySelector(`.fila-tarea[data-id="${CSS.escape(id)}"]`);
+        if (nodo) nodo.remove();
+        verificarListaTareasVacia();
+      }
+    );
+  }
+
+  elBtnTareaCancelar.addEventListener('click', limpiarFormularioTarea);
+
+  elFormTareas.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nombre = elInputTareaNombre.value.trim();
+    const categoria = elSelectTareaCat.value;
+    const importante = elCheckTareaImp.checked;
+    const descripcion = elInputTareaDesc.value.trim();
+
+    if (!nombre || !CATEGORIAS_VALIDAS_TAREAS.includes(categoria)) return;
+
+    if (tareaEditandoId) {
+      const tarea = tareasEstado.find(t => t.id === tareaEditandoId);
+      if (tarea && !tarea.completada) {
+        tarea.nombre = nombre;
+        tarea.categoria = categoria;
+        tarea.importante = importante;
+        tarea.descripcion = descripcion;
+        guardarTareas(tareasEstado);
+        mutarNodoTareaExistente(tarea.id);
+      }
+      limpiarFormularioTarea();
+    } else {
+      const nueva = {
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        nombre: nombre,
+        descripcion: descripcion,
+        categoria: categoria,
+        importante: importante,
+        completada: false,
+        fechaCreacion: Date.now()
+      };
+      tareasEstado.unshift(nueva);
+      guardarTareas(tareasEstado);
+
+      const msgVacio = elContenedorTareas.querySelector('.vacio');
+      if (msgVacio) msgVacio.remove();
+
+      const nodoNuevo = crearNodoTarea(nueva);
+      elContenedorTareas.insertBefore(nodoNuevo, elContenedorTareas.firstChild);
+      limpiarFormularioTarea();
+    }
+  });
+
+  function renderizarTareasLazy() {
+    if (observerTareas) {
+      observerTareas.disconnect();
+      observerTareas = null;
+    }
+    elContenedorTareas.innerHTML = '';
+
+    if (tareasEstado.length === 0) {
+      verificarListaTareasVacia();
+      return;
+    }
+
+    const TAMANIO_TANDA = 15;
+    let cursor = 0;
+
+    const sentinela = document.createElement('div');
+    sentinela.id = 'tareas-sentinela';
+    elContenedorTareas.appendChild(sentinela);
+
+    function cargarSiguienteTanda() {
+      const fin = Math.min(cursor + TAMANIO_TANDA, tareasEstado.length);
+      for (let i = cursor; i < fin; i++) {
+        elContenedorTareas.insertBefore(crearNodoTarea(tareasEstado[i]), sentinela);
+      }
+      cursor = fin;
+      if (cursor >= tareasEstado.length && observerTareas) {
+        observerTareas.disconnect();
+      }
+    }
+
+    if ('IntersectionObserver' in window) {
+      observerTareas = new IntersectionObserver((entradas) => {
+        entradas.forEach((entrada) => {
+          if (entrada.isIntersecting && cursor < tareasEstado.length) {
+            cargarSiguienteTanda();
+          }
+        });
+      }, { rootMargin: '150px' });
+      observerTareas.observe(sentinela);
+    }
+
+    cargarSiguienteTanda();
+
+    if (!observerTareas) {
+      while (cursor < tareasEstado.length) cargarSiguienteTanda();
+    }
+  }
+
+  function inicializarVistaTareas() {
+    limpiarFormularioTarea();
+    tareasEstado = cargarTareas().sort((a, b) => b.fechaCreacion - a.fechaCreacion);
+    renderizarTareasLazy();
+  }
+
+  document.getElementById('btn-comida-tareas').addEventListener('click', () => {
+    if (!orionDatos.activo || orionDatos.estado === 'quep') return;
+    const todas = cargarTareas();
+    const candidatas = todas.filter(t => t.importante && t.completada);
+    if (candidatas.length === 0) return;
+
+    const cant = candidatas.length;
+    const msg = `¿Canjear ${cant} tarea${cant === 1 ? '' : 's'} importante${cant === 1 ? '' : 's'} completada${cant === 1 ? '' : 's'} por ${cant} plato${cant === 1 ? '' : 's'} de comida? Se eliminará${cant === 1 ? '' : 'n'} del listado.`;
+
+    abrirModalConfirmacion(msg, () => {
+      const actuales = cargarTareas();
+      const aCanjear = actuales.filter(t => t.importante && t.completada);
+      if (aCanjear.length === 0) return;
+
+      const idsBorrados = new Set(aCanjear.map(t => t.id));
+      const restantes = actuales.filter(t => !idsBorrados.has(t.id));
+      guardarTareas(restantes);
+
+      orionDatos.platos += aCanjear.length;
+      guardarOrion(orionDatos);
+      renderVistaOrion();
+
+      tareasEstado = restantes.sort((a, b) => b.fechaCreacion - a.fechaCreacion);
+      idsBorrados.forEach(id => {
+        const nodo = elContenedorTareas.querySelector(`.fila-tarea[data-id="${CSS.escape(id)}"]`);
+        if (nodo) nodo.remove();
+      });
+      verificarListaTareasVacia();
+    });
   });
 </script>
 </body>
