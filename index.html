@@ -2263,10 +2263,16 @@
     renderVistaOrion();
   }
 
+  function obtenerNombresTodosLosEvaluadores() {
+    const todos = [...evaluadores, ...evaluadoresAntiguos];
+    const unicos = new Set(todos.map(e => (e.archivo || e.nombre).toLowerCase().trim()));
+    return Array.from(unicos);
+  }
+
   elBtnOrionActivar.addEventListener('click', () => {
     if (orionDatos.activo && orionDatos.estado !== 'quep') return;
     const ahora = Date.now();
-    const nombresActuales = evaluadores.map(e => e.archivo || e.nombre);
+    const nombresActuales = obtenerNombresTodosLosEvaluadores();
     orionDatos = {
       fechaNacimiento: ahora,
       ultimaAlimentacion: 0,
@@ -2308,41 +2314,121 @@
   });
 
   function detectarEvaluadoresNuevos() {
-    const actuales = evaluadores.map(e => e.archivo || e.nombre);
-    const nuevos = actuales.filter(nombre => !orionDatos.evaluadoresRecompensados.includes(nombre));
-    return nuevos;
+    const todosActuales = obtenerNombresTodosLosEvaluadores();
+    const recompensadosNorm = orionDatos.evaluadoresRecompensados.map(n => String(n).toLowerCase().trim());
+    return todosActuales.filter(nombre => !recompensadosNorm.includes(nombre));
+  }
+
+  function normalizarNombreEspacio(txt) {
+    return String(txt || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/_/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function obtenerMapaEspaciosStorage() {
+    const clavesPosibles = ['registro_espacios_v1', 'registroEspacios', 'registro_espacios'];
+    for (const c of clavesPosibles) {
+      const crudo = localStorage.getItem(c);
+      if (crudo) {
+        try {
+          const obj = JSON.parse(crudo);
+          if (obj && typeof obj.espacios === 'object') return obj.espacios;
+          if (obj && typeof obj === 'object' && !Array.isArray(obj)) return obj;
+        } catch (e) {}
+      }
+    }
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      try {
+        const obj = JSON.parse(localStorage.getItem(k));
+        if (obj && typeof obj === 'object' && obj.espacios && typeof obj.espacios === 'object') {
+          return obj.espacios;
+        }
+      } catch (e) {}
+    }
+    return {};
+  }
+
+  function obtenerSesionesRetencionStorage() {
+    const clavesPosibles = ['retencionRutas', 'retencion_rutas_v1', 'retencion_rutas'];
+    for (const c of clavesPosibles) {
+      const crudo = localStorage.getItem(c);
+      if (crudo) {
+        try {
+          const obj = JSON.parse(crudo);
+          if (Array.isArray(obj)) return obj;
+          if (obj && Array.isArray(obj.retencionRutas)) return obj.retencionRutas;
+        } catch (e) {}
+      }
+    }
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      try {
+        const obj = JSON.parse(localStorage.getItem(k));
+        if (obj && Array.isArray(obj.retencionRutas)) return obj.retencionRutas;
+        if (Array.isArray(obj) && obj.length > 0 && obj[0] && 'totalRutas' in obj[0] && 'espacio' in obj[0]) {
+          return obj;
+        }
+      } catch (e) {}
+    }
+    return [];
+  }
+
+  function obtenerTotalRutasEspacio(espaciosObj, nombreEspacio) {
+    if (espaciosObj[nombreEspacio] !== undefined) {
+      return Number(espaciosObj[nombreEspacio]);
+    }
+    const buscado = normalizarNombreEspacio(nombreEspacio);
+    for (const clave of Object.keys(espaciosObj)) {
+      if (normalizarNombreEspacio(clave) === buscado) {
+        return Number(espaciosObj[clave]);
+      }
+    }
+    return 0;
   }
 
   function detectarSesionPomodoroValida() {
     try {
-      const regCrudo = localStorage.getItem('registro_espacios_v1');
-      const retCrudo = localStorage.getItem('retencionRutas');
-      if (!regCrudo || !retCrudo) return null;
+      const espacios = obtenerMapaEspaciosStorage();
+      const listaSesiones = obtenerSesionesRetencionStorage();
+      if (!listaSesiones.length) return null;
 
-      const reg = JSON.parse(regCrudo);
-      const espacios = (reg && reg.espacios && typeof reg.espacios === 'object') ? reg.espacios : {};
-      const ret = JSON.parse(retCrudo);
+      const ultimaPorEspacio = {};
+      listaSesiones.forEach((s, idx) => {
+        if (!s || !s.espacio) return;
+        const espNorm = normalizarNombreEspacio(s.espacio);
+        const tsActual = Number(s.timestamp || idx);
+        const guardado = ultimaPorEspacio[espNorm];
+        const tsGuardado = guardado ? Number(guardado.sesion.timestamp || guardado.idx) : -1;
+        if (!guardado || tsActual >= tsGuardado) {
+          ultimaPorEspacio[espNorm] = { sesion: s, idx: idx };
+        }
+      });
 
-      const porEspacio = {};
-      if (Array.isArray(ret)) {
-        ret.forEach(s => {
-          if (s && s.espacio) porEspacio[s.espacio] = s;
-        });
-      } else if (ret && typeof ret === 'object') {
-        Object.keys(ret).forEach(esp => {
-          const val = ret[esp];
-          porEspacio[esp] = Array.isArray(val) ? val[val.length - 1] : val;
-        });
-      }
+      const candidatos = Object.values(ultimaPorEspacio)
+        .map(x => x.sesion)
+        .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
 
-      for (const nombreEsp of Object.keys(porEspacio)) {
-        const sesion = porEspacio[nombreEsp];
-        const totalEspacio = Number(espacios[nombreEsp]);
-        if (!sesion || !totalEspacio || totalEspacio <= 0) continue;
+      for (const sesion of candidatos) {
+        const nombreEsp = sesion.espacio;
+        let totalEspacio = obtenerTotalRutasEspacio(espacios, nombreEsp);
+        const totalRutas = Number(sesion.totalRutas ?? (Array.isArray(sesion.rutas) ? sesion.rutas.length : 0));
 
-        const totalRutas = Number(sesion.totalRutas ?? sesion.rutasTotales ?? 0);
-        const retenidas = Number(sesion.rutasRetenidas ?? sesion.retenidas ?? sesion.aciertos ?? 0);
-        const idSesion = String(sesion.id || sesion.fecha || sesion.timestamp || `${nombreEsp}_${totalRutas}_${retenidas}`);
+        if (!totalEspacio || totalEspacio <= 0) {
+          totalEspacio = totalRutas;
+        }
+        if (totalEspacio <= 0 || totalRutas <= 0) continue;
+
+        const retenidas = Number(
+          sesion.retenidas ??
+          sesion.rutasRetenidas ??
+          (Array.isArray(sesion.rutas) ? sesion.rutas.filter(r => r && r.retenida).length : 0)
+        );
+        const idSesion = String(sesion.id || `${nombreEsp}_${sesion.timestamp || 0}`);
 
         if (
           totalRutas >= 0.8 * totalEspacio &&
