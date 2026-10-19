@@ -60,7 +60,7 @@ CARACTER = {
     "nuM": [4, 50],
     "pasoS": [60, 210],
     "preG": [55, 190],
-    "comP": [25, 200],
+    "comP": [25, 240],
 }
 
 # Códigos de colores [color temas principales(temaS), color cuadros(imP, cuR), color de flechas, color gradiente en temas principales, color de fuente]

@@ -41,7 +41,7 @@ estilo de diseño para el mapa, nota: deberas seleccionar todos los bordes ir a 
     "layout": "elkTree",
     "config": {
       "elk.spacing.nodeNode": "25",
-      "elk.mrtree.weighting": "DESCENDANTS",
+      "elk.mrtree.weighting": "MODEL_ORDER",
       "elk.direction": "DOWN",
       "edgeStyle": "keep",
       "corners": "straight",

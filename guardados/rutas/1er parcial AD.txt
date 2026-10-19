@@ -1,0 +1,704 @@
+RUTA 1
+IDEA CENTRAL
+el objetivo
+fue estimar alquiler mensual 1
+departamento en rublos a
+partir información
+como superficie,
+distrito,
+ubicación,
+antigüedad,
+tipo edificio,
+estado renovación y
+fecha del anuncio
+
+RUTA 2
+IDEA CENTRAL
+el modelo final
+es una regresión lineal,
+pero antes se transformaron algunas
+variables
+para que pudiera
+representar relaciones más realistas
+
+RUTA 3
+IDEA CENTRAL
+Por eso,
+'lineal' describe
+cómo modelo
+combina variables transformadas;
+no significa
+que precio tenga
+que cambiar en línea recta
+con cada variable original
+
+RUTA 4
+CONCEPTOS y PREGUNTAS
+LOG1P
+el modelo aprende en escala logarítmica,
+pero propietario
+necesita una estimación en rublos
+
+RUTA 5
+CONCEPTOS y PREGUNTAS
+Al volver una escala logarítmica
+a moneda original,
+simplemente deshacer transformación
+puede subestimar alquiler promedio,
+porque convertir de vuelta
+no compensa automáticamente
+variabilidad errores
+
+RUTA 6
+CONCEPTOS y PREGUNTAS
+CORRECCION de DUAN
+calcula 1 factor ajuste
+a partir residuos del entrenamiento
+
+RUTA 7
+CONCEPTOS y PREGUNTAS
+En informe,
+factor Duan
+es aproximadamente 1,003500
+
+RUTA 8
+CONCEPTOS y PREGUNTAS
+Es una corrección pequeña,
+cual tiene sentido
+porque factor
+está muy cerca uno
+
+RUTA 9
+CONCEPTOS y PREGUNTAS
+Por tanto,
+corrección mejora ligeramente resultado,
+pero no
+produce 1 cambio enorme
+
+RUTA 10
+CONCEPTOS y PREGUNTAS
+MULTICOLINEALIDAD
+la multicolinealidad aparece
+cuando varias variables
+cuentan casi misma historia
+
+RUTA 11
+CONCEPTOS y PREGUNTAS
+Por ejemplo,
+distancia al centro y
+distancia al metro
+pueden estar relacionadas;
+también superficie y
+cantidad habitaciones
+
+RUTA 12
+CONCEPTOS y PREGUNTAS
+Eso puede volver inestables coeficientes:
+al modelo le cuesta
+separar qué parte del efecto
+corresponde a cada variable
+
+RUTA 13
+CONCEPTOS y PREGUNTAS
+No significa necesariamente
+que predicción vaya a
+ser mala,
+pero
+sí complica interpretación y
+puede volver frágiles coeficientes
+
+RUTA 14
+CONCEPTOS y PREGUNTAS
+VIF
+mide cuánto se infla incertidumbre
+1 predictor
+por su relación con otros
+
+RUTA 15
+CONCEPTOS y PREGUNTAS
+NUMERO DE CONDICION
+es una señal global estabilidad
+numérica del conjunto variables
+
+RUTA 16
+CONCEPTOS y PREGUNTAS
+Ningún VIF final
+llega a 10;
+53 57 predictores
+tienen VIF menor
+que 5 y cuatro quedan
+en franja moderada
+
+RUTA 17
+CONCEPTOS y PREGUNTAS
+el máximo
+es 8,01,
+así
+que sería incorrecto decir
+que toda colinealidad desapareció
+
+RUTA 18
+CONCEPTOS y PREGUNTAS
+ONEHOT ENCODING
+transforma una variable categórica en
+indicadores separados,
+normalmente
+con valores
+que identifican
+si 1 anuncio
+pertenece o no
+a una categoría
+
+RUTA 19
+CONCEPTOS y PREGUNTAS
+Es útil
+para variables
+con pocas categorías y
+sin orden numérico natural,
+como tipo edificio o
+estado renovación
+
+RUTA 20
+CONCEPTOS y PREGUNTAS
+Así,
+modelo no interpreta
+por error
+que una categoría
+vale 'más'
+que otra solo
+porque tenga 1 número asignado
+
+RUTA 21
+CONCEPTOS y PREGUNTAS
+TARGET ENCODING
+resume una categoría
+mediante una estadística relacionada
+con alquiler objetivo
+Es útil
+cuando hay muchas categorías
+
+RUTA 22
+CONCEPTOS y PREGUNTAS
+En vez crear una columna
+por cada distrito,
+genera una representación numérica del
+efecto asociado a ese distrito
+
+RUTA 23
+CONCEPTOS y PREGUNTAS
+DATA LEAKAGE
+o fuga información,
+ocurre
+cuando modelo
+recibe durante entrenamiento una pista
+que no tendría disponible forma
+legítima al predecir 1 caso
+nuevo
+
+RUTA 24
+CONCEPTOS y PREGUNTAS
+Entonces parece muy preciso,
+pero esa precisión
+es artificial
+
+RUTA 25
+CONCEPTOS y PREGUNTAS
+la elección
+depende principalmente cuántas categorías
+existen,
+cuántos casos
+hay en cada una y
+cuánto se
+necesita interpretar cada efecto
+
+RUTA 26
+CONCEPTOS y PREGUNTAS
+Con pocas categorías
+por ejemplo,
+seis tipos edificio o
+cuatro estados renovación One Hot
+resulta simple y
+transparente
+
+RUTA 27
+CONCEPTOS y PREGUNTAS
+Con 129 distritos,
+crear una columna
+por categoría
+puede volver representación demasiado dispersa y hacer que distritos raros se estimen
+con pocos datos;
+Target Encoding
+resume esa señal en menos columnas,
+aunque exige controles estrictos contra fuga
+
+RUTA 28
+CONCEPTOS y PREGUNTAS
+SPLINES
+permiten
+que efecto una variable cambie forma
+gradual
+según tramo su rango,
+en vez obligar al modelo
+a usar una sola pendiente
+para todos casos
+
+RUTA 29
+CONCEPTOS y PREGUNTAS
+Son útiles
+cuando 1 metro cuadrado adicional
+no tiene mismo efecto en
+departamentos pequeños y grandes,
+o
+cuando alejarse del centro
+encarece o abarata
+alquiler forma distinta
+según distancia
+
+RUTA 30
+CONCEPTOS y PREGUNTAS
+PCA transforma varias columnas correlacionadas
+en nuevas combinaciones
+que concentran información esas columnas y quedan menos correlacionadas
+entre sí
+
+RUTA 31
+CONCEPTOS y PREGUNTAS
+No es una técnica
+que 'descubra causalidad',
+ni hace que modelo
+sea automáticamente mejor
+
+RUTA 32
+CONCEPTOS y PREGUNTAS
+ESTUDIO ABLACION
+consiste en armar variantes 1 modelo y
+agregar o quitar
+1 bloque características cada vez,
+manteniendo comparable evaluación
+
+RUTA 33
+CONCEPTOS y PREGUNTAS
+la pregunta es:
+'¿Qué mejora realmente
+cuando incorporo esta pieza?'.
+Si error baja forma
+consistente en datos no usados
+para ajustar esa variante,
+hay evidencia
+que bloque
+aporta valor predictivo
+
+RUTA 34
+CONCEPTOS y PREGUNTAS
+Si error no baja o
+empeora,
+complejidad adicional quizá no se
+justifique
+
+RUTA 35
+CONCEPTOS y PREGUNTAS
+JARQUE BERA
+es una prueba formal
+que analiza
+si distribución residuos se parece
+a una normal,
+prestando atención a su asimetría y
+a qué tan
+pesadas o ligeras
+son sus colas
+
+RUTA 36
+CONCEPTOS y PREGUNTAS
+la hipótesis nula es
+que residuos
+siguen una distribución normal
+
+RUTA 37
+CONCEPTOS y PREGUNTAS
+Si valor p
+es menor
+que umbral elegido en informe,
+0,05 se rechaza esa hipótesis;
+si es mayor,
+no hay evidencia suficiente
+para rechazarla
+
+RUTA 38
+CONCEPTOS y PREGUNTAS
+DURBIN WATSON
+ayuda a detectar
+autocorrelación primer orden:
+si 1 error
+tiende a parecerse al error
+inmediatamente anterior en una secuencia
+ordenada
+
+RUTA 39
+CONCEPTOS y PREGUNTAS
+En 1 análisis temporal importa
+porque errores meses cercanos podrían
+compartir una tendencia no capturada
+
+RUTA 40
+CONCEPTOS y PREGUNTAS
+Un valor alrededor 2 suele
+indicar poca evidencia autocorrelación primer orden;
+por debajo 2
+puede sugerir autocorrelación positiva,
+aunque interpretación completa
+depende del contexto y
+supuestos prueba
+
+RUTA 41
+CONCEPTOS y PREGUNTAS
+CURVA APRENDIZAJE
+muestra cómo cambia error
+cuando modelo
+recibe más filas entrenamiento
+
+RUTA 42
+CONCEPTOS y PREGUNTAS
+En versión K Fold mezclada,
+datos se reparten en pliegues
+sin respetar estrictamente orden cronológico
+
+RUTA 43
+CONCEPTOS y PREGUNTAS
+Sirve para observar estabilidad
+dentro de una muestra tratada
+como si sus registros fueran intercambiables,
+pero es menos adecuada
+para demostrar
+cómo se comportará modelo
+con meses futuros
+cuando existe una tendencia del
+mercado
+
+RUTA 44
+CONCEPTOS y PREGUNTAS
+CURVA APRENDIZAJE FUERA DE TIEMPO
+responde una pregunta más cercana
+al uso real:
+si entreno
+con cada vez más datos históricos,
+¿mejoran predicciones
+sobre períodos posteriores
+que modelo no vio?
+entrenamiento
+mantiene orden temporal y
+valid/test
+pertenecen a períodos posteriores
+
+RUTA 45
+CONCEPTOS y PREGUNTAS
+Así se
+mide desempeño
+ante 1 mercado
+que evoluciona,
+en lugar
+asumir
+que anuncios antiguos y
+futuros son intercambiables
+
+RUTA 46
+CONCEPTOS y PREGUNTAS
+K FOLD
+mezcla datos
+para evaluar modelo en distintas particiones,
+mientras que partición temporal respeta orden cronológico:
+se entrena
+con períodos anteriores y
+se evalúa
+con períodos posteriores
+
+RUTA 47
+CONCEPTOS y PREGUNTAS
+Esto permite
+comprobar
+si modelo
+puede predecir alquileres futuros sin
+aprovechar información del futuro
+
+RUTA 48
+CONCEPTOS y PREGUNTAS
+KRUSTAL WALLIS
+permite evaluar
+si alquileres presentan diferencias
+entre grupos,
+como distintos barrios,
+sin exigir
+que datos sigan una distribución
+normal
+
+RUTA 49
+CONCEPTOS y PREGUNTAS
+V CRAMER
+mide intensidad asociación
+entre dos variables categóricas y
+
+RUTA 50
+CONCEPTOS y PREGUNTAS
+ayuda a
+detectar posibles redundancias
+entre características
+
+RUTA 51
+CONCEPTOS y PREGUNTAS
+OLS
+estima coeficientes
+buscando minimizar errores cuadrados
+
+RUTA 52
+CONCEPTOS y PREGUNTAS
+Ridge y
+Lasso penalizan coeficientes
+para controlar complejidad y
+multicolinealidad,
+mientras que Huber
+reduce influencia ciertos errores extremos
+
+RUTA 53
+CONCEPTOS y PREGUNTAS
+OLS puede ganar
+si ofrece 1 mejor equilibrio
+entre precisión,
+estabilidad e
+interpretación en datos evaluados
+
+RUTA 54
+CONCEPTOS y PREGUNTAS
+CETERIS PARIBUS
+significa
+'manteniendo constantes demás variables'. 1
+coeficiente representa
+cómo cambia predicción del modelo
+cuando cambia una característica del
+departamento y
+demás permanecen iguales
+
+RUTA 55
+CONCEPTOS y PREGUNTAS
+Si variable
+está transformada o codificada,
+interpretación debe
+considerar esa transformación
+
+RUTA 56
+GRAFICOS EDA
+1
+distribución del alquiler:
+muestra asimetría variable objetivo y
+ayuda a justificar log1p
+
+RUTA 57
+GRAFICOS EDA
+2
+distribuciones predictores numéricos:
+permite
+detectar asimetrías, rangos extraños y variables
+con valores extremos,
+sin eliminarlos automáticamente
+
+RUTA 58
+GRAFICOS EDA
+3
+análisis categórico:
+compara distribuciones del alquiler
+entre tipos edificio,
+renovaciones,
+distritos y
+otras categorías;
+
+RUTA 59
+GRAFICOS EDA
+ayuda a reconocer
+asociaciones y categorías
+con pocos casos
+
+RUTA 60
+GRAFICOS EDA
+4
+correlaciones:
+identifica relaciones
+entre predictores,
+por ejemplo superficie
+con habitaciones y
+distancia al centro
+con distancia al metro;
+orienta análisis multicolinealidad
+
+RUTA 61
+GRAFICOS EDA
+5
+relaciones bivariadas clave:
+evidencia apertura en abanico del
+alquiler original y curvatura relación
+con distancia al centro;
+justifica transformación logarítmica y
+splines
+
+RUTA 62
+GRAFICOS EDA
+6
+leakage y metro:
+muestra
+por qué rent_per_sqm filtraría respuesta y
+documenta dudas
+sobre validez variables estación y
+línea metro
+
+RUTA 63
+GRAFICOS EDA
+7
+tendencias temporales:
+muestra una evolución alcista nominal y
+una estacionalidad mensual poco marcada;
+ayuda a justificar tratamiento temporal y
+partición cronológica
+
+RUTA 64
+GRAFICOS EDA
+8
+distribución espacial:
+muestra concentración alquileres altos en zona
+central y
+agrupamientos periféricos;
+justifica representar ubicación
+con más una variable
+
+RUTA 65
+GRAFICOS EDA
+Después vienen gráficos diagnóstico residuos,
+que verifican
+si esas decisiones dejaron patrones
+sistemáticos en errores
+
+RUTA 66
+GRAFICOS DIAGNOSTICO
+1
+Histograma residuos:
+debería verse aproximadamente centrado en
+cero y
+sin una asimetría extrema
+
+RUTA 67
+GRAFICOS DIAGNOSTICO
+En informe,
+asimetría residual
+es cercana a cero y
+dispersión es parecida
+entre train,
+valid y
+test
+
+RUTA 68
+GRAFICOS DIAGNOSTICO
+2
+QQ plot:
+compara distribución residuos
+con una normal teórica
+
+RUTA 69
+GRAFICOS DIAGNOSTICO
+Tus puntos
+se aproximan mucho a diagonal;
+en extremos se curvan ligeramente
+hacia adentro,
+compatible
+con colas más ligeras
+que una normal
+
+RUTA 70
+GRAFICOS DIAGNOSTICO
+Visualmente es una buena aproximación,
+pero Jarque Bera
+sí rechaza normalidad en test
+
+RUTA 71
+GRAFICOS DIAGNOSTICO
+3
+Scale Location:
+busca cambios en magnitud errores
+a largo predicciones
+
+RUTA 72
+GRAFICOS DIAGNOSTICO
+la curva
+se mantiene prácticamente horizontal en
+torno al nivel esperado;
+no se
+observa embudo marcado
+
+RUTA 73
+GRAFICOS DIAGNOSTICO
+Breusch Pagan tampoco rechaza homocedasticidad en
+valid ni
+test
+
+RUTA 74
+GRAFICOS DIAGNOSTICO
+4
+Residuos vs. valores ajustados:
+busca curvas,
+embudos o
+agrupamientos
+
+RUTA 75
+GRAFICOS DIAGNOSTICO
+la nube
+está centrada alrededor cero,
+sin forma U
+ni abanico,
+y línea media es horizontal
+
+RUTA 76
+GRAFICOS DIAGNOSTICO
+Eso apoya
+que no queda una no
+linealidad o una variación dispersión evidente en rango observado,
+aunque ningún gráfico prueba
+que modelo capture absolutamente toda estructura
+
+RUTA 77
+GRAFICOS DIAGNOSTICO
+5
+Real vs. predicho:
+contrasta directamente predicción
+con valor observado
+
+RUTA 78
+GRAFICOS DIAGNOSTICO
+Cuanto más cerca quedan puntos diagonal ideal,
+más cercanas
+son predicciones;
+se complementa
+
+RUTA 79
+GRAFICOS DIAGNOSTICO
+con RMSE, MAE y R²,
+porque una impresión visual no
+cuantifica error
+por sí sola
+
+RUTA 80
+GRAFICOS DIAGNOSTICO
+6
+Residuos a largo
+del tiempo:
+busca deriva temporal
+
+RUTA 81
+GRAFICOS DIAGNOSTICO
+el informe
+describe una dispersión relativamente estable,
+pero también 1 sesgo medio
+positivo en períodos posteriores,
+relacionado
+con evolución nominal alquileres
+
+RUTA 82
+GRAFICOS DIAGNOSTICO
+Esto recuerda
+que errores estables no descartan
+que mercado cambie nivel
+

@@ -875,6 +875,7 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     html = html.replace("__IMAGEN_MAPA_BASE64__", base64_mapa)
     html = html.replace("__TIPO_IMAGEN_MAPA__", tipo_mapa)
     html = html.replace("__NOMBRE_IMAGEN_MAPA__", _escapar_atributo_html(nombre_mapa))
+    html = html.replace("__HAY_MAPA__", "1" if base64_mapa else "0")
 
     with open(f"guardados/evaluadores/evaluador_{nombre_base}.html", "w", encoding="utf-8") as archivo:
         archivo.write(html)
@@ -3598,8 +3599,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-icono-circular" id="btn-notas-evaluador" title="Notas del evaluador">📝</button>
       <button class="boton-icono-circular" id="btn-estadisticas" title="Estadísticas">📊</button>
       <button class="boton-icono-circular" id="btn-observador-mapa" title="Ver mapa"
-              data-mapa-src="data:__TIPO_IMAGEN_MAPA__;base64,__IMAGEN_MAPA_BASE64__"
+              data-mapa-hay="__HAY_MAPA__"
               data-mapa-nombre="__NOMBRE_IMAGEN_MAPA__">🗺️</button>
+      <script type="text/plain" id="mapa-imagen-datos">data:__TIPO_IMAGEN_MAPA__;base64,__IMAGEN_MAPA_BASE64__</script>
       <button class="boton-icono-circular" id="btn-pomodoro" title="Pomodoro">⏲️</button>
     </div>
     <div class="pomodoro-badge-slot" id="pomodoro-badge-slot-observador">
@@ -3653,7 +3655,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <div class="galeria-indicador" id="galeria-indicador"></div>
     <div class="galeria-imagen-wrap">
-      <img id="galeria-img" class="galeria-img" alt="Imagen de una ruta" style="display:none;">
+      <img id="galeria-img" class="galeria-img" alt="Imagen de una ruta" decoding="async" style="display:none;">
     </div>
     <p class="galeria-vacia" id="galeria-vacia" style="display:none;">No hay imágenes en las rutas de respuestas.txt.</p>
     <p class="galeria-descripcion" id="galeria-descripcion" style="display:none;"></p>
@@ -4573,7 +4575,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 <div class="lightbox" id="lightbox">
   <button class="lightbox-cerrar" title="Cerrar">&times;</button>
-  <img id="lightbox-img" src="" alt="Imagen ampliada">
+  <img id="lightbox-img" src="" alt="Imagen ampliada" decoding="async">
 </div>
 
 <script>
@@ -4707,11 +4709,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  function guardarGamificacion() {
+  function guardarGamificacionYa() {
     try {
       localStorage.setItem(CLAVE_GAMIFICACION, JSON.stringify(gamificacion));
     } catch (e) {
     }
+  }
+  // Antes: JSON.stringify sincrono de todo el historial en cada tarjeta evaluada. Ahora diferido (250 ms).
+  var _guardarGamificacionDiferido = crearGuardadoDiferidoPerezoso(guardarGamificacionYa, 250);
+  function guardarGamificacion() {
+    _guardarGamificacionDiferido();
   }
 
   let gamificacion = cargarGamificacion();
@@ -4770,6 +4777,71 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   const _guardadosPendientes = [];
 
+  // ===== OPTIMIZACION: utilidades de render =====
+  // _versionDatos sube con cualquier escritura de localStorage, guardado diferido o cambio de rev:
+  // si no cambio, los datos persistidos no cambiaron y una vista derivada puede reutilizarse.
+  var _versionDatos = 0;
+  (function () {
+    try {
+      const setOriginal = Storage.prototype.setItem;
+      const removeOriginal = Storage.prototype.removeItem;
+      Storage.prototype.setItem = function () { _versionDatos++; return setOriginal.apply(this, arguments); };
+      Storage.prototype.removeItem = function () { _versionDatos++; return removeOriginal.apply(this, arguments); };
+    } catch (e) { }
+  })();
+  const _firmasRender = {};
+  function renderSiCambioDatos(clave, extra, fn) {
+    const firma = _versionDatos + '|' + extra;
+    if (_firmasRender[clave] === firma) return false;
+    fn();
+    _firmasRender[clave] = _versionDatos + '|' + extra;
+    return true;
+  }
+  function reemplazarHijos(cont, nodos) {
+    if (typeof cont.replaceChildren === 'function') {
+      if (nodos) cont.replaceChildren(nodos); else cont.replaceChildren();
+    } else {
+      cont.textContent = '';
+      if (nodos) cont.appendChild(nodos);
+    }
+  }
+  function mostrarMensajeVacio(cont, texto) {
+    const d = document.createElement('div');
+    d.className = 'lista-vacia';
+    d.textContent = texto;
+    reemplazarHijos(cont, d);
+  }
+  function limpiarReconciliado(cont) {
+    cont._nodosPorClave = null;
+    reemplazarHijos(cont, null);
+  }
+  // Reconciliacion por clave: reutiliza los nodos cuya firma no cambio y solo crea/borra/mueve el resto.
+  function reconciliarHijos(cont, items, claveFn, firmaFn, crearFn) {
+    const previos = cont._nodosPorClave || new Map();
+    const nuevos = new Map();
+    const repetidas = new Map();
+    let cursor = cont.firstChild;
+    items.forEach((item) => {
+      let clave = String(claveFn(item));
+      const veces = repetidas.get(clave) || 0;
+      repetidas.set(clave, veces + 1);
+      if (veces > 0) clave = clave + '#' + veces;
+      const firma = firmaFn(item);
+      let nodo = previos.get(clave);
+      if (!nodo || nodo._firma !== firma || nodo.parentNode !== cont) {
+        nodo = crearFn(item);
+        nodo._firma = firma;
+      }
+      nuevos.set(clave, nodo);
+      if (nodo === cursor) cursor = cursor.nextSibling;
+      else cont.insertBefore(nodo, cursor);
+    });
+    previos.forEach((nodo, clave) => {
+      if (nuevos.get(clave) !== nodo && nodo.parentNode === cont) cont.removeChild(nodo);
+    });
+    cont._nodosPorClave = nuevos;
+  }
+
   function crearGuardadoDebounced(fnGuardarYa, ms) {
     let temporizador = null;
     let pendiente = false;
@@ -4779,6 +4851,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       fnGuardarYa();
     };
     const debounced = function () {
+      _versionDatos++;
       pendiente = true;
       clearTimeout(temporizador);
       temporizador = setTimeout(disparar, ms);
@@ -4792,8 +4865,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return debounced;
   }
 
-  window.addEventListener('beforeunload', () => {
+  // Guardado diferido que crea su temporizador en el primer uso (no depende del orden de declaracion)
+  function crearGuardadoDiferidoPerezoso(fnGuardarYa, ms) {
+    let diferido = null;
+    return function () {
+      if (!diferido) diferido = crearGuardadoDebounced(fnGuardarYa, ms);
+      diferido();
+    };
+  }
+
+  // Los guardados diferidos pendientes se escriben al cerrar, recargar, ocultar la pestana o cambiar de app (movil)
+  const _vaciarGuardadosPendientes = () => {
     _guardadosPendientes.forEach((d) => d.flush());
+  };
+  window.addEventListener('beforeunload', _vaciarGuardadosPendientes);
+  window.addEventListener('pagehide', _vaciarGuardadosPendientes);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') _vaciarGuardadosPendientes();
   });
 
   const CLAVE_RELOJ_LOGICO = 'reloj_logico_v1';
@@ -4805,10 +4893,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return 0;
     }
   })();
-  function guardarRelojLogico() {
+  function guardarRelojLogicoYa() {
     try { localStorage.setItem(CLAVE_RELOJ_LOGICO, String(relojLogicoLocal)); } catch (e) { }
   }
+  var _guardarRelojDiferido = crearGuardadoDiferidoPerezoso(guardarRelojLogicoYa, 250);
+  function guardarRelojLogico() {
+    _guardarRelojDiferido();
+  }
   function siguienteRev() {
+    _versionDatos++;
     relojLogicoLocal += 1;
     guardarRelojLogico();
     return relojLogicoLocal;
@@ -5324,10 +5417,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     notasEvaluador = depurarPretestsEnLista(notasEvaluador);
   }
 
+  function guardarNotasEvaluadorYa() {
+    try {
+      localStorage.setItem(CLAVE_NOTAS_EVALUADOR, JSON.stringify(notasEvaluador));
+    } catch (e) {
+    }
+  }
+  var _guardarNotasDiferido = crearGuardadoDiferidoPerezoso(guardarNotasEvaluadorYa, 250);
   function guardarNotasEvaluador() {
     try {
-      depurarPretestsDuplicados();
-      localStorage.setItem(CLAVE_NOTAS_EVALUADOR, JSON.stringify(notasEvaluador));
+      depurarPretestsDuplicados();   // se mantiene sincrono: las vistas leen notasEvaluador en memoria enseguida
+      _guardarNotasDiferido();
     } catch (e) {
     }
   }
@@ -5673,8 +5773,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return typeof linea === 'string' && linea.indexOf('IMG:data:image/') === 0;
   }
 
-  function normalizarPalabra(palabra) {
+  function normalizarPalabraSinCache(palabra) {
     return palabra.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');
+  }
+
+  var _memoNormalizar = null;
+  function normalizarPalabra(palabra) {
+    if (palabra.length > 80) return normalizarPalabraSinCache(palabra);
+    const memo = _memoNormalizar || (_memoNormalizar = new Map());
+    let r = memo.get(palabra);
+    if (r === undefined) {
+      r = normalizarPalabraSinCache(palabra);
+      if (memo.size > 3000) memo.clear();
+      memo.set(palabra, r);
+    }
+    return r;
   }
 
   function rutasValidasDe(tarjeta) {
@@ -5694,16 +5807,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     if (nombre === 'observador') {
       requestAnimationFrame(() => {
-        renderImagenesPreview();   // NUEVO: refresca también al entrar por primera vez (mismo motivo que "temas")
+        renderSiCambioDatos('imagenes', '', renderImagenesPreview);
       });
     }
 
     if (nombre === 'temas') {
       requestAnimationFrame(() => {
-        renderDificilesPreview();  // MODIFICADO: actualizar la vista de difíciles
-        renderNotasPreview();      // NUEVO: notas distintas a las del txt
-        renderRevisarGuardadoPreview();  // NUEVO: también al volver por "Volver a temas" del observador
-        renderRazonesPreview();    // NUEVO: corrige que no aparecieran al abrir el HTML por primera vez
+        renderSiCambioDatos('dificiles', '', renderDificilesPreview);
+        renderSiCambioDatos('notas', '', renderNotasPreview);
+        renderSiCambioDatos('revisar', JSON.stringify(revisarEnMemoria), renderRevisarGuardadoPreview);
+        renderSiCambioDatos('razones', '', renderRazonesPreview);
         actualizarMarcasTemas();   // NUEVO: refresca ★/💡/🏷 sin resetear las casillas marcadas
         evaluarAvisoSRS();         // NUEVO: §4 — avisa si hay listas de Repaso Espaciado vencidas
       });
@@ -5720,14 +5833,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return tarjeta.tema && tarjeta.tema.trim() !== '' ? tarjeta.tema : '(Sin tema)';
   }
 
+  var _cacheAgruparPorTema = null;
   function agruparPorTema() {
+    if (_cacheAgruparPorTema) return _cacheAgruparPorTema;
     const mapa = new Map();
     tarjetasCompletas.forEach((t, i) => {
       const nombre = nombreTema(t);
       if (!mapa.has(nombre)) mapa.set(nombre, []);
       mapa.get(nombre).push(i);
     });
-    return Array.from(mapa.entries()).map((par) => ({ nombre: par[0], indices: par[1] }));
+    _cacheAgruparPorTema = Array.from(mapa.entries()).map((par) => ({ nombre: par[0], indices: par[1] }));
+    return _cacheAgruparPorTema;
   }
 
   function crearTextosTarjeta(t) {
@@ -5855,8 +5971,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function construirListaTemas() {
-    elListaTemas.innerHTML = '';
     gruposTemaInfo.clear();
+    const fragTemas = document.createDocumentFragment();
     agruparPorTema().forEach((g) => {
       const det = document.createElement('details');
       det.className = 'grupo-tema';
@@ -5893,6 +6009,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       info.lazyCtrl = prepararDetallesLazy(det, () => {
         const cuerpo = document.createElement('div');
         cuerpo.className = 'cuerpo-grupo';
+        const fragFilasTema = document.createDocumentFragment();
         g.indices.forEach((i) => {
           const fila = document.createElement('label');
           fila.className = 'item-tarjeta-check';
@@ -5900,28 +6017,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           c.type = 'checkbox';
           c.checked = estaSeleccionado(i);
           c.dataset.idx = String(i);
-          c.addEventListener('change', () => {
-            fijarSeleccionado(i, c.checked);
-            actualizarResumenGrupo(g.nombre);
-            actualizarConteoSeleccion();
-          });
           fila.appendChild(c);
           fila.appendChild(crearTextosTarjeta(tarjetasCompletas[i]));
           const marcas = document.createElement('span');
           marcas.className = 'tc-marcas';
           marcas.textContent = (esDificil(tarjetasCompletas[i]) ? '★ ' : '') + (notaEfectivaDe(tarjetasCompletas[i]) !== '' ? '💡 ' : '') + (razonesDeTarjeta(tarjetasCompletas[i]).length > 0 ? ' 🏷' : '');
           fila.appendChild(marcas);
-          cuerpo.appendChild(fila);
+          fragFilasTema.appendChild(fila);
         });
+        cuerpo.appendChild(fragFilasTema);
         det.appendChild(cuerpo);
         info.cuerpoEl = cuerpo;
       });
 
-      elListaTemas.appendChild(det);
+      fragTemas.appendChild(det);
       actualizarResumenGrupo(g.nombre);
     });
+    reemplazarHijos(elListaTemas, fragTemas);
     actualizarConteoSeleccion();
   }
+
+  // Delegacion de eventos: un solo listener 'change' para todos los checkboxes de tarjetas de la galeria
+  elListaTemas.addEventListener('change', (e) => {
+    const c = e.target;
+    if (!c || c.type !== 'checkbox' || c.dataset.idx === undefined) return;
+    const i = Number(c.dataset.idx);
+    fijarSeleccionado(i, c.checked);
+    const nombreGrupo = indiceAGrupoTema.get(i);
+    if (nombreGrupo !== undefined) actualizarResumenGrupo(nombreGrupo);
+    actualizarConteoSeleccion();
+  });
 
   document.getElementById('btn-comenzar').addEventListener('click', () => {
     const seleccion = indicesSeleccionados();
@@ -5936,9 +6061,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const gruposObservadorInfo = new Map();
   const indiceAGrupoObservador = new Map();
 
+  function textoMarcasTarjeta(t) {
+    return (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
+  }
+
+  // Los grupos y filas son constantes (tarjetas inmutables): solo cambian las marcas ★ 🚩 💡 🏷.
+  function refrescarMarcasObservador() {
+    elListaObservador.querySelectorAll('.fila-observador').forEach((fila) => {
+      const t = tarjetasCompletas[Number(fila.dataset.idx)];
+      const marcas = fila.querySelector('.tc-marcas');
+      if (t && marcas) marcas.textContent = textoMarcasTarjeta(t);
+    });
+  }
+
+  elListaObservador.addEventListener('click', (e) => {
+    const fila = e.target.closest('.fila-observador');
+    if (!fila || !elListaObservador.contains(fila)) return;
+    abrirTarjetaObservador(Number(fila.dataset.idx));
+  });
+
   function construirListaObservador() {
-    elListaObservador.innerHTML = '';
+    if (gruposObservadorInfo.size > 0 && elListaObservador.firstChild) {
+      refrescarMarcasObservador();   // ya construida: actualizacion quirurgica
+      return;
+    }
     gruposObservadorInfo.clear();
+    const frag = document.createDocumentFragment();
     agruparPorTema().forEach((g) => {
       const det = document.createElement('details');
       det.className = 'grupo-tema';
@@ -5966,6 +6114,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         const cuerpo = document.createElement('div');
         cuerpo.className = 'cuerpo-grupo';
         cuerpo.style.paddingLeft = '0';
+        const fragFilas = document.createDocumentFragment();
         g.indices.forEach((i) => {
           const t = tarjetasCompletas[i];
           const fila = document.createElement('button');
@@ -5975,17 +6124,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           fila.appendChild(crearTextosTarjeta(t));
           const marcas = document.createElement('span');
           marcas.className = 'tc-marcas';
-          marcas.textContent = (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
+          marcas.textContent = textoMarcasTarjeta(t);
           fila.appendChild(marcas);
-          fila.addEventListener('click', () => abrirTarjetaObservador(i));
-          cuerpo.appendChild(fila);
+          fragFilas.appendChild(fila);
         });
+        cuerpo.appendChild(fragFilas);
         det.appendChild(cuerpo);
         info.cuerpoEl = cuerpo;
       });
 
-      elListaObservador.appendChild(det);
+      frag.appendChild(det);
     });
+    reemplazarHijos(elListaObservador, frag);
   }
 
   function entrarObservador() {
@@ -6353,26 +6503,47 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return indice;
   }
 
+  // Tokens que contienen la palabra. Cache por palabra; al escribir letra a letra, la palabra nueva
+  // solo se busca entre los tokens de la anterior (si un token contiene "cla" tambien contiene "cl").
+  function idsPorPalabraEnIndice(indice, palabra) {
+    const cache = indice._cachePalabras || (indice._cachePalabras = new Map());
+    let entrada = cache.get(palabra);
+    if (entrada === undefined) {
+      let origen = indice;
+      for (let k = palabra.length - 1; k >= 1; k--) {
+        const previa = cache.get(palabra.slice(0, k));
+        if (previa !== undefined) { origen = previa.pares; break; }
+      }
+      const pares = [];
+      for (const par of origen) {
+        if (par[0].indexOf(palabra) !== -1) pares.push(par);
+      }
+      let ids = null;
+      if (pares.length > 0) {
+        ids = new Set();
+        pares.forEach((par) => par[1].forEach((id) => ids.add(id)));
+      }
+      if (cache.size > 80) cache.clear();
+      entrada = { pares: pares, ids: ids };
+      cache.set(palabra, entrada);
+    }
+    return entrada.ids;
+  }
+
   function candidatosPorIndice(indice, consultaNorm) {
     const palabras = consultaNorm.split(/\\s+/).filter(Boolean);
     if (palabras.length === 0) return null;
     let resultado = null;
     for (let i = 0; i < palabras.length; i++) {
       const palabra = palabras[i];
-      let idsPalabra = null;
-      for (const [token, ids] of indice) {
-        if (token.indexOf(palabra) !== -1) {
-          if (idsPalabra === null) idsPalabra = new Set();
-          ids.forEach((id) => idsPalabra.add(id));
-        }
-      }
+      const idsPalabra = idsPorPalabraEnIndice(indice, palabra);
       if (idsPalabra === null) continue;   // esta palabra no acota: se ignora, no se pierde nada
       resultado = (resultado === null) ? idsPalabra : new Set(Array.from(resultado).filter((id) => idsPalabra.has(id)));
     }
     return resultado;
   }
 
-  const indiceTarjetas = construirIndiceInvertido(
+  const _construirIndiceTarjetas = () => construirIndiceInvertido(
     tarjetasCompletas.map((_, i) => i),
     (i) => {
       const t = tarjetasCompletas[i];
@@ -6380,18 +6551,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   );
 
-  const indiceHuerfanas = construirIndiceInvertido(
+  const _construirIndiceHuerfanas = () => construirIndiceInvertido(
     rutasHuerfanas,
     (numeroRuta) => 'ruta ' + numeroRuta + ' ' + (textoHuerfanaPlano(numeroRuta) || '')
   );
 
-  const indiceImagenes = construirIndiceInvertido(
+  const _construirIndiceImagenes = () => construirIndiceInvertido(
     INDICE_IMAGENES.map((_, i) => i),
     (posImg) => {
       const e = INDICE_IMAGENES[posImg];
       return 'ruta ' + e.ruta + ' ' + (descripcionDeImagen(e.ruta, e.indice) || '');
     }
   );
+
+  // Los indices invertidos se construyen en la primera busqueda, no al cargar
+  var _indiceTarjetas = null;
+  var _indiceHuerfanas = null;
+  var _indiceImagenes = null;
+  function obtenerIndiceTarjetas() { return _indiceTarjetas || (_indiceTarjetas = _construirIndiceTarjetas()); }
+  function obtenerIndiceHuerfanas() { return _indiceHuerfanas || (_indiceHuerfanas = _construirIndiceHuerfanas()); }
+  function obtenerIndiceImagenes() { return _indiceImagenes || (_indiceImagenes = _construirIndiceImagenes()); }
 
   let revisarRutasEnMemoria = {};
   function esRevisarRuta(numeroRuta) { return !!revisarRutasEnMemoria[numeroRuta]; }
@@ -6417,7 +6596,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function construirListaHuerfanas() {
-    elListaHuerfanas.innerHTML = '';
+    const fragHuerfanas = document.createDocumentFragment();
     rutasHuerfanas.forEach((numeroRuta) => {
       const bloque = rutasDisp[numeroRuta];
 
@@ -6439,12 +6618,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       btnRevisar.className = 'boton-revisar-huerfana';
       btnRevisar.dataset.ruta = String(numeroRuta);
       actualizarBotonRevisarHuerfana(btnRevisar, numeroRuta);
-      btnRevisar.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleRevisarHuerfana(numeroRuta);
-        actualizarBotonRevisarHuerfana(btnRevisar, numeroRuta);
-      });
       fila.appendChild(btnRevisar);
       sum.appendChild(fila);
 
@@ -6456,6 +6629,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         (bloque.lineas || []).forEach((linea) => {
           if (esImagen(linea)) {
             const img = document.createElement('img');
+            img.decoding = 'async';
+            img.loading = 'lazy';
             img.className = 'ruta-img-thumb';
             img.src = linea.substring(4);  // quitar el prefijo 'IMG:'
             img.alt = 'Imagen de la ruta ' + numeroRuta;
@@ -6467,12 +6642,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         det.appendChild(contenido);
       });
 
-      elListaHuerfanas.appendChild(det);
+      fragHuerfanas.appendChild(det);
     });
+    reemplazarHijos(elListaHuerfanas, fragHuerfanas);
   }
   construirListaHuerfanas();  // una sola vez: no cambia durante la sesión
 
   elListaHuerfanas.addEventListener('click', (evento) => {
+    const btnRev = evento.target.closest('.boton-revisar-huerfana');
+    if (btnRev && elListaHuerfanas.contains(btnRev)) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      const numeroRuta = Number(btnRev.dataset.ruta);
+      toggleRevisarHuerfana(numeroRuta);
+      actualizarBotonRevisarHuerfana(btnRev, numeroRuta);
+      return;
+    }
     if (evento.target.classList.contains('ruta-img-thumb')) {
       abrirLightbox(evento.target.src);
     }
@@ -6517,12 +6702,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function actualizarGrosorBordeMapa() {
     if (!elMapaImg || !elMapaSvgOverlay) return;
-    const escala = elMapaImg.getBoundingClientRect().width / elMapaImg.offsetWidth || 1;
+    // la escala visible de la imagen es exactamente zoomMapa: no hace falta leer la geometria (evita layout forzado)
+    const escala = (typeof zoomMapa === 'number' && isFinite(zoomMapa) && zoomMapa > 0) ? zoomMapa : 1;
     elMapaSvgOverlay.style.setProperty('--mapa-stroke', (GROSOR_BORDE_PX / escala) + 'px');
+  }
+
+  // Agrupa en un solo frame las actualizaciones de arrastre (mousemove / touchmove pueden llegar varias veces por frame)
+  var _transformMapaPendiente = false;
+  function programarTransformMapa() {
+    if (_transformMapaPendiente) return;
+    _transformMapaPendiente = true;
+    requestAnimationFrame(() => {
+      _transformMapaPendiente = false;
+      aplicarTransformMapa();
+    });
   }
 
   function sincronizarGeometriaSvgMapa() {
     if (!elMapaImg || !elMapaSvgOverlay) return;
+    // 1) todas las lecturas juntas
     const cs = getComputedStyle(elMapaImg);
     const num = (v) => parseFloat(v) || 0;
 
@@ -6532,27 +6730,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const insR = num(cs.borderRightWidth) + num(cs.paddingRight);
     const insB = num(cs.borderBottomWidth) + num(cs.paddingBottom);
 
-    const w = elMapaImg.offsetWidth - insL - insR;
-    const h = elMapaImg.offsetHeight - insT - insB;
+    const offW = elMapaImg.offsetWidth;
+    const offH = elMapaImg.offsetHeight;
+    const offL = elMapaImg.offsetLeft;
+    const offT = elMapaImg.offsetTop;
+    const w = offW - insL - insR;
+    const h = offH - insT - insB;
     if (w <= 0 || h <= 0) return;
 
-    elMapaSvgOverlay.style.left = (elMapaImg.offsetLeft + insL) + 'px';
-    elMapaSvgOverlay.style.top = (elMapaImg.offsetTop + insT) + 'px';
+    // 2) luego todas las escrituras (sin lecturas intercaladas)
+    elMapaSvgOverlay.style.left = (offL + insL) + 'px';
+    elMapaSvgOverlay.style.top = (offT + insT) + 'px';
     elMapaSvgOverlay.style.width = w + 'px';
     elMapaSvgOverlay.style.height = h + 'px';
 
     // Mismo transform y mismo origen que la imagen (origen en px, relativo al overlay)
-    elMapaSvgOverlay.style.transformOrigin =
-      (elMapaImg.offsetWidth / 2 - insL) + 'px ' + (elMapaImg.offsetHeight / 2 - insT) + 'px';
+    elMapaSvgOverlay.style.transformOrigin = (offW / 2 - insL) + 'px ' + (offH / 2 - insT) + 'px';
     elMapaSvgOverlay.style.transform = elMapaImg.style.transform;
-    actualizarGrosorBordeMapa();
 
-    // Grosor constante en pantalla: compensar el zoom aplicado al <svg> exterior
+    // Grosor constante en pantalla: compensar el zoom aplicado al <svg> exterior (antes se llamaba dos veces)
     actualizarGrosorBordeMapa();
   }
 
+  var _resizeMapaPendiente = false;
   window.addEventListener('resize', () => {
-    if (elMapaImg && elMapaSvgOverlay) sincronizarGeometriaSvgMapa();
+    if (!elMapaImg || !elMapaSvgOverlay || _resizeMapaPendiente) return;
+    _resizeMapaPendiente = true;
+    requestAnimationFrame(() => {
+      _resizeMapaPendiente = false;
+      if (elMapaImg && elMapaSvgOverlay) sincronizarGeometriaSvgMapa();
+    });
   });
 
   function normalizarSubT(nombre) {
@@ -6716,11 +6923,43 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return mapa;
   }
 
+  function descriptorRectMapa(coords, strokeColor, pad) {
+    if (!coords) return null;
+    const p = pad || 0;
+    const rx = Math.max(0, coords.x - p);
+    const ry = Math.max(0, coords.y - p);
+    const rw = Math.min(100 - rx, coords.w + p * 2);
+    const rh = Math.min(100 - ry, coords.h + p * 2);
+    return {
+      x: rx.toFixed(2), y: ry.toFixed(2),
+      w: Math.max(0.5, rw).toFixed(2), h: Math.max(0.5, rh).toFixed(2),
+      stroke: strokeColor,
+      clave: strokeColor + '|' + rx.toFixed(2) + '|' + ry.toFixed(2) + '|' + Math.max(0.5, rw).toFixed(2) + '|' + Math.max(0.5, rh).toFixed(2),
+    };
+  }
+
+  function crearRectMapa(d) {
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('class', 'mapa-borde-resaltado');
+    rect.setAttribute('x', d.x);
+    rect.setAttribute('y', d.y);
+    rect.setAttribute('width', d.w);
+    rect.setAttribute('height', d.h);
+    rect.setAttribute('stroke', d.stroke);
+    rect.setAttribute('stroke-width', '1');
+    return rect;
+  }
+
   function renderBordesSvgMapa() {
     if (!elMapaSvgOverlay) return;
     const grupoBordes = elMapaSvgOverlay.querySelector('#mapa-svg-bordes');
     if (!grupoBordes) return;
-    grupoBordes.innerHTML = '';
+
+    const rects = [];
+    const agregar = (coords, stroke, pad) => {
+      const d = descriptorRectMapa(coords, stroke, pad);
+      if (d) rects.push(d);
+    };
 
     const rutasPorSubt = agruparDatosRutasMapaPorSubT();
     const subtsCompletos = new Set();
@@ -6730,7 +6969,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         const infoSubt = mapaSubtMetricaCache[nombreSubt];
         if (infoSubt && infoSubt.coords) {
           subtsCompletos.add(nombreSubt);
-          agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.normal.stroke, 0);
+          agregar(infoSubt.coords, COLORES_ESTADO_MAPA.normal.stroke, 0);
         }
       }
     });
@@ -6738,25 +6977,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     datosRutasMapa.forEach((item) => {
       if (!item.coords) return;
       if (seleccionMapa.rutas.has(item.idRuta) && !subtsCompletos.has(item.subT)) {
-        agregarRectanguloSvgMapa(grupoBordes, item.coords, COLORES_ESTADO_MAPA.normal.stroke, 0);
+        agregar(item.coords, COLORES_ESTADO_MAPA.normal.stroke, 0);
       }
       if (seleccionMapa.dificiles.has(item.idRuta) && item.esDificil) {
-        agregarRectanguloSvgMapa(grupoBordes, item.coords, COLORES_ESTADO_MAPA.dificil.stroke, 0.18);
+        agregar(item.coords, COLORES_ESTADO_MAPA.dificil.stroke, 0.18);
       }
     });
 
     Object.values(mapaSubtMetricaCache).forEach((infoSubt) => {
       if (!infoSubt.coords) return;
       if (seleccionMapa.sobreconfianza.has(infoSubt.nombre) && infoSubt.sobreconfianza) {
-        agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.sobreconfianza.stroke, 0.45);
+        agregar(infoSubt.coords, COLORES_ESTADO_MAPA.sobreconfianza.stroke, 0.45);
       }
       if (seleccionMapa.olvido.has(infoSubt.nombre) && infoSubt.olvido) {
-        agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.olvido.stroke, 0.65);
+        agregar(infoSubt.coords, COLORES_ESTADO_MAPA.olvido.stroke, 0.65);
       }
       if (seleccionMapa.urgentes.has(infoSubt.nombre) && infoSubt.urgente) {
-        agregarRectanguloSvgMapa(grupoBordes, infoSubt.coords, COLORES_ESTADO_MAPA.urgente.stroke, 0.85);
+        agregar(infoSubt.coords, COLORES_ESTADO_MAPA.urgente.stroke, 0.85);
       }
     });
+
+    // solo se crean/quitan los rectangulos que cambiaron
+    reconciliarHijos(grupoBordes, rects, (d) => d.clave, () => '', crearRectMapa);
   }
 
   function actualizarEstadoChecksSubtRutasMapa() {
@@ -6927,11 +7169,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     lazyMapaAcordeones.rutas = prepararDetallesLazy(detRutas, () => {
       const cont = document.getElementById('lista-mapa-rutas');
-      cont.innerHTML = '';
       if (datosRutasMapa.length === 0) {
-        cont.innerHTML = '<div class="lista-vacia">No hay rutas registradas.</div>';
+        mostrarMensajeVacio(cont, 'No hay rutas registradas.');
         return;
       }
+      const fragRutasMapa = document.createDocumentFragment();
       const rutasPorSubt = agruparDatosRutasMapaPorSubT();
       rutasPorSubt.forEach((listaRutas, nombreSubt) => {
         const detSubt = document.createElement('details');
@@ -6972,12 +7214,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           chk.type = 'checkbox';
           chk.dataset.idRuta = String(item.idRuta);
           chk.checked = seleccionMapa.rutas.has(item.idRuta);
-          chk.addEventListener('change', () => {
-            if (chk.checked) seleccionMapa.rutas.add(item.idRuta);
-            else seleccionMapa.rutas.delete(item.idRuta);
-            actualizarEstadoChecksSubtRutasMapa();
-            renderBordesSvgMapa();
-          });
           const nombre = document.createElement('span');
           nombre.className = 'mapa-item-nombre';
           nombre.textContent = 'Ruta ' + item.idRuta;
@@ -6988,32 +7224,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           cuerpo.appendChild(label);
         });
 
-        chkGrupo.addEventListener('change', () => {
-          listaRutas.forEach((item) => {
-            if (chkGrupo.checked) seleccionMapa.rutas.add(item.idRuta);
-            else seleccionMapa.rutas.delete(item.idRuta);
-          });
-          cuerpo.querySelectorAll('input[data-id-ruta]').forEach((c) => {
-            c.checked = chkGrupo.checked;
-          });
-          actualizarEstadoChecksSubtRutasMapa();
-          renderBordesSvgMapa();
-        });
-
         detSubt.appendChild(cuerpo);
-        cont.appendChild(detSubt);
+        fragRutasMapa.appendChild(detSubt);
       });
+      reemplazarHijos(cont, fragRutasMapa);
       actualizarEstadoChecksSubtRutasMapa();
     });
 
     lazyMapaAcordeones.dificiles = prepararDetallesLazy(detDificiles, () => {
       const cont = document.getElementById('lista-mapa-dificiles');
-      cont.innerHTML = '';
       const filtradas = datosRutasMapa.filter((r) => r.esDificil);
       if (filtradas.length === 0) {
-        cont.innerHTML = '<div class="lista-vacia">No hay rutas difíciles.</div>';
+        mostrarMensajeVacio(cont, 'No hay rutas difíciles.');
         return;
       }
+      const fragDificilesMapa = document.createDocumentFragment();
       filtradas.forEach((item) => {
         const label = document.createElement('label');
         label.className = 'mapa-item-check';
@@ -7021,11 +7246,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         chk.type = 'checkbox';
         chk.dataset.idRuta = String(item.idRuta);
         chk.checked = seleccionMapa.dificiles.has(item.idRuta);
-        chk.addEventListener('change', () => {
-          if (chk.checked) seleccionMapa.dificiles.add(item.idRuta);
-          else seleccionMapa.dificiles.delete(item.idRuta);
-          renderBordesSvgMapa();
-        });
         const nombre = document.createElement('span');
         nombre.className = 'mapa-item-nombre';
         nombre.textContent = 'Ruta ' + item.idRuta + (item.subT ? ' — ' + item.subT : '');
@@ -7033,20 +7253,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         label.appendChild(nombre);
         label.appendChild(crearIndicadoresColorMapa(['dificil']));
         label.appendChild(crearBotonUbicarMapa(item.coords, 'Ubicar Ruta ' + item.idRuta + ' en mapa'));
-        cont.appendChild(label);
+        fragDificilesMapa.appendChild(label);
       });
+      reemplazarHijos(cont, fragDificilesMapa);
     });
 
     const construirListaSubtMapa = (idContenedor, campoFiltro, setSeleccion, codColor) => {
       const cont = document.getElementById(idContenedor);
-      cont.innerHTML = '';
       const subts = Object.values(mapaSubtMetricaCache)
         .filter((s) => s[campoFiltro])
         .sort((a, b) => a.nombre.localeCompare(b.nombre));
       if (subts.length === 0) {
-        cont.innerHTML = '<div class="lista-vacia">Ningún subT en esta categoría.</div>';
+        mostrarMensajeVacio(cont, 'Ningún subT en esta categoría.');
         return;
       }
+      const fragSubtMapa = document.createDocumentFragment();
       subts.forEach((infoSubt) => {
         const label = document.createElement('label');
         label.className = 'mapa-item-check';
@@ -7054,11 +7275,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         chk.type = 'checkbox';
         chk.dataset.subt = infoSubt.nombre;
         chk.checked = setSeleccion.has(infoSubt.nombre);
-        chk.addEventListener('change', () => {
-          if (chk.checked) setSeleccion.add(infoSubt.nombre);
-          else setSeleccion.delete(infoSubt.nombre);
-          renderBordesSvgMapa();
-        });
         const nombre = document.createElement('span');
         nombre.className = 'mapa-item-nombre';
         nombre.textContent = infoSubt.nombre;
@@ -7066,9 +7282,54 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         label.appendChild(nombre);
         label.appendChild(crearIndicadoresColorMapa([codColor]));
         label.appendChild(crearBotonUbicarMapa(infoSubt.coords, 'Ubicar ' + infoSubt.nombre + ' en mapa'));
-        cont.appendChild(label);
+        fragSubtMapa.appendChild(label);
+      });
+      reemplazarHijos(cont, fragSubtMapa);
+    };
+
+    // Delegacion de eventos: un listener 'change' por lista del mapa en vez de uno por checkbox
+    const alCambiarCheckMapa = (idLista, fn) => {
+      document.getElementById(idLista).addEventListener('change', (e) => {
+        if (e.target && e.target.type === 'checkbox') fn(e.target);
       });
     };
+    alCambiarCheckMapa('lista-mapa-rutas', (chk) => {
+      if (chk.dataset.subtGrupo !== undefined) {
+        const listaRutas = agruparDatosRutasMapaPorSubT().get(chk.dataset.subtGrupo) || [];
+        listaRutas.forEach((item) => {
+          if (chk.checked) seleccionMapa.rutas.add(item.idRuta);
+          else seleccionMapa.rutas.delete(item.idRuta);
+        });
+        const detSubt = chk.closest('details');
+        if (detSubt) {
+          detSubt.querySelectorAll('input[data-id-ruta]').forEach((c) => { c.checked = chk.checked; });
+        }
+      } else if (chk.dataset.idRuta !== undefined) {
+        const id = Number(chk.dataset.idRuta);
+        if (chk.checked) seleccionMapa.rutas.add(id);
+        else seleccionMapa.rutas.delete(id);
+      } else {
+        return;
+      }
+      actualizarEstadoChecksSubtRutasMapa();
+      renderBordesSvgMapa();
+    });
+    alCambiarCheckMapa('lista-mapa-dificiles', (chk) => {
+      if (chk.dataset.idRuta === undefined) return;
+      const id = Number(chk.dataset.idRuta);
+      if (chk.checked) seleccionMapa.dificiles.add(id);
+      else seleccionMapa.dificiles.delete(id);
+      renderBordesSvgMapa();
+    });
+    [['lista-mapa-sobreconfianza', 'sobreconfianza'], ['lista-mapa-olvido', 'olvido'], ['lista-mapa-urgentes', 'urgentes']].forEach((par) => {
+      alCambiarCheckMapa(par[0], (chk) => {
+        if (chk.dataset.subt === undefined) return;
+        const setSel = seleccionMapa[par[1]];
+        if (chk.checked) setSel.add(chk.dataset.subt);
+        else setSel.delete(chk.dataset.subt);
+        renderBordesSvgMapa();
+      });
+    });
 
     lazyMapaAcordeones.sobreconfianza = prepararDetallesLazy(detSobreconfianza, () => {
       construirListaSubtMapa('lista-mapa-sobreconfianza', 'sobreconfianza', seleccionMapa.sobreconfianza, 'sobreconfianza');
@@ -7102,7 +7363,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const det = document.getElementById('det-mapa-' + clave);
       const listaEl = document.getElementById('lista-mapa-' + clave);
       if (det) det.open = false;
-      if (listaEl) listaEl.innerHTML = '';
+      if (listaEl) reemplazarHijos(listaEl, null);
       if (lazyMapaAcordeones[clave]) lazyMapaAcordeones[clave].invalidar();
     });
   }
@@ -7110,7 +7371,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function abrirMapa() {
     if (elBtnObservadorMapa.disabled) return;
     mostrarPantalla('mapa');
-    elMapaImagenWrap.innerHTML = '';
+    reemplazarHijos(elMapaImagenWrap, null);
 
     seleccionMapa.rutas.clear();
     seleccionMapa.dificiles.clear();
@@ -7125,7 +7386,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     img.id = 'mapa-img';
     img.className = 'mapa-img';
     img.alt = 'Imagen del mapa';
-    img.src = elBtnObservadorMapa.dataset.mapaSrc;
+    img.decoding = 'async';
+    img.src = obtenerMapaSrc();
     elMapaImagenWrap.appendChild(img);
     elMapaImg = img;
 
@@ -7163,8 +7425,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     a.remove();
   }
 
+  // La imagen del mapa vive en <script type="text/plain" id="mapa-imagen-datos"> (antes: atributo data- de un boton).
+  // Se decodifica una sola vez a un Blob URL, en vez de reanalizar un data: URI de varios MB en cada apertura.
+  var _mapaSrcCache = null;
+  function obtenerMapaSrc() {
+    if (_mapaSrcCache !== null) return _mapaSrcCache;
+    const nodo = document.getElementById('mapa-imagen-datos');
+    const uri = nodo ? nodo.textContent.trim() : '';
+    const coma = uri.indexOf(',');
+    if (coma === -1 || uri.length <= coma + 1) { _mapaSrcCache = ''; return _mapaSrcCache; }
+    let src = uri;   // respaldo: el propio data: URI
+    try {
+      const fin = uri.indexOf(';');
+      const tipo = uri.slice(5, fin > 5 ? fin : coma) || 'image/png';
+      const binario = atob(uri.slice(coma + 1));
+      const bytes = new Uint8Array(binario.length);
+      for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+      src = URL.createObjectURL(new Blob([bytes], { type: tipo }));
+    } catch (e) {
+      src = uri;
+    }
+    _mapaSrcCache = src;
+    return _mapaSrcCache;
+  }
+
   function descargarImagenMapa() {
-    const src = elBtnObservadorMapa.dataset.mapaSrc;
+    const src = obtenerMapaSrc();
     if (!src) return;
     const nombre = elBtnObservadorMapa.dataset.mapaNombre || 'mapa';
     const a = document.createElement('a');
@@ -7232,7 +7518,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!arrastreMapa.activo || !elMapaImg) return;
     panMapa.x = e.clientX - arrastreMapa.x;
     panMapa.y = e.clientY - arrastreMapa.y;
-    aplicarTransformMapa();
+    programarTransformMapa();
   });
   window.addEventListener('mouseup', () => {
     if (!arrastreMapa.activo) return;
@@ -7261,7 +7547,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       e.preventDefault();
       panMapa.x = e.touches[0].clientX - arrastreMapa.x;
       panMapa.y = e.touches[0].clientY - arrastreMapa.y;
-      aplicarTransformMapa();
+      programarTransformMapa();
     }
   }, { passive: false });
 
@@ -7287,22 +7573,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return lineas.filter((linea) => !esImagen(linea)).join(' ');
   }
 
-  function buscarHuerfanasGlobal(consultaNorm) {
+  var _normHuerfanas = null;
+  function buscarHuerfanasGlobal(consultaNorm, limite) {
     const resultados = [];
-    const candidatosH = candidatosPorIndice(indiceHuerfanas, consultaNorm);
+    const candidatosH = candidatosPorIndice(obtenerIndiceHuerfanas(), consultaNorm);
     const listaRutas = candidatosH ? rutasHuerfanas.filter((n) => candidatosH.has(n)) : rutasHuerfanas;
-    listaRutas.forEach((numeroRuta) => {
+    if (_normHuerfanas === null) _normHuerfanas = new Map();
+    for (let k = 0; k < listaRutas.length; k++) {
+      const numeroRuta = listaRutas[k];
       let texto = null;
-      if (normalizarPalabra('ruta ' + numeroRuta).indexOf(consultaNorm) !== -1) {
+      if (('ruta ' + numeroRuta).indexOf(consultaNorm) !== -1) {
         texto = 'Ruta ' + numeroRuta;
       } else {
-        const contenido = textoHuerfanaPlano(numeroRuta);
-        if (contenido && normalizarPalabra(contenido).indexOf(consultaNorm) !== -1) {
-          texto = contenido;
+        let c = _normHuerfanas.get(numeroRuta);
+        if (c === undefined) {
+          const contenido = textoHuerfanaPlano(numeroRuta);
+          c = { contenido: contenido, norm: contenido ? normalizarPalabra(contenido) : '' };
+          _normHuerfanas.set(numeroRuta, c);
         }
+        if (c.contenido && c.norm.indexOf(consultaNorm) !== -1) texto = c.contenido;
       }
-      if (texto !== null) resultados.push({ ruta: numeroRuta, texto: texto });
-    });
+      if (texto !== null) {
+        resultados.push({ ruta: numeroRuta, texto: texto });
+        if (limite && resultados.length >= limite) break;
+      }
+    }
     return resultados;
   }
 
@@ -7316,23 +7611,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function renderDropdownBuscadorHuerfanas(consulta) {
     const consultaNorm = normalizarPalabra((consulta || '').trim());
-    elDropdownBuscadorHuerfanas.innerHTML = '';
-    if (consultaNorm === '') { elDropdownBuscadorHuerfanas.classList.remove('abierto'); return; }
-    const resultados = buscarHuerfanasGlobal(consultaNorm).slice(0, 30);
-    if (resultados.length === 0) {
-      renderDropdownVacio(elDropdownBuscadorHuerfanas);
-    } else {
-      resultados.forEach((r) => {
-        elDropdownBuscadorHuerfanas.appendChild(
-          crearItemDropdownBuscador('Ruta ' + r.ruta + ':', r.texto, consultaNorm, () => {
-            cerrarDropdownBuscador(elDropdownBuscadorHuerfanas);
-            elInputBuscadorHuerfanas.value = '';
-            seleccionarResultadoHuerfana(r.ruta);
-          })
-        );
-      });
-    }
-    elDropdownBuscadorHuerfanas.classList.add('abierto');
+    if (consultaNorm === '') { vaciarDropdownBuscador(elDropdownBuscadorHuerfanas); return; }
+    renderResultadosDropdown(elDropdownBuscadorHuerfanas, consultaNorm, buscarHuerfanasGlobal, (r) =>
+      crearItemDropdownBuscador('Ruta ' + r.ruta + ':', r.texto, consultaNorm, () => {
+        cerrarDropdownBuscador(elDropdownBuscadorHuerfanas);
+        elInputBuscadorHuerfanas.value = '';
+        seleccionarResultadoHuerfana(r.ruta);
+      })
+    );
   }
 
   let contextoAudio = null;
@@ -8539,6 +8825,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         (bloque.lineas || []).forEach((linea) => {
           if (esImagen(linea)) {
             const img = document.createElement('img');
+            img.decoding = 'async';
+            img.loading = 'lazy';
             img.className = 'ruta-img-thumb';
             img.src = linea.substring(4);
             img.alt = 'Imagen de la ruta ' + idRuta;
@@ -9142,52 +9430,71 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       descripcion: 'Al fallar conserva tu racha y su multiplicador (la penitencia se cobra igual). No se gasta si tu racha es 0.' },
   ];
 
+  const _refsTienda = new Map();
   function renderTienda() {
     elSaldoTienda.textContent = 'Puntos disponibles: ' + gamificacion.puntosTotales;
-    elGridTienda.innerHTML = '';
-    ITEMS_TIENDA.forEach((item) => {
-      const cont = document.createElement('div');
-      cont.className = 'item-tienda';
+    if (_refsTienda.size === 0) {
+      // los 4 items son constantes: se construyen una sola vez
+      const frag = document.createDocumentFragment();
+      ITEMS_TIENDA.forEach((item) => {
+        const cont = document.createElement('div');
+        cont.className = 'item-tienda';
 
-      const icono = document.createElement('div');
-      icono.className = 'item-tienda-icono';
-      icono.textContent = item.icono;
-      cont.appendChild(icono);
+        const icono = document.createElement('div');
+        icono.className = 'item-tienda-icono';
+        icono.textContent = item.icono;
+        cont.appendChild(icono);
 
-      const nombre = document.createElement('div');
-      nombre.className = 'item-tienda-nombre';
-      nombre.textContent = item.nombre;
-      cont.appendChild(nombre);
+        const nombre = document.createElement('div');
+        nombre.className = 'item-tienda-nombre';
+        nombre.textContent = item.nombre;
+        cont.appendChild(nombre);
 
-      const precio = document.createElement('div');
-      precio.className = 'item-tienda-precio';
-      precio.textContent = item.precio + ' pts';
-      cont.appendChild(precio);
+        const precio = document.createElement('div');
+        precio.className = 'item-tienda-precio';
+        precio.textContent = item.precio + ' pts';
+        cont.appendChild(precio);
 
-      const desc = document.createElement('div');
-      desc.className = 'item-tienda-descripcion';
-      desc.textContent = item.descripcion;
-      cont.appendChild(desc);
+        const desc = document.createElement('div');
+        desc.className = 'item-tienda-descripcion';
+        desc.textContent = item.descripcion;
+        cont.appendChild(desc);
 
-      const cantidad = gamificacion.inventario[item.id] || 0;
-      if (cantidad > 0) {
         const inv = document.createElement('div');
         inv.className = 'item-tienda-inventario';
-        inv.textContent = 'Tenés: ' + cantidad;
         cont.appendChild(inv);
+
+        const boton = document.createElement('button');
+        boton.type = 'button';
+        boton.className = 'item-tienda-boton';
+        boton.dataset.item = item.id;
+        boton.textContent = 'Comprar';
+        cont.appendChild(boton);
+
+        _refsTienda.set(item.id, { inv: inv, boton: boton });
+        frag.appendChild(cont);
+      });
+      reemplazarHijos(elGridTienda, frag);
+    }
+    // actualizacion quirurgica: solo inventario y estado del boton
+    ITEMS_TIENDA.forEach((item) => {
+      const refs = _refsTienda.get(item.id);
+      const cantidad = gamificacion.inventario[item.id] || 0;
+      if (cantidad > 0) {
+        refs.inv.textContent = 'Tenés: ' + cantidad;
+        refs.inv.style.display = '';
+      } else {
+        refs.inv.textContent = '';
+        refs.inv.style.display = 'none';
       }
-
-      const boton = document.createElement('button');
-      boton.type = 'button';
-      boton.className = 'item-tienda-boton';
-      boton.textContent = 'Comprar';
-      boton.disabled = gamificacion.puntosTotales < item.precio;
-      boton.addEventListener('click', () => comprarItem(item.id));
-      cont.appendChild(boton);
-
-      elGridTienda.appendChild(cont);
+      refs.boton.disabled = gamificacion.puntosTotales < item.precio;
     });
   }
+  elGridTienda.addEventListener('click', (e) => {
+    const boton = e.target.closest('button[data-item]');
+    if (!boton || boton.disabled || !elGridTienda.contains(boton)) return;
+    comprarItem(boton.dataset.item);
+  });
 
   function comprarItem(idItem) {
     const item = ITEMS_TIENDA.find((i) => i.id === idItem);
@@ -9323,103 +9630,135 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderListasGuardadas();
   }
 
+  function firmaFilaLista(lista) {
+    const srs = obtenerSrsLista(lista);
+    return [
+      lista.nombre,
+      listaActivaNombre === lista.nombre ? 1 : 0,
+      srsClaseBoton(srs),
+      srs.graduated ? 1 : 0,
+      srs.activated ? 1 : 0,
+      srs.currentLevel,
+      (!srs.graduated && srs.activated) ? srsTextoProximoRepaso(srs) : '',
+      lista.creada,
+      lista.modificada,
+      lista.hashes.join(','),
+    ].join('|');
+  }
+
+  function construirFilaLista(lista) {
+    const srs = obtenerSrsLista(lista);
+    const fila = document.createElement('div');
+    fila.className = 'fila-lista-guardada';
+    fila.dataset.nombre = lista.nombre;
+
+    const cabecera = document.createElement('div');
+    cabecera.className = 'lista-fila-cabecera';
+
+    const btnSrs = document.createElement('button');
+    btnSrs.type = 'button';
+    btnSrs.dataset.accion = 'srs';
+    btnSrs.className = 'lista-srs-btn ' + srsClaseBoton(srs);
+    btnSrs.textContent = srs.graduated ? '🎓 Reiniciar SRS' : '🧠';
+    btnSrs.title = srs.graduated ? 'Reiniciar el progreso de Repaso Espaciado'
+      : (srs.activated ? 'Repaso Espaciado activo (tocar para desactivarlo)' : 'Activar Repaso Espaciado para esta lista');
+    cabecera.appendChild(btnSrs);
+
+    const btnNombre = document.createElement('button');
+    btnNombre.type = 'button';
+    btnNombre.dataset.accion = 'nombre';
+    btnNombre.className = 'lista-nombre-btn';
+    btnNombre.textContent = lista.nombre + (listaActivaNombre === lista.nombre ? ' (activa)' : '');
+    cabecera.appendChild(btnNombre);
+
+    if (srs.graduated) {
+      const estado = document.createElement('span');
+      estado.className = 'lista-srs-estado';
+      estado.textContent = '🎓 Experto';
+      cabecera.appendChild(estado);
+    } else if (srs.activated) {
+      const estado = document.createElement('span');
+      estado.className = 'lista-srs-estado';
+      estado.textContent = 'Nivel ' + srs.currentLevel + ' · Próximo: ' + srsTextoProximoRepaso(srs);
+      cabecera.appendChild(estado);
+    }
+
+    const btnOjo = document.createElement('button');
+    btnOjo.type = 'button';
+    btnOjo.dataset.accion = 'ojo';
+    btnOjo.className = 'lista-ojo-btn';
+    btnOjo.title = 'Ver tarjetas de esta lista';
+    btnOjo.textContent = '👁';
+    cabecera.appendChild(btnOjo);
+
+    fila.appendChild(cabecera);
+
+    const acciones = document.createElement('div');
+    acciones.className = 'lista-acciones';
+    const btnRenombrar = document.createElement('button');
+    btnRenombrar.type = 'button';
+    btnRenombrar.dataset.accion = 'renombrar';
+    btnRenombrar.textContent = '✏️ Renombrar';
+    const btnBorrar = document.createElement('button');
+    btnBorrar.type = 'button';
+    btnBorrar.dataset.accion = 'borrar';
+    btnBorrar.textContent = '🗑️ Borrar';
+    acciones.appendChild(btnRenombrar);
+    acciones.appendChild(btnBorrar);
+    fila.appendChild(acciones);
+
+    const detalle = document.createElement('div');
+    detalle.className = 'lista-detalle';
+    detalle.textContent = lista.hashes.length + ' tarjeta(s) · creada: ' + formatearFechaLista(lista.creada) +
+      ' · modificada: ' + formatearFechaLista(lista.modificada);
+    fila.appendChild(detalle);
+
+    if (listasVerTarjetasExpandido.has(lista.nombre)) {
+      fila.appendChild(construirVistaTarjetasLista(lista));
+    }
+    return fila;
+  }
+
+  // Delegacion de eventos: un solo listener para todas las filas de listas guardadas
+  elListaListasGuardadas.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-accion]');
+    if (!btn || !elListaListasGuardadas.contains(btn)) return;
+    const fila = btn.closest('.fila-lista-guardada');
+    if (!fila) return;
+    const nombre = fila.dataset.nombre;
+    const accion = btn.dataset.accion;
+    if (accion === 'srs') alternarSrsLista(nombre);
+    else if (accion === 'nombre') { seleccionarListaActiva(nombre); cerrarModalListas(); }
+    else if (accion === 'renombrar') renombrarLista(nombre);
+    else if (accion === 'borrar') borrarLista(nombre);
+    else if (accion === 'ojo') {
+      if (listasVerTarjetasExpandido.has(nombre)) {
+        listasVerTarjetasExpandido.delete(nombre);
+        const visor = fila.querySelector('.lista-ver-tarjetas');
+        if (visor) visor.remove();
+      } else {
+        const lista = listas.find((l) => l.nombre === nombre && (!l.espacio || l.espacio === ESPACIO_HASH));
+        if (!lista) return;
+        listasVerTarjetasExpandido.add(nombre);
+        fila.appendChild(construirVistaTarjetasLista(lista));
+      }
+    }
+  });
+
   function renderListasGuardadas() {
     limpiarListasContraTarjetasActuales();
-    elListaListasGuardadas.innerHTML = '';
     const listasPropias = listas.filter((l) => !l.espacio || l.espacio === ESPACIO_HASH);
     const listasDeOtros = listas.filter((l) => l.espacio && l.espacio !== ESPACIO_HASH);
     const ordenadas = listasPropias.slice().sort((a, b) => b.creada - a.creada);   // más reciente primero
 
     if (ordenadas.length === 0) {
+      limpiarReconciliado(elListaListasGuardadas);
       elListasVacio.style.display = 'block';
     } else {
       elListasVacio.style.display = 'none';
+      // solo se reconstruyen las filas cuya firma cambio
+      reconciliarHijos(elListaListasGuardadas, ordenadas, (l) => l.nombre, firmaFilaLista, construirFilaLista);
     }
-
-    ordenadas.forEach((lista) => {
-      const srs = obtenerSrsLista(lista);
-      const fila = document.createElement('div');
-      fila.className = 'fila-lista-guardada';
-
-      const cabecera = document.createElement('div');
-      cabecera.className = 'lista-fila-cabecera';
-
-      const btnSrs = document.createElement('button');
-      btnSrs.type = 'button';
-      btnSrs.className = 'lista-srs-btn ' + srsClaseBoton(srs);
-      btnSrs.textContent = srs.graduated ? '🎓 Reiniciar SRS' : '🧠';
-      btnSrs.title = srs.graduated ? 'Reiniciar el progreso de Repaso Espaciado'
-        : (srs.activated ? 'Repaso Espaciado activo (tocar para desactivarlo)' : 'Activar Repaso Espaciado para esta lista');
-      btnSrs.addEventListener('click', () => alternarSrsLista(lista.nombre));
-      cabecera.appendChild(btnSrs);
-
-      const btnNombre = document.createElement('button');
-      btnNombre.type = 'button';
-      btnNombre.className = 'lista-nombre-btn';
-      btnNombre.textContent = lista.nombre + (listaActivaNombre === lista.nombre ? ' (activa)' : '');
-      btnNombre.addEventListener('click', () => {
-        seleccionarListaActiva(lista.nombre);
-        cerrarModalListas();
-      });
-      cabecera.appendChild(btnNombre);
-
-      if (srs.graduated) {
-        const estado = document.createElement('span');
-        estado.className = 'lista-srs-estado';
-        estado.textContent = '🎓 Experto';
-        cabecera.appendChild(estado);
-      } else if (srs.activated) {
-        const estado = document.createElement('span');
-        estado.className = 'lista-srs-estado';
-        estado.textContent = 'Nivel ' + srs.currentLevel + ' · Próximo: ' + srsTextoProximoRepaso(srs);
-        cabecera.appendChild(estado);
-      }
-
-      const btnOjo = document.createElement('button');
-      btnOjo.type = 'button';
-      btnOjo.className = 'lista-ojo-btn';
-      btnOjo.title = 'Ver tarjetas de esta lista';
-      btnOjo.textContent = '👁';
-      btnOjo.addEventListener('click', () => {
-        if (listasVerTarjetasExpandido.has(lista.nombre)) {
-          listasVerTarjetasExpandido.delete(lista.nombre);
-          const visor = fila.querySelector('.lista-ver-tarjetas');
-          if (visor) visor.remove();
-        } else {
-          listasVerTarjetasExpandido.add(lista.nombre);
-          fila.appendChild(construirVistaTarjetasLista(lista));
-        }
-      });
-      cabecera.appendChild(btnOjo);
-
-      fila.appendChild(cabecera);
-
-      const acciones = document.createElement('div');
-      acciones.className = 'lista-acciones';
-      const btnRenombrar = document.createElement('button');
-      btnRenombrar.type = 'button';
-      btnRenombrar.textContent = '✏️ Renombrar';
-      btnRenombrar.addEventListener('click', () => renombrarLista(lista.nombre));
-      const btnBorrar = document.createElement('button');
-      btnBorrar.type = 'button';
-      btnBorrar.textContent = '🗑️ Borrar';
-      btnBorrar.addEventListener('click', () => borrarLista(lista.nombre));
-      acciones.appendChild(btnRenombrar);
-      acciones.appendChild(btnBorrar);
-      fila.appendChild(acciones);
-
-      const detalle = document.createElement('div');
-      detalle.className = 'lista-detalle';
-      detalle.textContent = lista.hashes.length + ' tarjeta(s) · creada: ' + formatearFechaLista(lista.creada) +
-        ' · modificada: ' + formatearFechaLista(lista.modificada);
-      fila.appendChild(detalle);
-
-      if (listasVerTarjetasExpandido.has(lista.nombre)) {
-        fila.appendChild(construirVistaTarjetasLista(lista));
-      }
-
-      elListaListasGuardadas.appendChild(fila);
-    });
 
     renderGruposOtrosEvaluadores(
       elDetListasOtras,
@@ -9964,6 +10303,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function renderAnalisisGuardadosLista() {
+    delete _firmasRender.analisisGuardados;
+    renderAnalisisGuardadosListaCompleta();
+  }
+
+  function renderAnalisisGuardadosListaCompleta() {
     const propios = analisisPropios().slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
     const elLista = document.getElementById('analisis-guardados-lista');
     elLista.innerHTML = '';
@@ -10706,6 +11050,11 @@ const ZONAS_SYNC_GIST = [
   }
 
   function renderHistorial() {
+    delete _firmasRender.historial;   // cualquier render directo invalida la cache de apertura
+    renderHistorialCompleto();
+  }
+
+  function renderHistorialCompleto() {
     const todas = gamificacion.historial;
     const historial = todas.filter(esSesionLocal);   // la lista principal es solo de ESTE evaluador
     elListaHistorial.innerHTML = '';
@@ -10780,8 +11129,11 @@ const ZONAS_SYNC_GIST = [
 
   function renderGruposOtrosEvaluadores(elDet, elSuma, elLista, items, fnEspacio, etiquetaUnidad, zonaVinculo, antesDeAbrir, prefijoSuma) {
     if (!elDet || !elSuma || !elLista) return;
-    elLista.innerHTML = '';
     if (!items || items.length === 0) {
+      if (elLista._firmaGrupos !== '') {
+        reemplazarHijos(elLista, null);
+        elLista._firmaGrupos = '';
+      }
       elDet.style.display = 'none';
       return;
     }
@@ -10798,6 +11150,25 @@ const ZONAS_SYNC_GIST = [
       .map(([esp, cantidad]) => ({ esp: esp, cantidad: cantidad }))
       .sort((a, b) => etiquetaEspacio(a.esp).localeCompare(etiquetaEspacio(b.esp)));
 
+    // el contexto se actualiza siempre; el listener delegado (unico) lee el contexto vigente
+    elLista._ctxVinculo = { antesDeAbrir: antesDeAbrir, zonaVinculo: zonaVinculo };
+    if (!elLista._listenerVinculo) {
+      elLista._listenerVinculo = true;
+      elLista.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-accion="vincular"]');
+        if (!btn || !elLista.contains(btn)) return;
+        const ctx = elLista._ctxVinculo;
+        if (!ctx) return;
+        if (ctx.antesDeAbrir) ctx.antesDeAbrir();
+        abrirModalVincular(ctx.zonaVinculo, btn.dataset.esp ? btn.dataset.esp : undefined);
+      });
+    }
+
+    const firma = etiquetaUnidad + '|' + grupos.map((g) => g.esp + ':' + g.cantidad + ':' + etiquetaEspacio(g.esp)).join('|');
+    if (elLista._firmaGrupos === firma && elLista.firstChild) return;   // mismo contenido: no reconstruir
+    elLista._firmaGrupos = firma;
+
+    const frag = document.createDocumentFragment();
     grupos.forEach((g) => {
       const fila = document.createElement('div');
       fila.className = 'grupo-historial-otro';
@@ -10815,16 +11186,15 @@ const ZONAS_SYNC_GIST = [
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'boton-mini';
+      btn.dataset.accion = 'vincular';
+      btn.dataset.esp = g.esp;
       btn.textContent = 'Vincular a este evaluador';
-      btn.addEventListener('click', () => {
-        if (antesDeAbrir) antesDeAbrir();
-        abrirModalVincular(zonaVinculo, g.esp ? g.esp : undefined);
-      });
 
       fila.appendChild(info);
       fila.appendChild(btn);
-      elLista.appendChild(fila);
+      frag.appendChild(fila);
     });
+    reemplazarHijos(elLista, frag);
   }
 
   function renderHistorialOtros(otras) {
@@ -11006,7 +11376,7 @@ const ZONAS_SYNC_GIST = [
   function abrirHistorial() {
     historialPaginaActual = 1;
     mostrarPantalla('historial');
-    renderHistorial();
+    renderSiCambioDatos('historial', Math.floor(Date.now() / 60000), renderHistorialCompleto);
     renderIndicadorStorage();
   }
 
@@ -11310,13 +11680,21 @@ const ZONAS_SYNC_GIST = [
     return Array.from(candidatos).filter((esp) => zonas.some((z) => contarMovimientosZona(z, esp) > 0));
   }
 
-  function refrescarDropdownTodo() {
-    elVincEspacios.innerHTML = '';
-    candidatosParaZonas(zonasSeleccionadasTodo()).forEach((esp) => {
+  function llenarDatalistVinculo(espacios) {
+    const firma = espacios.join('|');
+    if (elVincEspacios._firma === firma) return;
+    elVincEspacios._firma = firma;
+    const frag = document.createDocumentFragment();
+    espacios.forEach((esp) => {
       const op = document.createElement('option');
       op.value = esp;
-      elVincEspacios.appendChild(op);
+      frag.appendChild(op);
     });
+    reemplazarHijos(elVincEspacios, frag);
+  }
+
+  function refrescarDropdownTodo() {
+    llenarDatalistVinculo(Array.from(candidatosParaZonas(zonasSeleccionadasTodo())));
   }
 
   function resumenVinculoTodo(zonas, viejo) {
@@ -11408,29 +11786,40 @@ const ZONAS_SYNC_GIST = [
   function renderListaBorrarEvaluador() {
     const el = document.getElementById('lista-borrar-evaluador');
     const espacios = espaciosBorrables();
-    el.innerHTML = '';
+    const firma = espacios.join('|');
+    if (el._firma === firma && el.firstChild) return;   // misma lista de evaluadores: no reconstruir
+    el._firma = firma;
+    const frag = document.createDocumentFragment();
     if (espacios.length === 0) {
       const p = document.createElement('p');
       p.className = 'galeria-vacia';
       p.textContent = 'No hay otros evaluadores con sesiones guardadas.';
-      el.appendChild(p);
-      return;
+      frag.appendChild(p);
+    } else {
+      espacios.forEach((esp) => {
+        const fila = document.createElement('div');
+        fila.className = 'fila-borrar-evaluador';
+        const nombre = document.createElement('span');
+        nombre.className = 'nombre-evaluador-borrar';
+        nombre.textContent = esp;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'boton-mini boton-mini-peligro';
+        btn.dataset.esp = esp;
+        btn.textContent = 'Borrar';
+        fila.appendChild(nombre);
+        fila.appendChild(btn);
+        frag.appendChild(fila);
+      });
     }
-    espacios.forEach((esp) => {
-      const fila = document.createElement('div');
-      fila.className = 'fila-borrar-evaluador';
-      const nombre = document.createElement('span');
-      nombre.className = 'nombre-evaluador-borrar';
-      nombre.textContent = esp;
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'boton-mini boton-mini-peligro';
-      btn.textContent = 'Borrar';
-      btn.addEventListener('click', () => borrarEvaluadorCompleto(esp));
-      fila.appendChild(nombre);
-      fila.appendChild(btn);
-      el.appendChild(fila);
-    });
+    reemplazarHijos(el, frag);
+    if (!el._delegado) {
+      el._delegado = true;
+      el.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-esp]');
+        if (btn && el.contains(btn)) borrarEvaluadorCompleto(btn.dataset.esp);
+      });
+    }
   }
 
   document.getElementById('btn-borrar-evaluador').addEventListener('click', () => {
@@ -11574,16 +11963,13 @@ const ZONAS_SYNC_GIST = [
       if (zona === 'todo') {
         refrescarDropdownTodo();
       } else {
-        elVincEspacios.innerHTML = '';
         const vistos = new Set();
         gamificacion.historial.forEach((s) => {
           const esp = espacioDeSesion(s);
-          if (!esp || esp === ESPACIO_HASH || vistos.has(esp)) return;
+          if (!esp || esp === ESPACIO_HASH) return;
           vistos.add(esp);
-          const op = document.createElement('option');
-          op.value = esp;
-          elVincEspacios.appendChild(op);
         });
+        llenarDatalistVinculo(Array.from(vistos));
       }
     }
     elVincConfirmar.value = '';
@@ -11661,25 +12047,43 @@ const ZONAS_SYNC_GIST = [
     }).join(' ');
   }
 
-  function buscarTarjetasGlobal(consultaNorm) {
+  var _normTarjetas = null;
+  function normCamposTarjeta(i, t) {
+    if (_normTarjetas === null) _normTarjetas = new Map();
+    let c = _normTarjetas.get(i);
+    if (c === undefined) {
+      c = { p: normalizarPalabra(t.primero || ''), s: t.segundo ? normalizarPalabra(t.segundo) : '', rutasTxt: undefined, r: '' };
+      _normTarjetas.set(i, c);
+    }
+    return c;
+  }
+
+  // limite: corta al llegar a N resultados (el dropdown solo muestra 30; antes se recorria todo y se cortaba despues)
+  function buscarTarjetasGlobal(consultaNorm, limite) {
     const resultados = [];
-    const candidatos = candidatosPorIndice(indiceTarjetas, consultaNorm);
+    const candidatos = candidatosPorIndice(obtenerIndiceTarjetas(), consultaNorm);
     const indices = candidatos ? Array.from(candidatos).sort((a, b) => a - b) : tarjetasCompletas.map((_, i) => i);
-    indices.forEach((i) => {
+    for (let k = 0; k < indices.length; k++) {
+      const i = indices[k];
       const t = tarjetasCompletas[i];
+      const c = normCamposTarjeta(i, t);
       let campoTexto = null;
-      if (normalizarPalabra(t.primero || '').indexOf(consultaNorm) !== -1) {
+      if (c.p.indexOf(consultaNorm) !== -1) {
         campoTexto = t.primero;
-      } else if (t.segundo && normalizarPalabra(t.segundo).indexOf(consultaNorm) !== -1) {
+      } else if (t.segundo && c.s.indexOf(consultaNorm) !== -1) {
         campoTexto = t.segundo;
       } else {
-        const textoRutas = textoRutasDeTarjeta(t);
-        if (textoRutas && normalizarPalabra(textoRutas).indexOf(consultaNorm) !== -1) {
-          campoTexto = textoRutas;
+        if (c.rutasTxt === undefined) {
+          c.rutasTxt = textoRutasDeTarjeta(t);
+          c.r = c.rutasTxt ? normalizarPalabra(c.rutasTxt) : '';
         }
+        if (c.rutasTxt && c.r.indexOf(consultaNorm) !== -1) campoTexto = c.rutasTxt;
       }
-      if (campoTexto !== null) resultados.push({ idx: i, texto: campoTexto });
-    });
+      if (campoTexto !== null) {
+        resultados.push({ idx: i, texto: campoTexto });
+        if (limite && resultados.length >= limite) break;
+      }
+    }
     return resultados;
   }
 
@@ -11694,9 +12098,42 @@ const ZONAS_SYNC_GIST = [
       btn.appendChild(tag);
     }
     btn.appendChild(resaltarCoincidenciaBuscador(texto, consultaNorm));
-    btn.addEventListener('click', onClick);
+    btn._onClick = onClick;   // delegacion: un unico listener por dropdown (ver instalarDelegacionDropdown)
     return btn;
   }
+
+  function instalarDelegacionDropdown(elDropdown) {
+    elDropdown.addEventListener('click', (e) => {
+      const btn = e.target.closest('.item-dropdown-buscador');
+      if (btn && elDropdown.contains(btn) && typeof btn._onClick === 'function') btn._onClick(e);
+    });
+  }
+
+  // Cierra/vacia y olvida la ultima consulta
+  function vaciarDropdownBuscador(elDropdown) {
+    elDropdown._consultaRender = null;
+    reemplazarHijos(elDropdown, null);
+    elDropdown.classList.remove('abierto');
+  }
+
+  // Misma consulta y resultados ya pintados: solo se reabre. Si cambia: un fragmento y un unico reemplazo.
+  function renderResultadosDropdown(elDropdown, consultaNorm, buscarFn, crearItemFn) {
+    if (elDropdown._consultaRender === consultaNorm && elDropdown.firstChild) {
+      elDropdown.classList.add('abierto');
+      return;
+    }
+    elDropdown._consultaRender = consultaNorm;
+    const resultados = buscarFn(consultaNorm, 30);
+    const frag = document.createDocumentFragment();
+    if (resultados.length === 0) {
+      renderDropdownVacio(frag);
+    } else {
+      resultados.forEach((r) => frag.appendChild(crearItemFn(r)));
+    }
+    reemplazarHijos(elDropdown, frag);
+    elDropdown.classList.add('abierto');
+  }
+  [elDropdownBuscadorTemas, elDropdownBuscadorObservador, elDropdownBuscadorGaleria, elDropdownBuscadorHuerfanas].forEach(instalarDelegacionDropdown);
 
   function renderDropdownVacio(elDropdown) {
     const vacio = document.createElement('div');
@@ -11706,8 +12143,10 @@ const ZONAS_SYNC_GIST = [
   }
 
   function cerrarDropdownBuscador(elDropdown) {
+    // se llama en cada clic del documento (x4): no tocar el DOM si ya esta cerrado y vacio
+    if (!elDropdown.classList.contains('abierto') && !elDropdown.firstChild) return;
     elDropdown.classList.remove('abierto');
-    elDropdown.innerHTML = '';
+    reemplazarHijos(elDropdown, null);
   }
 
   function seleccionarResultadoBuscadorTemas(idx) {
@@ -11727,69 +12166,70 @@ const ZONAS_SYNC_GIST = [
 
   function renderDropdownBuscadorTemas(consulta) {
     const consultaNorm = normalizarPalabra((consulta || '').trim());
-    elDropdownBuscadorTemas.innerHTML = '';
-    if (consultaNorm === '') { elDropdownBuscadorTemas.classList.remove('abierto'); return; }
-    const resultados = buscarTarjetasGlobal(consultaNorm).slice(0, 30);
-    if (resultados.length === 0) {
-      renderDropdownVacio(elDropdownBuscadorTemas);
-    } else {
-      resultados.forEach((r) => {
-        const t = tarjetasCompletas[r.idx];
-        elDropdownBuscadorTemas.appendChild(
-          crearItemDropdownBuscador('[' + nombreTema(t) + ']', r.texto, consultaNorm,
-            () => seleccionarResultadoBuscadorTemas(r.idx))
-        );
-      });
-    }
-    elDropdownBuscadorTemas.classList.add('abierto');
+    if (consultaNorm === '') { vaciarDropdownBuscador(elDropdownBuscadorTemas); return; }
+    renderResultadosDropdown(elDropdownBuscadorTemas, consultaNorm, buscarTarjetasGlobal, (r) => {
+      const t = tarjetasCompletas[r.idx];
+      return crearItemDropdownBuscador('[' + nombreTema(t) + ']', r.texto, consultaNorm,
+        () => seleccionarResultadoBuscadorTemas(r.idx));
+    });
   }
 
   function renderDropdownBuscadorObservador(consulta) {
     const consultaNorm = normalizarPalabra((consulta || '').trim());
-    elDropdownBuscadorObservador.innerHTML = '';
-    if (consultaNorm === '') { elDropdownBuscadorObservador.classList.remove('abierto'); return; }
-    const resultados = buscarTarjetasGlobal(consultaNorm).slice(0, 30);
-    if (resultados.length === 0) {
-      renderDropdownVacio(elDropdownBuscadorObservador);
-    } else {
-      resultados.forEach((r) => {
-        const t = tarjetasCompletas[r.idx];
-        elDropdownBuscadorObservador.appendChild(
-          crearItemDropdownBuscador('[' + nombreTema(t) + ']', r.texto, consultaNorm, () => {
-            cerrarDropdownBuscador(elDropdownBuscadorObservador);
-            elInputBuscadorObservador.value = '';
-            abrirTarjetaObservador(r.idx);
-          })
-        );
+    if (consultaNorm === '') { vaciarDropdownBuscador(elDropdownBuscadorObservador); return; }
+    renderResultadosDropdown(elDropdownBuscadorObservador, consultaNorm, buscarTarjetasGlobal, (r) => {
+      const t = tarjetasCompletas[r.idx];
+      return crearItemDropdownBuscador('[' + nombreTema(t) + ']', r.texto, consultaNorm, () => {
+        cerrarDropdownBuscador(elDropdownBuscadorObservador);
+        elInputBuscadorObservador.value = '';
+        abrirTarjetaObservador(r.idx);
       });
-    }
-    elDropdownBuscadorObservador.classList.add('abierto');
+    });
   }
 
-  function buscarGaleriaGlobal(consultaNorm) {
+  var _rutasOrdenadasGaleria = null;
+  var _primeraPosImgPorRuta = null;
+  var _normDescImagenes = null;
+  function buscarGaleriaGlobal(consultaNorm, limite) {
     const resultados = [];
     const posicionesUsadas = new Set();
+    if (_rutasOrdenadasGaleria === null) {
+      _rutasOrdenadasGaleria = Object.keys(rutasDisp).map(Number).sort((a, b) => a - b);
+      _primeraPosImgPorRuta = new Map();
+      INDICE_IMAGENES.forEach((e, pos) => {
+        if (!_primeraPosImgPorRuta.has(e.ruta)) _primeraPosImgPorRuta.set(e.ruta, pos);
+      });
+      _normDescImagenes = new Map();
+    }
 
-    Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
-      if (normalizarPalabra('ruta ' + ruta).indexOf(consultaNorm) === -1) return;
-      const posImg = INDICE_IMAGENES.findIndex((e) => e.ruta === ruta);
-      if (posImg === -1 || posicionesUsadas.has(posImg)) return;
+    for (let k = 0; k < _rutasOrdenadasGaleria.length; k++) {
+      const ruta = _rutasOrdenadasGaleria[k];
+      if (('ruta ' + ruta).indexOf(consultaNorm) === -1) continue;
+      const posImg = _primeraPosImgPorRuta.has(ruta) ? _primeraPosImgPorRuta.get(ruta) : -1;
+      if (posImg === -1 || posicionesUsadas.has(posImg)) continue;
       resultados.push({ ruta: ruta, indice: 0, texto: 'Ruta ' + ruta, posImg: posImg });
       posicionesUsadas.add(posImg);
-    });
+      if (limite && resultados.length >= limite) return resultados;
+    }
 
-    const candidatosI = candidatosPorIndice(indiceImagenes, consultaNorm);
+    const candidatosI = candidatosPorIndice(obtenerIndiceImagenes(), consultaNorm);
     const posicionesACheck = candidatosI ? Array.from(candidatosI).sort((a, b) => a - b) : INDICE_IMAGENES.map((_, i) => i);
-    posicionesACheck.forEach((posImg) => {
-      if (posicionesUsadas.has(posImg)) return;
+    for (let k = 0; k < posicionesACheck.length; k++) {
+      const posImg = posicionesACheck[k];
+      if (posicionesUsadas.has(posImg)) continue;
       const entrada = INDICE_IMAGENES[posImg];
-      const desc = descripcionDeImagen(entrada.ruta, entrada.indice);
-      if (desc && normalizarPalabra(desc).indexOf(consultaNorm) !== -1) {
-        resultados.push({ ruta: entrada.ruta, indice: entrada.indice, texto: desc, posImg: posImg });
-        posicionesUsadas.add(posImg);
+      let c = _normDescImagenes.get(posImg);
+      if (c === undefined) {
+        const desc = descripcionDeImagen(entrada.ruta, entrada.indice);
+        c = { desc: desc, norm: desc ? normalizarPalabra(desc) : '' };
+        _normDescImagenes.set(posImg, c);
       }
-    });
-
+      if (c.desc && c.norm.indexOf(consultaNorm) !== -1) {
+        resultados.push({ ruta: entrada.ruta, indice: entrada.indice, texto: c.desc, posImg: posImg });
+        posicionesUsadas.add(posImg);
+        if (limite && resultados.length >= limite) break;
+      }
+    }
     return resultados;
   }
 
@@ -11802,27 +12242,18 @@ const ZONAS_SYNC_GIST = [
 
   function renderDropdownBuscadorGaleria(consulta) {
     const consultaNorm = normalizarPalabra((consulta || '').trim());
-    elDropdownBuscadorGaleria.innerHTML = '';
-    if (consultaNorm === '') { elDropdownBuscadorGaleria.classList.remove('abierto'); return; }
-    const resultados = buscarGaleriaGlobal(consultaNorm).slice(0, 30);
-    if (resultados.length === 0) {
-      renderDropdownVacio(elDropdownBuscadorGaleria);
-    } else {
-      resultados.forEach((r) => {
-        elDropdownBuscadorGaleria.appendChild(
-          crearItemDropdownBuscador(etiquetaResultadoGaleria(r), r.texto, consultaNorm, async () => {
-            if (!(await confirmarDescartarGaleria())) return;
-            cerrarDropdownBuscador(elDropdownBuscadorGaleria);
-            elInputBuscadorGaleria.value = '';
-            galeriaPos = r.posImg;
-            resetGaleriaNotaUI();
-            mostrarPantalla('galeria');
-            renderGaleria();
-          })
-        );
-      });
-    }
-    elDropdownBuscadorGaleria.classList.add('abierto');
+    if (consultaNorm === '') { vaciarDropdownBuscador(elDropdownBuscadorGaleria); return; }
+    renderResultadosDropdown(elDropdownBuscadorGaleria, consultaNorm, buscarGaleriaGlobal, (r) =>
+      crearItemDropdownBuscador(etiquetaResultadoGaleria(r), r.texto, consultaNorm, async () => {
+        if (!(await confirmarDescartarGaleria())) return;
+        cerrarDropdownBuscador(elDropdownBuscadorGaleria);
+        elInputBuscadorGaleria.value = '';
+        galeriaPos = r.posImg;
+        resetGaleriaNotaUI();
+        mostrarPantalla('galeria');
+        renderGaleria();
+      })
+    );
   }
 
   elInputBuscadorTemas.addEventListener('input', debounce(() => renderDropdownBuscadorTemas(elInputBuscadorTemas.value), 200));
@@ -12031,6 +12462,8 @@ const ZONAS_SYNC_GIST = [
     const src = srcDeImagen(entrada.ruta, entrada.indice);
     if (src) {
       const img = document.createElement('img');
+      img.decoding = 'async';
+      img.loading = 'lazy';
       img.src = src;
       img.alt = 'Miniatura';
       img.style.maxWidth = '90px';
@@ -12178,9 +12611,7 @@ const ZONAS_SYNC_GIST = [
   document.getElementById('btn-huerfanas-volver').addEventListener('click', () => volverDesdeHuerfanas());
 
   (function inicializarBotonMapa() {
-    const src = elBtnObservadorMapa.dataset.mapaSrc || '';
-    const payload = src.split(',')[1] || '';
-    if (!payload) {
+    if (elBtnObservadorMapa.dataset.mapaHay !== '1') {
       elBtnObservadorMapa.disabled = true;
       elBtnObservadorMapa.title = 'No se seleccionó imagen del mapa';
     }
@@ -12650,6 +13081,14 @@ const ZONAS_SYNC_GIST = [
     return div;
   }
 
+  function botonMiniAccion(texto, accion) {
+    const b = document.createElement('button');
+    b.className = 'boton-mini';
+    b.textContent = texto;
+    b.dataset.accion = accion;
+    return b;
+  }
+
   function botonMini(texto, onClick) {
     const b = document.createElement('button');
     b.className = 'boton-mini';
@@ -12891,12 +13330,37 @@ const ZONAS_SYNC_GIST = [
   });
 
   function renderSelectorCategoriaNota(contenedor, categoriaSeleccionada, onSeleccionar) {
-    contenedor.innerHTML = '';
-    CATEGORIAS_NOTA_EVAL.forEach((cat) => {
-      const chip = document.createElement('span');
-      chip.className = 'chip-razon chip-categoria-nota' + (categoriaSeleccionada === cat.codigo ? ' seleccionada' : '');
-      chip.textContent = cat.texto;
-      if (categoriaSeleccionada === cat.codigo) {
+    // estado vigente (el listener delegado siempre lee el ultimo)
+    contenedor._selCat = { sel: categoriaSeleccionada, cb: onSeleccionar };
+    const primero = contenedor._chipsCat && contenedor._chipsCat.size > 0 ? contenedor._chipsCat.values().next().value : null;
+    if (!primero || primero.parentNode !== contenedor) {
+      const frag = document.createDocumentFragment();
+      const mapa = new Map();
+      CATEGORIAS_NOTA_EVAL.forEach((cat) => {
+        const chip = document.createElement('span');
+        chip.className = 'chip-razon chip-categoria-nota';
+        chip.textContent = cat.texto;
+        chip._cat = cat;
+        mapa.set(cat, chip);
+        frag.appendChild(chip);
+      });
+      reemplazarHijos(contenedor, frag);
+      contenedor._chipsCat = mapa;
+      if (!contenedor._listenerCat) {
+        contenedor._listenerCat = true;
+        contenedor.addEventListener('click', (e) => {
+          const chip = e.target.closest('.chip-categoria-nota');
+          if (!chip || chip.parentNode !== contenedor || !chip._cat) return;
+          const est = contenedor._selCat;
+          if (est && est.cb) est.cb(est.sel === chip._cat.codigo ? null : chip._cat.codigo);
+        });
+      }
+    }
+    // actualizacion quirurgica: solo estilos de seleccion
+    contenedor._chipsCat.forEach((chip, cat) => {
+      const sel = categoriaSeleccionada === cat.codigo;
+      chip.className = 'chip-razon chip-categoria-nota' + (sel ? ' seleccionada' : '');
+      if (sel) {
         chip.style.backgroundColor = cat.color;
         chip.style.borderColor = cat.color;
         chip.style.color = '#fff';
@@ -12905,8 +13369,6 @@ const ZONAS_SYNC_GIST = [
         chip.style.borderColor = cat.color;
         chip.style.color = cat.color;
       }
-      chip.addEventListener('click', () => onSeleccionar(categoriaSeleccionada === cat.codigo ? null : cat.codigo));
-      contenedor.appendChild(chip);
     });
   }
 
@@ -13013,49 +13475,69 @@ const ZONAS_SYNC_GIST = [
     renderListaBraindumpEvaluador();
   }
 
+  function construirFilaBraindump(nota) {
+    const div = document.createElement('div');
+    div.className = 'panel-nota item-nota-evaluador';
+    div.style.display = 'block';
+    div.dataset.id = nota.id;
+
+    const cab = document.createElement('div');
+    cab.className = 'panel-nota-cabecera';
+    const fecha = document.createElement('div');
+    fecha.className = 'panel-nota-titulo';
+    fecha.textContent = formatearFechaLista(nota.modificada || nota.creada);
+    cab.appendChild(fecha);
+    div.appendChild(cab);
+
+    const texto = document.createElement('div');
+    const vacia = !nota.texto || nota.texto.trim() === '';
+    texto.className = 'panel-nota-texto' + (vacia ? ' vacio' : '');
+    texto.textContent = vacia ? '(vacío)' : nota.texto;
+    div.appendChild(texto);
+
+    const acc = document.createElement('div');
+    acc.className = 'panel-nota-acciones';
+    acc.appendChild(botonMiniAccion('✎ Editar', 'editar'));
+    acc.appendChild(botonMiniAccion('🗑 Borrar nota', 'borrar'));
+    div.appendChild(acc);
+    return div;
+  }
+
   function renderListaBraindumpEvaluador() {
     const lista = notasBraindumpPropias();
-    elListaBraindump.innerHTML = '';
     if (lista.length === 0) {
+      limpiarReconciliado(elListaBraindump);
       elBraindumpVacio.style.display = 'block';
       return;
     }
     elBraindumpVacio.style.display = 'none';
-    lista.forEach((nota) => {
-      const div = document.createElement('div');
-      div.className = 'panel-nota item-nota-evaluador';
-      div.style.display = 'block';
-
-      const cab = document.createElement('div');
-      cab.className = 'panel-nota-cabecera';
-      const fecha = document.createElement('div');
-      fecha.className = 'panel-nota-titulo';
-      fecha.textContent = formatearFechaLista(nota.modificada || nota.creada);
-      cab.appendChild(fecha);
-      div.appendChild(cab);
-
-      const texto = document.createElement('div');
-      const vacia = !nota.texto || nota.texto.trim() === '';
-      texto.className = 'panel-nota-texto' + (vacia ? ' vacio' : '');
-      texto.textContent = vacia ? '(vacío)' : nota.texto;
-      div.appendChild(texto);
-
-      const acc = document.createElement('div');
-      acc.className = 'panel-nota-acciones';
-      acc.appendChild(botonMini('✎ Editar', () => abrirHojaBraindump(nota.id)));
-      acc.appendChild(botonMini('🗑 Borrar nota', async () => {
-        if (!(await confirmarAccion('¿Borrar este braindump? No se puede deshacer.'))) return;
-        notasEvaluador = notasEvaluador.filter((n) => n.id !== nota.id);
-        siguienteRev();
-        guardarNotasEvaluador();
-        renderListaBraindumpEvaluador();
-        actualizarVisibilidadVaciarNotasEval();
-      }));
-      div.appendChild(acc);
-
-      elListaBraindump.appendChild(div);
-    });
+    reconciliarHijos(
+      elListaBraindump,
+      lista,
+      (n) => n.id,
+      (n) => [n.id, n.modificada || n.creada || 0, n.texto || ''].join('|'),
+      construirFilaBraindump
+    );
   }
+
+  // Delegacion de eventos: Editar / Borrar de todos los braindumps
+  elListaBraindump.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-accion]');
+    if (!btn) return;
+    const fila = btn.closest('.item-nota-evaluador');
+    if (!fila || !fila.dataset.id) return;
+    const id = fila.dataset.id;
+    if (btn.dataset.accion === 'editar') {
+      abrirHojaBraindump(id);
+    } else if (btn.dataset.accion === 'borrar') {
+      if (!(await confirmarAccion('¿Borrar este braindump? No se puede deshacer.'))) return;
+      notasEvaluador = notasEvaluador.filter((n) => n.id !== id);
+      siguienteRev();
+      guardarNotasEvaluador();
+      renderListaBraindumpEvaluador();
+      actualizarVisibilidadVaciarNotasEval();
+    }
+  });
 
   function renderBraindumpTab() {
     if (braindumpAbiertoEnHoja) {
@@ -13313,6 +13795,7 @@ const ZONAS_SYNC_GIST = [
     const div = document.createElement('div');
     div.className = 'panel-nota item-nota-evaluador';
     div.style.display = 'block';
+    div.dataset.id = nota.id;
 
     const cab = document.createElement('div');
     cab.className = 'panel-nota-cabecera';
@@ -13396,12 +13879,8 @@ const ZONAS_SYNC_GIST = [
 
       const acc = document.createElement('div');
       acc.className = 'panel-nota-acciones';
-      acc.appendChild(botonMini('✎ Editar', () => empezarEdicionNotaEvaluador(nota.id)));
-      acc.appendChild(botonMini('🗑 Borrar', async () => {
-        if (!(await confirmarAccion('¿Borrar esta nota del evaluador? No se puede deshacer.'))) return;
-        borrarNotaEvaluador(nota.id);
-        if (elModalRetencionRutas.classList.contains('abierto')) renderRetencionSesionLista();
-      }));
+      acc.appendChild(botonMiniAccion('✎ Editar', 'editar'));
+      acc.appendChild(botonMiniAccion('🗑 Borrar', 'borrar'));
       div.appendChild(acc);
     }
 
@@ -13417,30 +13896,34 @@ const ZONAS_SYNC_GIST = [
 
   function renderNotasEvaluadorPaginacion(totalPaginas) {
     const el = document.getElementById('notaseval-paginacion');
-    el.innerHTML = '';
     el.style.display = 'flex';
+    if (!el._refs) {
+      const btnAnterior = document.createElement('button');
+      btnAnterior.type = 'button';
+      btnAnterior.className = 'boton-mini';
+      btnAnterior.textContent = 'Anterior';
+      btnAnterior.addEventListener('click', () => { notasEvalPaginaActual--; renderListaNotasEvaluador(); });
 
-    const btnAnterior = document.createElement('button');
-    btnAnterior.type = 'button';
-    btnAnterior.className = 'boton-mini';
-    btnAnterior.textContent = 'Anterior';
-    btnAnterior.disabled = notasEvalPaginaActual <= 1;
-    btnAnterior.addEventListener('click', () => { notasEvalPaginaActual--; renderListaNotasEvaluador(); });
+      const texto = document.createElement('span');
+      texto.className = 'historial-paginacion-texto';
 
-    const texto = document.createElement('span');
-    texto.className = 'historial-paginacion-texto';
-    texto.textContent = 'Página ' + notasEvalPaginaActual + ' de ' + totalPaginas;
+      const btnSiguiente = document.createElement('button');
+      btnSiguiente.type = 'button';
+      btnSiguiente.className = 'boton-mini';
+      btnSiguiente.textContent = 'Siguiente';
+      btnSiguiente.addEventListener('click', () => { notasEvalPaginaActual++; renderListaNotasEvaluador(); });
 
-    const btnSiguiente = document.createElement('button');
-    btnSiguiente.type = 'button';
-    btnSiguiente.className = 'boton-mini';
-    btnSiguiente.textContent = 'Siguiente';
-    btnSiguiente.disabled = notasEvalPaginaActual >= totalPaginas;
-    btnSiguiente.addEventListener('click', () => { notasEvalPaginaActual++; renderListaNotasEvaluador(); });
-
-    el.appendChild(btnAnterior);
-    el.appendChild(texto);
-    el.appendChild(btnSiguiente);
+      const frag = document.createDocumentFragment();
+      frag.appendChild(btnAnterior);
+      frag.appendChild(texto);
+      frag.appendChild(btnSiguiente);
+      reemplazarHijos(el, frag);
+      el._refs = { btnAnterior: btnAnterior, texto: texto, btnSiguiente: btnSiguiente };
+    }
+    // actualizacion quirurgica de los 3 elementos
+    el._refs.btnAnterior.disabled = notasEvalPaginaActual <= 1;
+    el._refs.texto.textContent = 'Página ' + notasEvalPaginaActual + ' de ' + totalPaginas;
+    el._refs.btnSiguiente.disabled = notasEvalPaginaActual >= totalPaginas;
   }
 
   function renderNotasEvaluadorOtras() {
@@ -13457,6 +13940,7 @@ const ZONAS_SYNC_GIST = [
     );
   }
 
+  let _contadorEdicionNotas = 0;
   function renderListaNotasEvaluador() {
     const propias = notasEvaluadorNormalesPropias().slice().sort((a, b) => (b.modificada || b.creada || 0) - (a.modificada || a.creada || 0));
     const elLista = document.getElementById('lista-notas-evaluador');
@@ -13465,9 +13949,9 @@ const ZONAS_SYNC_GIST = [
     elLista.parentElement.insertBefore(elEditorWrap, elLista);
     elEditorWrap.style.display = 'none';
     document.getElementById('btn-dictado-notaseval-editor').style.display = 'none';
-    elLista.innerHTML = '';
 
     if (propias.length === 0) {
+      limpiarReconciliado(elLista);
       elVacio.style.display = 'block';
       document.getElementById('notaseval-paginacion').style.display = 'none';
     } else {
@@ -13476,15 +13960,38 @@ const ZONAS_SYNC_GIST = [
       if (notasEvalPaginaActual > totalPaginas) notasEvalPaginaActual = totalPaginas;
       if (notasEvalPaginaActual < 1) notasEvalPaginaActual = 1;
       const inicio = (notasEvalPaginaActual - 1) * NOTASEVAL_POR_PAGINA;
-      propias.slice(inicio, inicio + NOTASEVAL_POR_PAGINA).forEach((nota) => {
-        elLista.appendChild(filaNotaEvaluador(nota));
-      });
+      // la fila en edicion siempre se reconstruye (aloja el editor compartido); el resto se reutiliza si no cambio
+      reconciliarHijos(
+        elLista,
+        propias.slice(inicio, inicio + NOTASEVAL_POR_PAGINA),
+        (n) => n.id,
+        (n) => (notaEvalEditandoId === n.id
+          ? 'edicion-' + (++_contadorEdicionNotas)
+          : [n.id, n.modificada || n.creada || 0, n.texto || '', n.categoria || '', n.rev || 0].join('|')),
+        (n) => filaNotaEvaluador(n)
+      );
       renderNotasEvaluadorPaginacion(totalPaginas);
     }
 
     actualizarVisibilidadVaciarNotasEval();
     renderNotasEvaluadorOtras();
   }
+
+  // Delegacion de eventos: Editar / Borrar de todas las notas normales
+  document.getElementById('lista-notas-evaluador').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-accion]');
+    if (!btn) return;
+    const fila = btn.closest('.item-nota-evaluador');
+    if (!fila || !fila.dataset.id) return;
+    const id = fila.dataset.id;
+    if (btn.dataset.accion === 'editar') {
+      empezarEdicionNotaEvaluador(id);
+    } else if (btn.dataset.accion === 'borrar') {
+      if (!(await confirmarAccion('¿Borrar esta nota del evaluador? No se puede deshacer.'))) return;
+      borrarNotaEvaluador(id);
+      if (elModalRetencionRutas.classList.contains('abierto')) renderRetencionSesionLista();
+    }
+  });
 
   function nombrePantallaActivaActual() {
     if (elPantallaGaleria.style.display !== 'none') return 'galeria';
@@ -13706,15 +14213,20 @@ const ZONAS_SYNC_GIST = [
   function retencionPropias() { return retencionRutas.filter((r) => !r.espacio || r.espacio === ESPACIO_HASH); }
   function retencionDeOtros() { return retencionRutas.filter((r) => r.espacio && r.espacio !== ESPACIO_HASH); }
 
+  var _cacheRutasCitadas = null;
   function todasLasRutasCitadas() {
+    if (_cacheRutasCitadas) return _cacheRutasCitadas;
     const set = new Set();
     tarjetasCompletas.forEach((t) => {
       (t.rutas || []).forEach((id) => { if (rutasDisp.hasOwnProperty(id)) set.add(id); });
     });
-    return Array.from(set).sort((a, b) => Number(a) - Number(b));
+    _cacheRutasCitadas = Array.from(set).sort((a, b) => Number(a) - Number(b));
+    return _cacheRutasCitadas;
   }
 
+  var _cacheRutasPorSubtema = null;
   function agruparRutasPorSubtema() {
+    if (_cacheRutasPorSubtema) return _cacheRutasPorSubtema;
     const mapa = new Map();
     tarjetasCompletas.forEach((t) => {
       const nombre = nombreTema(t);
@@ -13729,15 +14241,19 @@ const ZONAS_SYNC_GIST = [
       rutas: Array.from(set).sort((a, b) => Number(a) - Number(b)),
     }));
     resultado.sort((a, b) => a.nombre.localeCompare(b.nombre));
-    return resultado;
+    _cacheRutasPorSubtema = resultado;
+    return _cacheRutasPorSubtema;
   }
 
+  var _cacheMapaRutaASubtema = null;
   function mapaRutaASubtema() {
+    if (_cacheMapaRutaASubtema) return _cacheMapaRutaASubtema;
     const mapa = {};
     agruparRutasPorSubtema().forEach((s) => {
       s.rutas.forEach((id) => { if (!(id in mapa)) mapa[id] = s.nombre; });
     });
-    return mapa;
+    _cacheMapaRutaASubtema = mapa;
+    return _cacheMapaRutaASubtema;
   }
 
   let retencionSubtemasActivos = {};
@@ -13773,7 +14289,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       };
       notasEvaluador.push(nota);
       guardarNotasEvaluador();
-      renderRetencionSesionLista();
+      refrescarFilaRetencionSesion(idRuta);
     }
 
     rutaDudaActivaId = idRuta;
@@ -13799,6 +14315,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
 
   function guardarModalNotaDudaRuta() {
     if (rutaDudaActivaId === null) return;
+    const idRutaGuardada = rutaDudaActivaId;
     if (typeof window.__detenerDictadoSiActivoEn === 'function') {
       window.__detenerDictadoSiActivoEn(elDudaRutaEditor);
     }
@@ -13810,7 +14327,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       guardarNotasEvaluador();
     }
     cerrarModalNotaDudaRuta();
-    renderRetencionSesionLista();
+    refrescarFilaRetencionSesion(idRutaGuardada);
   }
 
   document.getElementById('btn-duda-ruta-guardar').addEventListener('click', () => guardarModalNotaDudaRuta());
@@ -13828,10 +14345,32 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     }
   });
 
-  function filaRetencionSesion(id) {
+  function pintarFilaRetencionSesion(div, id) {
     const estado = retencionSesionToggles[id] || { retenida: false, dificil: false };
+    const r = div._refs;
+    r.btnRet.className = 'toggle-retencion' + (estado.retenida ? ' activa-retenida' : '');
+    r.btnRet.textContent = estado.retenida ? '✓ Retenida' : 'Retenida';
+    r.btnDif.className = 'toggle-retencion' + (estado.dificil ? ' activa-dificil' : '');
+    r.btnDif.textContent = estado.dificil ? '⚠ Difícil' : 'Difícil';
+    if (estado.dificil) {
+      if (!r.btnNota) {
+        r.btnNota = document.createElement('button');
+        r.btnNota.type = 'button';
+        r.btnNota.dataset.accion = 'nota';
+        r.btnNota.textContent = '💡 Nota';
+        r.toggles.appendChild(r.btnNota);
+      }
+      r.btnNota.className = 'toggle-retencion' + (buscarNotaDudaRuta(id) ? ' activa-nota' : '');
+    } else if (r.btnNota) {
+      r.toggles.removeChild(r.btnNota);
+      r.btnNota = null;
+    }
+  }
+
+  function filaRetencionSesion(id) {
     const div = document.createElement('div');
     div.className = 'fila-retencion-ruta';
+    div._rutaId = id;
 
     const num = document.createElement('span');
     num.className = 'retencion-ruta-numero';
@@ -13843,38 +14382,16 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
 
     const btnRet = document.createElement('button');
     btnRet.type = 'button';
-    btnRet.className = 'toggle-retencion' + (estado.retenida ? ' activa-retenida' : '');
-    btnRet.textContent = estado.retenida ? '✓ Retenida' : 'Retenida';
-    btnRet.addEventListener('click', () => {
-      const e = retencionSesionToggles[id] || (retencionSesionToggles[id] = { retenida: false, dificil: false });
-      e.retenida = !e.retenida;
-      renderRetencionSesionLista();
-    });
-
+    btnRet.dataset.accion = 'retenida';
     const btnDif = document.createElement('button');
     btnDif.type = 'button';
-    btnDif.className = 'toggle-retencion' + (estado.dificil ? ' activa-dificil' : '');
-    btnDif.textContent = estado.dificil ? '⚠ Difícil' : 'Difícil';
-    btnDif.addEventListener('click', () => {
-      const e = retencionSesionToggles[id] || (retencionSesionToggles[id] = { retenida: false, dificil: false });
-      e.dificil = !e.dificil;
-      renderRetencionSesionLista();
-    });
-
+    btnDif.dataset.accion = 'dificil';
     toggles.appendChild(btnRet);
     toggles.appendChild(btnDif);
-
-    if (estado.dificil) {
-      const tieneNota = !!buscarNotaDudaRuta(id);
-      const btnNota = document.createElement('button');
-      btnNota.type = 'button';
-      btnNota.className = 'toggle-retencion' + (tieneNota ? ' activa-nota' : '');
-      btnNota.textContent = '💡 Nota';
-      btnNota.addEventListener('click', () => abrirModalNotaDudaRuta(id));
-      toggles.appendChild(btnNota);
-    }
-
     div.appendChild(toggles);
+
+    div._refs = { toggles: toggles, btnRet: btnRet, btnDif: btnDif, btnNota: null };
+    pintarFilaRetencionSesion(div, id);
     return div;
   }
 
@@ -13886,7 +14403,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     chk.checked = retencionSubtemasActivos[nombre] !== false;
     chk.addEventListener('change', () => {
       retencionSubtemasActivos[nombre] = chk.checked;
-      renderRetencionSesionLista();
+      renderRetencionSesionLista({ soloLista: true });   // los chips no cambian: solo se filtra la lista
     });
     label.appendChild(chk);
     label.appendChild(document.createTextNode(nombre));
@@ -13896,30 +14413,60 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   function renderRetencionSubtemas(subtemas) {
     const el = document.getElementById('retencion-subt-lista');
     el.className = 'retencion-subt-lista';
-    el.innerHTML = '';
-    subtemas.forEach((s) => el.appendChild(filaRetencionSubtema(s.nombre)));
+    const frag = document.createDocumentFragment();
+    subtemas.forEach((s) => frag.appendChild(filaRetencionSubtema(s.nombre)));
+    reemplazarHijos(el, frag);
   }
 
-  function renderRetencionSesionLista() {
+  function renderRetencionSesionLista(opciones) {
+    const soloLista = !!(opciones && opciones.soloLista);
     const seccion = document.getElementById('retencion-sesion-seccion');
     const visible = pomodoroActivo && pomodoroRetencionPresionada;
     seccion.style.display = visible ? 'block' : 'none';
     if (!visible) return;
 
-    const subtemas = agruparRutasPorSubtema();
-    renderRetencionSubtemas(subtemas);
+    if (!soloLista) renderRetencionSubtemas(agruparRutasPorSubtema());
 
     const ids = rutasCitadasActivas();
     const el = document.getElementById('retencion-sesion-lista');
     const elVacio = document.getElementById('retencion-sesion-vacia');
-    el.innerHTML = '';
     if (ids.length === 0) {
+      limpiarReconciliado(el);
       elVacio.style.display = 'block';
       return;
     }
     elVacio.style.display = 'none';
-    ids.forEach((id) => el.appendChild(filaRetencionSesion(id)));
+    // se reutilizan las filas existentes; solo se crean/quitan las que entran o salen del filtro
+    reconciliarHijos(el, ids, (id) => id, () => '', (id) => filaRetencionSesion(id));
+    ids.forEach((id) => {
+      const fila = el._nodosPorClave.get(String(id));
+      if (fila) pintarFilaRetencionSesion(fila, id);
+    });
   }
+
+  // Actualiza solo la fila de una ruta (toggle Retenida/Difícil/Nota): O(1) en vez de O(rutas).
+  function refrescarFilaRetencionSesion(id) {
+    const el = document.getElementById('retencion-sesion-lista');
+    const fila = el._nodosPorClave ? el._nodosPorClave.get(String(id)) : null;
+    if (fila) pintarFilaRetencionSesion(fila, id);
+    else renderRetencionSesionLista({ soloLista: true });
+  }
+
+  // Delegacion de eventos: un solo listener para todas las filas
+  document.getElementById('retencion-sesion-lista').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-accion]');
+    if (!btn) return;
+    const fila = btn.closest('.fila-retencion-ruta');
+    if (!fila) return;
+    const id = fila._rutaId;
+    const accion = btn.dataset.accion;
+    if (accion === 'nota') { abrirModalNotaDudaRuta(id); return; }
+    const est = retencionSesionToggles[id] || (retencionSesionToggles[id] = { retenida: false, dificil: false });
+    if (accion === 'retenida') est.retenida = !est.retenida;
+    else if (accion === 'dificil') est.dificil = !est.dificil;
+    else return;
+    pintarFilaRetencionSesion(fila, id);
+  });
 
   const RETENCION_POR_PAGINA = 15;
   let retencionHistorialPaginaActual = 1;
@@ -14067,6 +14614,11 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   }
 
   function renderRetencionHistorial() {
+    delete _firmasRender.retencionHistorial;
+    renderRetencionHistorialCompleto();
+  }
+
+  function renderRetencionHistorialCompleto() {
     const propias = retencionPropias().slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     const elLista = document.getElementById('retencion-historial-lista');
     const elVacio = document.getElementById('retencion-historial-vacio');
@@ -14090,8 +14642,8 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   function abrirModalRetencionRutas() {
     renderRetencionSesionLista();
     retencionHistorialPaginaActual = 1;
-    renderRetencionHistorial();
-    construirListaSubTOlvido();
+    // renderRetencionHistorialCompleto ya construye la lista de subT a olvidar (antes se construia dos veces)
+    renderSiCambioDatos('retencionHistorial', Math.floor(Date.now() / 60000), renderRetencionHistorialCompleto);
     elModalRetencionRutas.classList.add('abierto');
   }
 
@@ -14471,6 +15023,21 @@ let estadisticasConstruidas = false;
     return elTooltipEstadisticas;
   }
 
+  // Reposicionamiento del tooltip una sola vez por frame (leer su rect en cada mousemove fuerza layout)
+  var _tipPosPendiente = null;
+  function posicionarTooltipEstadisticasRaf(clientX, clientY) {
+    const yaProgramado = _tipPosPendiente !== null;
+    _tipPosPendiente = { x: clientX, y: clientY };
+    if (yaProgramado) return;
+    requestAnimationFrame(() => {
+      const pos = _tipPosPendiente;
+      _tipPosPendiente = null;
+      if (pos && elTooltipEstadisticas && elTooltipEstadisticas.style.display !== 'none') {
+        posicionarTooltipEstadisticas(pos.x, pos.y);
+      }
+    });
+  }
+
   function posicionarTooltipEstadisticas(clientX, clientY) {
     const tip = asegurarTooltipEstadisticas();
     const margen = 12;
@@ -14573,7 +15140,7 @@ let estadisticasConstruidas = false;
     });
     rect.addEventListener('mousemove', (ev) => {
       if (ES_DISPOSITIVO_TACTIL || rectActivoStacked !== rect) return;
-      posicionarTooltipEstadisticas(ev.clientX, ev.clientY);
+      posicionarTooltipEstadisticasRaf(ev.clientX, ev.clientY);
     });
     rect.addEventListener('mouseleave', () => {
       if (ES_DISPOSITIVO_TACTIL) return;
@@ -14608,21 +15175,29 @@ let estadisticasConstruidas = false;
   }
 
 function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
-    const circulos = Array.from(svg.querySelectorAll('circle[data-bucket-etiqueta]'));
+    // la lista de circulos y su cx no cambian: se calculan una vez por svg
+    let circulos = svg._cacheCirculosCx;
+    if (!circulos) {
+      circulos = Array.from(svg.querySelectorAll('circle[data-bucket-etiqueta]')).map((c) => ({
+        el: c,
+        cx: parseFloat(c.getAttribute('cx') || '0'),
+      }));
+      if (circulos.length > 0) svg._cacheCirculosCx = circulos;
+    }
     if (circulos.length === 0) return null;
     const rect = svg.getBoundingClientRect();
     const vbWidth = (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width) ? svg.viewBox.baseVal.width : 600;
     const xSvg = rect.width > 0 ? ((clientX - rect.left) / rect.width) * vbWidth : 0;
     let mejor = circulos[0];
-    let mejorDist = Math.abs(parseFloat(mejor.getAttribute('cx') || '0') - xSvg);
+    let mejorDist = Math.abs(mejor.cx - xSvg);
     for (let i = 1; i < circulos.length; i++) {
-      const dist = Math.abs(parseFloat(circulos[i].getAttribute('cx') || '0') - xSvg);
+      const dist = Math.abs(circulos[i].cx - xSvg);
       if (dist < mejorDist) {
         mejorDist = dist;
         mejor = circulos[i];
       }
     }
-    return mejor;
+    return mejor.el;
   }
 
   function mostrarTooltipTextoSvg(evento, svg) {
@@ -14679,20 +15254,29 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         mostrarFn(ev, svg);
         return;
       }
-      if (svg.getAttribute('data-tipo-tooltip') === 'curva') {
-        const circ = obtenerCirculoMasCercanoEnSvg(svg, ev.clientX);
-        if (circ) {
-          const lineas = [
-            'Bucket: ' + (circ.getAttribute('data-bucket-etiqueta') || ''),
-            'SubT evaluados: ' + (circ.getAttribute('data-subt-evaluados') || '0'),
-            'Retenidas: ' + (circ.getAttribute('data-retenidas-pct') || '0') + '%',
-            'Olvidadas: ' + (circ.getAttribute('data-olvidadas-pct') || '0') + '%',
-          ];
-          const tip = asegurarTooltipEstadisticas();
-          tip.textContent = lineas.join('\\n');
+      // una sola actualizacion por frame (antes: querySelectorAll + 2 getBoundingClientRect por mousemove)
+      svg._movTooltip = { x: ev.clientX, y: ev.clientY };
+      if (svg._movTooltipProgramado) return;
+      svg._movTooltipProgramado = true;
+      requestAnimationFrame(() => {
+        svg._movTooltipProgramado = false;
+        const m = svg._movTooltip;
+        if (!m || rectActivoStacked !== svg) return;
+        if (svg.getAttribute('data-tipo-tooltip') === 'curva') {
+          const circ = obtenerCirculoMasCercanoEnSvg(svg, m.x);
+          if (circ) {
+            const lineas = [
+              'Bucket: ' + (circ.getAttribute('data-bucket-etiqueta') || ''),
+              'SubT evaluados: ' + (circ.getAttribute('data-subt-evaluados') || '0'),
+              'Retenidas: ' + (circ.getAttribute('data-retenidas-pct') || '0') + '%',
+              'Olvidadas: ' + (circ.getAttribute('data-olvidadas-pct') || '0') + '%',
+            ];
+            const tip = asegurarTooltipEstadisticas();
+            tip.textContent = lineas.join('\\n');
+          }
         }
-      }
-      posicionarTooltipEstadisticas(ev.clientX, ev.clientY);
+        posicionarTooltipEstadisticas(m.x, m.y);
+      });
     });
 
     svg.addEventListener('mouseleave', () => {
@@ -15954,7 +16538,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         construirCurvaOlvido();
         curvaOlvidoConstruido = true;
       }
-      renderAnalisisGuardadosLista();
+      renderSiCambioDatos('analisisGuardados', '', renderAnalisisGuardadosListaCompleta);
     } else if (tab === 'srs') {
       if (!srsConstruido) {
         construirPestanaSrs();
@@ -16544,6 +17128,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
           lineasCloze.forEach((lineaObj) => {
             if (lineaObj.tipo === 'imagen') {
               const img = document.createElement('img');
+              img.decoding = 'async';
+              img.loading = 'lazy';
               img.className = 'ruta-img-thumb';
               img.src = lineaObj.src;
               img.alt = 'Imagen de la ruta ' + id;
@@ -16622,6 +17208,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         (bloque.lineas || []).forEach((linea) => {
           if (esImagen(linea)) {
             const img = document.createElement('img');
+            img.decoding = 'async';
+            img.loading = 'lazy';
             img.className = 'ruta-img-thumb';
             img.src = linea.substring(4);
             img.alt = 'Imagen de la ruta ' + id;
@@ -17559,23 +18147,28 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function renderChipsRazones(actual) {
     const guardadas = razonesDeTarjeta(actual);
-    elChipsRazones.innerHTML = '';
     if (guardadas.length === 0) {
+      limpiarReconciliado(elChipsRazones);
       elChipsRazones.style.display = 'none';
       return;
     }
     elChipsRazones.style.display = 'flex';
-    guardadas.forEach((cod) => {
-      const def = MAPA_RAZONES.get(cod);
-      if (!def) return;
-      const chip = document.createElement('span');
-      chip.className = 'chip-razon';
-      chip.textContent = def.texto;
-      chip.style.backgroundColor = hexToRgba(def.color, 0.15);
-      chip.style.borderColor = def.color;
-      chip.style.color = def.color;
-      elChipsRazones.appendChild(chip);
-    });
+    reconciliarHijos(
+      elChipsRazones,
+      guardadas.filter((cod) => MAPA_RAZONES.has(cod)),
+      (cod) => cod,
+      (cod) => cod,
+      (cod) => {
+        const def = MAPA_RAZONES.get(cod);
+        const chip = document.createElement('span');
+        chip.className = 'chip-razon';
+        chip.textContent = def.texto;
+        chip.style.backgroundColor = hexToRgba(def.color, 0.15);
+        chip.style.borderColor = def.color;
+        chip.style.color = def.color;
+        return chip;
+      }
+    );
   }
 
   function renderRazones(actual) {
@@ -17591,25 +18184,38 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elPanelRazones.style.display = razonesAbierto ? 'block' : 'none';
     if (!razonesAbierto) return;
 
-    elListaCheckRazones.innerHTML = '';
-    RAZONES_DEF.forEach((r) => {
-      const label = document.createElement('label');
-      label.className = 'item-check-razon';
-      const chk = document.createElement('input');
-      chk.type = 'checkbox';
-      chk.checked = razonesPendientes.indexOf(r.codigo) !== -1;
-      chk.addEventListener('change', () => toggleRazonCheck(r.codigo));
-      const dot = document.createElement('span');
-      dot.className = 'dot-razon';
-      dot.style.background = r.color;
-      const txt = document.createElement('span');
-      txt.textContent = r.texto;
-      label.appendChild(chk);
-      label.appendChild(dot);
-      label.appendChild(txt);
-      elListaCheckRazones.appendChild(label);
+    if (!elListaCheckRazones._construida) {
+      // la lista de razones es constante: se construye una vez y luego solo se sincroniza el estado
+      const frag = document.createDocumentFragment();
+      RAZONES_DEF.forEach((r) => {
+        const label = document.createElement('label');
+        label.className = 'item-check-razon';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk._codigo = r.codigo;
+        const dot = document.createElement('span');
+        dot.className = 'dot-razon';
+        dot.style.background = r.color;
+        const txt = document.createElement('span');
+        txt.textContent = r.texto;
+        label.appendChild(chk);
+        label.appendChild(dot);
+        label.appendChild(txt);
+        frag.appendChild(label);
+      });
+      reemplazarHijos(elListaCheckRazones, frag);
+      elListaCheckRazones._construida = true;
+    }
+    elListaCheckRazones.querySelectorAll('input[type="checkbox"]').forEach((chk) => {
+      chk.checked = razonesPendientes.indexOf(chk._codigo) !== -1;
     });
   }
+
+  // Delegacion de eventos para el checklist de razones
+  elListaCheckRazones.addEventListener('change', (e) => {
+    const chk = e.target;
+    if (chk && chk._codigo !== undefined) toggleRazonCheck(chk._codigo);
+  });
 
   elBtnPista.addEventListener('click', () => {
     revelado[indiceActual] = true;
@@ -17853,12 +18459,12 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const datos = _resumenListaDatos.get(idContenedor) || { indices: [], mostrarRazones: true };
     const indices = datos.indices, mostrarRazones = datos.mostrarRazones;
     const el = document.getElementById(idContenedor);
-    el.innerHTML = '';
 
     if (indices.length === 0) {
-      el.innerHTML = '<div class="lista-vacia">No hay tarjetas en esta categoría</div>';
+      mostrarMensajeVacio(el, 'No hay tarjetas en esta categoría');
       return;
     }
+    const fragResumen = document.createDocumentFragment();
 
     const posTxt = new Map();
     tarjetasCompletas.forEach((t, i) => posTxt.set(t, i));
@@ -17882,10 +18488,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       sum.textContent = nombre + ' (' + lista.length + ')';
       det.appendChild(sum);
       prepararDetallesLazy(det, () => {
-        lista.forEach((i) => det.appendChild(crearItemResultado(i, false, mostrarRazones)));
+        const fragItems = document.createDocumentFragment();
+        lista.forEach((i) => fragItems.appendChild(crearItemResultado(i, false, mostrarRazones)));
+        det.appendChild(fragItems);
       });
-      el.appendChild(det);
+      fragResumen.appendChild(det);
     });
+    reemplazarHijos(el, fragResumen);
   }
 
   function llenarLista(idContenedor, indices, mostrarRazones) {
@@ -18441,7 +19050,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function abrirModalPomodoroIniciar() {
-    renderAvisoRepasoPomodoro();
+    renderSiCambioDatos('avisoPomodoro', Math.floor(Date.now() / 60000), renderAvisoRepasoPomodoro);
     elModalPomodoroIniciar.classList.add('abierto');
   }
   function cerrarModalPomodoroIniciar() {

@@ -1,0 +1,35 @@
+subT IDEA CENTRAL
+cual es el objetivo? + objetivo, estimar & 1
+cual es el modelo final? + regresion lineal, representar,transformadas & 2
+
+subT CONCEPTOS y PREGUNTAS
+que es log1p? + aprende, subestimar, convertir & 4, 5
+que es correcion de duan? + factor ajuste, mejora & 6
+que es multicolinealidad? + misma historia, inestables, separar, interpretacion & 10, 13
+que es VIF? + incertidumbre, señal, estabilidad & 14, 15
+que es one hot encoding? + transforma, separados, pocas, interpreta & 18, 19
+que es target encoding? + resume, relacionada,representacion, util & 21
+que es data leakage? + fuga, pista, artificial & 23, 24
+que es splines? + efecto, obligar, sola & 28
+en que ayuda PCA? + transforma, nuevas, concentran, casualidad & 30, 31
+que es un estudio de ablacion? + variantes, manteniendo, mejora & 32, 33
+que es jarque bera? + normal, asimetria, colas & 35
+que es durbin watson? + error, tiende, autocorrelacion & 38
+que es curva de aprendizaje? + cambia, entrenamiento, estabilidad, comportara & 41
+que es curva de aprendizaje fuera de tiempo? + entreno, prediciones, temporal, posteriores & 44
+que es K FOLD? + particiones, anteriores, posteriores & 46
+que es KRUSTAL WALLIS? + diferencia, grupos, normal & 48
+que es V de CRAMER? + intensidad, categoricas, redundancias & 49, 50
+que es OLS? + minimizar, penalizan, influencia, equilibrio & 51, 52, 53
+que es CETERIS PARIBUS? + constantes, prediccion, transformada & 54
+
+subT GRAFICOS EDA
+analisis categorico + compara distribuciones, reconocer & 58, 59
+relaciones bivariadas clave + evidencia, abanico & 61
+
+subT GRAFICOS DIAGNOSTICO
+histograma residuos + centrado, 0 & 66
+qq plot + residuos, normal & 68
+scale location + cambio, errores, predicciones & 71
+residuos vs ajustados + busca, centrada & 74, 75
+real vs predicho + constrasta, observado, cercanas & 77, 78

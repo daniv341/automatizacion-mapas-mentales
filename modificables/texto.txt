@@ -1,273 +1,655 @@
-temaP SCOR
+temaP 1er parcial AD
 
 temaS
 
-^subT DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR
-deF Supply Chain Operations Reference (SCOR®)
-deF es una creación del 
-deF Supply Chain Council (SCC)
+^subT IDEA CENTRAL
+~imP el objetivo
+imP fue estimar alquiler mensual 1
+imP departamento en rublos a
+*imP partir información
+
++imP como superficie,
+
++imP distrito,
+
++imP ubicación,
+
++imP antigüedad,
+
++imP tipo edificio,
+
++imP estado renovación y
+
++imP fecha del anuncio
+
+~deF el modelo final
+deF es una regresión lineal,
+deF pero antes se transformaron algunas
+deF variables
+deF para que pudiera
+deF representar relaciones más realistas
+
+~comP Por eso,
+comP 'lineal' describe
+comP cómo modelo
+comP combina variables transformadas;
+comP no significa
+comP que precio tenga
+comP que cambiar en línea recta
+comP con cada variable original
+
+^subT CONCEPTOS y PREGUNTAS
+~`imP LOG1P
+deF el modelo aprende en escala logarítmica,
+deF pero propietario
+deF necesita una estimación en rublos
+
+-comP Al volver una escala logarítmica
+comP a moneda original,
+comP simplemente deshacer transformación
+comP puede subestimar alquiler promedio,
+comP porque convertir de vuelta
+comP no compensa automáticamente
+comP variabilidad errores
+
+~`imP CORRECCION de DUAN
+deF calcula 1 factor ajuste a
+deF partir residuos del entrenamiento
+
+-cuR En informe,
+cuR factor Duan
+cuR es aproximadamente 1,003500
+
+-comP Es una corrección pequeña,
+comP cual tiene sentido
+comP porque factor
+comP está muy cerca uno
+
+-comP Por tanto,
+comP corrección mejora ligeramente resultado,
+comP pero no
+comP produce 1 cambio enorme
+
+~`imP MULTICOLINEALIDAD
+deF la multicolinealidad aparece
+deF cuando varias variables
+deF cuentan casi misma historia
+
+-ejeM Por ejemplo,
+ejeM distancia al centro y
+ejeM distancia al metro
+*ejeM pueden estar relacionadas;
+
++ejeM también superficie y
+
++ejeM cantidad habitaciones
+
+-comP Eso puede volver inestables coeficientes:
+comP al modelo le cuesta
+comP separar qué parte del efecto
+comP corresponde a cada variable
+
+-cuR No significa necesariamente
+cuR que predicción vaya a
+cuR ser mala,
+cuR pero
+cuR sí complica interpretación y
+cuR puede volver frágiles coeficientes
+
+~`imP VIF
+deF mide cuánto se infla incertidumbre 1
+deF predictor
+deF por su relación con otros
+
+-imP NUMERO DE CONDICION
+deF es una señal global estabilidad
+deF numérica del conjunto variables
+
+-caR Ningún VIF final
+caR llega a 10;
+caR 53 57 predictores
+caR tienen VIF menor
+caR que 5 y cuatro quedan
+caR en franja moderada
+
+-caR el máximo
+caR es 8,01,
+caR así
+caR que sería incorrecto decir
+caR que toda colinealidad desapareció
+
+~`imP ONEHOT ENCODING
+deF transforma una variable categórica en
+deF indicadores separados,
+deF normalmente
+deF con valores
+deF que identifican
+*deF si 1 anuncio
+
++@deF pertenece o
+
++@deF no 
+
+$a una categoría
+
+-cuR Es útil
+cuR para variables
+cuR con pocas categorías y
+*cuR sin orden numérico natural,
+
++cuR como tipo edificio o
 
-~cuR Modelo SCOR
-cuR recoge 
-cuR visión consensuada del Consejo
-cuR sobre gestión 
-cuR cadena suministro
++cuR estado renovación
 
-~imP el modelo SCOR proporciona 
-imP 1 marco único
-*imP que vincula 
+-comP Así,
+comP modelo no interpreta
+comP por error
+comP que una categoría
+comP vale 'más'
+comP que otra solo
+comP porque tenga 1 número asignado
 
-+@imP procesos empresariales,
+~`imP TARGET ENCODING
+deF resume una categoría
+deF mediante una estadística relacionada
+deF con alquiler objetivo
 
-+@imP métricas,
+-comP En vez crear una columna
+comP por cada distrito,
+comP genera una representación numérica del
+comP efecto asociado a ese distrito
 
-+@imP mejores prácticas y
+-cuR Es útil
+cuR cuando hay muchas categorías
 
-+@imP características tecnológicas 
+~`imP DATA LEAKAGE
+deF o fuga información,
+deF ocurre
+deF cuando modelo
+deF recibe durante entrenamiento una pista
+deF que no tendría disponible forma
+deF legítima al predecir 1 caso
+deF nuevo
 
-$*imP en una estructura unificada
+-comP Entonces parece muy preciso,
+comP pero esa precisión
+comP es artificial
 
-+imP para facilitar comunicación
-imP entre socios cadena suministro y
+-comP la elección
+comP depende principalmente cuántas categorías
+comP existen,
+comP cuántos casos
+comP hay en cada una y
+comP cuánto se
+comP necesita interpretar cada efecto
 
-+imP mejorar eficacia 
-imP gestión cadena suministro y
+-ejeM Con pocas categorías
+ejeM por ejemplo,
+ejeM seis tipos edificio o
+*ejeM cuatro estados renovación One Hot
+
++ejeM resulta simple y
 
-+imP actividades relacionadas
-imP con su mejora
++ejeM transparente
+
+-ejeM Con 129 distritos,
+ejeM crear una columna
+*ejeM por categoría
+
++@ejeM puede volver representación demasiado dispersa y
+
++@ejeM hacer que distritos raros se estimen
+
+$ejeM con pocos datos;
+ejeM Target Encoding
+ejeM resume esa señal en menos columnas,
+ejeM aunque exige controles estrictos contra fuga
+
+~`imP SPLINES
+deF permiten
+deF que efecto una variable cambie forma
+deF gradual
+deF según tramo su rango,
+deF en vez obligar al modelo
+deF a usar una sola pendiente
+deF para todos casos
+
+-cuR Son útiles
+cuR cuando 1 metro cuadrado adicional
+*cuR no tiene mismo efecto en
+
++@cuR departamentos pequeños y
+
++@cuR grandes,
+
+$cuR o
+*cuR cuando alejarse del centro
+
++@cuR encarece o
+
++@cuR abarata
+
+$cuR alquiler forma distinta
+cuR según distancia
+
+-imP PCA transforma varias columnas correlacionadas
+*imP en nuevas combinaciones
+
++@imP que concentran información esas columnas y
+
++@imP quedan menos correlacionadas
+
+$imP entre sí
+
+-cuR No es una técnica
+cuR que 'descubra causalidad',
+cuR ni hace que modelo
+cuR sea automáticamente mejor
+
+~`imP ESTUDIO ABLACION
+*deF consiste en armar variantes 1 modelo y
+
++@deF agregar o
+
++@deF quitar
+
+$deF 1 bloque características cada vez,
+deF manteniendo comparable evaluación
+
+-preG la pregunta es:
+preG '¿Qué mejora realmente
+preG cuando incorporo esta pieza?'.
+preG Si error baja forma
+preG consistente en datos no usados
+preG para ajustar esa variante,
+preG hay evidencia
+preG que bloque
+preG aporta valor predictivo
+
+-comP Si error no baja o
+comP empeora,
+comP complejidad adicional quizá no se
+comP justifique
+
+~`imP JARQUE BERA
+deF es una prueba formal
+deF que analiza
+deF si distribución residuos se parece
+deF a una normal,
+deF prestando atención a su asimetría y
+*deF a qué tan
++@deF pesadas o
+
++@deF ligeras
+
+$deF son sus colas
+
+-deF la hipótesis nula es
+deF que residuos
+deF siguen una distribución normal
+
+-comP Si valor p
+comP es menor
+comP que umbral elegido en informe,
+comP 0,05 se rechaza esa hipótesis;
+comP si es mayor,
+comP no hay evidencia suficiente
+comP para rechazarla
+
+~`imP DURBIN WATSON
+deF ayuda a detectar
+deF autocorrelación primer orden:
+deF si 1 error
+deF tiende a parecerse al error
+deF inmediatamente anterior en una secuencia
+deF ordenada
+
+-comP En 1 análisis temporal importa
+comP porque errores meses cercanos podrían
+comP compartir una tendencia no capturada
+
+-comP Un valor alrededor 2 suele
+comP indicar poca evidencia autocorrelación primer orden;
+comP por debajo 2
+comP puede sugerir autocorrelación positiva,
+*comP aunque interpretación completa
+
++comP depende del contexto y
+
++comP supuestos prueba
+
+~`imP CURVA APRENDIZAJE
+deF muestra cómo cambia error
+deF cuando modelo
+deF recibe más filas entrenamiento
+
+-comP En versión K Fold mezclada,
+comP datos se reparten en pliegues
+comP sin respetar estrictamente orden cronológico
+
+-cuR Sirve para observar estabilidad
+cuR dentro de una muestra tratada
+cuR como si sus registros fueran intercambiables,
+cuR pero es menos adecuada
+cuR para demostrar
+cuR cómo se comportará modelo
+cuR con meses futuros
+cuR cuando existe una tendencia del
+cuR mercado
+
+~`imP CURVA APRENDIZAJE FUERA DE TIEMPO
+deF responde una pregunta más cercana
+deF al uso real:
+deF si entreno
+deF con cada vez más datos históricos,
+deF ¿mejoran predicciones
+*deF sobre períodos posteriores
+
++deF que modelo no vio? entrenamiento
+deF mantiene orden temporal y
+
++deF valid/test pertenecen a períodos posteriores
+
+-comP Así se
+comP mide desempeño
+comP ante 1 mercado
+comP que evoluciona,
+comP en lugar
+comP asumir
+comP que anuncios antiguos y
+comP futuros son intercambiables
+
+~`imP K FOLD
+deF mezcla datos
+deF para evaluar modelo en distintas particiones,
+deF mientras que partición temporal respeta orden cronológico:
+deF se entrena
+deF con períodos anteriores y
+deF se evalúa
+deF con períodos posteriores
 
-^subT ALCANCE Y PROCESOS SCOR
-imP el modelo SCOR 
-imP describe 
-imP actividades empresariales
-imP asociadas a todas fases 
-imP del proceso 
-imP satisfacer demanda 1 cliente
+-comP Esto permite
+comP comprobar
+comP si modelo
+comP puede predecir alquileres futuros sin
+comP aprovechar información del futuro
 
-~deF el modelo en sí 
-deF se organiza en torno
-deF a cinco procesos 
-deF gestión principales
+~`imP KRUSTAL WALLIS
+deF permite evaluar
+deF si alquileres presentan diferencias
+deF entre grupos,
+deF como distintos barrios,
+deF sin exigir
+deF que datos sigan una distribución
+deF normal
 
-~deF Mediante estos componentes básicos procesos,
-deF modelo SCOR
-deF puede utilizarse
-deF para describir 
-deF cadenas suministro 
-deF tanto muy sencillas
-deF como muy complejas
+~`imP V CRAMER
+*deF mide intensidad asociación
 
-~imP el modelo está 
-imP diseñado y
-imP se mantiene
-imP para dar soporte 
-imP a cadenas suministro 
-imP diversa complejidad y
-imP en múltiples sectores
++deF entre dos variables categóricas y
 
-^subT ESTRUCTURA PROCESOS SCOR (NIVEL 1 Y NIVEL 2)
-caR Planificar
++deF ayuda a
+deF detectar posibles redundancias
+deF entre características
 
-~caR Fuente y Abastecer
+~`imP OLS
+deF estima coeficientes
+deF buscando minimizar errores cuadrados
 
-~caR Realizar y Fabricar
+~-*caR Ridge y
 
-~caR Entrega
++caR Lasso penalizan coeficientes
+caR para controlar complejidad y
+caR multicolinealidad,
 
-~caR Devolución
++caR mientras que Huber
+caR reduce influencia ciertos errores extremos
 
-~caR Habilitar y Facilitar
+-comP OLS puede ganar
+*comP si ofrece 1 mejor equilibrio
 
-^subT ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR
-imP los atributos rendimiento 
-imP una cadena suministro
-*imP permiten 
++comP entre precisión,
 
-+@imP analizarla y
++comP estabilidad e
 
-+@imP evaluarla 
++comP interpretación en datos evaluados
 
-$imP en comparación
-imP con otras cadenas suministro
-imP que aplican 
-imP estrategias competitivas
+~`imP CETERIS PARIBUS
+deF significa
+deF 'manteniendo constantes demás variables'. 1
+deF coeficiente representa
+deF cómo cambia predicción del modelo
+*deF cuando cambia una característica del
 
-~imP SCOR identifica 
-imP cinco atributos fundamentales
-*imP del rendimiento cadena suministro:
++deF departamento y
 
-+caR fiabilidad,
++deF demás permanecen iguales
 
-+caR capacidad respuesta,
+~-*comP Si variable
 
-+caR agilidad,
++@comP está transformada o
 
-+caR costes y
++@comP codificada,
 
-+caR gestión activos
+$comP interpretación debe
+comP considerar esa transformación
 
-~cuR Sin estas características,
-cuR resulta difícil comparar 
-cuR una organización
-cuR que opta estratégicamente
-cuR ser proveedor bajo coste
-cuR con una organización
-*cuR que opta por competir en 
+^subT GRAFICOS EDA
+~nuM 1
+caR distribución del alquiler:
+caR muestra asimetría variable objetivo y
+caR ayuda a justificar log1p
 
-+cuR fiabilidad y
+~*nuM 2
+caR distribuciones predictores numéricos:
+*caR permite 
 
-+cuR rendimiento
++@caR detectar asimetrías,
 
-~imP las métricas estratégicas nivel 1
-imP están directamente relacionadas
-imP con atributos rendimiento
++@caR rangos extraños y
 
-~imP Estas métricas nivel 1
-imP son cálculos
-imP mediante los cuales 
-imP una organización
-imP puede medir su éxito 
-imP a hora alcanzar 
-imP posicionamiento deseado en mercado
++@caR variables
 
-~cuR Muchas métricas del modelo SCOR
-cuR son jerárquicas,
-cuR al igual que son 
-cuR elementos proceso
+$caR con valores extremos,
+caR sin eliminarlos automáticamente
 
-~caR las métricas nivel 1 
-caR se crean a partir 
-caR cálculos niveles inferiores
+~`nuM 3
+caR análisis categórico:
+*caR compara distribuciones del alquiler
 
-~caR las métricas nivel 2
-caR suelen estar asociadas 
-caR a 1 subconjunto más reducido 
-caR de procesos
++caR entre tipos edificio,
 
-~deF Además,
-deF métricas (diagnósticos)
-deF se utilizan para diagnosticar 
-deF variaciones en rendimiento
-deF con respecto al plan
++caR renovaciones,
 
-~imP Métricas Nivel 1
-*imP por Atributo
++caR distritos y
 
-+caR Fiabilidad
++caR otras categorías;
 
-+caR Capacidad respuesta
+-*caR ayuda a
 
-+caR Agilidad
++@caR reconocer asociaciones y
 
-+caR Coste
++@caR categorías
 
-+caR Eficiencia en gestión activos
+$caR con pocos casos
 
-^subT PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO
-deF la sección dedicada al personal
-deF proporciona herramientas
-deF para gestionar talento 
-deF en cadena suministro
-deF mediante incorporación 1 estándar
-deF que describe 
-deF conocimientos especializados necesarios
-*deF para 
+~*nuM 4
+caR correlaciones:
+caR identifica relaciones
+caR entre predictores,
+*caR por ejemplo superficie
 
-+deF realizar tareas y
++caR con habitaciones y
 
-+deF gestionar procesos
++caR distancia al centro
 
-~imP En SCOR,
-imP una competencia
-imP es capacidad 
-imP obtener resultados predeterminados
-*imP con 1 mínimo 
++caR con distancia al metro;
 
-+@imP tiempo y
++caR orienta análisis multicolinealidad
 
-+@imP energía,
+~nuM 5
+caR relaciones bivariadas clave:
+*caR evidencia apertura en abanico del
 
-$imP caracterizada
-*imP por una definición estándar con 
++@caR alquiler original y
 
-+imP experiencia,
++@caR curvatura relación
 
-+imP aptitudes y
+$*caR con distancia al centro;
 
-+imP formación asociadas
++caR justifica transformación logarítmica y
 
-~*imP la experiencia es
++caR splines
 
-+@imP conocimiento o
+~*nuM 6
+caR leakage y metro:
+caR muestra
+caR por qué rent_per_sqm filtraría respuesta y
+caR documenta dudas
+caR sobre validez variables estación y
+caR línea metro
 
-+@imP capacidad 
+~*nuM 7
 
-$imP adquiridos
-*imP mediante 
++caR tendencias temporales:
 
-+@imP observación o
++caR muestra una evolución alcista nominal y
 
-+@imP participación activa,
++caR una estacionalidad mensual poco marcada;
 
-$*que son
++caR ayuda a justificar tratamiento temporal y
 
-+imP obtenidos al realizar trabajo 
-imP en 1 entorno real y
++caR partición cronológica
 
-+imP al enfrentarse 
-imP a diferentes situaciones
-imP que requieren distintas acciones
+~nuM 8
+caR distribución espacial:
+*caR muestra concentración alquileres altos en zona
 
-~imP la aptitud
-*imP es una capacidad natural,
++@caR central y
 
-+@imP adquirida,
++@caR agrupamientos periféricos;
 
-+@imP aprendida o
+$caR justifica representar ubicación
+caR con más una variable
 
-+@imP desarrollada
+~textS Después vienen gráficos diagnóstico residuos,
+textS que verifican
+textS si esas decisiones dejaron patrones
+textS sistemáticos en errores
 
-$imP para realizar 1 determinado tipo trabajo
-imP a 1 nivel concreto
+^subT GRAFICOS DIAGNOSTICO
+~`nuM 1
+caR Histograma residuos:
+*caR debería verse aproximadamente centrado en
 
-~*imP la formación 
++caR cero y
 
-+@imP desarrolla una competencia o
++caR sin una asimetría extrema
 
-+@imP 1 tipo comportamiento 
+-caR En informe,
+caR asimetría residual
+caR es cercana a cero y
+caR dispersión es parecida
+*caR entre train,
 
-$imP a través instrucción
++caR valid y
 
-^subT PRÁCTICAS SCOR
-imP las empresas
-imP utilizan prácticas
-*imP para identificar formas 
++caR test
 
-+@imP alternativas o
+~`nuM 2
+caR QQ plot:
+caR compara distribución residuos
+caR con una normal teórica
 
-+@imP deseadas 
+-caR Tus puntos
+caR se aproximan mucho a diagonal;
+caR en extremos se curvan ligeramente
+caR hacia adentro,
+caR compatible
+caR con colas más ligeras
+caR que una normal
 
-$imP operar en sus cadenas suministro
+-cuR Visualmente es una buena aproximación,
+cuR pero Jarque Bera
+cuR sí rechaza normalidad en test
 
-~imP las prácticas SCOR
-imP pueden constituir 1 subconjunto del
-imP conjunto total prácticas
-imP que reconoce una empresa
+~`nuM 3
+caR Scale Location:
+caR busca cambios en magnitud errores
+caR a largo predicciones
 
-~cuR el Supply Chain Council 
-cuR recomienda a empresas 
-cuR interesadas en adoptar SCOR
-cuR que adapten este marco
-*cuR mediante 
+-caR la curva
+caR se mantiene prácticamente horizontal en
+caR torno al nivel esperado;
+caR no se
+caR observa embudo marcado
 
-+@cuR investigación,
+~-*caR Breusch Pagan tampoco rechaza homocedasticidad en
 
-+@cuR revisión y
++caR valid ni
 
-+@cuR integración prácticas relevantes 
++caR test
 
-$*cuR del 
+~*`nuM 4 Residuos vs. valores ajustados:
 
-+cuR sector y
++caR busca curvas,
 
-+cuR propia empresa (internalización)
++caR embudos o
+
++caR agrupamientos
+
+-caR la nube
+*caR está centrada alrededor cero,
+
++caR sin forma U
+
++caR ni abanico,
+
++
++caR y línea media es horizontal
+
+~-*comP Eso apoya
+
++comP que no queda una no
+@comP linealidad o
+
++@comP una variación dispersión evidente en rango observado,
+
+$comP aunque ningún gráfico prueba
+comP que modelo capture absolutamente toda estructura
+
+~`nuM 5
+caR Real vs. predicho:
+caR contrasta directamente predicción
+caR con valor observado
+
+~-*caR Cuanto más cerca quedan puntos diagonal ideal,
+caR más cercanas
+caR son predicciones;
+caR se complementa
+
++@caR con RMSE,
+
++@caR MAE y
+
++@caR R²,
+
+$caR porque una impresión visual no
+caR cuantifica error
+caR por sí sola
+
+~`nuM 6
+caR Residuos a largo
+caR del tiempo:
+caR busca deriva temporal
+
+-caR el informe
+caR describe una dispersión relativamente estable,
+caR pero también 1 sesgo medio
+caR positivo en períodos posteriores,
+caR relacionado
+caR con evolución nominal alquileres
+
+-comP Esto recuerda
+comP que errores estables no descartan
+comP que mercado cambie nivel

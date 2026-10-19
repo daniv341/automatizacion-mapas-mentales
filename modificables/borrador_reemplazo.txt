@@ -1,225 +1,558 @@
-temaP FUNCION TRANSFERENCIA
+temaP !er parcial AD
 
-temaS POLOS REALES
+temaS
 
-subT DEFINICIÓN FUNCIONES TRANSFERENCIA UN SISTEMA CONTINUO
-Se considerará primero
-funciones transferencia continuas,
-para sistemas
-una sola salida
-una sola entrada y
-o en notación transformada,
-como
-función Transferencia P(s)
-1 sistema continuo se define
-como
-aquel factor en ecuación Y(s)
-que multiplica
-a transformada entrada U(s)
+^subT IDEA CENTRAL
+imP el objetivo
+imP fue estimar alquiler mensual 1
+imP departamento en rublos a
+imP partir información
+imP como superficie,
+imP distrito,
+imP ubicación,
+imP antigüedad,
+imP tipo edificio,
+imP estado renovación y
+imP fecha del anuncio
 
-función transferencia
-se define como
-transformada Laplace salida
-sobre
-transformada Laplace entrada
+~deF el modelo final
+deF es una regresión lineal,
+deF pero antes se transformaron algunas
+deF variables
+deF para que pudiera
+deF representar relaciones más realistas
 
-denominador es
-Polinomio característico y
-transformada respuesta
-puede escribirse como
+~comP Por eso,
+comP 'lineal' describe
+comP cómo modelo
+comP combina variables transformadas;
+comP no significa
+comP que precio tenga
+comP que cambiar en línea recta
+comP con cada variable original
 
-donde términos correspondientes
-a valores iniciales uk0, yk0
-se consideran igual
-a cero,
-por tanto,
-Transformada Laplace salida Y(s)
-en respuesta
-a una entrada U(s)
-está dada por
+^subT CONCEPTOS y PREGUNTAS
+~-imP LOG1P
+deF el modelo aprende en escala logarítmica,
+deF pero propietario
+deF necesita una estimación en rublos
 
-Se hace énfasis
-en que
-no todas funciones transferencia
-son expresiones algebraicas racionales
+`comP Al volver una escala logarítmica
+comP a moneda original,
+comP simplemente deshacer transformación
+comP puede subestimar alquiler promedio,
+comP porque convertir de vuelta 
+comP no compensa automáticamente 
+comP variabilidad errores
 
-Puesto que
-formación transformada salida Y(s)
-es simplemente
-una multiplicación algebraica
-P(s) y U(s)
+~-imP CORRECCION de DUAN
+deF calcula 1 factor ajuste a
+deF partir residuos del entrenamiento
 
-Cuando términos los valores iniciales uk0, yk0
-son ceros,
-multiplicación es conmutativa;
-es decir:
-Y(s) = U(s) P(s) = P(s) U(s),
-entonces
-transformada inversa es
+`cuR En informe,
+cuR factor Duan
+cuR es aproximadamente 1,003500
 
-Por tanto,
-respuesta tiempo y(t)
-puede determinarse
-encontrando polos P(s) U(s)
+`comP Es una corrección pequeña,
+comP cual tiene sentido
+comP porque factor
+comP está muy cerca uno
 
-En consecuencia y(t)
-depende tanto
-polos y
-ceros
-función transferencia
-como
-polos y
-ceros
-entrada
+`comP Por tanto,
+comP corrección mejora ligeramente resultado,
+comP pero no
+comP produce 1 cambio enorme
 
-subT PROPIEDADES FUNCIÓN TRANSFERENCIA UN SISTEMA CONTINUO
-1
-Si entrada
-en 1 sistema
-con función transferencia P(s)
-es 1 impulso unitario,
-y todos sus valores iniciales
-son cero,
-transformada salida es P(s)
+~-imP MULTICOLINEALIDAD
+deF la multicolinealidad aparece
+deF cuando varias variables
+deF cuentan casi misma historia
 
-2
-función transferencia
-del sistema
-puede determinarse
-a partir ecuación diferencial
-del sistema
+`ejeM Por ejemplo,
+ejeM distancia al centro y
+ejeM distancia al metro
+ejeM pueden estar relacionadas;
+ejeM también superficie y
+ejeM cantidad habitaciones
 
-3
-Para sistemas continuos,
-si todas raíces del denominador
-tienen partes reales negativas,
-sistema es estable
+`comP Eso puede volver inestables coeficientes:
+comP al modelo le cuesta
+comP separar qué parte del efecto
+comP corresponde a cada variable
 
-4
-función transferencia del sistema
-puede especificarse entonces
-como una constante,
-especificando
-polos y
-ceros
-del sistema
+`cuR No significa necesariamente
+cuR que predicción vaya a
+cuR ser mala,
+cuR pero
+cuR sí complica interpretación y
+cuR puede volver frágiles coeficientes
 
-Esta constante
-representada por K
-es factor ganancia del sistema
+~-imP VIF
+deF mide cuánto se infla incertidumbre 1
+deF predictor
+deF por su relación con otros
 
-subT FORMA CANÓNICA UN SISTEMA EN MALLA CERRADA
-Donde G y H son
-funciones Transferencia
-del Sistema Control
-componentes Sistema Control son
+`imP NUMERO DE CONDICION
+deF es una señal global estabilidad
+deF numérica del conjunto variables
 
-En siguientes ecuaciones,
-signo –
-se refiere a 1 sistema
-con retroalimentación positiva
-con retroalimentación negativa
-se debe considerar
+`caR Ningún VIF final
+caR llega a 10;
+caR 53 57 predictores
+caR tienen VIF menor
+caR que 5 y cuatro quedan
+caR en franja moderada
 
-y signo +
-a 1 sistema
-con retroalimentación positiva
-con retroalimentación negativa
-se debe considerar
+`caR el máximo
+caR es 8,01,
+caR así
+caR que sería incorrecto decir
+caR que toda colinealidad desapareció
 
-denominador C/R
-determina
-ecuación característica del sistema,
-que se define
-a partir 1 ± GH=0
+~-imP ONEHOT ENCODING
+deF transforma una variable categórica en
+deF indicadores separados,
+deF normalmente
+deF con valores
+deF que identifican
+deF si 1 anuncio
+deF pertenece o
+deF no a una categoría
 
-subT RESPUESTA EN TIEMPO
-cómo variables estado
-están asociadas
-con sistemas lazo cerrado,
-para una variedad entradas o
-condiciones iniciales
-Queda encontrar y(t)
+`cuR Es útil
+cuR para variables
+cuR con pocas categorías y
+cuR sin orden numérico natural,
+cuR como tipo edificio o
+cuR estado renovación
 
-función transferencia
-lazo cerrado es
+`comP Así,
+comP modelo no interpreta
+comP por error
+comP que una categoría
+comP vale 'más'
+comP que otra solo
+comP porque tenga 1 número asignado
 
-Conociendo entrada en tiempo,
-se conoce su transformada
+~-imP TARGET ENCODING
+deF resume una categoría
+deF mediante una estadística relacionada
+deF con alquiler objetivo
 
-Y conociendo
-función transferencia lazo cerrado,
-se puede hallar
-transformada Laplace salida
+`comP En vez crear una columna
+comP por cada distrito,
+comP genera una representación numérica del
+comP efecto asociado a ese distrito
 
-Esto se obtiene hallando
-transformada Inversa Laplace anterior
+`cuR Es útil
+cuR cuando hay muchas categorías
 
-métodos gráficos
-son una herramienta poderosa
-en ingeniería control
-ya que exactitud obtenida
-es por general compatible
-con exactitudes
-con que se describen plantas
-que se desean estudiar
+~-imP DATA LEAKAGE
+deF o fuga información,
+deF ocurre
+deF cuando modelo
+deF recibe durante entrenamiento una pista
+deF que no tendría disponible forma
+deF legítima al predecir 1 caso
+deF nuevo
 
-subT ganancia respuesta tiempo
+`comP Entonces parece muy preciso,
+comP pero esa precisión
+comP es artificial
 
-diagrama respuesta en tiempo
+`comP la elección
+comP depende principalmente cuántas categorías
+comP existen,
+comP cuántos casos
+comP hay en cada una y
+comP cuánto se
+comP necesita interpretar cada efecto
 
-subT EFP  metodo grafico
-ganancia
-acostumbra poner
-segundo 
-cuadrante
+`ejeM Con pocas categorías
+ejeM por ejemplo,
+ejeM seis tipos edificio o
+ejeM cuatro estados renovación One Hot
+ejeM resulta simple y
+ejeM transparente
 
-subT conceptos previos
+`ejeM Con 129 distritos,
+ejeM crear una columna
+ejeM por categoría
+ejeM puede volver representación demasiado dispersa y
+ejeM hacer
+ejeM que distritos raros se estimen
+ejeM con pocos datos;
+ejeM Target Encoding
+ejeM resume esa señal en menos columnas,
+ejeM aunque exige controles estrictos contra fuga
 
-temaS POLOS COMPLEJOS
+~-imP SPLINES
+deF permiten
+deF que efecto una variable cambie forma
+deF gradual
+deF según tramo su rango,
+deF en vez obligar al modelo
+deF a usar una sola pendiente
+deF para todos casos
 
-subT EFP metodo grafico
-variable compleja
-en forma binomica
-considera como expresion
-sigma parte real
-jw 
-parte imaginaria
-sigma y w 
-numeros reales
-unidad imaginaria con propiedades
-polos en grafico
-son triangulos
+`cuR Son útiles
+cuR cuando 1 metro cuadrado adicional
+cuR no tiene mismo efecto en
+cuR departamentos pequeños y
+cuR grandes,
+cuR o
+cuR cuando alejarse del centro 
+cuR encarece o
+cuR abarata 
+cuR alquiler forma distinta
+cuR según distancia
 
-obteniendo valores
-s1 s2
-podemos expresar polinomio
-como
-si desarrolla
-cuadrado binomio
-llegara polinomio origen
+`imP PCA transforma varias columnas correlacionadas
+imP en nuevas combinaciones
+imP que concentran información esas columnas y
+imP quedan menos correlacionadas
+imP entre sí
 
-polos reales
-aproximan
-valores estables
+`cuR No es una técnica
+cuR que 'descubra causalidad',
+cuR ni hace que modelo
+cuR sea automáticamente mejor
 
-S imaginario puro
-sistema inestable
+~-imP ESTUDIO ABLACION
+deF consiste en armar variantes 1 modelo y
+deF agregar o
+deF quitar 
+deF 1 bloque características cada vez,
+deF manteniendo comparable evaluación
 
-si no dan R(s)
-usar 1/s
+`preG la pregunta es:
+preG '¿Qué mejora realmente
+preG cuando incorporo esta pieza?'.
+preG Si error baja forma
+preG consistente en datos no usados
+preG para ajustar esa variante,
+preG hay evidencia
+preG que bloque
+preG aporta valor predictivo
 
-angulos
-siempre
-positivizados
-usar radianes
+`comP Si error no baja o
+comP empeora,
+comP complejidad adicional quizá no se
+comP justifique
 
-suplementarios
-suma cuyo
-resultado
-= 180
+~-imP JARQUE BERA
+deF es una prueba formal
+deF que analiza
+deF si distribución residuos se parece
+deF a una normal,
+deF prestando atención a su asimetría y
+deF a qué tan 
+deF pesadas o
+deF ligeras 
+deF son sus colas
 
-diagrama respuesta en tiempo
+`deF la hipótesis nula es
+deF que residuos
+deF siguen una distribución normal
 
-ejemplo diagrama
+`comP Si valor p
+comP es menor
+comP que umbral elegido en informe,
+comP 0,05 se rechaza esa hipótesis;
+comP si es mayor,
+comP no hay evidencia suficiente
+comP para rechazarla
 
+~-imP DURBIN WATSON
+deF ayuda a detectar 
+deF autocorrelación primer orden:
+deF si 1 error
+deF tiende a parecerse al error
+deF inmediatamente anterior en una secuencia
+deF ordenada
+
+`comP En 1 análisis temporal importa
+comP porque errores meses cercanos podrían
+comP compartir una tendencia no capturada
+
+`comP Un valor alrededor 2 suele
+comP indicar poca evidencia autocorrelación primer orden;
+comP por debajo 2
+comP puede sugerir autocorrelación positiva,
+comP aunque interpretación completa
+comP depende del contexto y
+comP supuestos prueba
+
+~-imP CURVA APRENDIZAJE
+deF muestra cómo cambia error
+deF cuando modelo
+deF recibe más filas entrenamiento
+
+`comP En versión K Fold mezclada,
+comP datos se reparten en pliegues
+comP sin respetar estrictamente orden cronológico
+
+`cuR Sirve para observar estabilidad
+cuR dentro de una muestra tratada
+cuR como si sus registros fueran intercambiables,
+cuR pero es menos adecuada
+cuR para demostrar
+cuR cómo se comportará modelo
+cuR con meses futuros
+cuR cuando existe una tendencia del
+cuR mercado
+
+~-imP CURVA APRENDIZAJE FUERA DE TIEMPO
+deF responde una pregunta más cercana
+deF al uso real:
+deF si entreno
+deF con cada vez más datos históricos,
+deF ¿mejoran predicciones
+deF sobre períodos posteriores
+deF que modelo no vio? entrenamiento
+deF mantiene orden temporal y
+deF valid/test pertenecen a períodos posteriores
+
+`comP Así se
+comP mide desempeño
+comP ante 1 mercado
+comP que evoluciona,
+comP en lugar
+comP asumir
+comP que anuncios antiguos y
+comP futuros son intercambiables
+
+~-imP K FOLD
+deF mezcla datos
+deF para evaluar modelo en distintas particiones,
+deF mientras que partición temporal respeta orden cronológico:
+deF se entrena
+deF con períodos anteriores y
+deF se evalúa
+deF con períodos posteriores
+
+`comP Esto permite
+comP comprobar
+comP si modelo
+comP puede predecir alquileres futuros sin
+comP aprovechar información del futuro
+
+~-imP KRUSTAL WALLIS
+deF permite evaluar
+deF si alquileres presentan diferencias
+deF entre grupos,
+deF como distintos barrios,
+deF sin exigir
+deF que datos sigan una distribución
+deF normal
+
+~-imP V CRAMER
+deF mide intensidad asociación
+deF entre dos variables categóricas y
+deF ayuda a
+deF detectar posibles redundancias
+deF entre características
+
+~-imP OLS 
+deF estima coeficientes
+deF buscando minimizar errores cuadrados
+
+`caR Ridge y
+caR Lasso penalizan coeficientes
+caR para controlar complejidad y
+caR multicolinealidad,
+caR mientras que Huber
+caR reduce influencia ciertos errores extremos
+
+`comP OLS puede ganar
+comP si ofrece 1 mejor equilibrio
+comP entre precisión,
+comP estabilidad e
+comP interpretación en datos evaluados
+
+~-imP CETERIS PARIBUS
+deF significa
+deF 'manteniendo constantes demás variables'. 1
+deF coeficiente representa
+deF cómo cambia predicción del modelo
+deF cuando cambia una característica del
+deF departamento y
+deF demás permanecen iguales
+
+`comP Si variable
+comP está transformada o
+comP codificada,
+comP interpretación debe
+comP considerar esa transformación
+
+^subT GRAFICOS EDA
+nuM 1 
+caR distribución del alquiler:
+caR muestra asimetría variable objetivo y
+caR ayuda a justificar log1p
+
+~nuM 2 
+caR distribuciones predictores numéricos:
+caR permite detectar asimetrías,
+caR rangos extraños y
+caR variables
+caR con valores extremos,
+caR sin eliminarlos automáticamente
+
+~nuM 3 
+caR análisis categórico:
+caR compara distribuciones del alquiler
+caR entre tipos edificio,
+caR renovaciones,
+caR distritos y
+caR otras categorías;
+caR ayuda a
+caR reconocer asociaciones y
+caR categorías
+caR con pocos casos
+
+~nuM 4 
+caR correlaciones:
+caR identifica relaciones
+caR entre predictores,
+caR por ejemplo superficie
+caR con habitaciones y
+caR distancia al centro
+caR con distancia al metro;
+caR orienta análisis multicolinealidad
+
+~nuM 5 
+caR relaciones bivariadas clave:
+caR evidencia apertura en abanico del
+caR alquiler original y
+caR curvatura relación
+caR con distancia al centro;
+caR justifica transformación logarítmica y
+caR splines
+
+~nuM 6 
+caR leakage y
+caR metro:
+caR muestra
+caR por qué rent_per_sqm filtraría respuesta y
+caR documenta dudas
+caR sobre validez variables estación y
+caR línea metro
+
+~nuM 7 
+caR tendencias temporales:
+caR muestra una evolución alcista nominal y
+caR una estacionalidad mensual poco marcada;
+caR ayuda a justificar tratamiento temporal y
+caR partición cronológica
+
+~nuM 8 
+caR distribución espacial:
+caR muestra concentración alquileres altos en zona
+caR central y
+caR agrupamientos periféricos;
+caR justifica representar ubicación
+caR con más una variable
+
+~textS Después vienen gráficos diagnóstico residuos,
+textS que verifican
+textS si esas decisiones dejaron patrones
+textS sistemáticos en errores
+
+^subT GRAFICOS DIAGNOSTICO
+~-nuM 1 
+caR Histograma residuos:
+caR debería verse aproximadamente centrado en
+caR cero y
+caR sin una asimetría extrema
+
+`caR En informe,
+caR asimetría residual
+caR es cercana a cero y
+caR dispersión es parecida
+caR entre train,
+caR valid y
+caR test
+
+~-nuM 2 
+caR QQ plot:
+caR compara distribución residuos
+caR con una normal teórica
+
+`caR Tus puntos
+caR se aproximan mucho a diagonal;
+caR en extremos se curvan ligeramente
+caR hacia adentro,
+caR compatible
+caR con colas más ligeras
+caR que una normal
+
+`cuR Visualmente es una buena aproximación,
+cuR pero Jarque Bera
+cuR sí rechaza normalidad en test
+
+~-nuM 3 
+caR Scale Location:
+caR busca cambios en magnitud errores
+caR a largo predicciones
+
+`caR la curva
+caR se mantiene prácticamente horizontal en
+caR torno al nivel esperado;
+caR no se
+caR observa embudo marcado
+
+`caR Breusch Pagan tampoco rechaza homocedasticidad en
+caR valid ni
+caR test
+
+~-nuM 4 Residuos vs. valores ajustados:
+caR busca curvas,
+caR embudos o
+caR agrupamientos
+
+`caR la nube
+caR está centrada alrededor cero,
+caR sin forma U
+caR ni abanico,
+caR y línea media
+caR es horizontal
+
+`comP Eso apoya
+comP que no queda una no
+comP linealidad o
+comP una variación dispersión evidente en rango observado,
+comP aunque ningún gráfico prueba
+comP que modelo capture absolutamente toda estructura
+
+~-nuM 5 
+caR Real vs. predicho:
+caR contrasta directamente predicción
+caR con valor observado
+
+`caR Cuanto más cerca quedan puntos diagonal ideal,
+caR más cercanas
+caR son predicciones;
+caR se complementa
+caR con RMSE,
+caR MAE y
+caR R²,
+caR porque una impresión visual no
+caR cuantifica error
+caR por sí sola
+
+~-nuM 6 
+caR Residuos a largo
+caR del tiempo:
+caR busca deriva temporal
+
+`caR el informe
+caR describe una dispersión relativamente estable,
+caR pero también 1 sesgo medio
+caR positivo en períodos posteriores,
+caR relacionado
+caR con evolución nominal alquileres
+
+`comP Esto recuerda
+comP que errores estables no descartan
+comP que mercado cambie nivel

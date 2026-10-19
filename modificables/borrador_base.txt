@@ -1,48 +1,65 @@
-temaP SCOR
+temaP !er parcial AD 
 
-temaS
+temaS 
 
-DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR
-El modelo Supply Chain Operations Reference (SCOR®) es una creación del Supply Chain Council (SCC). El modelo SCOR recoge la visión consensuada del Consejo sobre la gestión de la cadena de suministro. El modelo SCOR proporciona un marco único que vincula los procesos empresariales, las métricas, las mejores prácticas y las características tecnológicas en una estructura unificada para facilitar la comunicación entre los socios de la cadena de suministro y mejorar la eficacia de la gestión de la cadena de suministro y las actividades relacionadas con su mejora.
+subT IDEA CENTRAL
+El objetivo fue estimar el alquiler mensual de un departamento en rublos a partir de información como superficie, distrito, ubicación, antigüedad, tipo de edificio, estado de renovación y fecha del anuncio. El modelo final es una regresión lineal, pero antes se transformaron algunas variables para que pudiera representar relaciones más realistas. Por eso, “lineal” describe cómo el modelo combina las variables transformadas; no significa que el precio tenga que cambiar en línea recta con cada variable original.
 
-ALCANCE Y PROCESOS DE SCOR
-El modelo Supply Chain Operations Reference (SCOR®) describe las actividades empresariales asociadas a todas las fases del proceso de satisfacer la demanda de un cliente. El modelo en sí se organiza en torno a los cinco procesos de gestión principales. Mediante estos componentes básicos de los procesos, el modelo SCOR puede utilizarse para describir cadenas de suministro tanto muy sencillas como muy complejas.
+subT CONCEPTOS y PREGUNTAS
+El modelo aprende en escala logarítmica, pero el propietario necesita una estimación en rublos. Al volver de una escala logarítmica a la moneda original, simplemente deshacer la transformación puede subestimar el alquiler promedio, porque convertir de vuelta no compensa automáticamente la variabilidad de los errores. La corrección de Duan calcula un factor de ajuste a partir de los residuos del entrenamiento.
 
-El modelo está diseñado y se mantiene para dar soporte a cadenas de suministro de diversa complejidad y en múltiples sectores.
+En el informe, el factor de Duan es aproximadamente 1,003500. Es una corrección pequeña, lo cual tiene sentido porque el factor está muy cerca de uno. En validación, el RMSE en rublos baja de 5.344,75 a 5.312,92 cuando se aplica la corrección. Por tanto, la corrección mejora ligeramente el resultado, pero no produce un cambio enorme.
 
-ESTRUCTURA DE PROCESOS SCOR (NIVEL 1 Y NIVEL 2)
-Planificar
-Fuente y Abastecer
-Realizar y Fabricar
-Entrega
-Devolución
-Habilitar y Facilitar
+La multicolinealidad aparece cuando varias variables cuentan casi la misma historia. Por ejemplo, la distancia al centro y la distancia al metro pueden estar relacionadas; también la superficie y la cantidad de habitaciones. Eso puede volver inestables los coeficientes: al modelo le cuesta separar qué parte del efecto corresponde a cada variable. No significa necesariamente que la predicción vaya a ser mala, pero sí complica la interpretación y puede volver frágiles los coeficientes.
 
-ATRIBUTOS DE RENDIMIENTO Y MÉTRICAS SCOR
-Los atributos de rendimiento de una cadena de suministro permiten analizarla y evaluarla en comparación con otras cadenas de suministro que aplican estrategias competitivas. SCOR identifica cinco atributos fundamentales del rendimiento de la cadena de suministro: fiabilidad, capacidad de respuesta, agilidad, costes y gestión de activos. Sin estas características, resulta difícil comparar una organización que opta estratégicamente ser el proveedor de bajo coste con una organización que opta por competir en fiabilidad y rendimiento.
+El VIF mide cuánto se infla la incertidumbre de un predictor por su relación con los otros. El número de condición es una señal global de la estabilidad numérica del conjunto de variables. En el informe, el número de condición baja de 43,84 a 10,42 después del preprocesamiento. Ningún VIF final llega a 10; 53 de los 57 predictores tienen VIF menor que 5 y cuatro quedan en la franja moderada. El máximo es 8,01, así que sería incorrecto decir que toda colinealidad desapareció.
 
-Las métricas estratégicas de nivel 1 están directamente relacionadas con los atributos de rendimiento. Estas métricas de nivel 1 son los cálculos mediante los cuales una organización puede medir su éxito a la hora de alcanzar el posicionamiento deseado en el mercado.
+One-Hot Encoding transforma una variable categórica en indicadores separados, normalmente con valores que identifican si un anuncio pertenece o no a una categoría. Es útil para variables con pocas categorías y sin orden numérico natural, como tipo de edificio o estado de renovación. Así, el modelo no interpreta por error que una categoría vale “más” que otra solo porque tenga un número asignado.
 
-Muchas métricas del modelo SCOR son jerárquicas, al igual que lo son los elementos de proceso. Las métricas de nivel 1 se crean a partir de cálculos de niveles inferiores. Las métricas de nivel 2 suelen estar asociadas a un subconjunto más reducido de procesos. Además, las métricas (diagnósticos) se utilizan para diagnosticar las variaciones en el rendimiento con respecto al plan.
+Target Encoding resume una categoría mediante una estadística relacionada con el alquiler objetivo. En vez de crear una columna por cada distrito, genera una representación numérica del efecto asociado a ese distrito. Es útil cuando hay muchas categorías: en el informe `district` tiene 129 valores distintos.
 
-Métricas de Nivel 1 por Atributo:
-Fiabilidad
-Capacidad de respuesta
-Agilidad
-Coste
-Eficiencia en la gestión de activos
+Data Leakage, o fuga de información, ocurre cuando el modelo recibe durante el entrenamiento una pista que no tendría disponible de forma legítima al predecir un caso nuevo. Entonces parece muy preciso, pero esa precisión es artificial.
 
-PERSONAS: COMPETENCIAS EN LA CADENA DE SUMINISTRO
+La elección depende principalmente de cuántas categorías existen, de cuántos casos hay en cada una y de cuánto se necesita interpretar cada efecto. Con pocas categorías —por ejemplo, seis tipos de edificio o cuatro estados de renovación— One-Hot resulta simple y transparente. Con 129 distritos, crear una columna por categoría puede volver la representación demasiado dispersa y hacer que los distritos raros se estimen con pocos datos; Target Encoding resume esa señal en menos columnas, aunque exige controles estrictos contra la fuga.
 
-La sección dedicada al personal proporciona herramientas para gestionar el talento en la cadena de suministro mediante la incorporación de un estándar que describe los conocimientos especializados necesarios para realizar tareas y gestionar procesos. La gestión de competencias de SCOR complementa los componentes de referencia existentes sobre procesos, métricas y prácticas, al alinear a las personas y sus competencias con los procesos.
+Los splines permiten que el efecto de una variable cambie de forma gradual según el tramo de su rango, en vez de obligar al modelo a usar una sola pendiente para todos los casos. Son útiles cuando un metro cuadrado adicional no tiene el mismo efecto en departamentos pequeños y grandes, o cuando alejarse del centro encarece o abarata el alquiler de forma distinta según la distancia.
 
-En SCOR, una competencia es la capacidad de obtener resultados predeterminados con un mínimo de tiempo y energía, caracterizada por una definición estándar con la experiencia, las aptitudes y la formación asociadas.
+PCA transforma varias columnas correlacionadas en nuevas combinaciones que concentran la información de esas columnas y quedan menos correlacionadas entre sí. En tu proyecto se aplicó a bloques de características spline para mejorar la estabilidad numérica y bajar la redundancia. No es una técnica que “descubra causalidad”, ni hace que el modelo sea automáticamente mejor.
 
-La experiencia es el conocimiento o la capacidad adquiridos mediante la observación o la participación activa, obtenidos al realizar el trabajo en un entorno real y al enfrentarse a diferentes situaciones que requieren distintas acciones.
+un estudio de ablación consiste en armar variantes de un modelo y agregar o quitar un bloque de características cada vez, manteniendo comparable la evaluación. La pregunta es: “¿Qué mejora realmente cuando incorporo esta pieza?”. Si el error baja de forma consistente en datos no usados para ajustar esa variante, hay evidencia de que el bloque aporta valor predictivo. Si el error no baja o empeora, la complejidad adicional quizá no se justifique.
 
-La aptitud es una capacidad natural, adquirida, aprendida o desarrollada para realizar un determinado tipo de trabajo a un nivel concreto.
+Jarque-Bera es una prueba formal que analiza si la distribución de los residuos se parece a una normal, prestando atención a su asimetría y a qué tan pesadas o ligeras son sus colas. La hipótesis nula es que los residuos siguen una distribución normal. Si el valor p es menor que el umbral elegido —en el informe, 0,05— se rechaza esa hipótesis; si es mayor, no hay evidencia suficiente para rechazarla.
 
-La formación desarrolla una competencia o un tipo de comportamiento a través de la instrucción.
+Durbin-Watson ayuda a detectar autocorrelación de primer orden: si un error tiende a parecerse al error inmediatamente anterior en una secuencia ordenada. En un análisis temporal importa porque los errores de meses cercanos podrían compartir una tendencia no capturada. Un valor alrededor de 2 suele indicar poca evidencia de autocorrelación de primer orden; por debajo de 2 puede sugerir autocorrelación positiva, aunque la interpretación completa depende del contexto y de los supuestos de la prueba.
 
-PRÁCTICAS SCOR
-La sección «Prácticas SCOR» contiene prácticas de gestión, soluciones de software y definiciones asociadas a cada proceso. Las empresas utilizan las prácticas para identificar formas alternativas o deseadas de operar en sus cadenas de suministro. Las prácticas de SCOR pueden constituir un subconjunto del conjunto total de prácticas que reconoce una empresa. El Supply Chain Council recomienda a las empresas interesadas en adoptar SCOR que adapten este marco mediante la investigación, la revisión y la integración de las prácticas relevantes del sector y de la propia empresa (internalización).
+Una curva de aprendizaje muestra cómo cambia el error cuando el modelo recibe más filas de entrenamiento. En la versión K-Fold mezclada, los datos se reparten en pliegues sin respetar estrictamente el orden cronológico. Sirve para observar estabilidad dentro de una muestra tratada como si sus registros fueran intercambiables, pero es menos adecuada para demostrar cómo se comportará el modelo con meses futuros cuando existe una tendencia del mercado.
+
+Curva de Aprendizaje Fuera de Tiempo responde una pregunta más cercana al uso real: si entreno con cada vez más datos históricos, ¿mejoran las predicciones sobre períodos posteriores que el modelo no vio? El entrenamiento mantiene el orden temporal y valid/test pertenecen a períodos posteriores. Así se mide el desempeño ante un mercado que evoluciona, en lugar de asumir que anuncios antiguos y futuros son intercambiables.
+
+K-Fold mezcla los datos para evaluar el modelo en distintas particiones, mientras que la partición temporal respeta el orden cronológico: se entrena con períodos anteriores y se evalúa con períodos posteriores. Esto permite comprobar si el modelo puede predecir alquileres futuros sin aprovechar información del futuro.
+
+Kruskal-Wallis permite evaluar si los alquileres presentan diferencias entre grupos, como distintos barrios, sin exigir que los datos sigan una distribución normal. La V de Cramér mide la intensidad de la asociación entre dos variables categóricas y ayuda a detectar posibles redundancias entre características.
+
+OLS estima los coeficientes buscando minimizar los errores cuadrados. Ridge y Lasso penalizan los coeficientes para controlar la complejidad y la multicolinealidad, mientras que Huber reduce la influencia de ciertos errores extremos. OLS puede ganar si ofrece un mejor equilibrio entre precisión, estabilidad e interpretación en los datos evaluados.
+
+Ceteris paribus significa “manteniendo constantes las demás variables”. Un coeficiente representa cómo cambia la predicción del modelo cuando cambia una característica del departamento y las demás permanecen iguales. Si la variable está transformada o codificada, la interpretación debe considerar esa transformación.
+
+subT GRAFICOS EDA
+grafico 1 — distribución del alquiler: muestra la asimetría de la variable objetivo y ayuda a justificar `log1p`.
+grafico 2 — distribuciones de predictores numéricos: permite detectar asimetrías, rangos extraños y variables con valores extremos, sin eliminarlos automáticamente.
+grafico 3 — análisis categórico: compara distribuciones del alquiler entre tipos de edificio, renovaciones, distritos y otras categorías; ayuda a reconocer asociaciones y categorías con pocos casos.
+grafico 4 — correlaciones: identifica relaciones entre predictores, por ejemplo superficie con habitaciones y distancia al centro con distancia al metro; orienta el análisis de multicolinealidad.
+grafico 5 — relaciones bivariadas clave: evidencia la apertura en abanico del alquiler original y la curvatura de la relación con la distancia al centro; justifica transformación logarítmica y splines.
+grafico 6 — leakage y metro: muestra por qué `rent_per_sqm` filtraría la respuesta y documenta dudas sobre la validez de variables de estación y línea de metro.
+grafico 7 — tendencias temporales: muestra una evolución alcista nominal y una estacionalidad mensual poco marcada; ayuda a justificar el tratamiento temporal y la partición cronológica.
+grafico 8 — distribución espacial: muestra concentración de alquileres altos en la zona central y agrupamientos periféricos; justifica representar la ubicación con más de una variable.
+
+Después vienen los gráficos de diagnóstico de residuos, que verifican si esas decisiones dejaron patrones sistemáticos en los errores
+
+subT GRAFICOS DIAGNOSTICO
+grafico 1 — Histograma de residuos: debería verse aproximadamente centrado en cero y sin una asimetría extrema. En el informe, la asimetría residual es cercana a cero y la dispersión es parecida entre train, valid y test.
+grafico 2 — QQ-plot: compara la distribución de los residuos con una normal teórica. Tus puntos se aproximan mucho a la diagonal; en los extremos se curvan ligeramente hacia adentro, compatible con colas más ligeras que las de una normal. Visualmente es una buena aproximación, pero Jarque-Bera sí rechaza normalidad en test.
+grafico 3 — Scale-Location: busca cambios en la magnitud de los errores a lo largo de las predicciones. La curva se mantiene prácticamente horizontal en torno al nivel esperado; no se observa embudo marcado. Breusch-Pagan tampoco rechaza homocedasticidad en valid ni test.
+grafico 4 — Residuos vs. valores ajustados: busca curvas, embudos o agrupamientos. La nube está centrada alrededor de cero, sin forma de U ni abanico, y la línea media es horizontal. Eso apoya que no queda una no linealidad o una variación de dispersión evidente en el rango observado, aunque ningún gráfico prueba que el modelo capture absolutamente toda la estructura.
+grafico 5 — Real vs. predicho: contrasta directamente la predicción con el valor observado. Cuanto más cerca quedan los puntos de la diagonal ideal, más cercanas son las predicciones; se complementa con RMSE, MAE y R², porque una impresión visual no cuantifica el error por sí sola.
+grafico 6 — Residuos a lo largo del tiempo: busca deriva temporal. El informe describe una dispersión relativamente estable, pero también un sesgo medio positivo en los períodos posteriores, relacionado con la evolución nominal de los alquileres. Esto recuerda que errores estables no descartan que el mercado cambie de nivel.
