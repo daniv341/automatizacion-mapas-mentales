@@ -72,6 +72,14 @@
       "resaltar": false,
       "colores": "rojoClaro",
       "imagen_mapa":"E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\SCOR.jpg"
+    },
+    {
+      "recordatorio": "../guardados/recordatorios/recordatorio 1er parcial AD.txt",
+      "respuestas": "../guardados/rutas/1er parcial AD.txt",
+      "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\introduccion a analisis de datos\\mapas mentales\\1er parcial AD.drawio",
+      "resaltar": false,
+      "colores": "azulOscuro",
+      "imagen_mapa":"E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\introduccion a analisis de datos\\mapas mentales\\1er parcial AD.jpg"
     }
   ]
 }
