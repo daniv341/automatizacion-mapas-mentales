@@ -611,6 +611,7 @@
   .zona-eval textarea:focus {
     outline: 2px solid var(--color-boton); outline-offset: 1px;
   }
+
   .zona-eval .fila-eval { display: flex; justify-content: center; margin-top: 8px; }
   .resultado-eval {
     display: none; min-height: 18px;
@@ -1161,6 +1162,7 @@
     color: var(--texto-suave);
     margin: 4px 0 10px;
   }
+  
   .indicador-storage-dot {
     width: 9px;
     height: 9px;
@@ -1168,6 +1170,7 @@
     display: inline-block;
     background: #2e7d32;
   }
+
   .indicador-storage-dot.storage-naranja { background: #e07b00; }
   .indicador-storage-dot.storage-rojo { background: #c0392b; }
 
@@ -1845,6 +1848,7 @@
     font-size: 12px;
     background: var(--bg-superficie-alt);
   }
+  
   .lista-ver-tarjeta-item { padding: 3px 0; border-bottom: 1px solid var(--color-borde-suave); }
   .lista-ver-tarjeta-item:last-child { border-bottom: none; }
   .lista-ver-tarjeta-item.lista-ver-tarjeta-faltante { color: var(--texto-tenue); }
@@ -2161,6 +2165,12 @@
     border-bottom: 1px solid var(--color-borde-suave);
   }
   .fila-retencion-ruta:last-child { border-bottom: none; }
+  .retencion-tarjeta-grupo { margin-bottom: 14px; }
+  .retencion-tarjeta-pregunta {
+    font-weight: 700;
+    padding: 8px 4px 6px;
+    border-bottom: 2px solid var(--color-borde-suave);
+  }
   .retencion-ruta-numero { font-weight: 700; min-width: 42px; }
   .retencion-ruta-toggles { display: flex; gap: 8px; margin-left: auto; }
 
@@ -7006,7 +7016,7 @@
       if (opciones.conPista) return 8;
       return 15;
     }
-    if (resultado === 'casi') return modoEspecial === 'cloze' ? 8 : 3;
+    if (resultado === 'casi') return 8;
     if (resultado === 'no') return 0;
     if (resultado === 'saltar') {
       if (modoEspecial === 'cloze') return 0;
@@ -13740,6 +13750,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     const div = document.createElement('div');
     div.className = 'fila-retencion-ruta';
     div._rutaId = id;
+    div.dataset.ruta = id;
 
     const num = document.createElement('span');
     num.className = 'retencion-ruta-numero';
@@ -13779,6 +13790,36 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     return label;
   }
 
+  function gruposRetencionPorTarjeta(ids) {
+    const activas = new Set(ids.map(String));
+    const vistas = new Set();
+    const grupos = [];
+    tarjetasCompletas.forEach((t, idx) => {
+      const propias = [];
+      (t.rutas || []).forEach((id) => {
+        const clave = String(id);
+        if (!activas.has(clave) || vistas.has(clave)) return;
+        vistas.add(clave);
+        propias.push(id);
+      });
+      if (propias.length === 0) return;
+      propias.sort((a, b) => Number(a) - Number(b));
+      grupos.push({ clave: idx, pregunta: t.primero || '', ids: propias });
+    });
+    return grupos;
+  }
+
+  function grupoRetencionTarjeta(grupo) {
+    const div = document.createElement('div');
+    div.className = 'retencion-tarjeta-grupo';
+    const pregunta = document.createElement('div');
+    pregunta.className = 'retencion-tarjeta-pregunta';
+    pregunta.textContent = grupo.pregunta;
+    div.appendChild(pregunta);
+    grupo.ids.forEach((id) => div.appendChild(filaRetencionSesion(id)));
+    return div;
+  }
+
   function renderRetencionSubtemas(subtemas) {
     const el = document.getElementById('retencion-subt-lista');
     el.className = 'retencion-subt-lista';
@@ -13805,18 +13846,14 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       return;
     }
     elVacio.style.display = 'none';
-    // se reutilizan las filas existentes; solo se crean/quitan las que entran o salen del filtro
-    reconciliarHijos(el, ids, (id) => id, () => '', (id) => filaRetencionSesion(id));
-    ids.forEach((id) => {
-      const fila = el._nodosPorClave.get(String(id));
-      if (fila) pintarFilaRetencionSesion(fila, id);
-    });
+    reconciliarHijos(el, gruposRetencionPorTarjeta(ids), (g) => g.clave, (g) => g.ids.join(','), grupoRetencionTarjeta);
+    el.querySelectorAll('.fila-retencion-ruta').forEach((fila) => pintarFilaRetencionSesion(fila, fila._rutaId));
   }
 
   // Actualiza solo la fila de una ruta (toggle Retenida/Difícil/Nota): O(1) en vez de O(rutas).
   function refrescarFilaRetencionSesion(id) {
     const el = document.getElementById('retencion-sesion-lista');
-    const fila = el._nodosPorClave ? el._nodosPorClave.get(String(id)) : null;
+    const fila = el.querySelector('.fila-retencion-ruta[data-ruta="' + String(id).replace(/"/g, '') + '"]');
     if (fila) pintarFilaRetencionSesion(fila, id);
     else renderRetencionSesionLista({ soloLista: true });
   }
@@ -17170,6 +17207,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     respuestaMostrada[indiceActual] = true;
 
     if (modoObservador) {
+      revelado[indiceActual] = true; 
       renderTarjeta();
       return;
     }

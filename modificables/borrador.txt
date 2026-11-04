@@ -1,657 +1,101 @@
-temaP 1er parcial AD
+1. Contenido Teórico del Documento
 
-temaS
 
-^subT IDEA CENTRAL
-~imP el objetivo
-imP fue estimar alquiler mensual 1
-imP departamento en rublos a
-*imP partir información
 
-+imP como superficie,
+Definición de Decisión
 
-+imP distrito,
+Decisión: «El proceso para identificar y solucionar un curso de acción para resolver un problema específico». Stoner, et al (2003:260).
 
-+imP ubicación,
+Para tomar buenas decisiones…
+1. Identificar restricciones y limitaciones.
+2. Conocer la relación costo – beneficio y/o rendimientos esperado.
+3. Entender cuándo usar métodos cuantitativos o cualitativos.
+4. Conocer factores internos formales (cultura organizacional, políticas internas, estructura, etc.) e informales (políticas implícitas, hábitos, experiencia, etc.).
+5. Identificar factores externos (políticos, económicos, sociales, internacionales, culturales).
 
-+imP antigüedad,
+Técnicas
 
-+imP tipo edificio,
+Técnicas cuantitativas: PL (Programación Lineal), stock, colas, BI.
+Técnicas cualitativas: Experiencia, sentido común, madurez, creatividad.
 
-+imP estado renovación y
+Elementos de una Decisión
 
-+imP fecha del anuncio
+Decisor: Persona o grupo de personas (un comité, una empresa, una nación, etc.) que se encarga de tomar la decisión y elegir la alternativa óptima para cumplir el objetivo de la empresa bajo ciertos criterios.
+Alternativas: Acciones que puede realizar y controlar el decisor, con características propias (beneficios, pérdidas, costos, etc.) consistentes con el análisis que hace el decisor (instalar una planta pequeña, mediana o grande, implementar entre diferentes tecnologías la que presente mejores beneficios, etc.).
+Estados de la naturaleza: Eventos o escenarios que pueden ocurrir, no controlables, mutuamente excluyentes.
+Pagos: Medición del beneficio (ingresos, utilidad, aumento de clientes) o pérdida (costo) resultante de haber tomado una decisión, elegido una alternativa y la ocurrencia de un evento.
+Relación en Matriz de Pagos: Valor Monetario Esperado (VME = Σ(XijPi)).
 
-~deF el modelo final
-deF es una regresión lineal,
-deF pero antes se transformaron algunas
-deF variables
-deF para que pudiera
-deF representar relaciones más realistas
+Etapas en la Toma de Decisiones
 
-~comP Por eso,
-comP 'lineal' describe
-comP cómo modelo
-comP combina variables transformadas;
-comP no significa
-comP que precio tenga
-comP que cambiar en línea recta
-comP con cada variable original
+1. Inteligencia: Descubrimiento del problema: ¿cuál es el problema?
+2. Diseño: Descubrimiento de la solución: ¿cuáles son las posibles soluciones?
+3. Elección: Elección de soluciones: ¿cuál es la mejor solución?
+4. Implementación: Prueba de la solución: ¿está funcionando la solución? ¿podemos hacer que funcione mejor?
 
-^subT CONCEPTOS y PREGUNTAS
-~`imP LOG1P
-deF el modelo aprende en escala logarítmica,
-deF pero propietario
-deF necesita una estimación en rublos
+Criterios y Ambientes de Decisión
 
--comP Al volver una escala logarítmica
-comP a moneda original,
-comP simplemente deshacer transformación
-comP puede subestimar alquiler promedio,
-comP porque convertir de vuelta
-comP no compensa automáticamente
-comP variabilidad errores
+Certeza: Solo hay un escenario posible.
+Riesgo: Hay distintos escenarios pero se conoce la probabilidad de ocurrir.
+Incertidumbre: Hay distintos escenarios pero no se sabe la probabilidad de ocurrir.
 
-~`imP CORRECCION de DUAN
-deF calcula 1 factor ajuste a
-deF partir residuos del entrenamiento
+Criterios utilizados para tomar una decisión (Matriz de decisión en incertidumbre):
 
--cuR En informe,
-cuR factor Duan
-cuR es aproximadamente 1,003500
+1. Criterio optimista
+2. Criterio pesimista
+3. Criterio ni optimista ni pesimista
+4. Criterio de Hurwics
+5. Criterio de Savage
 
--comP Es una corrección pequeña,
-comP cual tiene sentido
-comP porque factor
-comP está muy cerca uno
+Clasificación de las Decisiones
 
--comP Por tanto,
-comP corrección mejora ligeramente resultado,
-comP pero no
-comP produce 1 cambio enorme
+Según Información:
 
-~`imP MULTICOLINEALIDAD
-deF la multicolinealidad aparece
-deF cuando varias variables
-deF cuentan casi misma historia
+Decisiones en certidumbre: cuenta con información confiable, exacta, medible (técnicas cuantitativas y cualitativas).
+Decisiones en incertidumbre: falta de información, datos. Impredecible (técnicas cuantitativas). Programadas y no programadas.
+Decisiones en riesgo: restricciones identificadas, información incompleta pero objetiva y confiable, se conocen probabilidades asociadas (técnicas cuantitativas).
 
--ejeM Por ejemplo,
-ejeM distancia al centro y
-ejeM distancia al metro
-*ejeM pueden estar relacionadas;
+Según Frecuencia:
+Decisiones rutinarias: frecuencia diaria, repetitivas (técnicas cualitativas).
+Decisiones de emergencia: sin precedentes, mientras transcurren eventos.
+Decisiones operativas: establecidas en políticas y manuales (técnicas cualitativas y cuantitativas).
 
-+ejeM también superficie y
+2. Estilos de Decisor (Toma de Decisiones)
 
-+ejeM cantidad habitaciones
+El modelo de referencia más empleado en administración y teoría de la decisión fue propuesto por Alan J. Rowe y Richard O. Mason, y difundido por autores como Stephen P. Robbins y Mary Coulter. Se basa en dos dimensiones cognitivas:
+Forma de pensar: Racional/lógica (procesa la información de forma secuencial y consistente) vs. Intuitiva/creativa (mira la situación en su conjunto).
+Tolerancia a la ambigüedad: Baja (necesita orden, certidumbre y estructura) vs. Alta (se siente cómodo procesando múltiples posibilidades simultáneas).
 
--comP Eso puede volver inestables coeficientes:
-comP al modelo le cuesta
-comP separar qué parte del efecto
-comP corresponde a cada variable
+Al cruzar estas dimensiones, surgen cuatro estilos principales de decisor:
 
--cuR No significa necesariamente
-cuR que predicción vaya a
-cuR ser mala,
-cuR pero
-cuR sí complica interpretación y
-cuR puede volver frágiles coeficientes
+1. Estilo Directivo
+Perfil: Pensamiento racional y baja tolerancia a la ambigüedad.
 
-~`imP VIF
-deF mide cuánto se infla incertidumbre 1
-deF predictor
-deF por su relación con otros
+Características:
+Son rápidos, pragmáticos y orientados a la acción inmediata y al corto plazo.
+Evalúan pocas alternativas y utilizan poca información (la justa y necesaria).
+Prefieren reglas claras, procedimientos preestablecidos y control.
 
--imP NUMERO DE CONDICION
-deF es una señal global estabilidad
-deF numérica del conjunto variables
+2. Estilo Analítico
+Perfil: Pensamiento racional y alta tolerancia a la ambigüedad.
 
--caR Ningún VIF final
-caR llega a 10;
-caR 53 57 predictores
-caR tienen VIF menor
-caR que 5 y cuatro quedan
-caR en franja moderada
+Características:
+Demandan abundante cantidad de datos e información antes de decidir.
+Analizan meticulosamente múltiples variables, escenarios y alternativas posibles.
+Son metódicos y objetivos; tienen gran capacidad de adaptación ante problemas complejos e imprevistos.
 
--caR el máximo
-caR es 8,01,
-caR así
-caR que sería incorrecto decir
-caR que toda colinealidad desapareció
+3. Estilo Conceptual
+Perfil: Pensamiento intuitivo y alta tolerancia a la ambigüedad.
 
-~`imP ONEHOT ENCODING
-deF transforma una variable categórica en
-deF indicadores separados,
-deF normalmente
-deF con valores
-deF que identifican
-*deF si 1 anuncio
+Características:
+Enfocados en el «panorama general» (big picture) y con perspectiva a largo plazo.
+Muy creativos e innovadores, abiertos a considerar soluciones novedosas y diversos puntos de vista.
+Fomentan la discusión de ideas, aunque en ocasiones pueden postergar la ejecución concreta por analizar demasiadas alternativas abstractas.
 
-+@deF pertenece o
+4. Estilo Conductual (o de Comportamiento)
+Perfil: Pensamiento intuitivo y baja tolerancia a la ambigüedad.
 
-+@deF no 
-
-$a una categoría
-
--cuR Es útil
-cuR para variables
-cuR con pocas categorías y
-*cuR sin orden numérico natural,
-
-+cuR como tipo edificio o
-
-+cuR estado renovación
-
--comP Así,
-comP modelo no interpreta
-comP por error
-comP que una categoría
-comP vale 'más'
-comP que otra solo
-comP porque tenga 1 número asignado
-
-~`imP TARGET ENCODING
-deF resume una categoría
-deF mediante una estadística relacionada
-deF con alquiler objetivo
-
--comP En vez crear una columna
-comP por cada distrito,
-comP genera una representación numérica del
-comP efecto asociado a ese distrito
-
--cuR Es útil
-cuR cuando hay muchas categorías
-
-~`imP DATA LEAKAGE
-deF o fuga información,
-deF ocurre
-deF cuando modelo
-deF recibe durante entrenamiento una pista
-deF que no tendría disponible forma
-deF legítima al predecir 1 caso
-deF nuevo
-
--comP Entonces parece muy preciso,
-comP pero esa precisión
-comP es artificial
-
--comP la elección
-comP depende principalmente cuántas categorías
-comP existen,
-comP cuántos casos
-comP hay en cada una y
-comP cuánto se
-comP necesita interpretar cada efecto
-
--ejeM Con pocas categorías
-ejeM por ejemplo,
-ejeM seis tipos edificio o
-*ejeM cuatro estados renovación One Hot
-
-+ejeM resulta simple y
-
-+ejeM transparente
-
--ejeM Con 129 distritos,
-ejeM crear una columna
-*ejeM por categoría
-
-+@ejeM puede volver representación demasiado dispersa y
-
-+@ejeM hacer que distritos raros se estimen
-
-$ejeM con pocos datos;
-ejeM Target Encoding
-ejeM resume esa señal en menos columnas,
-ejeM aunque exige controles estrictos contra fuga
-
-~`imP SPLINES
-deF permiten
-deF que efecto una variable cambie forma
-deF gradual
-deF según tramo su rango,
-deF en vez obligar al modelo
-deF a usar una sola pendiente
-deF para todos casos
-
--cuR Son útiles
-cuR cuando 1 metro cuadrado adicional
-*cuR no tiene mismo efecto en
-
-+@cuR departamentos pequeños y
-
-+@cuR grandes,
-
-$cuR o
-*cuR cuando alejarse del centro
-
-+@cuR encarece o
-
-+@cuR abarata
-
-$cuR alquiler forma distinta
-cuR según distancia
-
--imP PCA transforma varias columnas correlacionadas
-*imP en nuevas combinaciones
-
-+@imP que concentran información esas columnas y
-
-+@imP quedan menos correlacionadas
-
-$imP entre sí
-
--cuR No es una técnica
-cuR que 'descubra causalidad',
-cuR ni hace que modelo
-cuR sea automáticamente mejor
-
-~`imP ESTUDIO ABLACION
-*deF consiste en armar variantes 1 modelo y
-
-+@deF agregar o
-
-+@deF quitar
-
-$deF 1 bloque características cada vez,
-deF manteniendo comparable evaluación
-
--preG la pregunta es:
-preG '¿Qué mejora realmente
-preG cuando incorporo esta pieza?'.
-preG Si error baja forma
-preG consistente en datos no usados
-preG para ajustar esa variante,
-preG hay evidencia
-preG que bloque
-preG aporta valor predictivo
-
--comP Si error no baja o
-comP empeora,
-comP complejidad adicional quizá no se
-comP justifique
-
-~`imP JARQUE BERA
-deF es una prueba formal
-deF que analiza
-*deF si distribución residuos se parece
-
-+deF a una normal,
-deF prestando atención a su asimetría y
-
-+deF a qué tan
-@deF pesadas o
-
-+@deF ligeras
-
-$deF son sus colas
-
--deF la hipótesis nula es
-deF que residuos
-deF siguen una distribución normal
-
--comP Si valor p
-comP es menor
-comP que umbral elegido en informe,
-comP 0,05 se rechaza esa hipótesis;
-comP si es mayor,
-comP no hay evidencia suficiente
-comP para rechazarla
-
-~`imP DURBIN WATSON
-deF ayuda a detectar
-deF autocorrelación primer orden:
-deF si 1 error
-deF tiende a parecerse al error
-deF inmediatamente anterior en una secuencia
-deF ordenada
-
--comP En 1 análisis temporal importa
-comP porque errores meses cercanos podrían
-comP compartir una tendencia no capturada
-
--comP Un valor alrededor 2 suele
-comP indicar poca evidencia autocorrelación primer orden;
-comP por debajo 2
-comP puede sugerir autocorrelación positiva,
-*comP aunque interpretación completa
-
-+comP depende del contexto y
-
-+comP supuestos prueba
-
-~`imP CURVA APRENDIZAJE
-deF muestra cómo cambia error
-deF cuando modelo
-deF recibe más filas entrenamiento
-
--comP En versión K Fold mezclada,
-comP datos se reparten en pliegues
-comP sin respetar estrictamente orden cronológico
-
--cuR Sirve para observar estabilidad
-cuR dentro de una muestra tratada
-cuR como si sus registros fueran intercambiables,
-cuR pero es menos adecuada
-cuR para demostrar
-cuR cómo se comportará modelo
-cuR con meses futuros
-cuR cuando existe una tendencia del
-cuR mercado
-
-~`imP CURVA APRENDIZAJE FUERA DE TIEMPO
-deF responde una pregunta más cercana
-deF al uso real:
-deF si entreno
-deF con cada vez más datos históricos,
-deF ¿mejoran predicciones
-*deF sobre períodos posteriores
-
-+deF que modelo no vio? entrenamiento
-deF mantiene orden temporal y
-
-+deF valid/test pertenecen a períodos posteriores
-
--comP Así se
-comP mide desempeño
-comP ante 1 mercado
-comP que evoluciona,
-comP en lugar
-comP asumir
-comP que anuncios antiguos y
-comP futuros son intercambiables
-
-~`imP K FOLD
-deF mezcla datos
-deF para evaluar modelo en distintas particiones,
-deF mientras que partición temporal respeta orden cronológico:
-deF se entrena
-deF con períodos anteriores y
-deF se evalúa
-deF con períodos posteriores
-
--comP Esto permite
-comP comprobar
-comP si modelo
-comP puede predecir alquileres futuros sin
-comP aprovechar información del futuro
-
-~`imP KRUSTAL WALLIS
-deF permite evaluar
-deF si alquileres presentan diferencias
-deF entre grupos,
-deF como distintos barrios,
-deF sin exigir
-deF que datos sigan una distribución
-deF normal
-
-~`imP V CRAMER
-*deF mide intensidad asociación
-
-+deF entre dos variables categóricas y
-
-+deF ayuda a
-deF detectar posibles redundancias
-deF entre características
-
-~`imP OLS
-deF estima coeficientes
-deF buscando minimizar errores cuadrados
-
-~*-caR Ridge y
-
-+caR Lasso penalizan coeficientes
-caR para controlar complejidad y
-caR multicolinealidad,
-
-+caR mientras que Huber
-caR reduce influencia ciertos errores extremos
-
--comP OLS puede ganar
-*comP si ofrece 1 mejor equilibrio
-
-+comP entre precisión,
-
-+comP estabilidad e
-
-+comP interpretación en datos evaluados
-
-~`imP CETERIS PARIBUS
-deF significa
-deF 'manteniendo constantes demás variables'. 1
-deF coeficiente representa
-deF cómo cambia predicción del modelo
-*deF cuando cambia una característica del
-
-+deF departamento y
-
-+deF demás permanecen iguales
-
-~*-comP Si variable
-
-+@comP está transformada o
-
-+@comP codificada,
-
-$comP interpretación debe
-comP considerar esa transformación
-
-^subT GRAFICOS EDA
-~nuM 1
-caR distribución del alquiler:
-caR muestra asimetría variable objetivo y
-caR ayuda a justificar log1p
-
-~*nuM 2
-caR distribuciones predictores numéricos:
-*caR permite 
-
-+@caR detectar asimetrías,
-
-+@caR rangos extraños y
-
-+@caR variables
-
-$caR con valores extremos,
-caR sin eliminarlos automáticamente
-
-~nuM 3
-caR análisis categórico:
-*caR compara distribuciones del alquiler
-
-+caR entre tipos edificio,
-
-+caR renovaciones,
-
-+caR distritos y
-
-+caR otras categorías;
-
-$*caR ayuda a
-
-+@caR reconocer asociaciones y
-
-+@caR categorías
-
-$caR con pocos casos
-
-~*nuM 4
-caR correlaciones:
-caR identifica relaciones
-caR entre predictores,
-*caR por ejemplo superficie
-
-+caR con habitaciones y
-
-+caR distancia al centro
-
-+caR con distancia al metro;
-
-+caR orienta análisis multicolinealidad
-
-~nuM 5
-caR relaciones bivariadas clave:
-*caR evidencia apertura en abanico del
-
-+@caR alquiler original y
-
-+@caR curvatura relación
-
-$*caR con distancia al centro;
-
-+caR justifica transformación logarítmica y
-
-+caR splines
-
-~*nuM 6
-caR leakage y metro:
-caR muestra
-caR por qué rent_per_sqm filtraría respuesta y
-caR documenta dudas
-caR sobre validez variables estación y
-caR línea metro
-
-~*nuM 7
-
-+caR tendencias temporales:
-
-+caR muestra una evolución alcista nominal y
-
-+caR una estacionalidad mensual poco marcada;
-
-+caR ayuda a justificar tratamiento temporal y
-
-+caR partición cronológica
-
-~nuM 8
-caR distribución espacial:
-*caR muestra concentración alquileres altos en zona
-
-+@caR central y
-
-+@caR agrupamientos periféricos;
-
-$caR justifica representar ubicación
-caR con más una variable
-
-~textS Después vienen gráficos diagnóstico residuos,
-textS que verifican
-textS si esas decisiones dejaron patrones
-textS sistemáticos en errores
-
-^subT GRAFICOS DIAGNOSTICO
-~`nuM 1
-caR Histograma residuos:
-*caR debería verse aproximadamente centrado en
-
-+caR cero y
-
-+caR sin una asimetría extrema
-
--caR En informe,
-caR asimetría residual
-caR es cercana a cero y
-caR dispersión es parecida
-*caR entre train,
-
-+caR valid y
-
-+caR test
-
-~`nuM 2
-caR QQ plot:
-caR compara distribución residuos
-caR con una normal teórica
-
--caR Tus puntos
-caR se aproximan mucho a diagonal;
-caR en extremos se curvan ligeramente
-caR hacia adentro,
-caR compatible
-caR con colas más ligeras
-caR que una normal
-
--cuR Visualmente es una buena aproximación,
-cuR pero Jarque Bera
-cuR sí rechaza normalidad en test
-
-~`nuM 3
-caR Scale Location:
-caR busca cambios en magnitud errores
-caR a largo predicciones
-
--caR la curva
-caR se mantiene prácticamente horizontal en
-caR torno al nivel esperado;
-caR no se
-caR observa embudo marcado
-
-~*-caR Breusch Pagan tampoco rechaza homocedasticidad en
-
-+caR valid ni
-
-+caR test
-
-~*`nuM 4 Residuos vs. valores ajustados:
-
-+caR busca curvas,
-
-+caR embudos o
-
-+caR agrupamientos
-
--caR la nube
-*caR está centrada alrededor cero,
-
-+caR sin forma U
-
-+caR ni abanico,
-
-+
-+caR y línea media es horizontal
-
-~*-comP Eso apoya
-
-+comP que no queda una no
-@comP linealidad o
-
-+@comP una variación dispersión evidente en rango observado,
-
-$comP aunque ningún gráfico prueba
-comP que modelo capture absolutamente toda estructura
-
-~`nuM 5
-caR Real vs. predicho:
-caR contrasta directamente predicción
-caR con valor observado
-
-~*-caR Cuanto más cerca quedan puntos diagonal ideal,
-caR más cercanas
-caR son predicciones;
-caR se complementa
-
-+@caR con RMSE,
-
-+@caR MAE y
-
-+@caR R²,
-
-$caR porque una impresión visual no
-caR cuantifica error
-caR por sí sola
-
-~`nuM 6
-caR Residuos a largo
-caR del tiempo:
-caR busca deriva temporal
-
--caR el informe
-caR describe una dispersión relativamente estable,
-caR pero también 1 sesgo medio
-caR positivo en períodos posteriores,
-caR relacionado
-caR con evolución nominal alquileres
-
--comP Esto recuerda
-comP que errores estables no descartan
-comP que mercado cambie nivel
+Características:
+Centrados en las personas, las relaciones humanas y la cultura del equipo.
+Buscan el consenso, la aceptación colectiva y la participación de los miembros de la organización.
+Fomentan la comunicación abierta y procuran evitar el conflicto interpersonal.
