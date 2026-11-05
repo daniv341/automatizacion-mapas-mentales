@@ -611,7 +611,6 @@
   .zona-eval textarea:focus {
     outline: 2px solid var(--color-boton); outline-offset: 1px;
   }
-
   .zona-eval .fila-eval { display: flex; justify-content: center; margin-top: 8px; }
   .resultado-eval {
     display: none; min-height: 18px;
@@ -1162,7 +1161,6 @@
     color: var(--texto-suave);
     margin: 4px 0 10px;
   }
-  
   .indicador-storage-dot {
     width: 9px;
     height: 9px;
@@ -1170,7 +1168,6 @@
     display: inline-block;
     background: #2e7d32;
   }
-
   .indicador-storage-dot.storage-naranja { background: #e07b00; }
   .indicador-storage-dot.storage-rojo { background: #c0392b; }
 
@@ -1848,7 +1845,6 @@
     font-size: 12px;
     background: var(--bg-superficie-alt);
   }
-  
   .lista-ver-tarjeta-item { padding: 3px 0; border-bottom: 1px solid var(--color-borde-suave); }
   .lista-ver-tarjeta-item:last-child { border-bottom: none; }
   .lista-ver-tarjeta-item.lista-ver-tarjeta-faltante { color: var(--texto-tenue); }
@@ -3727,6 +3723,16 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-salir-sin-guardar">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>Análisis sin guardar</h3>
+    <p id="modal-salir-sin-guardar-texto"></p>
+    <button class="boton-reiniciar" id="btn-salir-guardar">Guardar y salir</button>
+    <button class="boton-secundario" id="btn-salir-sin-guardar">Salir sin guardar</button>
+    <button class="modal-cancelar" id="btn-salir-cancelar">Cancelar</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-aviso">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <p id="modal-aviso-texto" style="white-space: pre-line;"></p>
@@ -3792,6 +3798,7 @@
   let revelado = [];
   let pistaMostrada = [];  // MODIFICADO: si se usó 'Mostrar pista' (afecta la nota)
   let respuestaMostrada = [];
+  let rutasVisibles = [];
   let escritos = [];       // texto escrito por tarjeta (aunque no se evalue)
   let evaluaciones = [];   // {resultado, acertadas, faltaron, clavesTotal, propClaves, sim, comunes, totalEscritas, totalReferencia} o null
   let indiceActual = 0;
@@ -5348,6 +5355,7 @@
     revelado = new Array(n).fill(false);
     pistaMostrada = new Array(n).fill(false);
     respuestaMostrada = new Array(n).fill(false);
+    rutasVisibles = new Array(n).fill(false);
     escritos = new Array(n).fill('');
     evaluaciones = new Array(n).fill(null);
     porComprension = new Array(n).fill(false);
@@ -7016,7 +7024,7 @@
       if (opciones.conPista) return 8;
       return 15;
     }
-    if (resultado === 'casi') return 8;
+    if (resultado === 'casi') return modoEspecial === 'cloze' ? 8 : 3;
     if (resultado === 'no') return 0;
     if (resultado === 'saltar') {
       if (modoEspecial === 'cloze') return 0;
@@ -7600,6 +7608,7 @@
     revelado = new Array(n).fill(false);
     pistaMostrada = new Array(n).fill(false);
     respuestaMostrada = new Array(n).fill(false);
+    rutasVisibles = new Array(n).fill(false);
     escritos = new Array(n).fill('');
     evaluaciones = new Array(n).fill(null);
     porComprension = new Array(n).fill(false);
@@ -7615,6 +7624,7 @@
     gameOverDisparado = false;
     historialGuardadoEstaSesion = false;
     analisisGuardadoEstaSesion = false;
+    ultimoAnalisisFilas = [];
     modoZombie = false;
     reintentadasSesion = new Set();
     primerIntentoFallido = new Set();
@@ -7760,6 +7770,7 @@
     clozeData.evaluada = true;
     revelado[indiceActual] = true;
     respuestaMostrada[indiceActual] = true;
+    rutasVisibles[indiceActual] = true;
 
     const total = clozeData.totalHuecos;
     const prop = total > 0 ? (aciertos / total) : 1;
@@ -7926,6 +7937,7 @@
     revelado = new Array(n).fill(false);
     pistaMostrada = new Array(n).fill(false);
     respuestaMostrada = new Array(n).fill(false);
+    rutasVisibles = new Array(n).fill(false);
     escritos = new Array(n).fill('');
     evaluaciones = new Array(n).fill(null);
     porComprension = new Array(n).fill(false);
@@ -7940,6 +7952,7 @@
     gameOverDisparado = false;
     historialGuardadoEstaSesion = false;
     analisisGuardadoEstaSesion = false;
+    ultimoAnalisisFilas = [];
     modoZombie = false;
     reintentadasSesion = new Set();
     primerIntentoFallido = new Set();
@@ -8298,6 +8311,7 @@
     ronda.completada = true;
     revelado[indiceActual] = true;
     respuestaMostrada[indiceActual] = true;
+    rutasVisibles[indiceActual] = true;
     indiceCongelado = indiceActual;
 
     let res = 'no';
@@ -9506,10 +9520,14 @@
   }
 
   const elBtnAnalisisSesionGuardar = document.getElementById('btn-analisis-sesion-guardar');
-  elBtnAnalisisSesionGuardar.addEventListener('click', () => {
-    if (analisisGuardadoEstaSesion) return;
+  function contarSaltadasSesion() {
+    return resultados.filter((r) => r === 'saltar').length;
+  }
+
+  function guardarAnalisisSesionActual() {
+    if (analisisGuardadoEstaSesion) return false;
     const entrada = construirEntradaAnalisisGuardado();
-    if (!entrada) return;
+    if (!entrada) return false;
     analisisGuardados.push(entrada);
     analisisGuardados.sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
     while (analisisGuardados.length > MAX_ANALISIS_GUARDADOS) analisisGuardados.shift();
@@ -9518,9 +9536,69 @@
     curvaOlvidoConstruido = false;
     subtRepasarConstruido = false;
     sesgoConfianzaConstruido = false;
+    analisisGuardadoEstaSesion = true;
     elBtnAnalisisSesionGuardar.disabled = true;
     elBtnAnalisisSesionGuardar.textContent = '✓ Guardado';
+    return true;
+  }
+
+  elBtnAnalisisSesionGuardar.addEventListener('click', async () => {
+    if (analisisGuardadoEstaSesion) return;
+    const n = contarSaltadasSesion();
+    if (n > 0) {
+      const mensaje = n === 1
+        ? 'Queda 1 tarjeta sin responder: el análisis la contará como saltada. ¿Guardar de todos modos?'
+        : 'Quedan ' + n + ' tarjetas sin responder: el análisis las contará como saltadas. ¿Guardar de todos modos?';
+      if (!(await confirmarAccion(mensaje))) return;
+    }
+    guardarAnalisisSesionActual();
   });
+
+  const elModalSalirSinGuardar = document.getElementById('modal-salir-sin-guardar');
+  const elModalSalirSinGuardarTexto = document.getElementById('modal-salir-sin-guardar-texto');
+  let _resolverSalirSinGuardar = null;
+
+  function preguntarSalidaSinGuardar(mensaje) {
+    return new Promise((resolve) => {
+      elModalSalirSinGuardarTexto.textContent = mensaje;
+      elModalSalirSinGuardar.classList.add('abierto');
+      _resolverSalirSinGuardar = resolve;
+    });
+  }
+
+  function cerrarModalSalirSinGuardar(opcion) {
+    elModalSalirSinGuardar.classList.remove('abierto');
+    if (_resolverSalirSinGuardar) {
+      const resolver = _resolverSalirSinGuardar;
+      _resolverSalirSinGuardar = null;
+      resolver(opcion);
+    }
+  }
+
+  document.getElementById('btn-salir-guardar').addEventListener('click', () => cerrarModalSalirSinGuardar('guardar'));
+  document.getElementById('btn-salir-sin-guardar').addEventListener('click', () => cerrarModalSalirSinGuardar('salir'));
+  document.getElementById('btn-salir-cancelar').addEventListener('click', () => cerrarModalSalirSinGuardar(null));
+  elModalSalirSinGuardar.addEventListener('click', (evento) => {
+    if (evento.target === elModalSalirSinGuardar) cerrarModalSalirSinGuardar(null);
+  });
+
+  function analisisPendienteDeGuardar() {
+    return !pomodoroActivo && !modoEspecial && !modoObservador &&
+      ultimoAnalisisFilas.length > 0 && !analisisGuardadoEstaSesion;
+  }
+
+  async function salirDelResumen(accion) {
+    if (analisisPendienteDeGuardar()) {
+      const n = contarSaltadasSesion();
+      let mensaje = 'Generaste el análisis de esta sesión pero no lo guardaste.';
+      if (n === 1) mensaje += ' Queda 1 tarjeta sin responder: el análisis guardado la contará como saltada.';
+      else if (n > 1) mensaje += ' Quedan ' + n + ' tarjetas sin responder: el análisis guardado las contará como saltadas.';
+      const opcion = await preguntarSalidaSinGuardar(mensaje);
+      if (opcion === null) return;
+      if (opcion === 'guardar') guardarAnalisisSesionActual();
+    }
+    accion();
+  }
 
   function construirExportAnalisis() {
     return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), analisisGuardados: analisisGuardados };
@@ -10344,7 +10422,25 @@ const ZONAS_SYNC_GIST = [
     detalle.appendChild(puntosTxt);
     item.appendChild(detalle);
     actualizarListadoEnItem(item, entrada);   // NUEVO: arma/actualiza el "listado" (ver más abajo)
+
+    if (esSesionLocal(entrada)) {
+      const acciones = document.createElement('div');
+      acciones.className = 'retencion-entrada-acciones';
+      acciones.appendChild(botonMini('🗑 Borrar', () => borrarSesionHistorial(entrada.fecha)));
+      item.appendChild(acciones);
+    }
     return item;
+  }
+
+  async function borrarSesionHistorial(fecha) {
+    if (!(await confirmarAccion('¿Borrar esta sesión del historial? No se puede deshacer.'))) return;
+    const antes = gamificacion.historial.length;
+    gamificacion.historial = gamificacion.historial.filter((s) => !(esSesionLocal(s) && String(s.fecha) === String(fecha)));
+    if (gamificacion.historial.length === antes) return;
+    guardarGamificacion();
+    estadisticasConstruidas = false;
+    srsConstruido = false;
+    renderHistorial();
   }
 
   function actualizarListadoEnItem(item, entrada) {
@@ -16245,10 +16341,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const renderRazonesUI = (t) => renderRazones(t);
   const acumularTiempoActual = () => { if (cronometroActivo && !cronometroCongelado()) acumularTiempo(); };
 
-  document.getElementById('btn-elegir-temas').addEventListener('click', () => {
+  document.getElementById('btn-elegir-temas').addEventListener('click', () => salirDelResumen(() => {
     limpiarModoEspecialAlSalir();
     mostrarPantalla('temas');
-  });
+  }));
 
   function iniciarSesion(lista) {
     detenerCountdownExamen();
@@ -16262,6 +16358,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     revelado = new Array(lista.length).fill(false);
     pistaMostrada = new Array(lista.length).fill(false);  // MODIFICADO
     respuestaMostrada = new Array(lista.length).fill(false);
+    rutasVisibles = new Array(lista.length).fill(false);
     escritos = new Array(lista.length).fill('');
     evaluaciones = new Array(lista.length).fill(null);
     porComprension = new Array(lista.length).fill(false);
@@ -16283,6 +16380,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     gameOverDisparado = false;
     historialGuardadoEstaSesion = false;
     analisisGuardadoEstaSesion = false;
+    ultimoAnalisisFilas = [];
     elBtnAnalisisSesionGuardar.disabled = false;
     elBtnAnalisisSesionGuardar.textContent = '💾 Guardar análisis';
     actualizarBadgeNotaActual();
@@ -16346,7 +16444,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
 
     const validas = rutasValidasDe(actual);
-    elBtnRespuesta.style.display = (modoJuego !== 'examen' && validas.length > 0 && !respuestaMostrada[indiceActual])
+    elBtnRespuesta.style.display = (modoJuego !== 'examen' && validas.length > 0 && !rutasVisibles[indiceActual])
       ? 'inline-block' : 'none';
 
     elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
@@ -16587,7 +16685,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       return;
     }
 
-    if (!respuestaMostrada[indiceActual]) {
+    if (!rutasVisibles[indiceActual]) {
       elRutasContenedor.style.display = 'none';
       return;
     }
@@ -17202,12 +17300,12 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function mostrarRespuesta() {
-    if (respuestaMostrada[indiceActual]) return;
+    if (rutasVisibles[indiceActual]) return;
 
-    respuestaMostrada[indiceActual] = true;
+    rutasVisibles[indiceActual] = true;
+    if (resultados[indiceActual] === null) respuestaMostrada[indiceActual] = true;
 
     if (modoObservador) {
-      revelado[indiceActual] = true; 
       renderTarjeta();
       return;
     }
@@ -17972,20 +18070,20 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const elBtnRepasarNo = document.getElementById('btn-repasar-no');
     const paraRepaso = (i) => resultados[i] === 'no' || resultados[i] === 'casi' || primerIntentoFallido.has(i);
     elBtnRepasarNo.style.display = tarjetasSesion.some((_, i) => paraRepaso(i)) ? 'block' : 'none';
-    elBtnRepasarNo.onclick = () => {
+    elBtnRepasarNo.onclick = () => salirDelResumen(() => {
       if (iniciarSesionEspecialFiltrada(modoEspecial === 'matching'
         ? (i) => resultados[i] === 'no' || resultados[i] === 'casi'
         : paraRepaso)) return;
       let pendientes = tarjetasSesion.filter((_, i) => paraRepaso(i));
       if (modoAleatorio) pendientes = mezclar(pendientes);
       iniciarSesion(pendientes);
-    };
+    });
 
-    document.getElementById('btn-reiniciar').onclick = () => {
+    document.getElementById('btn-reiniciar').onclick = () => salirDelResumen(() => {
       if (reiniciarSesionActual()) return;
       const nuevaLista = modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion];
       iniciarSesion(nuevaLista);
-    };
+    });
 
     renderResumenGamificacion(nota);
     guardarHistorialSesion(nota, conteos);
