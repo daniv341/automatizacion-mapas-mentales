@@ -3298,6 +3298,130 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     margin-right: 4px;
   }
 
+  .quiz-contenedor {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    margin-top: 8px;
+  }
+
+  .quiz-titulo {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--texto-secundario);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .quiz-opcion {
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 2px solid var(--color-borde-medio);
+    background: var(--bg-superficie);
+    color: var(--texto-principal);
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    overflow-wrap: anywhere;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .quiz-opcion:hover:not(:disabled) {
+    background: var(--bg-superficie-hover);
+    border-color: var(--color-boton);
+  }
+
+  .quiz-opcion.seleccionada {
+    border-color: var(--color-boton);
+    background: color-mix(in srgb, var(--color-boton) 12%, var(--bg-superficie));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-boton) 25%, transparent);
+  }
+
+  .quiz-opcion:disabled {
+    cursor: default;
+    opacity: 1;
+  }
+
+  .quiz-opcion.correcta {
+    border-color: #3aa76d;
+    background: rgba(58, 167, 109, 0.14);
+    color: #2e7d32;
+  }
+
+  .quiz-opcion.incorrecta {
+    border-color: #e0574c;
+    background: rgba(224, 87, 76, 0.14);
+    color: #c0392b;
+  }
+
+  .quiz-opcion-letra {
+    font-weight: 800;
+    color: var(--texto-secundario);
+    flex-shrink: 0;
+  }
+
+  .detective-ayuda {
+    font-size: 13px;
+    color: var(--texto-secundario);
+    margin-bottom: 8px;
+  }
+
+  .detective-palabra {
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 0 1px;
+  }
+
+  .detective-palabra:hover {
+    background: var(--bg-superficie-hover);
+  }
+
+  .detective-palabra.sospechosa {
+    background: rgba(224, 163, 0, 0.28);
+    text-decoration: underline wavy #b8860b;
+  }
+
+  .detective-palabra.fija {
+    cursor: default;
+  }
+
+  .detective-palabra.fija:hover {
+    background: transparent;
+  }
+
+  .detective-palabra.alterada-ok {
+    background: rgba(58, 167, 109, 0.2);
+    color: #2e7d32;
+    font-weight: 700;
+  }
+
+  .detective-palabra.alterada-fallo {
+    background: rgba(224, 87, 76, 0.18);
+    color: #c0392b;
+    font-weight: 700;
+  }
+
+  .detective-palabra.falso {
+    background: rgba(224, 87, 76, 0.18);
+    color: #c0392b;
+    text-decoration: line-through;
+  }
+
+  .detective-original {
+    font-size: 13px;
+    font-weight: 700;
+    color: #3aa76d;
+    margin: 0 4px;
+  }
+
   .matching-contenedor {
     display: flex;
     flex-direction: column;
@@ -4509,6 +4633,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="opcion-modo-icono">🔗</span>
         <span class="opcion-modo-nombre">Matching Pairs</span>
         <span class="opcion-modo-detalle">Emparejá conceptos con sus rutas</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-otro-quiz" data-otro-modo="quiz">
+        <span class="opcion-modo-icono">❓</span>
+        <span class="opcion-modo-nombre">Cuestionario</span>
+        <span class="opcion-modo-detalle">Elegí la respuesta correcta entre varias opciones</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-otro-detective" data-otro-modo="detective">
+        <span class="opcion-modo-icono">🕵️</span>
+        <span class="opcion-modo-nombre">Detective</span>
+        <span class="opcion-modo-detalle">Encontrá las palabras alteradas en las rutas</span>
       </button>
     </div>
     <label class="opcion-demostraciones-wrap" id="wrap-modo-demostraciones" for="chk-modo-demostraciones">
@@ -7905,12 +8039,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function calcularPuntosBase(resultado, opciones) {
     opciones = opciones || {};
+    if (modoEspecial === 'quiz') return resultado === 'si' ? 8 : 0;
+    if (modoEspecial === 'detective') return resultado === 'si' ? 15 : (resultado === 'casi' ? 8 : 0);
     if (resultado === 'si') {
       if (opciones.pistaGratisUsada) return 15;
       if (opciones.conPista) return 8;
       return 15;
     }
-    if (resultado === 'casi') return 8;
+    if (resultado === 'casi') return modoEspecial === 'cloze' ? 8 : 3;
     if (resultado === 'no') return 0;
     if (resultado === 'saltar') {
       if (modoEspecial === 'cloze') return 0;
@@ -8031,6 +8167,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let estadoDemostracionesModal = false;
   let otroModoElegidoEnModal = 'cloze';
   let datosClozeSesion = [];
+  let datosQuizSesion = [];
+  let datosDetectiveSesion = [];
   let rondasMatching = [];
   let primeroSeleccionadoMatching = null;
   let asociacionesTempMatching = new Set();
@@ -8051,13 +8189,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (srsSesionActiva) return 'srs';
     if (modoEspecial === 'cloze') return 'cloze_' + modoJuego;
     if (modoEspecial === 'matching') return 'matching_' + modoJuego;
+    if (modoEspecial === 'quiz') return 'quiz_' + modoJuego;
+    if (modoEspecial === 'detective') return 'detective_' + modoJuego;
     if (repasoInteligenteActivo) return 'inteligente';
     return modoJuego;
   }
 
   function esModoEspecialHistorial(modo) {
     const m = String(modo || '');
-    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0;
+    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0;
   }
 
   function nombreModoJuego(modo) {
@@ -8067,6 +8207,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (modo === 'matching_light') return '🔗 Matching Light';
     if (modo === 'matching_normal') return '🔗 Matching Normal';
     if (modo === 'matching_tryhard') return '🔗 Matching Tryhard';
+    if (modo === 'quiz_light') return '❓ Cuestionario Light';
+    if (modo === 'quiz_normal') return '❓ Cuestionario Normal';
+    if (modo === 'quiz_tryhard') return '❓ Cuestionario Tryhard';
+    if (modo === 'detective_light') return '🕵️ Detective Light';
+    if (modo === 'detective_normal') return '🕵️ Detective Normal';
+    if (modo === 'detective_tryhard') return '🕵️ Detective Tryhard';
     if (modo === 'inteligente') return '🧠 Repaso inteligente';
     if (modo === 'srs') return '🧠 SRS';
     if (modo === 'examen') return '📝 Examen';
@@ -8150,12 +8296,40 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       modoDemostracionesPendiente = false;
       rondasMatching = rondas;
       abrirModalSeleccionModo(rondas, 'matching');
+    } else if (otroModoElegidoEnModal === 'quiz') {
+      const distintos = distintosSegundoQuiz();
+      const elegibles = base.filter((t) => esElegibleQuiz(t, distintos));
+      if (elegibles.length === 0) {
+        cerrarModalOtrosModos();
+        await avisar('No hay tarjetas con segundo término y al menos otra respuesta distinta en los temas seleccionados para iniciar el Cuestionario.');
+        return;
+      }
+      elModalOtrosModos.classList.remove('abierto');
+      resetearCheckboxDemostracionesModal();
+      modoEspecialPendiente = 'quiz';
+      modoDemostracionesPendiente = false;
+      abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'quiz');
+    } else if (otroModoElegidoEnModal === 'detective') {
+      const pool = construirPoolDistractoresDetective();
+      const elegibles = base.filter((t) => generarDetectiveTarjeta(t, pool) !== null);
+      if (elegibles.length === 0) {
+        cerrarModalOtrosModos();
+        await avisar('No hay tarjetas con rutas que tengan palabras alterables (y distractores disponibles) en los temas seleccionados para iniciar el modo Detective.');
+        return;
+      }
+      elModalOtrosModos.classList.remove('abierto');
+      resetearCheckboxDemostracionesModal();
+      modoEspecialPendiente = 'detective';
+      modoDemostracionesPendiente = false;
+      abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'detective');
     }
   }
 
   document.getElementById('btn-otros-modos').addEventListener('click', () => abrirModalOtrosModos());
   document.getElementById('opcion-otro-cloze').addEventListener('click', () => seleccionarOtroModoEnModal('cloze'));
   document.getElementById('opcion-otro-matching').addEventListener('click', () => seleccionarOtroModoEnModal('matching'));
+  document.getElementById('opcion-otro-quiz').addEventListener('click', () => seleccionarOtroModoEnModal('quiz'));
+  document.getElementById('opcion-otro-detective').addEventListener('click', () => seleccionarOtroModoEnModal('detective'));
   document.getElementById('btn-otros-modos-comenzar').addEventListener('click', () => confirmarOtrosModos());
   document.getElementById('btn-otros-modos-cancelar').addEventListener('click', () => cerrarModalOtrosModos());
   function actualizarBarraGamificacion() {
@@ -8225,6 +8399,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else if (modoEspecialPendiente === 'matching') {
       elTituloModalModo.textContent = 'Elegí el modo de juego — 🔗 Matching';
       elOpcionModoExamen.style.display = 'none';
+    } else if (modoEspecialPendiente === 'quiz') {
+      elTituloModalModo.textContent = 'Elegí el modo de juego — ❓ Cuestionario';
+      elOpcionModoExamen.style.display = 'none';
+    } else if (modoEspecialPendiente === 'detective') {
+      elTituloModalModo.textContent = 'Elegí el modo de juego — 🕵️ Detective';
+      elOpcionModoExamen.style.display = 'none';
     } else {
       elTituloModalModo.textContent = 'Elegí el modo de juego';
       elOpcionModoExamen.style.display = '';
@@ -8275,6 +8455,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       iniciarSesionCloze(lista);
     } else if (modoEspecial === 'matching') {
       iniciarSesionMatching(lista);
+    } else if (modoEspecial === 'quiz') {
+      iniciarSesionQuiz(lista);
+    } else if (modoEspecial === 'detective') {
+      iniciarSesionDetective(lista);
     } else {
       iniciarSesion(lista);
     }
@@ -8676,6 +8860,679 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       textoDetalle: textoDetalle,
     };
     escritos[indiceActual] = clozeData.respuestasUsuario.join(' | ');
+    resultados[indiceActual] = res;
+
+    procesarResultadoGamificacion(indiceActual, res, { conPista: false, pistaGratisUsada: false });
+    if (resultados.every((x) => x !== null)) {
+      cronometroActivo = false;
+    }
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function clavePlanaTexto(texto) {
+    const base = normalizarPalabra(String(texto || '').trim());
+    const plano = base.replace(/[^a-z0-9α-ω]+/g, ' ').trim();
+    return plano !== '' ? plano : base;
+  }
+
+  let _clavesSegundoQuiz = new Map();
+  const _palabrasSegundoQuiz = new Map();
+
+  function claveSegundoQuiz(t) {
+    let k = _clavesSegundoQuiz.get(t);
+    if (k === undefined) {
+      k = clavePlanaTexto(t.segundo);
+      _clavesSegundoQuiz.set(t, k);
+    }
+    return k;
+  }
+
+  function palabrasSegundoQuiz(t) {
+    let s = _palabrasSegundoQuiz.get(t);
+    if (!s) {
+      s = extraerPalabrasValidasSegundo(t.segundo);
+      _palabrasSegundoQuiz.set(t, s);
+    }
+    return s;
+  }
+
+  function distintosSegundoQuiz() {
+    const set = new Set();
+    tarjetasCompletas.forEach((t) => {
+      if (t.segundo && t.segundo.trim() !== '') set.add(claveSegundoQuiz(t));
+    });
+    return set;
+  }
+
+  function esElegibleQuiz(t, distintos) {
+    return !!t.segundo && t.segundo.trim() !== '' && distintos.size >= 2;
+  }
+
+  function similitudQuiz(a, b) {
+    const pa = palabrasSegundoQuiz(a);
+    const pb = palabrasSegundoQuiz(b);
+    let comunes = 0;
+    pa.forEach((p) => { if (pb.has(p)) comunes++; });
+    const union = pa.size + pb.size - comunes;
+    const jaccard = union > 0 ? comunes / union : 0;
+    const clavesA = new Set(a.claves || []);
+    let clavesComunes = 0;
+    (b.claves || []).forEach((c) => { if (clavesA.has(c)) clavesComunes++; });
+    return clavesComunes + jaccard * 3;
+  }
+
+  function generarOpcionesQuiz(t) {
+    const vistos = new Set([claveSegundoQuiz(t)]);
+    const candidatos = [];
+    mezclar(tarjetasCompletas).forEach((o) => {
+      if (o === t || !o.segundo || o.segundo.trim() === '') return;
+      const k = claveSegundoQuiz(o);
+      if (vistos.has(k)) return;
+      vistos.add(k);
+      candidatos.push({ texto: o.segundo.trim(), puntaje: similitudQuiz(t, o) });
+    });
+    candidatos.sort((a, b) => b.puntaje - a.puntaje);
+    const opciones = [{ texto: t.segundo.trim(), correcta: true }];
+    candidatos.slice(0, 3).forEach((c) => opciones.push({ texto: c.texto, correcta: false }));
+    return mezclar(opciones);
+  }
+
+  function datosQuizDe(i) {
+    if (!datosQuizSesion[i]) {
+      datosQuizSesion[i] = { opciones: generarOpcionesQuiz(tarjetasSesion[i]), seleccion: null, evaluada: false };
+    }
+    return datosQuizSesion[i];
+  }
+
+  function iniciarSesionEspecialBase(lista, prepararDatos) {
+    modoObservador = false;
+    srsSesionActiva = null;
+    elAreaTarjeta.classList.remove('observador');
+    tarjetasSesion = [...lista];
+    const n = tarjetasSesion.length;
+    resultados = new Array(n).fill(null);
+    tiempos = new Array(n).fill(0);
+    revelado = new Array(n).fill(false);
+    pistaMostrada = new Array(n).fill(false);
+    respuestaMostrada = new Array(n).fill(false);
+    rutasVisibles = new Array(n).fill(false);
+    escritos = new Array(n).fill('');
+    evaluaciones = new Array(n).fill(null);
+    porComprension = new Array(n).fill(false);
+    prepararDatos();
+
+    vidasActuales = vidasMaximas;
+    puntosSesion = 0;
+    rachaActual = 0;
+    mejorRacha = 0;
+    multiplicadorActual = 1;
+    puntosPorTarjeta = new Array(n).fill(0);
+    pistaGratisUsadaPorTarjeta = new Array(n).fill(false);
+    gameOverDisparado = false;
+    historialGuardadoEstaSesion = false;
+    analisisGuardadoEstaSesion = false;
+    ultimoAnalisisFilas = [];
+    modoZombie = false;
+    reintentadasSesion = new Set();
+    primerIntentoFallido = new Set();
+    reintentoExitoso = new Set();
+    segundaPendiente = false;
+
+    indiceActual = 0;
+    cronometroActivo = true;
+    indiceCongelado = -1;
+    pausaManual = false;
+    elOverlayPausa.classList.remove('abierto');
+    resetPanelesUI();
+    actualizarBarraGamificacion();
+    mostrarPantalla('estudio');
+    renderTarjeta();
+    iniciarCronometro();
+  }
+
+  function iniciarSesionQuiz(lista) {
+    iniciarSesionEspecialBase(lista, () => {
+      datosQuizSesion = new Array(tarjetasSesion.length).fill(null);
+    });
+  }
+
+  function ocultarContenedoresEspeciales() {
+    ['cloze-contenedor-activo', 'matching-contenedor-activo', 'quiz-contenedor-activo'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+
+  function seleccionarOpcionQuiz(idx) {
+    if (pausaManual) return;
+    const d = datosQuizDe(indiceActual);
+    if (d.evaluada || resultados[indiceActual] !== null) return;
+    d.seleccion = idx;
+    const cont = document.getElementById('quiz-contenedor-activo');
+    if (cont) {
+      cont.querySelectorAll('.quiz-opcion').forEach((btn, i) => btn.classList.toggle('seleccionada', i === idx));
+    }
+    elBtnEvaluar.disabled = false;
+  }
+
+  function renderTarjetaQuiz() {
+    const t = tarjetasSesion[indiceActual];
+    const d = datosQuizDe(indiceActual);
+    const r = resultados[indiceActual];
+    const yaEvaluada = d.evaluada || r !== null;
+
+    ocultarContenedoresEspeciales();
+    elTemaTexto.textContent = nombreTema(t);
+    elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
+    const contestadas = resultados.filter((x) => x !== null).length;
+    elBarraRelleno.style.width = ((contestadas / tarjetasSesion.length) * 100) + '%';
+
+    elBadgeRutas.style.display = 'none';
+    elBtnRevisar.style.display = 'inline-block';
+    elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
+
+    elPrimero.style.display = 'block';
+    elPrimero.textContent = t.primero;
+    elBtnPista.style.display = 'none';
+    elBtnRespuesta.style.display = 'none';
+    elSeparador.style.display = 'none';
+    elSegundo.style.display = 'none';
+    elSegundo.textContent = '';
+
+    renderPanelNota(t);
+    renderRazonesUI(t);
+
+    elRutasContenedor.innerHTML = '';
+    elRutasContenedor.style.display = 'none';
+    if (elZonaEval.nextElementSibling !== elRutasContenedor) {
+      elRutasContenedor.parentNode.insertBefore(elZonaEval, elRutasContenedor);
+    }
+
+    elTextoEval.parentElement.style.display = 'none';
+    elBtnDictadoTextoEval.style.display = 'none';
+    elRespuestaUsuarioResaltada.style.display = 'none';
+    elZonaEval.style.display = 'block';
+
+    let cont = document.getElementById('quiz-contenedor-activo');
+    if (!cont) {
+      cont = document.createElement('div');
+      cont.id = 'quiz-contenedor-activo';
+      cont.className = 'quiz-contenedor';
+      elZonaEval.insertBefore(cont, elFilaEval);
+    }
+    cont.style.display = 'flex';
+    cont.innerHTML = '';
+
+    const titulo = document.createElement('div');
+    titulo.className = 'quiz-titulo';
+    titulo.textContent = 'Elegí la respuesta correcta';
+    cont.appendChild(titulo);
+
+    d.opciones.forEach((op, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'quiz-opcion';
+      const letra = document.createElement('span');
+      letra.className = 'quiz-opcion-letra';
+      letra.textContent = String.fromCharCode(65 + idx) + ')';
+      const texto = document.createElement('span');
+      texto.textContent = op.texto;
+      btn.appendChild(letra);
+      btn.appendChild(texto);
+      if (yaEvaluada) {
+        btn.disabled = true;
+        if (op.correcta) btn.classList.add('correcta');
+        else if (d.evaluada && d.seleccion === idx) btn.classList.add('incorrecta');
+      } else {
+        btn.classList.toggle('seleccionada', d.seleccion === idx);
+        btn.addEventListener('click', () => seleccionarOpcionQuiz(idx));
+      }
+      cont.appendChild(btn);
+    });
+
+    elFilaEval.style.display = yaEvaluada ? 'none' : 'flex';
+    elBtnEvaluar.disabled = yaEvaluada || d.seleccion === null;
+
+    const ev = evaluaciones[indiceActual];
+    if (d.evaluada && ev) {
+      elResultadoEval.style.display = 'block';
+      elResultadoEval.className = 'resultado-eval ' + (ev.resultado === 'si' ? 'bien' : 'mal');
+      elResultadoEval.textContent = ev.textoDetalle;
+    } else {
+      elResultadoEval.style.display = 'none';
+      elResultadoEval.textContent = '';
+    }
+
+    elEstadoMarca.className = 'estado-marca' + (r ? ' ' + r : '');
+    if (r === 'si') elEstadoMarca.textContent = '✓ Marcada como entendida';
+    else if (r === 'no') elEstadoMarca.textContent = '✗ Marcada como no entendida';
+    else if (r === 'saltar') elEstadoMarca.textContent = '— Pasada sin marcar';
+    else elEstadoMarca.textContent = '';
+
+    const yaMarcada = r !== null;
+    document.querySelector('.botonera').style.display = 'flex';
+    elBtnSi.classList.remove('comprension');
+    elBtnSi.textContent = '✓';
+    elBtnSi.title = 'Entendido';
+    elBtnSi.style.display = yaEvaluada ? 'flex' : 'none';
+    elBtnNo.style.display = yaEvaluada ? 'flex' : 'none';
+    elBtnSaltar.style.display = 'inline-block';
+    elBtnDificil.style.display = 'inline-block';
+    elBtnRazones.style.display = 'inline-block';
+    elBtnSi.disabled = yaMarcada;
+    elBtnNo.disabled = yaMarcada;
+    elBtnSaltar.disabled = yaMarcada;
+
+    elBtnDificil.classList.toggle('activa', esDificil(t));
+    elBtnDificil.textContent = esDificil(t) ? '★ Difícil' : '☆ Difícil';
+
+    elBtnPausa.style.display = cronometroActivo ? 'inline-block' : 'none';
+    elBtnAnterior.disabled = indiceActual === 0;
+    elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+    actualizarBadgeNotaActual();
+  }
+
+  function evaluarQuizActual() {
+    const d = datosQuizDe(indiceActual);
+    if (d.evaluada || resultados[indiceActual] !== null || d.seleccion === null) return;
+
+    acumularTiempoActual();
+    indiceCongelado = indiceActual;
+
+    const elegida = d.opciones[d.seleccion];
+    const res = elegida.correcta ? 'si' : 'no';
+    d.evaluada = true;
+    revelado[indiceActual] = true;
+
+    evaluaciones[indiceActual] = {
+      resultado: res,
+      textoDetalle: elegida.correcta
+        ? '✓ Correcto'
+        : '✗ Incorrecto — la respuesta correcta está resaltada en verde.',
+    };
+    escritos[indiceActual] = elegida.texto;
+    resultados[indiceActual] = res;
+
+    procesarResultadoGamificacion(indiceActual, res, { conPista: false, pistaGratisUsada: false });
+    if (resultados.every((x) => x !== null)) {
+      cronometroActivo = false;
+    }
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function segmentarLineaDetective(linea) {
+    const segs = [];
+    const re = new RegExp(REGEX_PALABRAS_CLOZE.source, 'g');
+    let ultimo = 0;
+    let m;
+    while ((m = re.exec(linea)) !== null) {
+      if (m.index > ultimo) segs.push({ tipo: 'texto', valor: linea.slice(ultimo, m.index) });
+      segs.push({ tipo: 'palabra', valor: m[0], norm: normalizarPalabra(m[0]) });
+      ultimo = re.lastIndex;
+    }
+    if (ultimo < linea.length) segs.push({ tipo: 'texto', valor: linea.slice(ultimo) });
+    return segs;
+  }
+
+  function esAlterableDetective(norm, setClaves) {
+    if (/^[0-9]+$/.test(norm)) return false;
+    return setClaves.has(norm) || (norm.length >= 3 && !STOPWORDS.has(norm));
+  }
+
+  function lineasDeRutaDetective(id) {
+    const bloque = rutasDisp[id];
+    return (bloque && Array.isArray(bloque.lineas)) ? bloque.lineas : [];
+  }
+
+  function construirPoolDistractoresDetective() {
+    const claves = new Map();
+    const sueltas = new Map();
+    tarjetasCompletas.forEach((t) => {
+      const setClaves = new Set(t.claves || []);
+      rutasValidasDe(t).forEach((id) => {
+        lineasDeRutaDetective(id).forEach((linea) => {
+          if (esImagen(linea)) return;
+          segmentarLineaDetective(linea).forEach((s) => {
+            if (s.tipo !== 'palabra' || !esAlterableDetective(s.norm, setClaves)) return;
+            const destino = setClaves.has(s.norm) ? claves : sueltas;
+            if (!destino.has(s.norm)) destino.set(s.norm, s.valor);
+          });
+        });
+      });
+    });
+    return { claves: Array.from(claves.entries()), sueltas: Array.from(sueltas.entries()) };
+  }
+
+  function tomarDistractoresDetective(pool, excluidos, cantidad) {
+    const res = [];
+    const usados = new Set();
+    const agregar = (par) => {
+      if (excluidos.has(par[0]) || usados.has(par[0])) return false;
+      usados.add(par[0]);
+      res.push({ norm: par[0], surface: par[1] });
+      return true;
+    };
+    [pool.claves, pool.sueltas].forEach((lote) => {
+      if (res.length >= cantidad || lote.length === 0) return;
+      const maxIntentos = Math.max(40, cantidad * 30);
+      for (let i = 0; i < maxIntentos && res.length < cantidad; i++) {
+        agregar(lote[Math.floor(Math.random() * lote.length)]);
+      }
+      for (let i = 0; i < lote.length && res.length < cantidad; i++) {
+        agregar(lote[i]);
+      }
+    });
+    return res;
+  }
+
+  function adaptarCasoDetective(surface, original) {
+    if (original.length > 1 && original === original.toUpperCase() && original !== original.toLowerCase()) {
+      return surface.toUpperCase();
+    }
+    const minuscula = surface.toLowerCase();
+    const inicial = original.charAt(0);
+    if (inicial !== inicial.toLowerCase() && inicial === inicial.toUpperCase()) {
+      return minuscula.charAt(0).toUpperCase() + minuscula.slice(1);
+    }
+    return minuscula;
+  }
+
+  function generarDetectiveTarjeta(t, pool) {
+    const setClaves = new Set(t.claves || []);
+    const palabrasPropias = new Set();
+    const rutas = {};
+    const ocurrencias = [];
+    const segPorIdx = new Map();
+    let contador = 0;
+
+    rutasValidasDe(t).forEach((id) => {
+      rutas[id] = lineasDeRutaDetective(id).map((linea) => {
+        if (esImagen(linea)) return { tipo: 'imagen', src: linea.substring(4) };
+        const segmentos = segmentarLineaDetective(linea).map((s) => {
+          if (s.tipo !== 'palabra') return s;
+          palabrasPropias.add(s.norm);
+          const seg = { tipo: 'palabra', idx: contador++, valor: s.valor, original: s.valor, norm: s.norm, alterada: false };
+          segPorIdx.set(seg.idx, seg);
+          if (esAlterableDetective(s.norm, setClaves)) {
+            ocurrencias.push({ seg: seg, esClave: setClaves.has(s.norm) });
+          }
+          return seg;
+        });
+        return { tipo: 'texto', segmentos: segmentos };
+      });
+    });
+
+    if (ocurrencias.length === 0) return null;
+
+    const nClaves = (t.claves || []).length;
+    const objetivo = nClaves > 0 ? Math.min(6, Math.max(1, Math.round(nClaves * 0.3))) : 1;
+
+    const orden = mezclar(ocurrencias);
+    orden.sort((a, b) => (b.esClave ? 1 : 0) - (a.esClave ? 1 : 0));
+    const elegidas = [];
+    const normsUsadas = new Set();
+    for (let i = 0; i < orden.length && elegidas.length < objetivo; i++) {
+      if (normsUsadas.has(orden[i].seg.norm)) continue;
+      normsUsadas.add(orden[i].seg.norm);
+      elegidas.push(orden[i].seg);
+    }
+
+    const distractores = tomarDistractoresDetective(pool, palabrasPropias, elegidas.length);
+    if (distractores.length === 0) return null;
+
+    const alteraciones = new Set();
+    const alteradas = [];
+    for (let i = 0; i < distractores.length; i++) {
+      const seg = elegidas[i];
+      seg.valor = adaptarCasoDetective(distractores[i].surface, seg.original);
+      seg.alterada = true;
+      alteraciones.add(seg.idx);
+      alteradas.push(seg);
+    }
+
+    return {
+      rutas: rutas,
+      abiertas: new Set(),
+      alteraciones: alteraciones,
+      alteradas: alteradas,
+      segPorIdx: segPorIdx,
+      marcadas: new Set(),
+      evaluada: false,
+    };
+  }
+
+  function iniciarSesionDetective(lista) {
+    const pool = construirPoolDistractoresDetective();
+    const datos = [];
+    const validas = [];
+    lista.forEach((t) => {
+      const d = generarDetectiveTarjeta(t, pool);
+      if (d) { validas.push(t); datos.push(d); }
+    });
+    if (validas.length === 0) return;
+    iniciarSesionEspecialBase(validas, () => {
+      datosDetectiveSesion = datos;
+    });
+  }
+
+  function renderRutasDetective(validas) {
+    const d = datosDetectiveSesion[indiceActual];
+    if (!d) {
+      elRutasContenedor.style.display = 'none';
+      return;
+    }
+    elRutasContenedor.style.display = 'block';
+    const yaEvaluada = d.evaluada || resultados[indiceActual] !== null;
+
+    if (!yaEvaluada) {
+      const ayuda = document.createElement('div');
+      ayuda.className = 'detective-ayuda';
+      ayuda.textContent = 'Algunas palabras de las rutas fueron alteradas. Abrí las rutas y tocá las palabras que creas sospechosas.';
+      elRutasContenedor.appendChild(ayuda);
+    }
+
+    validas.forEach((id) => {
+      const det = document.createElement('details');
+      det.className = 'ruta-acordeon';
+      det.open = d.abiertas.has(id);
+
+      const sum = document.createElement('summary');
+      sum.textContent = 'Ruta ' + id;
+      det.appendChild(sum);
+
+      det.addEventListener('toggle', () => {
+        if (det.open) d.abiertas.add(id);
+        else d.abiertas.delete(id);
+      });
+
+      prepararDetallesLazy(det, () => {
+        const contenido = document.createElement('div');
+        contenido.className = 'ruta-contenido';
+        (d.rutas[id] || []).forEach((lineaObj) => {
+          if (lineaObj.tipo === 'imagen') {
+            const img = document.createElement('img');
+            img.decoding = 'async';
+            img.loading = 'lazy';
+            img.className = 'ruta-img-thumb';
+            img.src = lineaObj.src;
+            img.alt = 'Imagen de la ruta ' + id;
+            contenido.appendChild(img);
+            return;
+          }
+          const div = document.createElement('div');
+          div.className = 'ruta-linea';
+          lineaObj.segmentos.forEach((seg) => {
+            if (seg.tipo === 'texto') {
+              div.appendChild(document.createTextNode(seg.valor));
+              return;
+            }
+            const span = document.createElement('span');
+            span.className = 'detective-palabra';
+            span.textContent = seg.valor;
+            const marcada = d.marcadas.has(seg.idx);
+            if (!yaEvaluada) {
+              span.classList.toggle('sospechosa', marcada);
+              span.addEventListener('click', () => {
+                if (pausaManual || d.evaluada || resultados[indiceActual] !== null) return;
+                if (d.marcadas.has(seg.idx)) d.marcadas.delete(seg.idx);
+                else d.marcadas.add(seg.idx);
+                span.classList.toggle('sospechosa', d.marcadas.has(seg.idx));
+              });
+              div.appendChild(span);
+              return;
+            }
+            span.classList.add('fija');
+            if (seg.alterada) {
+              span.classList.add(marcada ? 'alterada-ok' : 'alterada-fallo');
+              div.appendChild(span);
+              const orig = document.createElement('span');
+              orig.className = 'detective-original';
+              orig.textContent = '(' + seg.original + ')';
+              div.appendChild(orig);
+            } else {
+              if (d.evaluada && marcada) span.classList.add('falso');
+              div.appendChild(span);
+            }
+          });
+          contenido.appendChild(div);
+        });
+        det.appendChild(contenido);
+      });
+
+      elRutasContenedor.appendChild(det);
+    });
+  }
+
+  function renderTarjetaDetective() {
+    const t = tarjetasSesion[indiceActual];
+    const d = datosDetectiveSesion[indiceActual];
+    const r = resultados[indiceActual];
+    const yaEvaluada = d.evaluada || r !== null;
+
+    ocultarContenedoresEspeciales();
+    elTemaTexto.textContent = nombreTema(t);
+    elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
+    const contestadas = resultados.filter((x) => x !== null).length;
+    elBarraRelleno.style.width = ((contestadas / tarjetasSesion.length) * 100) + '%';
+
+    const nRutas = rutasValidasDe(t).length;
+    if (nRutas > 0) {
+      elBadgeRutas.textContent = 'rutas = ' + nRutas;
+      elBadgeRutas.style.display = 'block';
+    } else {
+      elBadgeRutas.style.display = 'none';
+    }
+
+    elBtnRevisar.style.display = 'inline-block';
+    elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
+
+    elPrimero.style.display = 'block';
+    elPrimero.textContent = t.primero;
+    elBtnPista.style.display = 'none';
+    elBtnRespuesta.style.display = 'none';
+
+    const mostrarSegundo = d.evaluada && !!t.segundo;
+    elSeparador.style.display = mostrarSegundo ? 'block' : 'none';
+    elSegundo.style.display = mostrarSegundo ? 'block' : 'none';
+    elSegundo.textContent = mostrarSegundo ? t.segundo : '';
+
+    renderPanelNota(t);
+    renderRazonesUI(t);
+
+    if (elRutasContenedor.nextElementSibling !== elZonaEval) {
+      elZonaEval.parentNode.insertBefore(elRutasContenedor, elZonaEval);
+    }
+    elRutasContenedor.innerHTML = '';
+    renderRutasDetective(rutasValidasDe(t));
+
+    elTextoEval.parentElement.style.display = 'none';
+    elBtnDictadoTextoEval.style.display = 'none';
+    elRespuestaUsuarioResaltada.style.display = 'none';
+    elZonaEval.style.display = yaEvaluada ? 'none' : 'block';
+    elFilaEval.style.display = yaEvaluada ? 'none' : 'flex';
+    elBtnEvaluar.disabled = yaEvaluada;
+
+    const ev = evaluaciones[indiceActual];
+    if (d.evaluada && ev) {
+      elResultadoEval.style.display = 'block';
+      elResultadoEval.className = 'resultado-eval ' + (ev.resultado === 'si' ? 'bien' : (ev.resultado === 'casi' ? 'casi' : 'mal'));
+      elResultadoEval.textContent = ev.textoDetalle;
+    } else {
+      elResultadoEval.style.display = 'none';
+      elResultadoEval.textContent = '';
+    }
+
+    elEstadoMarca.className = 'estado-marca' + (r ? ' ' + r : '');
+    if (r === 'si') elEstadoMarca.textContent = '✓ Marcada como entendida';
+    else if (r === 'casi') elEstadoMarca.textContent = '~ Casi entendida';
+    else if (r === 'no') elEstadoMarca.textContent = '✗ Marcada como no entendida';
+    else if (r === 'saltar') elEstadoMarca.textContent = '— Pasada sin marcar';
+    else elEstadoMarca.textContent = '';
+
+    const yaMarcada = r !== null;
+    document.querySelector('.botonera').style.display = 'flex';
+    elBtnSi.classList.remove('comprension');
+    elBtnSi.textContent = '✓';
+    elBtnSi.title = 'Entendido';
+    elBtnSi.style.display = yaEvaluada ? 'flex' : 'none';
+    elBtnNo.style.display = yaEvaluada ? 'flex' : 'none';
+    elBtnSaltar.style.display = 'inline-block';
+    elBtnDificil.style.display = 'inline-block';
+    elBtnRazones.style.display = 'inline-block';
+    elBtnSi.disabled = yaMarcada;
+    elBtnNo.disabled = yaMarcada;
+    elBtnSaltar.disabled = yaMarcada;
+
+    elBtnDificil.classList.toggle('activa', esDificil(t));
+    elBtnDificil.textContent = esDificil(t) ? '★ Difícil' : '☆ Difícil';
+
+    elBtnPausa.style.display = cronometroActivo ? 'inline-block' : 'none';
+    elBtnAnterior.disabled = indiceActual === 0;
+    elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+    actualizarBadgeNotaActual();
+  }
+
+  function evaluarDetectiveActual() {
+    const d = datosDetectiveSesion[indiceActual];
+    if (!d || d.evaluada || resultados[indiceActual] !== null) return;
+
+    acumularTiempoActual();
+    indiceCongelado = indiceActual;
+
+    const total = d.alteraciones.size;
+    let detectadas = 0;
+    d.alteraciones.forEach((i) => { if (d.marcadas.has(i)) detectadas++; });
+    let falsos = 0;
+    d.marcadas.forEach((i) => { if (!d.alteraciones.has(i)) falsos++; });
+
+    let nivel = detectadas === total ? 2 : (detectadas / total >= 0.5 ? 1 : 0);
+    nivel = Math.max(0, nivel - falsos);
+    const res = nivel === 2 ? 'si' : (nivel === 1 ? 'casi' : 'no');
+
+    d.evaluada = true;
+    revelado[indiceActual] = true;
+    respuestaMostrada[indiceActual] = true;
+    rutasVisibles[indiceActual] = true;
+
+    const etq = res === 'si' ? '✓ Bien' : (res === 'casi' ? '~ Casi' : '✗ Mal');
+    const reales = d.alteradas.map((s) => '«' + s.valor + '» → «' + s.original + '»').join(', ');
+    const textoDetalle = etq + ' — Detectaste ' + detectadas + ' de ' + total + ' alteración(es). Falsos positivos: ' + falsos +
+      '. Alteraciones reales: ' + reales + '.';
+
+    evaluaciones[indiceActual] = {
+      resultado: res,
+      acertadas: detectadas,
+      clavesTotal: total,
+      textoDetalle: textoDetalle,
+    };
+    escritos[indiceActual] = Array.from(d.marcadas).map((i) => {
+      const seg = d.segPorIdx.get(i);
+      return seg ? seg.valor : '';
+    }).join(' | ');
     resultados[indiceActual] = res;
 
     procesarResultadoGamificacion(indiceActual, res, { conPista: false, pistaGratisUsada: false });
@@ -9157,7 +10014,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!modoZombie) {
       if (nErrores === 0) {
         if (!esModoSinGamificacion()) {
-          const pts = Math.round(15 * multiplicadorActual);
+          const pts = Math.round(8 * multiplicadorActual);
           puntosSesion += pts;
           puntosPorTarjeta[indiceActual] = (puntosPorTarjeta[indiceActual] || 0) + pts;
           rachaActual++;
@@ -9223,6 +10080,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (clozeCont) clozeCont.style.display = 'none';
     const matchCont = document.getElementById('matching-contenedor-activo');
     if (matchCont) matchCont.style.display = 'none';
+    const quizCont = document.getElementById('quiz-contenedor-activo');
+    if (quizCont) quizCont.style.display = 'none';
     if (elZonaEval.nextElementSibling !== elRutasContenedor) {
       elRutasContenedor.parentNode.insertBefore(elZonaEval, elRutasContenedor);
     }
@@ -9241,6 +10100,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       renderTarjetaMatching();
       return true;
     }
+    if (modoEspecial === 'quiz') {
+      renderTarjetaQuiz();
+      return true;
+    }
+    if (modoEspecial === 'detective') {
+      renderTarjetaDetective();
+      return true;
+    }
     limpiarContenedoresModoEspecial();
     return false;
   }
@@ -9252,6 +10119,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     if (modoEspecial === 'matching') {
       evaluarPrimeroMatchingActual();
+      return true;
+    }
+    if (modoEspecial === 'quiz') {
+      evaluarQuizActual();
+      return true;
+    }
+    if (modoEspecial === 'detective') {
+      evaluarDetectiveActual();
       return true;
     }
     return false;
@@ -9270,6 +10145,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else if (modoEspecial === 'cloze') {
       const clozeData = datosClozeSesion[indiceActual];
       if ((clozeData && clozeData.evaluada) || resultados[indiceActual] !== null) {
+        indiceCongelado = indiceActual;
+      } else {
+        indiceCongelado = -1;
+      }
+    } else if (modoEspecial === 'quiz' || modoEspecial === 'detective') {
+      const datos = modoEspecial === 'quiz' ? datosQuizSesion[indiceActual] : datosDetectiveSesion[indiceActual];
+      if ((datos && datos.evaluada) || resultados[indiceActual] !== null) {
         indiceCongelado = indiceActual;
       } else {
         indiceCongelado = -1;
@@ -9298,7 +10180,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           }
         }
       });
-    } else if (modoEspecial === 'cloze') {
+    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective') {
       resultados.forEach((r, i) => {
         if (r === null) resultados[i] = 'saltar';
       });
@@ -9418,6 +10300,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
+    if (modoEspecial === 'quiz' || modoEspecial === 'detective') {
+      let lista = tarjetasSesion.filter((_, i) => predicado(i));
+      if (lista.length === 0) return true;
+      if (modoAleatorio) lista = mezclar(lista);
+      if (modoEspecial === 'quiz') iniciarSesionQuiz(lista);
+      else iniciarSesionDetective(lista);
+      return true;
+    }
     return false;
   }
 
@@ -9433,6 +10323,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
+    if (modoEspecial === 'quiz' || modoEspecial === 'detective') {
+      const base = modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion];
+      if (modoEspecial === 'quiz') iniciarSesionQuiz(base);
+      else iniciarSesionDetective(base);
+      return true;
+    }
     return false;
   }
 
@@ -9444,6 +10340,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     modoDemostracionesCloze = false;
     modoDemostracionesPendiente = false;
     datosClozeSesion = [];
+    datosQuizSesion = [];
+    datosDetectiveSesion = [];
     rondasMatching = [];
     primeroSeleccionadoMatching = null;
     asociacionesTempMatching.clear();
@@ -12681,6 +13579,20 @@ const ZONAS_SYNC_GIST = [
           if (ronda && !ronda.completada && primeroSeleccionadoMatching !== null) {
             evento.preventDefault();
             evaluarPrimeroMatchingActual();
+            return;
+          }
+        } else if (modoEspecial === 'quiz') {
+          const d = datosQuizSesion[indiceActual];
+          if (d && !d.evaluada && d.seleccion !== null && resultados[indiceActual] === null) {
+            evento.preventDefault();
+            evaluarQuizActual();
+            return;
+          }
+        } else if (modoEspecial === 'detective') {
+          const d = datosDetectiveSesion[indiceActual];
+          if (d && !d.evaluada && resultados[indiceActual] === null) {
+            evento.preventDefault();
+            evaluarDetectiveActual();
             return;
           }
         }
@@ -16231,8 +17143,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const cont = document.getElementById('estadisticas-contenido');
     cont.innerHTML = '';
 
+    const MODOS_GRAFICAS = ['light', 'normal', 'tryhard', 'examen', 'srs'];
     const historialPropio = gamificacion.historial
-      .filter((s) => espacioDeSesion(s) === ESPACIO_HASH)
+      .filter((s) => espacioDeSesion(s) === ESPACIO_HASH && MODOS_GRAFICAS.indexOf(s.modo) !== -1)
       .slice()
       .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
     const ultimasSesiones = historialPropio.slice(-10);
@@ -17487,6 +18400,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       return;
     }
 
+    if (modoEspecial === 'detective') {
+      renderRutasDetective(validas);
+      return;
+    }
+
     if (modoEspecial === 'cloze') {
       const clozeData = datosClozeSesion[indiceActual];
       if (!clozeData) {
@@ -18192,6 +19110,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (resultados[indiceActual] === null) respuestaMostrada[indiceActual] = true;
 
     if (modoObservador) {
+      revelado[indiceActual] = true;
       renderTarjeta();
       return;
     }
