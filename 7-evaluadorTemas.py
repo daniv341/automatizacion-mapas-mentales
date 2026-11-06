@@ -3994,7 +3994,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <div class="tarjeta" id="tarjeta">
       <div class="badge-rutas" id="badge-rutas" style="display:none;"></div>
-      <button class="boton-revisar" id="btn-revisar" title="Marcar para revisar (solo durante esta sesión)">🚩 Revisar</button>
+      <button class="boton-revisar" id="btn-revisar" title="Marcar para revisar (se guarda en este navegador)">🚩 Revisar</button>
       <div class="primero" id="tarjeta-primero"></div>
       <div class="zona-segundo" id="zona-segundo">
         <div class="fila-botones-tarjeta">
@@ -4830,7 +4830,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let modoObservador = false;  // NUEVO: viendo tarjetas sin evaluarse (sin cronómetro ni calificación)
   let observadorAbiertos = new Set();  // NUEVO: subT abiertos en la lista del observador
   let pausaManual = false;     // NUEVO: cronómetro pausado a mano (botón ⏸ Pausar)
-  let revisarEnMemoria = {};
+  function cargarRevisarLocal(clave) {
+    try {
+      const o = JSON.parse(localStorage.getItem(clave) || '{}');
+      return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
+    } catch (e) { return {}; }
+  }
+  function guardarRevisarLocal(clave, obj) {
+    try { localStorage.setItem(clave, JSON.stringify(obj)); } catch (e) {}
+  }
+  let revisarEnMemoria = cargarRevisarLocal('revisar_tarjetas_v1');
 
   function esRevisar(t) { return !!revisarEnMemoria[hashTarjeta(t)]; }
 
@@ -4843,6 +4852,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else {
       revisarEnMemoria[h] = { p: t.primero || '', s: t.segundo || '', t: Date.now() };
     }
+    guardarRevisarLocal('revisar_tarjetas_v1', revisarEnMemoria);
     renderTarjeta();
   }
   let porComprension = [];     // NUEVO: tarjetas marcadas Entendida por comprensión
@@ -4884,7 +4894,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return { puntosTotales: 0, inventario: { comodines: 0, pistasGratis: 0, escudosRacha: 0, segundasOportunidades: 0 }, historial: [], resumenPorEvaluador: {} };
   }
 
-  function cargarGamificacion() {
+  function itemsLedgerGamificacion() { return ['comodines', 'pistasGratis', 'escudosRacha', 'segundasOportunidades']; }
+
+  function asegurarLedgerGamificacion(g) {
+    const esNum = (v) => typeof v === 'number' && isFinite(v);
+    if (!g.inventario || typeof g.inventario !== 'object') g.inventario = {};
+    if (!esNum(g.puntosGastados)) g.puntosGastados = 0;
+    if (!esNum(g.ganadosBruto)) g.ganadosBruto = (g.puntosTotales || 0) + g.puntosGastados;
+    if (!g.comprados || typeof g.comprados !== 'object') g.comprados = {};
+    if (!g.consumidos || typeof g.consumidos !== 'object') g.consumidos = {};
+    if (!g.historialBorrado || typeof g.historialBorrado !== 'object' || Array.isArray(g.historialBorrado)) g.historialBorrado = {};
+    itemsLedgerGamificacion().forEach((k) => {
+      if (!esNum(g.consumidos[k])) g.consumidos[k] = 0;
+      if (!esNum(g.comprados[k])) g.comprados[k] = (g.inventario[k] || 0) + g.consumidos[k];
+    });
+    return g;
+  }
+
+  function cargarGamificacion() { return asegurarLedgerGamificacion(cargarGamificacionCruda()); }
+
+  function cargarGamificacionCruda() {
     try {
       const crudo = localStorage.getItem(CLAVE_GAMIFICACION);
       if (!crudo) return valoresPorDefectoGamificacion();
@@ -4901,6 +4930,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         },
         historial: Array.isArray(obj.historial) ? obj.historial : base.historial,
         resumenPorEvaluador: (obj.resumenPorEvaluador && typeof obj.resumenPorEvaluador === 'object') ? obj.resumenPorEvaluador : base.resumenPorEvaluador,
+        ganadosBruto: obj.ganadosBruto,
+        puntosGastados: obj.puntosGastados,
+        comprados: obj.comprados,
+        consumidos: obj.consumidos,
+        historialBorrado: obj.historialBorrado,
       };
     } catch (e) {
       return valoresPorDefectoGamificacion();
@@ -4913,7 +4947,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } catch (e) {
     }
   }
-  // Antes: JSON.stringify sincrono de todo el historial en cada tarjeta evaluada. Ahora diferido (250 ms).
+
   var _guardarGamificacionDiferido = crearGuardadoDiferidoPerezoso(guardarGamificacionYa, 250);
   function guardarGamificacion() {
     _guardarGamificacionDiferido();
@@ -4943,6 +4977,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let gameOverDisparado = false;
   let historialGuardadoEstaSesion = false;
   let analisisGuardadoEstaSesion = false;
+  let ultimaEntradaHistorial = null;       // entrada del historial creada por la sesion actual (para actualizarla si se continua)
+  let puntosSumadosHistorial = 0;          // puntos de la sesion ya sumados a puntosTotales
+  let ultimaEntradaAnalisisSesion = null;  // analisis guardado de esta sesion (se reemplaza si se vuelve a guardar)
+  let reveladasAlSaltar = new Set();       // indices saltados a mano (se vio la respuesta): al reintentar no dan puntos ni racha
+  let srsReaplicable = null;               // sesion SRS ya aplicada: permite recalcular si se continua en la misma sesion
   let reintentadasSesion = new Set();      // tarjetas (objeto) que ya usaron su reintento en esta sesión
   let primerIntentoFallido = new Set();    // índices que fallaron el primer intento y usaron segunda oportunidad (quedan para repaso)
   let reintentoExitoso = new Set();        // subconjunto: el reintento salió bien (recompensa reducida)
@@ -4975,9 +5014,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   const _guardadosPendientes = [];
 
-  // ===== OPTIMIZACION: utilidades de render =====
-  // _versionDatos sube con cualquier escritura de localStorage, guardado diferido o cambio de rev:
-  // si no cambio, los datos persistidos no cambiaron y una vista derivada puede reutilizarse.
   var _versionDatos = 0;
   (function () {
     try {
@@ -5013,7 +5049,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cont._nodosPorClave = null;
     reemplazarHijos(cont, null);
   }
-  // Reconciliacion por clave: reutiliza los nodos cuya firma no cambio y solo crea/borra/mueve el resto.
+
   function reconciliarHijos(cont, items, claveFn, firmaFn, crearFn) {
     const previos = cont._nodosPorClave || new Map();
     const nuevos = new Map();
@@ -5063,7 +5099,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return debounced;
   }
 
-  // Guardado diferido que crea su temporizador en el primer uso (no depende del orden de declaracion)
   function crearGuardadoDiferidoPerezoso(fnGuardarYa, ms) {
     let diferido = null;
     return function () {
@@ -5072,7 +5107,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     };
   }
 
-  // Los guardados diferidos pendientes se escriben al cerrar, recargar, ocultar la pestana o cambiar de app (movil)
   const _vaciarGuardadosPendientes = () => {
     _guardadosPendientes.forEach((d) => d.flush());
   };
@@ -6258,7 +6292,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     actualizarConteoSeleccion();
   }
 
-  // Delegacion de eventos: un solo listener 'change' para todos los checkboxes de tarjetas de la galeria
   elListaTemas.addEventListener('change', (e) => {
     const c = e.target;
     if (!c || c.type !== 'checkbox' || c.dataset.idx === undefined) return;
@@ -6361,6 +6394,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function entrarObservador() {
     if (tarjetasCompletas.length === 0) return;
+    detenerCountdownExamen();
+    detenerCountdownGlobalExamen();
     mostrarPantalla('observador');
     requestAnimationFrame(() => {
       construirListaObservador();
@@ -6368,6 +6403,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function abrirTarjetaObservador(idx) {
+    configurarModoJuego('light');
+    limpiarModoEspecialAlSalir();
+    detenerCountdownExamen();
+    detenerCountdownGlobalExamen();
+    srsSesionActiva = null;
+    actualizarBadgeSrs();
+    segundaPendiente = false;
+    modoZombie = false;
+    limpiarAviso();
     const n = tarjetasCompletas.length;
     tarjetasSesion = [...tarjetasCompletas];   // orden del txt
     resultados = new Array(n).fill(null);
@@ -6725,8 +6769,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return indice;
   }
 
-  // Tokens que contienen la palabra. Cache por palabra; al escribir letra a letra, la palabra nueva
-  // solo se busca entre los tokens de la anterior (si un token contiene "cla" tambien contiene "cl").
   function idsPorPalabraEnIndice(indice, palabra) {
     const cache = indice._cachePalabras || (indice._cachePalabras = new Map());
     let entrada = cache.get(palabra);
@@ -6786,7 +6828,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   );
 
-  // Los indices invertidos se construyen en la primera busqueda, no al cargar
   var _indiceTarjetas = null;
   var _indiceHuerfanas = null;
   var _indiceImagenes = null;
@@ -6794,7 +6835,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function obtenerIndiceHuerfanas() { return _indiceHuerfanas || (_indiceHuerfanas = _construirIndiceHuerfanas()); }
   function obtenerIndiceImagenes() { return _indiceImagenes || (_indiceImagenes = _construirIndiceImagenes()); }
 
-  let revisarRutasEnMemoria = {};
+  let revisarRutasEnMemoria = cargarRevisarLocal('revisar_rutas_v1');
   function esRevisarRuta(numeroRuta) { return !!revisarRutasEnMemoria[numeroRuta]; }
   function toggleRevisarHuerfana(numeroRuta) {
     if (revisarRutasEnMemoria[numeroRuta]) {
@@ -6802,6 +6843,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else {
       revisarRutasEnMemoria[numeroRuta] = { ruta: numeroRuta, t: Date.now() };
     }
+    guardarRevisarLocal('revisar_rutas_v1', revisarRutasEnMemoria);
   }
 
   function agregarLineaPlana(contenedor, linea) {
@@ -6924,12 +6966,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function actualizarGrosorBordeMapa() {
     if (!elMapaImg || !elMapaSvgOverlay) return;
-    // la escala visible de la imagen es exactamente zoomMapa: no hace falta leer la geometria (evita layout forzado)
     const escala = (typeof zoomMapa === 'number' && isFinite(zoomMapa) && zoomMapa > 0) ? zoomMapa : 1;
     elMapaSvgOverlay.style.setProperty('--mapa-stroke', (GROSOR_BORDE_PX / escala) + 'px');
   }
 
-  // Agrupa en un solo frame las actualizaciones de arrastre (mousemove / touchmove pueden llegar varias veces por frame)
   var _transformMapaPendiente = false;
   function programarTransformMapa() {
     if (_transformMapaPendiente) return;
@@ -6946,7 +6986,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const cs = getComputedStyle(elMapaImg);
     const num = (v) => parseFloat(v) || 0;
 
-    // Insets reales (borde + padding) para quedarnos solo con el área del contenido
     const insL = num(cs.borderLeftWidth) + num(cs.paddingLeft);
     const insT = num(cs.borderTopWidth) + num(cs.paddingTop);
     const insR = num(cs.borderRightWidth) + num(cs.paddingRight);
@@ -6960,17 +6999,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const h = offH - insT - insB;
     if (w <= 0 || h <= 0) return;
 
-    // 2) luego todas las escrituras (sin lecturas intercaladas)
     elMapaSvgOverlay.style.left = (offL + insL) + 'px';
     elMapaSvgOverlay.style.top = (offT + insT) + 'px';
     elMapaSvgOverlay.style.width = w + 'px';
     elMapaSvgOverlay.style.height = h + 'px';
 
-    // Mismo transform y mismo origen que la imagen (origen en px, relativo al overlay)
     elMapaSvgOverlay.style.transformOrigin = (offW / 2 - insL) + 'px ' + (offH / 2 - insT) + 'px';
     elMapaSvgOverlay.style.transform = elMapaImg.style.transform;
 
-    // Grosor constante en pantalla: compensar el zoom aplicado al <svg> exterior (antes se llamaba dos veces)
     actualizarGrosorBordeMapa();
   }
 
@@ -7219,7 +7255,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     });
 
-    // solo se crean/quitan los rectangulos que cambiaron
     reconciliarHijos(grupoBordes, rects, (d) => d.clave, () => '', crearRectMapa);
   }
 
@@ -7509,7 +7544,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       reemplazarHijos(cont, fragSubtMapa);
     };
 
-    // Delegacion de eventos: un listener 'change' por lista del mapa en vez de uno por checkbox
     const alCambiarCheckMapa = (idLista, fn) => {
       document.getElementById(idLista).addEventListener('change', (e) => {
         if (e.target && e.target.type === 'checkbox') fn(e.target);
@@ -7772,8 +7806,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     a.remove();
   }
 
-  // La imagen del mapa vive en <script type="text/plain" id="mapa-imagen-datos"> (antes: atributo data- de un boton).
-  // Se decodifica una sola vez a un Blob URL, en vez de reanalizar un data: URI de varios MB en cada apertura.
   var _mapaSrcCache = null;
   function obtenerMapaSrc() {
     if (_mapaSrcCache !== null) return _mapaSrcCache;
@@ -8100,6 +8132,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (modoZombie) return;
 
     opciones = opciones || {};
+    const yaVista = reveladasAlSaltar.has(indice) && (resultado === 'si' || resultado === 'casi');
+    if (yaVista) {   // se vio la respuesta al saltarla: el reintento no suma puntos ni racha
+      opciones = Object.assign({}, opciones, { factor: 0 });
+      mostrarAviso('👁 Esta tarjeta ya se había visto al saltarla: no suma puntos ni racha.');
+    }
 
     const puntos = puntosFinales(resultado, opciones);
     const anterior = puntosPorTarjeta[indice] || 0;
@@ -8111,10 +8148,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!esModoSinGamificacion()) {
       if (resultado === 'no' && rachaActual > 0 && (gamificacion.inventario.escudosRacha || 0) > 0) {
         gamificacion.inventario.escudosRacha--;
+        gamificacion.consumidos.escudosRacha++;
         guardarGamificacion();
         escudoUsado = true;
       }
-      actualizarRachaTrasResultado(resultado, !!opciones.comodinUsado, escudoUsado);
+      if (!yaVista) actualizarRachaTrasResultado(resultado, !!opciones.comodinUsado, escudoUsado);
     }
 
     if (resultado === 'si') {
@@ -8141,6 +8179,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function ajustarPuntosGamificacion(indice, resultado, opciones) {
     if (modoObservador) return;
     if (modoZombie) return;   // NUEVO: sesión zombie -> puntaje congelado, ni el ajuste de "entendida" suma
+    if (reveladasAlSaltar.has(indice)) opciones = Object.assign({}, opciones, { factor: 0 });
     const puntos = puntosFinales(resultado, opciones);
     const anterior = puntosPorTarjeta[indice] || 0;
     const delta = puntos - anterior;
@@ -8270,7 +8309,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   async function confirmarOtrosModos() {
     const base = obtenerTarjetasBaseSeleccionadas();
     if (otroModoElegidoEnModal === 'cloze') {
-      const calificadas = base.filter((t) => t.segundo && t.segundo.trim() !== '' && rutasValidasDe(t).length > 0);
+      const calificadas = base.filter((t) => t.segundo && t.segundo.trim() !== '' && rutasValidasDe(t).length > 0 &&
+        generarEstructuraClozeTarjeta(t).totalHuecos > 0);
       if (calificadas.length === 0) {
         cerrarModalOtrosModos();
         await avisar('No hay tarjetas calificadas (con segundo término y rutas válidas) en los temas seleccionados para iniciar Cloze Deletion.');
@@ -8389,7 +8429,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function abrirModalSeleccionModo(lista, tipoEspecial, esRepasoInteligente) {
-    if (!lista || lista.length === 0) return;
+    if (!lista || lista.length === 0) { avisar('No hay tarjetas para iniciar la sesión.'); return; }
     listaPendienteInicio = lista;
     modoEspecialPendiente = tipoEspecial || null;
     repasoInteligentePendiente = !!esRepasoInteligente;
@@ -8694,6 +8734,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gameOverDisparado = false;
     historialGuardadoEstaSesion = false;
     analisisGuardadoEstaSesion = false;
+    ultimaEntradaHistorial = null;
+    puntosSumadosHistorial = 0;
+    ultimaEntradaAnalisisSesion = null;
+    reveladasAlSaltar = new Set();
+    srsReaplicable = null;
     ultimoAnalisisFilas = [];
     modoZombie = false;
     reintentadasSesion = new Set();
@@ -8791,8 +8836,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elBtnSi.classList.remove('comprension');
     elBtnSi.textContent = '✓';
     elBtnSi.title = 'Entendido';
-    elBtnSi.style.display = yaEvaluada ? 'flex' : 'none';
-    elBtnNo.style.display = yaEvaluada ? 'flex' : 'none';
+    elBtnSi.style.display = 'none';
+    elBtnNo.style.display = 'none';
     elBtnSaltar.style.display = 'inline-block';
     elBtnDificil.style.display = 'inline-block';
     elBtnRazones.style.display = 'inline-block';
@@ -8810,9 +8855,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     actualizarBadgeNotaActual();
   }
 
-  function evaluarClozeActual() {
+  async function evaluarClozeActual() {
     const clozeData = datosClozeSesion[indiceActual];
     if (!clozeData || clozeData.evaluada || resultados[indiceActual] !== null) return;
+
+    const todosVacios = clozeData.totalHuecos > 0 && clozeData.respuestasUsuario.every((x) => String(x || '').trim() === '');
+    if (todosVacios) {
+      if (!(await confirmarAccion('No completaste ningún hueco: si evaluás ahora contará como no entendida. ¿Evaluar igual?'))) return;
+      if (clozeData.evaluada || resultados[indiceActual] !== null) return;
+    }
 
     acumularTiempoActual();
     indiceCongelado = indiceActual;
@@ -8839,7 +8890,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     clozeData.evaluada = true;
     revelado[indiceActual] = true;
-    respuestaMostrada[indiceActual] = true;
     rutasVisibles[indiceActual] = true;
 
     const total = clozeData.totalHuecos;
@@ -8972,6 +9022,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gameOverDisparado = false;
     historialGuardadoEstaSesion = false;
     analisisGuardadoEstaSesion = false;
+    ultimaEntradaHistorial = null;
+    puntosSumadosHistorial = 0;
+    ultimaEntradaAnalisisSesion = null;
+    reveladasAlSaltar = new Set();
+    srsReaplicable = null;
     ultimoAnalisisFilas = [];
     modoZombie = false;
     reintentadasSesion = new Set();
@@ -9116,8 +9171,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elBtnSi.classList.remove('comprension');
     elBtnSi.textContent = '✓';
     elBtnSi.title = 'Entendido';
-    elBtnSi.style.display = yaEvaluada ? 'flex' : 'none';
-    elBtnNo.style.display = yaEvaluada ? 'flex' : 'none';
+    elBtnSi.style.display = 'none';
+    elBtnNo.style.display = 'none';
     elBtnSaltar.style.display = 'inline-block';
     elBtnDificil.style.display = 'inline-block';
     elBtnRazones.style.display = 'inline-block';
@@ -9312,7 +9367,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const d = generarDetectiveTarjeta(t, pool);
       if (d) { validas.push(t); datos.push(d); }
     });
-    if (validas.length === 0) return;
+    if (validas.length === 0) { avisar('Ninguna de estas tarjetas tiene palabras alterables para el modo Detective.'); return; }
     iniciarSesionEspecialBase(validas, () => {
       datosDetectiveSesion = datos;
     });
@@ -9478,8 +9533,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elBtnSi.classList.remove('comprension');
     elBtnSi.textContent = '✓';
     elBtnSi.title = 'Entendido';
-    elBtnSi.style.display = yaEvaluada ? 'flex' : 'none';
-    elBtnNo.style.display = yaEvaluada ? 'flex' : 'none';
+    elBtnSi.style.display = 'none';
+    elBtnNo.style.display = 'none';
     elBtnSaltar.style.display = 'inline-block';
     elBtnDificil.style.display = 'inline-block';
     elBtnRazones.style.display = 'inline-block';
@@ -9515,7 +9570,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     d.evaluada = true;
     revelado[indiceActual] = true;
-    respuestaMostrada[indiceActual] = true;
     rutasVisibles[indiceActual] = true;
 
     const etq = res === 'si' ? '✓ Bien' : (res === 'casi' ? '~ Casi' : '✗ Mal');
@@ -9695,6 +9749,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gameOverDisparado = false;
     historialGuardadoEstaSesion = false;
     analisisGuardadoEstaSesion = false;
+    ultimaEntradaHistorial = null;
+    puntosSumadosHistorial = 0;
+    ultimaEntradaAnalisisSesion = null;
+    reveladasAlSaltar = new Set();
+    srsReaplicable = null;
     ultimoAnalisisFilas = [];
     modoZombie = false;
     reintentadasSesion = new Set();
@@ -9977,11 +10036,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const errores = [];
     let nErrores = 0;
+    let nIncorrectas = 0;
+    let nFaltantes = 0;
 
     asociadas.forEach((idRuta) => {
       ronda.rutasBloqueadas.add(idRuta);
       if (!realesSet.has(idRuta)) {
-        nErrores++;
+        nIncorrectas++;
         const esExtra = asociadas.length > itemP.rutasReales.length;
         const tipoTxt = esExtra ? 'Ruta extra' : 'Asociación incorrecta';
         errores.push(tipoTxt + ' (Ruta ' + idRuta + ')');
@@ -9993,11 +10054,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     itemP.rutasReales.forEach((idRuta) => {
       if (!asociadasSet.has(idRuta)) {
-        nErrores++;
+        nFaltantes++;
         errores.push('Ruta faltante (Ruta ' + idRuta + ')');
       }
     });
 
+    nErrores = Math.max(nIncorrectas, nFaltantes);   // una asociación equivocada ya no cuenta doble (ruta de más + ruta faltante)
     itemP.asociadasUsuario = asociadas;
     itemP.evaluado = true;
     itemP.cantidadErrores = nErrores;
@@ -10014,12 +10076,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!modoZombie) {
       if (nErrores === 0) {
         if (!esModoSinGamificacion()) {
-          const pts = Math.round(8 * multiplicadorActual);
+          const yaVista = reveladasAlSaltar.has(indiceActual);   // ronda saltada a mano: no da puntos ni racha
+          const pts = yaVista ? 0 : Math.round(8 * multiplicadorActual);
           puntosSesion += pts;
           puntosPorTarjeta[indiceActual] = (puntosPorTarjeta[indiceActual] || 0) + pts;
-          rachaActual++;
-          if (rachaActual > mejorRacha) mejorRacha = rachaActual;
-          recalcularMultiplicador();
+          if (!yaVista) {
+            rachaActual++;
+            if (rachaActual > mejorRacha) mejorRacha = rachaActual;
+            recalcularMultiplicador();
+          }
         }
         reproducirSonido('bien');
       } else {
@@ -10033,17 +10098,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       actualizarBarraGamificacion();
     }
 
-    if (gameOverDisparado) {
-      renderTarjetaMatching();
-      return;
-    }
-
     const todosEvaluados = ronda.primeros.every((p) => p.evaluado);
     if (todosEvaluados) {
       completarRondaMatchingActual();
     } else {
       renderTarjetaMatching();
     }
+  }
+
+  function resultadoRondaMatching(ronda) {
+    if (ronda.erroresTotales === 0) return 'si';
+    const base = ronda.primeros.reduce((a, p) => a + Math.max(1, (p.rutasReales || []).length), 0);
+    return ronda.erroresTotales <= Math.max(1, Math.round(base * 0.25)) ? 'casi' : 'no';
   }
 
   function completarRondaMatchingActual() {
@@ -10053,13 +10119,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     acumularTiempoActual();
     ronda.completada = true;
     revelado[indiceActual] = true;
-    respuestaMostrada[indiceActual] = true;
     rutasVisibles[indiceActual] = true;
     indiceCongelado = indiceActual;
 
-    let res = 'no';
-    if (ronda.erroresTotales === 0) res = 'si';
-    else if (ronda.erroresTotales <= 2) res = 'casi';
+    const res = resultadoRondaMatching(ronda);
 
     resultados[indiceActual] = res;
     evaluaciones[indiceActual] = {
@@ -10087,6 +10150,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     elTextoEval.parentElement.style.display = '';
     document.querySelector('.botonera').style.display = 'flex';
+    [elBtnSi, elBtnNo, elBtnRevisar, elBtnSaltar, elBtnDificil, elBtnRazones].forEach((b) => { b.style.display = ''; });
+    elBtnRespuesta.disabled = false;
   }
 
   function hookInicioRenderTarjeta() {
@@ -10172,12 +10237,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           if (!algunoEvaluado) {
             resultados[i] = 'saltar';
           } else {
-            let res = 'no';
-            if (ronda.erroresTotales === 0) res = 'si';
-            else if (ronda.erroresTotales <= 2) res = 'casi';
-            resultados[i] = res;
+            ronda.primeros.forEach((p) => {
+              if (!p.evaluado) {
+                const falt = Math.max(1, (p.rutasReales || []).length);
+                ronda.erroresTotales += falt;
+                ronda.detalleErroresRonda.push('«' + p.primero + '»: sin evaluar (' + falt + ' ruta(s) faltante(s))');
+              }
+            });
+            resultados[i] = resultadoRondaMatching(ronda);
             ronda.completada = true;
           }
+        } else {
+          resultados[i] = resultadoRondaMatching(ronda);   // todos los pares evaluados pero la ronda no se había cerrado
+          ronda.completada = true;
         }
       });
     } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective') {
@@ -10258,7 +10330,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
-  // Tarjetas base de las rondas de Matching cuyo índice cumple el predicado.
   function tarjetasBaseDeRondasMatching(predicado) {
     const base = [];
     rondasMatching.forEach((ronda, i) => {
@@ -10267,7 +10338,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return base;
   }
 
-  // Deja una ronda de Matching como nueva (para retomarla desde cero).
   function resetearRondaMatching(ronda) {
     if (!ronda) return;
     ronda.completada = false;
@@ -10284,25 +10354,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
   }
 
-  // Nueva sesión especial solo con las tarjetas/rondas que cumplen el predicado.
-  // Devuelve true si el modo actual es Cloze o Matching (la sesión ya quedó gestionada).
   function iniciarSesionEspecialFiltrada(predicado) {
     if (modoEspecial === 'cloze') {
       let lista = tarjetasSesion.filter((_, i) => predicado(i));
-      if (lista.length === 0) return true;
+      if (lista.length === 0) { avisar('No hay tarjetas para repasar con ese criterio.'); return true; }
       if (modoAleatorio) lista = mezclar(lista);
       iniciarSesionCloze(lista);
       return true;
     }
     if (modoEspecial === 'matching') {
       const nuevasRondas = construirRondasMatching(tarjetasBaseDeRondasMatching(predicado));
-      if (nuevasRondas.length === 0) return true;
+      if (nuevasRondas.length === 0) { avisar('No hay rondas para repasar con ese criterio.'); return true; }
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
     if (modoEspecial === 'quiz' || modoEspecial === 'detective') {
       let lista = tarjetasSesion.filter((_, i) => predicado(i));
-      if (lista.length === 0) return true;
+      if (lista.length === 0) { avisar('No hay tarjetas para repasar con ese criterio.'); return true; }
       if (modoAleatorio) lista = mezclar(lista);
       if (modoEspecial === 'quiz') iniciarSesionQuiz(lista);
       else iniciarSesionDetective(lista);
@@ -10415,13 +10483,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     repasoInteligenteActivo = inteligentePendiente;
     configurarModoJuego('examen');
     iniciarSesion(lista);
-    if (tiempoGlobalExamen && lista.length > 0) iniciarCountdownGlobalExamen(lista.length);
   });
 
   function dispararGameOver() {
     if (esModoSinGamificacion()) return;   // nunca en Light
     if (gameOverDisparado) return;       // no disparar 2 veces
     gameOverDisparado = true;
+    if (cronometroActivo && !cronometroCongelado()) acumularTiempo();   // el tiempo del modal no cuenta
     pausaManual = true;
     reproducirSonido('game_over');
     elModalGameOver.classList.add('abierto');
@@ -10430,6 +10498,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('btn-gameover-resumen').addEventListener('click', () => {
     elModalGameOver.classList.remove('abierto');
     pausaManual = false;
+    tiempoInicioTarjeta = Date.now();
     finalizarSesion();
   });
 
@@ -10471,13 +10540,46 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       aExtraer.forEach((s) => aQuitar.add(s));
     });
     if (aQuitar.size > 0) {
+      aQuitar.forEach((s) => registrarTumbaHistorial(s.fecha));   // evita que una importacion vieja los vuelva a contar
       gamificacion.historial = gamificacion.historial.filter((s) => !aQuitar.has(s));
     }
   }
 
+  function actualizarEntradaHistorialExistente(nota, conteos) {
+    const entrada = ultimaEntradaHistorial;
+    if (!entrada || gamificacion.historial.indexOf(entrada) === -1) return;
+    entrada.nota = Math.round(nota * 10) / 10;
+    entrada.duracion_ms = tiempos.reduce((a, b) => a + b, 0);
+    entrada.tarjetas = tarjetasSesion.map((t) => hashTarjeta(t));
+    if (conteos) {
+      entrada.conteos = { si: conteos.si || 0, casi: conteos.casi || 0, no: conteos.no || 0, pista: conteos.pista || 0, resp: conteos.resp || 0, evaluadas: conteos.evaluadas || 0 };
+    }
+    if (!esModoSinGamificacion()) {
+      const delta = puntosSesion - puntosSumadosHistorial;
+      entrada.puntos_ganados = puntosSesion;
+      if (delta !== 0) {
+        gamificacion.puntosTotales += delta;
+        gamificacion.ganadosBruto += delta;
+        puntosSumadosHistorial = puntosSesion;
+      }
+    }
+    guardarGamificacion();
+    actualizarBarraGamificacion();
+    estadisticasConstruidas = false;
+    srsConstruido = false;
+  }
+
+  function registrarTumbaHistorial(fecha) {
+    if (!gamificacion.historialBorrado) gamificacion.historialBorrado = {};
+    gamificacion.historialBorrado[String(fecha)] = Date.now();
+  }
+
   function guardarHistorialSesion(nota, conteos) {
     if (modoObservador) return;
-    if (historialGuardadoEstaSesion) return;   // evita duplicar si mostrarResumen() se llama 2 veces
+    if (historialGuardadoEstaSesion) {
+      actualizarEntradaHistorialExistente(nota, conteos);
+      return;
+    }
     historialGuardadoEstaSesion = true;
 
     const duracionMs = tiempos.reduce((a, b) => a + b, 0);
@@ -10511,9 +10613,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         entradaNueva.niveles_srs = niveles;
       }
     }
+    ultimaEntradaHistorial = gamificacion.historial[gamificacion.historial.length - 1];
     podarHistorialPorEvaluador();   // NUEVO: justo después de agregar la entrada, antes de persistir
+    puntosSumadosHistorial = 0;
     if (!esModoSinGamificacion()) {
       gamificacion.puntosTotales += puntosSesion;
+      gamificacion.ganadosBruto += puntosSesion;
+      puntosSumadosHistorial = puntosSesion;
     }
     guardarGamificacion();
     actualizarBarraGamificacion();
@@ -10551,7 +10657,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function renderTienda() {
     elSaldoTienda.textContent = 'Puntos disponibles: ' + gamificacion.puntosTotales;
     if (_refsTienda.size === 0) {
-      // los 4 items son constantes: se construyen una sola vez
       const frag = document.createDocumentFragment();
       ITEMS_TIENDA.forEach((item) => {
         const cont = document.createElement('div');
@@ -10593,7 +10698,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       });
       reemplazarHijos(elGridTienda, frag);
     }
-    // actualizacion quirurgica: solo inventario y estado del boton
     ITEMS_TIENDA.forEach((item) => {
       const refs = _refsTienda.get(item.id);
       const cantidad = gamificacion.inventario[item.id] || 0;
@@ -10618,7 +10722,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!item) return;
     if (gamificacion.puntosTotales < item.precio) return;
     gamificacion.puntosTotales -= item.precio;
+    gamificacion.puntosGastados += item.precio;
     gamificacion.inventario[idItem] = (gamificacion.inventario[idItem] || 0) + 1;
+    gamificacion.comprados[idItem] = (gamificacion.comprados[idItem] || 0) + 1;
     guardarGamificacion();
     renderTienda();
     actualizarBarraGamificacion();
@@ -10634,7 +10740,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('btn-tienda-resetear').addEventListener('click', async () => {
     if (!(await confirmarAccion('¿Resetear tus puntos y todo tu inventario a 0? Esto no afecta tus sesiones, difíciles, notas ni otros datos. No se puede deshacer.'))) return;
     gamificacion.puntosTotales = 0;
-    Object.keys(gamificacion.inventario).forEach((clave) => { gamificacion.inventario[clave] = 0; });
+    gamificacion.puntosGastados = gamificacion.ganadosBruto;   // el libro queda en 0 y una importacion vieja no lo revive
+    Object.keys(gamificacion.inventario).forEach((clave) => {
+      gamificacion.inventario[clave] = 0;
+      gamificacion.consumidos[clave] = gamificacion.comprados[clave] || 0;
+    });
     guardarGamificacion();
     renderTienda();
     actualizarBarraGamificacion();
@@ -10836,7 +10946,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return fila;
   }
 
-  // Delegacion de eventos: un solo listener para todas las filas de listas guardadas
   elListaListasGuardadas.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-accion]');
     if (!btn || !elListaListasGuardadas.contains(btn)) return;
@@ -10873,7 +10982,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elListasVacio.style.display = 'block';
     } else {
       elListasVacio.style.display = 'none';
-      // solo se reconstruyen las filas cuya firma cambio
       reconciliarHijos(elListaListasGuardadas, ordenadas, (l) => l.nombre, firmaFilaLista, construirFilaLista);
     }
 
@@ -11312,6 +11420,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (analisisGuardadoEstaSesion) return false;
     const entrada = construirEntradaAnalisisGuardado();
     if (!entrada) return false;
+    if (ultimaEntradaAnalisisSesion) {
+      const iPrev = analisisGuardados.indexOf(ultimaEntradaAnalisisSesion);
+      if (iPrev >= 0) analisisGuardados.splice(iPrev, 1);
+    }
+    ultimaEntradaAnalisisSesion = entrada;
     analisisGuardados.push(entrada);
     analisisGuardados.sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
     while (analisisGuardados.length > MAX_ANALISIS_GUARDADOS) analisisGuardados.shift();
@@ -11694,6 +11807,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       notasEvaluador: construirExportNotasEvaluador(),
       retencionRutas: construirExportRetencion(),
       analisisSesion: construirExportAnalisis(),
+      revisar: { tarjetas: revisarEnMemoria, rutas: revisarRutasEnMemoria },
     };
   }
 
@@ -11720,7 +11834,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return { error: 'El backup no tiene el campo "evaluador" (formato viejo o inválido).' };
     }
 
-    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas', 'notasEvaluador', 'retencionRutas', 'analisisSesion'];
+    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas', 'notasEvaluador', 'retencionRutas', 'analisisSesion', 'revisar'];
     const presentes = ZONAS.filter((z) => datos[z] !== undefined && datos[z] !== null);
     if (presentes.length === 0) return { error: 'El archivo no tiene ninguna sección reconocida.' };
 
@@ -11822,6 +11936,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const lista = Array.isArray(datos.analisisSesion) ? datos.analisisSesion : (datos.analisisSesion.analisisGuardados || []);
       const r = fusionarAnalisisLista(lista);
       contar(r.nuevas > 0 || (eliminadasPorZona.analisis || 0) > 0);
+    }
+
+    if (datos.revisar && typeof datos.revisar === 'object') {
+      const unirRevisar = (destino, entrante, clave) => {
+        if (!entrante || typeof entrante !== 'object') return false;
+        let cambio = false;
+        Object.keys(entrante).forEach((k) => {
+          const e = entrante[k];
+          if (!e || typeof e !== 'object') return;
+          const previo = destino[k];
+          if (!previo || (Number(e.t) || 0) > (Number(previo.t) || 0)) { destino[k] = e; cambio = true; }
+        });
+        if (cambio) guardarRevisarLocal(clave, destino);
+        return cambio;
+      };
+      const cTar = unirRevisar(revisarEnMemoria, datos.revisar.tarjetas, 'revisar_tarjetas_v1');
+      const cRut = unirRevisar(revisarRutasEnMemoria, datos.revisar.rutas, 'revisar_rutas_v1');
+      contar(cTar || cRut);
     }
 
     marcarUltimoBackup();
@@ -12221,6 +12353,7 @@ const ZONAS_SYNC_GIST = [
     const antes = gamificacion.historial.length;
     gamificacion.historial = gamificacion.historial.filter((s) => !(esSesionLocal(s) && String(s.fecha) === String(fecha)));
     if (gamificacion.historial.length === antes) return;
+    registrarTumbaHistorial(fecha);
     guardarGamificacion();
     estadisticasConstruidas = false;
     srsConstruido = false;
@@ -12349,7 +12482,6 @@ const ZONAS_SYNC_GIST = [
       .map(([esp, cantidad]) => ({ esp: esp, cantidad: cantidad }))
       .sort((a, b) => etiquetaEspacio(a.esp).localeCompare(etiquetaEspacio(b.esp)));
 
-    // el contexto se actualiza siempre; el listener delegado (unico) lee el contexto vigente
     elLista._ctxVinculo = { antesDeAbrir: antesDeAbrir, zonaVinculo: zonaVinculo };
     if (!elLista._listenerVinculo) {
       elLista._listenerVinculo = true;
@@ -12439,8 +12571,11 @@ const ZONAS_SYNC_GIST = [
     const n = gamificacion.historial.filter(esSesionLocal).length;
     if (n === 0) return;
     if (!(await confirmarAccion('¿Borrar las ' + n + ' sesión(es) de ESTE evaluador («' + ESPACIO_HASH + '»)? Las sesiones de otros evaluadores, los puntos y el inventario NO se ven afectados.'))) return;
+    gamificacion.historial.filter(esSesionLocal).forEach((s) => registrarTumbaHistorial(s.fecha));
     gamificacion.historial = gamificacion.historial.filter((s) => !esSesionLocal(s));
     guardarGamificacion();
+    estadisticasConstruidas = false;
+    srsConstruido = false;
     renderHistorial();
   }
 
@@ -12448,8 +12583,11 @@ const ZONAS_SYNC_GIST = [
     const n = gamificacion.historial.length;
     if (n === 0) return;
     if (!(await confirmarAccion('¿Borrar el historial GLOBAL (' + n + ' sesión(es) de TODOS los evaluadores, incluidas las sin identificar)? Los puntos y el inventario NO se ven afectados.'))) return;
+    gamificacion.historial.forEach((s) => registrarTumbaHistorial(s.fecha));
     gamificacion.historial = [];
     guardarGamificacion();
+    estadisticasConstruidas = false;
+    srsConstruido = false;
     renderHistorial();
   }
 
@@ -12462,6 +12600,42 @@ const ZONAS_SYNC_GIST = [
     return mejor;
   }
 
+  function ledgerDeImportado(imp) {
+    const esNum = (v) => typeof v === 'number' && isFinite(v);
+    const inv = (imp.inventario && typeof imp.inventario === 'object') ? imp.inventario : {};
+    const gastados = esNum(imp.puntosGastados) ? imp.puntosGastados : 0;
+    const out = {
+      puntosGastados: gastados,
+      ganadosBruto: esNum(imp.ganadosBruto) ? imp.ganadosBruto : ((esNum(imp.puntosTotales) ? imp.puntosTotales : 0) + gastados),
+      comprados: {},
+      consumidos: {},
+      historialBorrado: (imp.historialBorrado && typeof imp.historialBorrado === 'object' && !Array.isArray(imp.historialBorrado)) ? imp.historialBorrado : {},
+    };
+    itemsLedgerGamificacion().forEach((k) => {
+      const cons = (imp.consumidos && esNum(imp.consumidos[k])) ? imp.consumidos[k] : 0;
+      out.consumidos[k] = cons;
+      out.comprados[k] = (imp.comprados && esNum(imp.comprados[k])) ? imp.comprados[k] : ((esNum(inv[k]) ? inv[k] : 0) + cons);
+    });
+    return out;
+  }
+
+  function fusionarLedgerGamificacion(imp) {
+    const g = gamificacion;
+    asegurarLedgerGamificacion(g);
+    const l = ledgerDeImportado(imp);
+    g.ganadosBruto = Math.max(g.ganadosBruto, l.ganadosBruto);
+    g.puntosGastados = Math.max(g.puntosGastados, l.puntosGastados);
+    g.puntosTotales = Math.max(0, g.ganadosBruto - g.puntosGastados);
+    itemsLedgerGamificacion().forEach((k) => {
+      g.comprados[k] = Math.max(g.comprados[k], l.comprados[k]);
+      g.consumidos[k] = Math.max(g.consumidos[k], l.consumidos[k]);
+      g.inventario[k] = Math.max(0, g.comprados[k] - g.consumidos[k]);
+    });
+    Object.keys(l.historialBorrado).forEach((f) => {
+      if (!g.historialBorrado[f]) g.historialBorrado[f] = l.historialBorrado[f];
+    });
+  }
+
   function fusionarGamificacionImportada(importado) {
     const impPuntos = typeof importado.puntosTotales === 'number' ? importado.puntosTotales : 0;
     const impInv = importado.inventario || {};
@@ -12469,19 +12643,14 @@ const ZONAS_SYNC_GIST = [
     const impPistas = typeof impInv.pistasGratis === 'number' ? impInv.pistasGratis : 0;
     const impHistorial = Array.isArray(importado.historial) ? importado.historial : [];
 
-    gamificacion.puntosTotales = Math.max(gamificacion.puntosTotales, impPuntos);
-    gamificacion.inventario.comodines = Math.max(gamificacion.inventario.comodines, impComodines);
-    gamificacion.inventario.pistasGratis = Math.max(gamificacion.inventario.pistasGratis, impPistas);
-    gamificacion.inventario.escudosRacha = Math.max(gamificacion.inventario.escudosRacha || 0,
-      typeof impInv.escudosRacha === 'number' ? impInv.escudosRacha : 0);
-    gamificacion.inventario.segundasOportunidades = Math.max(gamificacion.inventario.segundasOportunidades || 0,
-      typeof impInv.segundasOportunidades === 'number' ? impInv.segundasOportunidades : 0);
+    fusionarLedgerGamificacion(importado);
 
     const fechasLocales = new Set(gamificacion.historial.map((s) => String(s.fecha)));
     impHistorial.forEach((sesion) => {
       if (!sesion || typeof sesion !== 'object') return;
       const f = String(sesion.fecha);
       if (fechasLocales.has(f)) return;
+      if (gamificacion.historialBorrado && gamificacion.historialBorrado[f]) return;   // borrada o consolidada a proposito
       const copia = Object.assign({}, sesion);
       if (typeof copia.espacio !== 'string') delete copia.espacio;   // sin identificar
       gamificacion.historial.push(copia);
@@ -12503,17 +12672,23 @@ const ZONAS_SYNC_GIST = [
           ultimaFecha: typeof r.ultimaFecha === 'string' ? r.ultimaFecha : '',
         };
       } else {
-        previo.sesionesPodadas += Number(r.sesionesPodadas) || 0;
-        previo.mejorNota = Math.max(previo.mejorNota, Number(r.mejorNota) || 0);
-        previo.sumaNotas += Number(r.sumaNotas) || 0;
-        previo.tiempoTotalMs += Number(r.tiempoTotalMs) || 0;
-        previo.puntosTotales += Number(r.puntosTotales) || 0;
-        if (typeof r.ultimaFecha === 'string' && r.ultimaFecha > (previo.ultimaFecha || '')) previo.ultimaFecha = r.ultimaFecha;
+        const mejorPrev = Number(previo.mejorNota) || 0;
+        const fechaPrev = previo.ultimaFecha || '';
+        if ((Number(r.sesionesPodadas) || 0) > (Number(previo.sesionesPodadas) || 0)) {
+          previo.sesionesPodadas = Number(r.sesionesPodadas) || 0;
+          previo.sumaNotas = Number(r.sumaNotas) || 0;
+          previo.tiempoTotalMs = Number(r.tiempoTotalMs) || 0;
+          previo.puntosTotales = Number(r.puntosTotales) || 0;
+        }
+        previo.mejorNota = Math.max(mejorPrev, Number(r.mejorNota) || 0);
+        if (typeof r.ultimaFecha === 'string' && r.ultimaFecha > fechaPrev) previo.ultimaFecha = r.ultimaFecha;
       }
     });
 
     podarHistorialPorEvaluador();   // por si el historial importado supera el límite por evaluador
     guardarGamificacion();
+    estadisticasConstruidas = false;
+    srsConstruido = false;
     renderHistorial();
     actualizarBarraGamificacion();
   }
@@ -12532,8 +12707,16 @@ const ZONAS_SYNC_GIST = [
         avisar('El archivo no tiene el formato esperado.');
         return;
       }
+      const tieneHistorial = Array.isArray(importado.historial);
+      const tienePuntos = typeof importado.puntosTotales === 'number' || (importado.inventario && typeof importado.inventario === 'object');
+      if (!tieneHistorial && !tienePuntos) {
+        avisar('El archivo no parece un historial exportado (faltan las secciones "historial" e "inventario").');
+        return;
+      }
+      const antesN = gamificacion.historial.length;
       fusionarGamificacionImportada(importado);
-      avisar('Historial importado y fusionado correctamente.');
+      const nuevasN = Math.max(0, gamificacion.historial.length - antesN);
+      avisar('Historial importado y fusionado. Sesiones nuevas: ' + nuevasN + '.');
     };
     lector.onerror = () => avisar('No se pudo leer el archivo.');
     lector.readAsText(archivo);
@@ -13257,7 +13440,6 @@ const ZONAS_SYNC_GIST = [
     return c;
   }
 
-  // limite: corta al llegar a N resultados (el dropdown solo muestra 30; antes se recorria todo y se cortaba despues)
   function buscarTarjetasGlobal(consultaNorm, limite) {
     const resultados = [];
     const candidatos = candidatosPorIndice(obtenerIndiceTarjetas(), consultaNorm);
@@ -13308,14 +13490,12 @@ const ZONAS_SYNC_GIST = [
     });
   }
 
-  // Cierra/vacia y olvida la ultima consulta
   function vaciarDropdownBuscador(elDropdown) {
     elDropdown._consultaRender = null;
     reemplazarHijos(elDropdown, null);
     elDropdown.classList.remove('abierto');
   }
 
-  // Misma consulta y resultados ya pintados: solo se reabre. Si cambia: un fragmento y un unico reemplazo.
   function renderResultadosDropdown(elDropdown, consultaNorm, buscarFn, crearItemFn) {
     if (elDropdown._consultaRender === consultaNorm && elDropdown.firstChild) {
       elDropdown.classList.add('abierto');
@@ -13342,7 +13522,6 @@ const ZONAS_SYNC_GIST = [
   }
 
   function cerrarDropdownBuscador(elDropdown) {
-    // se llama en cada clic del documento (x4): no tocar el DOM si ya esta cerrado y vacio
     if (!elDropdown.classList.contains('abierto') && !elDropdown.firstChild) return;
     elDropdown.classList.remove('abierto');
     reemplazarHijos(elDropdown, null);
@@ -13481,6 +13660,10 @@ const ZONAS_SYNC_GIST = [
 
     if (elModalConfirmacion.classList.contains('abierto')) { cerrarModalConfirmacion(false); return; }
     if (elModalAviso.classList.contains('abierto')) { cerrarModalAviso(); return; }
+    if (elModalSyncEliminaciones.classList.contains('abierto')) { cerrarModalSyncEliminaciones('cancelar'); return; }   // el modal de decisión está arriba de todo
+    if (elModalSegunda.classList.contains('abierto')) { document.getElementById('btn-segunda-no').click(); return; }
+    if (elModalContinuar.classList.contains('abierto')) { cerrarModalContinuar(); return; }
+    if (elModalExamenOpciones.classList.contains('abierto')) { document.getElementById('btn-examen-opciones-cancelar').click(); return; }
 
     if (elModalNotasEvaluador.classList.contains('abierto') && (modoHojaNotasEval === 'pretest' || modoHojaNotasEval === 'skimming' || modoHojaNotasEval === 'braindump')) {
       evento.preventDefault();
@@ -13512,7 +13695,6 @@ const ZONAS_SYNC_GIST = [
     if (elPantallaGaleria.style.display !== 'none') { volverListaDesdeGaleria(); return; }
     if (elPantallaHuerfanas.style.display !== 'none') { volverDesdeHuerfanas(); return; }
     if (elPantallaMapa.style.display !== 'none') { cerrarPantallaMapa(); return; }
-    if (elModalSyncEliminaciones.classList.contains('abierto')) { cerrarModalSyncEliminaciones('cancelar'); return; }
   });
 
   document.addEventListener('keydown', (evento) => {
@@ -13526,7 +13708,7 @@ const ZONAS_SYNC_GIST = [
     if (elModalPomodoroAbandonar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-abandonar-si').click(); return; }
     if (elModalPomodoroResumen.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-resumen-cerrar').click(); return; }
     if (elModalContinuar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-modal-sesion').click(); return; }
-    if (elModalSegunda.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-segunda-si').click(); return; }
+    if (elModalSegunda.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-segunda-no').click(); return; }
     if (elModalGuardarLista.classList.contains('abierto')) { evento.preventDefault(); elBtnGuardarListaAceptar.click(); return; }
     if (elModalVincular.classList.contains('abierto')) { evento.preventDefault(); elBtnVincAceptar.click(); return; }
     if (elModalRepasoInteligente.classList.contains('abierto')) { evento.preventDefault(); if (!elBtnComenzarRI.disabled) elBtnComenzarRI.click(); return; }
@@ -14538,7 +14720,6 @@ const ZONAS_SYNC_GIST = [
   });
 
   function renderSelectorCategoriaNota(contenedor, categoriaSeleccionada, onSeleccionar) {
-    // estado vigente (el listener delegado siempre lee el ultimo)
     contenedor._selCat = { sel: categoriaSeleccionada, cb: onSeleccionar };
     const primero = contenedor._chipsCat && contenedor._chipsCat.size > 0 ? contenedor._chipsCat.values().next().value : null;
     if (!primero || primero.parentNode !== contenedor) {
@@ -14564,7 +14745,6 @@ const ZONAS_SYNC_GIST = [
         });
       }
     }
-    // actualizacion quirurgica: solo estilos de seleccion
     contenedor._chipsCat.forEach((chip, cat) => {
       const sel = categoriaSeleccionada === cat.codigo;
       chip.className = 'chip-razon chip-categoria-nota' + (sel ? ' seleccionada' : '');
@@ -14774,7 +14954,6 @@ const ZONAS_SYNC_GIST = [
     );
   }
 
-  // Delegacion de eventos: Editar / Borrar de todos los braindumps
   elListaBraindump.addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-accion]');
     if (!btn) return;
@@ -14894,6 +15073,15 @@ const ZONAS_SYNC_GIST = [
 
   function cancelarHojaCompartida() {
     detenerDictadoHojaCompartida();
+    if (pomodoroActivo && modoHojaNotasEval === 'pretest' && pomodoroFase === 'pretest') {
+      guardarHojaCompartida();   // durante el Pomodoro, Escape/Cancelar no descarta lo escrito ni salta la fase
+      return;
+    }
+    if (pomodoroActivo && modoHojaNotasEval === 'skimming' && pomodoroFase === 'skimming') {
+      guardarHojaCompartida();
+      cerrarNotasEvaluador({ desdeTransicionPomodoro: true });
+      return;
+    }
     if (modoHojaNotasEval === 'pretest' || modoHojaNotasEval === 'skimming') {
       const notaUnica = obtenerNotaUnicaPropia(modoHojaNotasEval);
       if (notaUnica) elHojaEditor.value = notaUnica.texto || '';
@@ -15193,7 +15381,6 @@ const ZONAS_SYNC_GIST = [
       reemplazarHijos(el, frag);
       el._refs = { btnAnterior: btnAnterior, texto: texto, btnSiguiente: btnSiguiente };
     }
-    // actualizacion quirurgica de los 3 elementos
     el._refs.btnAnterior.disabled = notasEvalPaginaActual <= 1;
     el._refs.texto.textContent = 'Página ' + notasEvalPaginaActual + ' de ' + totalPaginas;
     el._refs.btnSiguiente.disabled = notasEvalPaginaActual >= totalPaginas;
@@ -15233,7 +15420,6 @@ const ZONAS_SYNC_GIST = [
       if (notasEvalPaginaActual > totalPaginas) notasEvalPaginaActual = totalPaginas;
       if (notasEvalPaginaActual < 1) notasEvalPaginaActual = 1;
       const inicio = (notasEvalPaginaActual - 1) * NOTASEVAL_POR_PAGINA;
-      // la fila en edicion siempre se reconstruye (aloja el editor compartido); el resto se reutiliza si no cambio
       reconciliarHijos(
         elLista,
         propias.slice(inicio, inicio + NOTASEVAL_POR_PAGINA),
@@ -15250,7 +15436,6 @@ const ZONAS_SYNC_GIST = [
     renderNotasEvaluadorOtras();
   }
 
-  // Delegacion de eventos: Editar / Borrar de todas las notas normales
   document.getElementById('lista-notas-evaluador').addEventListener('click', async (e) => {
     const btn = e.target.closest('button[data-accion]');
     if (!btn) return;
@@ -15312,6 +15497,16 @@ const ZONAS_SYNC_GIST = [
       window.__detenerDictadoSiActivoEn(textareaNueva);
       window.__detenerDictadoSiActivoEn(textareaEditor);
       window.__detenerDictadoSiActivoEn(elHojaEditor);
+    }
+    if (pomodoroActivo && !opts.desdeTransicionPomodoro && (modoHojaNotasEval === 'pretest' || modoHojaNotasEval === 'skimming') &&
+        (pomodoroFase === 'pretest' || pomodoroFase === 'skimming')) {
+      const notaHoja = obtenerNotaUnicaPropia(modoHojaNotasEval);
+      if (notaHoja) {   // cerrar con la X durante el Pomodoro guarda lo escrito
+        notaHoja.texto = elHojaEditor.value.trim();
+        notaHoja.modificada = Date.now();
+        notaHoja.rev = siguienteRev();
+        guardarNotasEvaluador();
+      }
     }
     elModalNotasEvaluador.classList.remove('abierto');
     notaEvalEditandoId = null;
@@ -15744,7 +15939,6 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     el.querySelectorAll('.fila-retencion-ruta').forEach((fila) => pintarFilaRetencionSesion(fila, fila._rutaId));
   }
 
-  // Actualiza solo la fila de una ruta (toggle Retenida/Difícil/Nota): O(1) en vez de O(rutas).
   function refrescarFilaRetencionSesion(id) {
     const el = document.getElementById('retencion-sesion-lista');
     const fila = el.querySelector('.fila-retencion-ruta[data-ruta="' + String(id).replace(/"/g, '') + '"]');
@@ -15752,7 +15946,6 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     else renderRetencionSesionLista({ soloLista: true });
   }
 
-  // Delegacion de eventos: un solo listener para todas las filas
   document.getElementById('retencion-sesion-lista').addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-accion]');
     if (!btn) return;
@@ -15942,7 +16135,6 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   function abrirModalRetencionRutas() {
     renderRetencionSesionLista();
     retencionHistorialPaginaActual = 1;
-    // renderRetencionHistorialCompleto ya construye la lista de subT a olvidar (antes se construia dos veces)
     renderSiCambioDatos('retencionHistorial', Math.floor(Date.now() / 60000), renderRetencionHistorialCompleto);
     elModalRetencionRutas.classList.add('abierto');
   }
@@ -16323,7 +16515,6 @@ let estadisticasConstruidas = false;
     return elTooltipEstadisticas;
   }
 
-  // Reposicionamiento del tooltip una sola vez por frame (leer su rect en cada mousemove fuerza layout)
   var _tipPosPendiente = null;
   function posicionarTooltipEstadisticasRaf(clientX, clientY) {
     const yaProgramado = _tipPosPendiente !== null;
@@ -16475,7 +16666,6 @@ let estadisticasConstruidas = false;
   }
 
 function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
-    // la lista de circulos y su cx no cambian: se calculan una vez por svg
     let circulos = svg._cacheCirculosCx;
     if (!circulos) {
       circulos = Array.from(svg.querySelectorAll('circle[data-bucket-etiqueta]')).map((c) => ({
@@ -16554,7 +16744,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         mostrarFn(ev, svg);
         return;
       }
-      // una sola actualizacion por frame (antes: querySelectorAll + 2 getBoundingClientRect por mousemove)
       svg._movTooltip = { x: ev.clientX, y: ev.clientY };
       if (svg._movTooltipProgramado) return;
       svg._movTooltipProgramado = true;
@@ -17874,6 +18063,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     acc.className = 'acciones-nota-dif';
     acc.appendChild(botonMini('🗑 Quitar', () => {
       delete revisarEnMemoria[hash];
+      guardarRevisarLocal('revisar_tarjetas_v1', revisarEnMemoria);
       renderRevisarGuardadoPreview();
     }));
     div.appendChild(acc);
@@ -17889,7 +18079,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     hashes.forEach((h) => el.appendChild(filaRevisarGuardada(h, revisarEnMemoria[h])));
     elInfo.textContent = hashes.length === 0
       ? 'No tenés tarjetas marcadas para revisar (botón 🚩 durante el estudio).'
-      : 'Marcadas en esta sesión del navegador: ' + hashes.length + ' (se pierden al recargar la página)';
+      : 'Marcadas (se guardan en este navegador y en el backup completo): ' + hashes.length;
     elVaciar.style.display = hashes.length > 0 ? 'inline-block' : 'none';
   }
 
@@ -17897,6 +18087,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (Object.keys(revisarEnMemoria).length === 0) return;
     if (!(await confirmarAccion('¿Vaciar todas las tarjetas para revisar? No se puede deshacer.'))) return;
     revisarEnMemoria = {};
+    guardarRevisarLocal('revisar_tarjetas_v1', revisarEnMemoria);
     renderRevisarGuardadoPreview();
   });
 
@@ -18179,6 +18370,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     gameOverDisparado = false;
     historialGuardadoEstaSesion = false;
     analisisGuardadoEstaSesion = false;
+    ultimaEntradaHistorial = null;
+    puntosSumadosHistorial = 0;
+    ultimaEntradaAnalisisSesion = null;
+    reveladasAlSaltar = new Set();
+    srsReaplicable = null;
     ultimoAnalisisFilas = [];
     elBtnAnalisisSesionGuardar.disabled = false;
     elBtnAnalisisSesionGuardar.textContent = '💾 Guardar análisis';
@@ -18196,6 +18392,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     mostrarPantalla('estudio');
     iniciarCronometro();
     renderTarjeta();
+    if (modoJuego === 'examen' && tiempoGlobalExamen && lista.length > 0) iniciarCountdownGlobalExamen(lista.length);
   }
 
   function quedanPendientes() {
@@ -18802,6 +18999,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       'Si acertás el reintento cobrás el ' + Math.round(FACTOR_RECOMPENSA_REINTENTO * 100) +
       ' % de los puntos y tu racha sigue creciendo. La tarjeta igual queda para repaso.';
     elModalSegunda.classList.add('abierto');
+    document.getElementById('btn-segunda-no').focus();   // el consumible solo se gasta con un clic explícito en Sí
   }
 
   function resolverSegundaOportunidad(acepta) {
@@ -18816,6 +19014,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function iniciarReintento(idx) {
     gamificacion.inventario.segundasOportunidades--;
+    gamificacion.consumidos.segundasOportunidades++;
     guardarGamificacion();
     reintentadasSesion.add(tarjetasSesion[idx]);
     primerIntentoFallido.add(idx);
@@ -19077,12 +19276,14 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     let comodinUsado = false;
     if (!modoObservador && !modoZombie && !esModoSinGamificacion() && resultado === 'saltar' && gamificacion.inventario.comodines > 0) {
       gamificacion.inventario.comodines--;
+      gamificacion.consumidos.comodines++;
       comodinUsado = true;
       guardarGamificacion();
     }
 
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
+    if (resultado === 'saltar') reveladasAlSaltar.add(indiceActual);   // al saltar se ve la respuesta
 
     if (!modoObservador) {
       procesarResultadoGamificacion(indiceActual, resultado, {
@@ -19099,11 +19300,18 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       tiempoInicioTarjeta = Date.now();
     }
 
+    if (cronometroActivo && !quedanPendientes()) {   // los modos especiales no pasan por la parada del render genérico
+      cronometroActivo = false;
+      actualizarCronometro();
+    }
     actualizarBadgeNotaActual();
     renderTarjeta();
   }
 
-  function mostrarRespuesta() {
+  async function mostrarRespuesta() {
+    if (pausaManual || segundaPendiente) return;
+    if (rutasVisibles[indiceActual]) return;
+    if (!(await confirmarDescartarBorrador())) return;   // igual que marcar(): no perder una nota/razones sin guardar
     if (rutasVisibles[indiceActual]) return;
 
     rutasVisibles[indiceActual] = true;
@@ -19152,7 +19360,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       comodinUsado: false,
       factor: reintentoExitoso.has(indiceActual) ? FACTOR_RECOMPENSA_REINTENTO : 1,
     });
-    if (resultadoOriginal === 'mal') {
+    if (resultadoOriginal === 'mal' && !reveladasAlSaltar.has(indiceActual)) {
       actualizarRachaTrasResultado('si', false);  // incrementa racha + recalcula multiplicador (puede sonar "racha")
     }
     reproducirSonido('bien');
@@ -19495,7 +19703,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (!razonesAbierto) return;
 
     if (!elListaCheckRazones._construida) {
-      // la lista de razones es constante: se construye una vez y luego solo se sincroniza el estado
       const frag = document.createDocumentFragment();
       RAZONES_DEF.forEach((r) => {
         const label = document.createElement('label');
@@ -19521,7 +19728,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     });
   }
 
-  // Delegacion de eventos para el checklist de razones
   elListaCheckRazones.addEventListener('change', (e) => {
     const chk = e.target;
     if (chk && chk._codigo !== undefined) toggleRazonCheck(chk._codigo);
@@ -19532,6 +19738,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pistaMostrada[indiceActual] = true;
     if (!modoObservador && !modoZombie && !esModoSinGamificacion() && gamificacion.inventario.pistasGratis > 0) {
       gamificacion.inventario.pistasGratis--;
+      gamificacion.consumidos.pistasGratis++;
       pistaGratisUsadaPorTarjeta[indiceActual] = true;
       guardarGamificacion();
       actualizarBarraGamificacion();
@@ -19932,6 +20139,14 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       primeroSeleccionadoMatching = null;
       asociacionesTempMatching.clear();
     }
+    analisisGuardadoEstaSesion = false;   // el análisis se podrá volver a guardar (reemplaza al anterior)
+    elBtnAnalisisSesionGuardar.disabled = false;
+    elBtnAnalisisSesionGuardar.textContent = '💾 Guardar análisis';
+    globalExamenPendientesAlVencer = 0;
+    if (srsReaplicable && !srsSesionActiva) {   // el progreso SRS se recalcula con lo respondido en la continuación
+      srsSesionActiva = srsReaplicable;
+      actualizarBadgeSrs();
+    }
     const primera = resultados.findIndex((r) => r === null);
     indiceActual = primera >= 0 ? primera : 0;
     cronometroActivo = primera >= 0;
@@ -19943,6 +20158,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     mostrarPantalla('estudio');
     iniciarCronometro();
     renderTarjeta();
+    if (modoJuego === 'examen' && tiempoGlobalExamen && primera >= 0) {
+      iniciarCountdownGlobalExamen(resultados.filter((r) => r === null).length);
+    }
     window.scrollTo(0, 0);
   }
 
@@ -19974,6 +20192,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function iniciarSesionSRS(listasVencidas) {
+    if (modoJuego === 'examen') configurarModoJuego('normal');   // el Examen oculta pistas/navegación: no se hereda
+    limpiarModoEspecialAlSalir();
     const hashesPorLista = {};
     const todosLosHashes = new Set();
     listasVencidas.forEach((lista) => {
@@ -20005,6 +20225,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       if (total === 0) return;
       const pct = exitos / total;
       const srs = obtenerSrsLista(lista);
+      if (!srsSesionActiva.previos) srsSesionActiva.previos = {};
+      if (srsSesionActiva.previos[nombre]) Object.assign(srs, srsSesionActiva.previos[nombre]);   // reaplicación: parte del estado previo
+      else srsSesionActiva.previos[nombre] = Object.assign({}, srs);
       if (pct >= 0.8) srs.currentLevel += 1;
       else if (pct >= 0.6) {  }
       else if (pct >= 0.4) srs.currentLevel = Math.max(1, srs.currentLevel - 1);
@@ -20020,15 +20243,19 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       lista.rev = siguienteRev();
     });
     guardarListas();
+    srsReaplicable = srsSesionActiva;
     srsSesionActiva = null;
     actualizarBadgeSrs();
   }
 
   let srsListasVencidasAviso = [];
+  let ultimoAvisoSrsMs = 0;
   function evaluarAvisoSRS() {
     limpiarListasContraTarjetasActuales();
     const vencidas = listas.filter((l) => (!l.espacio || l.espacio === ESPACIO_HASH) && srsListaParaAviso(l));
     if (vencidas.length === 0) return;
+    if (Date.now() - ultimoAvisoSrsMs < 1800000) return;   // no repetir el aviso en cada vuelta a "temas" (máx. 1 cada 30 min)
+    ultimoAvisoSrsMs = Date.now();
     srsListasVencidasAviso = vencidas;
     const elLista = document.getElementById('srs-aviso-lista');
     elLista.innerHTML = '';
@@ -20263,22 +20490,24 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function autoguardarYCerrarPretestPomodoro() {
     detenerDictadoHojaCompartida();
-    const pretest = obtenerPretestPropio();
-    if (pretest && elModalNotasEvaluador.classList.contains('abierto') && modoHojaNotasEval === 'pretest') {
-      pretest.texto = elHojaEditor.value.trim();
-      pretest.modificada = Date.now();
-      pretest.rev = siguienteRev();
-      guardarNotasEvaluador();
+    if (!elModalNotasEvaluador.classList.contains('abierto')) return;
+    const esHojaUnica = modoHojaNotasEval === 'pretest' || modoHojaNotasEval === 'skimming';
+    if (esHojaUnica) {
+      const notaHoja = obtenerNotaUnicaPropia(modoHojaNotasEval);
+      if (notaHoja) {
+        notaHoja.texto = elHojaEditor.value.trim();
+        notaHoja.modificada = Date.now();
+        notaHoja.rev = siguienteRev();
+        guardarNotasEvaluador();
+      }
     }
-    if (elModalNotasEvaluador.classList.contains('abierto')) {
+    if (esHojaUnica || pomodoroFase === 'pretest') {
       cerrarNotasEvaluador({ desdeTransicionPomodoro: true });
     }
   }
 
   function entrarFaseRetencionPomodoro() {
-    if (pomodoroFase === 'pretest' && elModalNotasEvaluador.classList.contains('abierto')) {
-      autoguardarYCerrarPretestPomodoro();
-    }
+    autoguardarYCerrarPretestPomodoro();
     pomodoroFase = 'retencion';
     pomodoroSegundosRestantes = DURACION_LECTURA_SEG;
     pomodoroRetencionPresionada = true;
@@ -20310,10 +20539,26 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
   }
 
+  let pomodoroUltimoTick = 0;
+  let pomodoroPausaInicio = 0;
+  let pomodoroPausaAcumMs = 0;
+  function cerrarPausaPomodoro() {
+    if (pomodoroPausaInicio > 0) {
+      pomodoroPausaAcumMs += Date.now() - pomodoroPausaInicio;
+      pomodoroPausaInicio = 0;
+    }
+  }
+
+  // Cuenta con reloj de pared: si el navegador throttlea el intervalo (pestaña en segundo plano), no se pierde tiempo.
   function tickPomodoro() {
-    pomodoroSegundosRestantes--;
-    if (pomodoroFase === 'pretest') pomodoroAcumulado.pretest++;
-    else if (pomodoroFase === 'retencion') pomodoroAcumulado.retencion++;
+    const ahoraTick = Date.now();
+    let delta = Math.round((ahoraTick - pomodoroUltimoTick) / 1000);
+    if (!(delta >= 1)) delta = 1;
+    pomodoroUltimoTick = ahoraTick;
+    if (delta > pomodoroSegundosRestantes) delta = Math.max(1, pomodoroSegundosRestantes);
+    pomodoroSegundosRestantes -= delta;
+    if (pomodoroFase === 'pretest' || pomodoroFase === 'skimming') pomodoroAcumulado.pretest += delta;   // lectura = pretest + skimming
+    else if (pomodoroFase === 'retencion') pomodoroAcumulado.retencion += delta;
     if (pomodoroSegundosRestantes <= 0) {
       avanzarFasePomodoro();
     } else {
@@ -20334,6 +20579,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         return;
       }
     } else if (pomodoroFase === 'skimming') {
+      autoguardarYCerrarPretestPomodoro();
       pomodoroFase = 'descanso_largo';
       pomodoroSegundosRestantes = DURACION_DESCANSO_LARGO_SEG;
       reproducirSonido('pomodoro_lectura_a_descanso');
@@ -20356,6 +20602,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function iniciarIntervaloPomodoro() {
     clearInterval(pomodoroIntervalo);
+    pomodoroUltimoTick = Date.now();
     pomodoroIntervalo = setInterval(tickPomodoro, 1000);
   }
 
@@ -20379,6 +20626,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroCiclo = 1;
     pomodoroSegundosRestantes = DURACION_PRETEST_SEG;
     pomodoroPausado = false;
+    pomodoroPausaInicio = 0;
+    pomodoroPausaAcumMs = 0;
     pomodoroHoraInicio = Date.now();
     pomodoroAcumulado = { pretest: 0, retencion: 0 };
     pomodoroRetencionPresionada = false;
@@ -20421,12 +20670,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (!pomodoroActivo || (pomodoroFase !== 'retencion' && pomodoroFase !== 'descanso')) return;
     clearInterval(pomodoroIntervalo);
     if (pomodoroPausado) {
+      cerrarPausaPomodoro();
       pomodoroPausado = false;
       elOverlayPausa.classList.remove('abierto');
       elTituloPausa.textContent = '⏸ En pausa';
       elTextoPausa.textContent = 'El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.';
     }
-    pomodoroTotalSegCongelado = Math.round((Date.now() - pomodoroHoraInicio) / 1000);
+    pomodoroTotalSegCongelado = Math.max(0, Math.round((Date.now() - pomodoroHoraInicio - pomodoroPausaAcumMs) / 1000));
     pomodoroEnBraindumpFinal = true;
     elPomodoroBadge.style.display = 'none';
 
@@ -20453,8 +20703,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (pomodoroBraindumpNotaId) {
       const nota = notasEvaluador.find((n) => n.id === pomodoroBraindumpNotaId);
       if (nota) {
-        nota.texto = elHojaEditor.value.trim();
-        nota.modificada = Date.now();
+        const textoBd = elHojaEditor.value.trim();
+        if (textoBd === '') {   // no dejar una nota braindump vacía en la lista ni en los backups
+          notasEvaluador = notasEvaluador.filter((n) => n.id !== nota.id);
+        } else {
+          nota.texto = textoBd;
+          nota.modificada = Date.now();
+        }
         nota.rev = siguienteRev();
         guardarNotasEvaluador();
       }
@@ -20470,6 +20725,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function pausarPomodoro() {
     if (!pomodoroActivo || pomodoroPausado || pomodoroFase === 'descanso' || pomodoroFase === 'descanso_largo') return;
     pomodoroPausado = true;
+    pomodoroPausaInicio = Date.now();
     clearInterval(pomodoroIntervalo);
     elTituloPausa.textContent = '⏸ En pausa';
     elTextoPausa.textContent = 'Pomodoro en pausa · Quedan ' + formatoMMSS(pomodoroSegundosRestantes) + ' de la fase actual';
@@ -20478,6 +20734,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
   function reanudarPomodoro() {
     if (!pomodoroPausado) return;
+    cerrarPausaPomodoro();
     pomodoroPausado = false;
     elOverlayPausa.classList.remove('abierto');
     elTituloPausa.textContent = '⏸ En pausa';
@@ -20501,10 +20758,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function abandonarPomodoro(totalSegForzado) {
     clearInterval(pomodoroIntervalo);
-    if (pomodoroFase === 'pretest' && elModalNotasEvaluador.classList.contains('abierto')) {
-      autoguardarYCerrarPretestPomodoro();
-    }
+    autoguardarYCerrarPretestPomodoro();
     if (pomodoroPausado) {
+      cerrarPausaPomodoro();
       pomodoroPausado = false;
       elOverlayPausa.classList.remove('abierto');
       elTituloPausa.textContent = '⏸ En pausa';
@@ -20512,11 +20768,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
     const totalSeg = typeof totalSegForzado === 'number'
       ? totalSegForzado
-      : Math.round((Date.now() - pomodoroHoraInicio) / 1000);
+      : Math.max(0, Math.round((Date.now() - pomodoroHoraInicio - pomodoroPausaAcumMs) / 1000));
     document.getElementById('pomodoro-resumen-lectura').textContent = formatoMMSS(pomodoroAcumulado.pretest);
     document.getElementById('pomodoro-resumen-retencion').textContent = formatoMMSS(pomodoroAcumulado.retencion);
     document.getElementById('pomodoro-resumen-total').textContent = formatoMMSS(totalSeg);
-    document.getElementById('pomodoro-resumen-ciclos').textContent = String(pomodoroCiclo - 1 >= 0 ? pomodoroCiclo - 1 : 0);
+    document.getElementById('pomodoro-resumen-ciclos').textContent = String(Math.max(0, pomodoroCiclo - 1 + (pomodoroFase === 'descanso' ? 1 : 0)));
 
     const entradaRetencion = construirEntradaRetencion(totalSeg);
     if (entradaRetencion) {
@@ -20552,6 +20808,15 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elBtnPomodoro.disabled = false;
   }
   document.getElementById('btn-pomodoro-resumen-cerrar').addEventListener('click', () => cerrarModalPomodoroResumen());
+
+  // El Pomodoro vive solo en memoria: avisar antes de recargar/cerrar la pestaña.
+  window.addEventListener('beforeunload', (e) => {
+    if (pomodoroActivo) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  });
 
   construirListaTemas();
   mostrarPantalla('temas');
