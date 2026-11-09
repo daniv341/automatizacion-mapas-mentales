@@ -5073,6 +5073,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-pendientes">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>Tarjetas sin responder</h3>
+    <p id="modal-pendientes-texto"></p>
+    <button class="boton-reiniciar" id="btn-pendientes-volver">Volver a la evaluación</button>
+    <button class="boton-secundario" id="btn-pendientes-finalizar">Finalizar igual</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-salir-sin-guardar">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>Análisis sin guardar</h3>
@@ -14686,6 +14695,7 @@ const ZONAS_SYNC_GIST = [
     if (elModalAviso.classList.contains('abierto')) { cerrarModalAviso(); return; }
     if (elModalSyncEliminaciones.classList.contains('abierto')) { cerrarModalSyncEliminaciones('cancelar'); return; }   // el modal de decisión está arriba de todo
     if (elModalPrimeroEditado.classList.contains('abierto')) { cerrarModalPrimeroEditado('cancelar'); return; }
+    if (elModalPendientes.classList.contains('abierto')) { cerrarModalPendientes('volver'); return; }
     if (elModalSegunda.classList.contains('abierto')) { document.getElementById('btn-segunda-no').click(); return; }
     if (elModalContinuar.classList.contains('abierto')) { cerrarModalContinuar(); return; }
     if (elModalExamenOpciones.classList.contains('abierto')) { document.getElementById('btn-examen-opciones-cancelar').click(); return; }
@@ -14728,6 +14738,7 @@ const ZONAS_SYNC_GIST = [
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
 
     if (elModalConfirmacion.classList.contains('abierto')) { evento.preventDefault(); elBtnConfirmacionAceptar.click(); return; }
+    if (elModalPendientes.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pendientes-volver').click(); return; }
     if (elModalAviso.classList.contains('abierto')) { evento.preventDefault(); elBtnAvisoAceptar.click(); return; }
     if (elModalTutorial.classList.contains('abierto')) return;   // Enter no debe iniciar el Pomodoro desde el tutorial
     if (elModalPomodoroIniciar.classList.contains('abierto')) {
@@ -20901,7 +20912,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   elBtnSaltar.addEventListener('click', () => marcar('saltar'));
   elBtnAnterior.addEventListener('click', () => navegar(-1));
   elBtnSiguiente.addEventListener('click', () => navegar(1));
-  elBtnFinalizar.addEventListener('click', () => finalizarSesion());
+  elBtnFinalizar.addEventListener('click', () => intentarFinalizarSesion());
 
   document.addEventListener('keydown', (evento) => {
     if (elModalSegunda.classList.contains('abierto')) return;   // NUEVO: dialogo de segunda oportunidad abierto
@@ -20955,6 +20966,65 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       clearInterval(cronometroIntervalId);
       cronometroIntervalId = null;
     }
+  }
+
+  const elModalPendientes = document.getElementById('modal-pendientes');
+  const elModalPendientesTexto = document.getElementById('modal-pendientes-texto');
+  let _resolverPendientes = null;
+
+  function pedirDecisionPendientes(posiciones) {
+    return new Promise((resolve) => {
+      const n = posiciones.length;
+      elModalPendientesTexto.textContent = (n === 1 ? 'Te falta 1 tarjeta sin responder: ' : 'Te faltan ' + n + ' tarjetas sin responder: ') + posiciones.join(', ');
+      elModalPendientes.classList.add('abierto');
+      _resolverPendientes = resolve;
+    });
+  }
+
+  function cerrarModalPendientes(decision) {
+    elModalPendientes.classList.remove('abierto');
+    if (_resolverPendientes) {
+      const r = _resolverPendientes;
+      _resolverPendientes = null;
+      r(decision);
+    }
+  }
+
+  document.getElementById('btn-pendientes-volver').addEventListener('click', () => cerrarModalPendientes('volver'));
+  document.getElementById('btn-pendientes-finalizar').addEventListener('click', () => cerrarModalPendientes('finalizar'));
+
+  async function intentarFinalizarSesion() {
+    const posiciones = [];
+    resultados.forEach((r, i) => { if (r === null) posiciones.push(i + 1); });
+    if (modoJuego === 'examen' || posiciones.length === 0) {
+      finalizarSesion();
+      return;
+    }
+
+    const estabaPausada = pausaManual;
+    if (cronometroActivo && !cronometroCongelado()) acumularTiempo();
+    pausaManual = true;
+    actualizarCronometro();
+    const decision = await pedirDecisionPendientes(posiciones);
+    pausaManual = estabaPausada;
+
+    if (decision === 'volver') {
+      const destino = posiciones[0] - 1;
+      if (destino !== indiceActual) {
+        if (await confirmarDescartarBorrador()) {
+          indiceActual = destino;
+          hookCambioIndiceEspecial();
+          resetPanelesUI();
+        }
+      }
+      if (cronometroActivo && !cronometroCongelado()) tiempoInicioTarjeta = Date.now();
+      renderTarjeta();
+      actualizarCronometro();
+      return;
+    }
+
+    if (cronometroActivo && !cronometroCongelado()) tiempoInicioTarjeta = Date.now();
+    finalizarSesion();
   }
 
   async function finalizarSesion(opciones) {
