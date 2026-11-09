@@ -925,6 +925,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     --color-sombra: rgba(0,0,0,0.06);
     --color-sombra-fuerte: rgba(0,0,0,0.15);
     --color-overlay: rgba(30,30,40,0.55);
+    --hm-n1: rgba(79, 70, 229, 0.30);
+    --hm-n2: rgba(79, 70, 229, 0.55);
+    --hm-n3: #4F46E5;
+    --hm-venc: #e0574c;
   }
 
   html[data-tema="oscuro"] {
@@ -947,6 +951,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     --color-sombra: rgba(0,0,0,0.35);
     --color-sombra-fuerte: rgba(0,0,0,0.45);
     --color-overlay: rgba(0,0,0,0.65);
+    --hm-n1: rgba(79, 70, 229, 0.45);
+    --hm-n2: rgba(79, 70, 229, 0.70);
+    --hm-n3: #4F46E5;
+    --hm-venc: #e0574c;
   }
 
   html.sin-transiciones, html.sin-transiciones * {
@@ -2057,6 +2065,157 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .indicador-storage-dot.storage-naranja { background: #e07b00; }
   .indicador-storage-dot.storage-rojo { background: #c0392b; }
 
+  .indicador-storage .boton-historial-heatmap { margin-left: auto; flex-shrink: 0; }
+
+  .heatmap-bloque {
+    border: 1px solid var(--color-borde-medio);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 22px;
+  }
+  .heatmap-titulo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--texto-cabecera);
+    margin-bottom: 2px;
+  }
+  .heatmap-ayuda {
+    font-size: 11px;
+    color: var(--texto-tenue);
+    margin-bottom: 12px;
+  }
+  .heatmap-mes { margin-bottom: 16px; }
+  .heatmap-mes:last-of-type { margin-bottom: 4px; }
+  .heatmap-mes-nombre {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: capitalize;
+    color: var(--texto-cabecera);
+    margin-bottom: 6px;
+  }
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .heatmap-dia-cab {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--texto-tenue);
+    text-align: center;
+  }
+  .heatmap-celda {
+    aspect-ratio: 1 / 1;
+    min-height: 34px;
+    border-radius: 6px;
+    background: var(--bg-superficie-hover);
+    border: 1px solid var(--color-borde-suave);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--texto-suave);
+    user-select: none;
+  }
+  .heatmap-celda.hm-vacia {
+    background: transparent;
+    border-color: transparent;
+  }
+  .heatmap-celda.hm-con-datos {
+    cursor: pointer;
+    border-color: transparent;
+    font-weight: 700;
+    color: #fff;
+  }
+  .heatmap-celda.hm-con-datos:focus-visible {
+    outline: 2px solid var(--color-boton);
+    outline-offset: 1px;
+  }
+  .heatmap-celda.hm-n1 { background: var(--hm-n1); color: var(--texto-principal); }
+  .heatmap-celda.hm-n2 { background: var(--hm-n2); }
+  .heatmap-celda.hm-n3 { background: var(--hm-n3); }
+  .heatmap-celda.hm-hoy {
+    outline: 2px solid var(--color-boton);
+    outline-offset: 1px;
+  }
+  .heatmap-leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    font-size: 10px;
+    color: var(--texto-tenue);
+    margin-top: 8px;
+  }
+  .leyenda-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .hm-chip {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .hm-chip-n1 { background: var(--hm-n1); }
+  .hm-chip-n2 { background: var(--hm-n2); }
+  .hm-chip-n3 { background: var(--hm-n3); }
+  .hm-chip-hoy { background: var(--bg-superficie-hover); outline: 2px solid var(--color-boton); outline-offset: -1px; }
+  .heatmap-detalle {
+    margin-top: 12px;
+    border-top: 1px solid var(--color-borde-medio);
+    padding-top: 10px;
+  }
+  .heatmap-detalle-titulo {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: capitalize;
+    color: var(--texto-cabecera);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .heatmap-detalle-cerrar {
+    background: none;
+    border: none;
+    color: var(--texto-tenue);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    font-family: inherit;
+  }
+  .heatmap-detalle-cerrar:hover { color: var(--texto-principal); }
+  .heatmap-detalle-item {
+    font-size: 12px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--color-borde-suave);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .heatmap-detalle-item:last-child { border-bottom: none; }
+  .hm-badge {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 2px 7px;
+    white-space: nowrap;
+  }
+  .hm-badge-real { background: var(--color-boton); color: #fff; }
+  .heatmap-detalle-nivel { color: var(--texto-tenue); }
+
+  @media (max-width: 400px) {
+    .heatmap-grid { gap: 3px; }
+    .heatmap-celda { min-height: 30px; font-size: 9px; }
+    .heatmap-leyenda { gap: 7px; }
+  }
+
   .boton-pausa {
     border: 1.5px solid var(--color-borde-fuerte);
     background: var(--bg-superficie);
@@ -2102,6 +2261,59 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   .boton-revisar.activa { background: #ffe3c2; border-color: #e0812a; color: #a85a10; }
+  .boton-revisar.activa.editada { background: #ffd199; border: 2px dashed #d9690b; color: #8a4208; }
+
+  .fila-primero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+  }
+  .boton-editar-primero {
+    flex: none;
+    font-size: 13px;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1.5px solid #e0812a;
+    background: #ffe3c2;
+    color: #a85a10;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .boton-leer-primero {
+    flex: none;
+    font-size: 14px;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1.5px solid var(--color-boton);
+    background: rgba(255,255,255,0.65);
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .boton-leer-primero.leyendo { background: #e3f0ff; border-color: #3b82f6; }
+  .editor-primero {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  .input-editar-primero {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1.5px solid #e6d38a;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    background: #fffdf2;
+    color: #4d4216;
+  }
+  .input-editar-primero:focus { outline: 2px solid #F2C94C; outline-offset: 1px; }
+  .fila-editor-primero { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
   .boton-circular.boton-si.comprension {
     width: auto;
@@ -2355,22 +2567,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-
-  .boton-revisar-huerfana {
-    position: relative;
-    flex-shrink: 0;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--color-boton);
-    background: rgba(255,255,255,0.65);
-    border: 1.5px solid var(--color-boton);
-    border-radius: 12px;
-    padding: 2px 8px;
-    font-family: inherit;
-    cursor: pointer;
-  }
-
-  .boton-revisar-huerfana.activa { background: #ffe3c2; border-color: #e0812a; color: #a85a10; }
 
   .saldo-tienda {
     font-size: 16px;
@@ -2679,6 +2875,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .fila-backup-zona .zona-nombre { font-size: 13px; font-weight: 700; color: var(--texto-principal); }
   .fila-backup-zona .zona-botones { display: flex; gap: 6px; }
   .modal-caja-ancha h3, .modal-caja-ancha > p.modal-ayuda { text-align: center; }
+
+  .tutorial-contenido { font-size: 13px; line-height: 1.4; color: var(--texto-secundario); }
+  .tutorial-modo { font-size: 14px; font-weight: 800; color: var(--color-boton); text-transform: uppercase; letter-spacing: 0.03em; margin: 14px 0 4px; padding-bottom: 3px; border-bottom: 1px solid var(--color-borde); }
+  .tutorial-modo:first-child { margin-top: 0; }
+  .tutorial-sec { display: block; font-size: 13px; font-weight: 700; color: var(--texto-principal); margin: 8px 0 2px; }
+  .tutorial-lista { margin: 0 0 0 20px; padding: 0; }
+  .tutorial-lista li { margin: 1px 0; }
 
   .fila-acciones-listas { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 10px; }
   .boton-mini-peligro { color: #a4402f; border-color: #f0c4bc; }
@@ -3942,11 +4145,29 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="indicador-storage" id="indicador-storage">
       <span class="indicador-storage-dot" id="indicador-storage-dot"></span>
       <span id="indicador-storage-texto"></span>
+      <button class="boton-icono-circular boton-historial-heatmap" id="btn-historial-heatmap" type="button" title="Calendario de sesiones" aria-expanded="false">📅</button>
     </div>
     <div class="fila-acciones-historial">
       <button class="boton-secundario" id="btn-abrir-sync" title="Backup completo y respaldos individuales">🔄 Sincronización</button>
       <button class="boton-secundario" id="btn-historial-borrar-este" title="Quita solo las sesiones de este evaluador">Borrar historial de este evaluador</button>
       <button class="boton-secundario" id="btn-historial-borrar-global" title="Vacia las sesiones de TODOS los evaluadores">Borrar historial global</button>
+    </div>
+    <div class="heatmap-bloque" id="heatmap-bloque-historial" style="display:none;">
+      <div class="heatmap-titulo">📅 Calendario de sesiones</div>
+      <div class="heatmap-ayuda">Tocá un día para ver el detalle de las sesiones.</div>
+      <div class="historial-paginacion" id="heatmap-historial-nav" style="margin-bottom:10px;">
+        <button type="button" class="boton-mini" id="btn-heatmap-historial-anterior" title="Período anterior">◀</button>
+        <span class="historial-paginacion-texto" id="heatmap-historial-periodo"></span>
+        <button type="button" class="boton-mini" id="btn-heatmap-historial-siguiente" title="Período siguiente">▶</button>
+      </div>
+      <div id="heatmap-historial-meses"></div>
+      <div class="heatmap-leyenda">
+        <span class="leyenda-item"><span class="hm-chip hm-chip-n1"></span>1 sesión</span>
+        <span class="leyenda-item"><span class="hm-chip hm-chip-n2"></span>2-3</span>
+        <span class="leyenda-item"><span class="hm-chip hm-chip-n3"></span>4+</span>
+        <span class="leyenda-item"><span class="hm-chip hm-chip-hoy"></span>hoy</span>
+      </div>
+      <div class="heatmap-detalle" id="heatmap-historial-detalle" hidden></div>
     </div>
     <div class="lista-historial-scroll" id="lista-historial"></div>
     <div class="historial-paginacion" id="historial-paginacion" style="display:none;"></div>
@@ -3995,7 +4216,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="tarjeta" id="tarjeta">
       <div class="badge-rutas" id="badge-rutas" style="display:none;"></div>
       <button class="boton-revisar" id="btn-revisar" title="Marcar para revisar (se guarda en este navegador)">🚩 Revisar</button>
-      <div class="primero" id="tarjeta-primero"></div>
+      <div class="fila-primero">
+        <div class="primero" id="tarjeta-primero"></div>
+        <button class="boton-leer-primero" id="btn-leer-primero" title="Leer en voz alta el «primero»" aria-label="Leer en voz alta el «primero»">🔊</button>
+        <button class="boton-editar-primero" id="btn-editar-primero" style="display:none;" title="Editar el «primero» de esta tarjeta marcada">✎</button>
+      </div>
+      <div class="editor-primero" id="editor-primero" style="display:none;">
+        <input type="text" class="input-editar-primero" id="input-editar-primero" autocomplete="off" placeholder="Nuevo «primero»">
+        <div class="fila-editor-primero">
+          <button class="boton-mini" id="btn-guardar-primero">💾 Guardar</button>
+          <button class="boton-mini" id="btn-cancelar-primero">✕ Cancelar</button>
+        </div>
+      </div>
       <div class="zona-segundo" id="zona-segundo">
         <div class="fila-botones-tarjeta">
           <button class="boton-pista" id="btn-pista">Mostrar pista<span class="badge-conteo" id="badge-pista-gratis" style="display:none;"></span></button>
@@ -4148,11 +4380,77 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <div class="modal-overlay" id="modal-pomodoro-iniciar">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>¿Empezar a estudiar?</h3>
+    <button class="boton-secundario" id="btn-pomodoro-tutorial" style="width:100%;">📖 Método de estudio</button>
     <div class="pomodoro-banner-repaso" id="pomodoro-aviso-repaso"></div>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-normal">Normal</button>
     <button class="boton-secundario" id="btn-pomodoro-iniciar-dificil">Difícil</button>
     <button class="boton-mini" id="btn-pomodoro-iniciar-historial">🧠 Ver historial de retención</button>
     <button class="modal-cancelar" id="btn-pomodoro-iniciar-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-tutorial">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>📖 Método de estudio</h3>
+    <div class="tutorial-contenido">
+      <div class="tutorial-modo">Temas normales</div>
+      <strong class="tutorial-sec">Pretest (5 min)</strong>
+      <ol class="tutorial-lista">
+        <li>Abrir la hoja de Pretest y escribir todo lo que ya sabés del tema sin mirar material (brain dump inicial).</li>
+        <li>No corregir ni completar, solo volcar lo que sale.</li>
+      </ol>
+      <strong class="tutorial-sec">Retención activa (25 min)</strong>
+      <ol class="tutorial-lista">
+        <li>Estudiar el mapa rama por rama: lees, tapás y recordás (1er intento).</li>
+        <li>Si recordás bien, seguís con la siguiente.</li>
+        <li>Si falla, intentás 1 vez más (2do intento); si no, la marcás como Difícil y seguís.</li>
+        <li>Podés abrir el panel de Retención y marcar cada ruta como ✓ Retenida o ⚠ Difícil.</li>
+        <li>Repetir hasta terminar el ciclo.</li>
+      </ol>
+      <strong class="tutorial-sec">Descanso (5 min)</strong>
+      <ol class="tutorial-lista" start="6">
+        <li>Pausa obligatoria, no mirar material.</li>
+      </ol>
+      <strong class="tutorial-sec">Ciclos siguientes</strong>
+      <ol class="tutorial-lista" start="7">
+        <li>Repetir Retención (25 min) + Descanso (5 min) tantas veces como necesites.</li>
+        <li>Al finalizar un ciclo o durante un descanso, podés hacer un Braindump: escribir todo lo que recordás sin mirar.</li>
+        <li>El sistema registra qué rutas retuviste y cuáles no, y calcula tu curva de olvido.</li>
+      </ol>
+
+      <div class="tutorial-modo">Temas difíciles</div>
+      <strong class="tutorial-sec">Pretest (5 min)</strong>
+      <ol class="tutorial-lista">
+        <li>Igual: escribís lo que ya sabés del tema.</li>
+      </ol>
+      <strong class="tutorial-sec">Skimming (5 min)</strong>
+      <ol class="tutorial-lista" start="2">
+        <li>Lectura rápida global del mapa para identificar estructura, ramas difíciles y/o terminología específica.</li>
+      </ol>
+      <strong class="tutorial-sec">Descanso largo (10 min)</strong>
+      <ol class="tutorial-lista" start="3">
+        <li>Pausa extendida antes de la retención profunda.</li>
+      </ol>
+      <strong class="tutorial-sec">Retención activa (25 min)</strong>
+      <ol class="tutorial-lista" start="4">
+        <li>Igual que el modo normal: tapar y recordar, marcar rutas (1er intento).</li>
+        <li>Si una ruta no entra después de 2 intentos, marcarla Difícil y anotar la duda exacta (botón 💡 Nota de ruta).</li>
+        <li>Seguir con la siguiente.</li>
+      </ol>
+      <strong class="tutorial-sec">Ciclos siguientes</strong>
+      <ol class="tutorial-lista" start="7">
+        <li>Igual que el modo normal: Retención + Descanso + Braindump.</li>
+      </ol>
+
+      <div class="tutorial-modo">Braindump final (ambos modos)</div>
+      <ol class="tutorial-lista">
+        <li>Al terminar una retención o durante un descanso, apretar 🧠 Braindump.</li>
+        <li>El temporizador se pausa y se abre una hoja en blanco.</li>
+        <li>Escribir todo lo que recordás sin mirar material.</li>
+        <li>Guardar: el sistema lo registra como nota de braindump.</li>
+      </ol>
+    </div>
+    <button class="modal-cancelar" id="btn-tutorial-cerrar">Cerrar</button>
   </div>
 </div>
 
@@ -4264,6 +4562,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <button class="boton-mini" id="btn-gist-exportar-dificiles" title="Subir este archivo al Gist">☁️ Subir</button>
         <button class="boton-mini" id="btn-gist-importar-dificiles" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-importar" accept=".json,application/json" style="display:none">
+      </span>
+    </div>
+    <div class="fila-backup-zona">
+      <span class="zona-nombre">🚩 Para revisar</span>
+      <span class="zona-botones">
+        <button class="boton-mini" id="btn-exportar-pararevisar" title="Descarga los primeros editados como JSON">Exportar</button>
+        <button class="boton-mini" id="btn-importar-pararevisar" title="Fusiona los primeros editados de un JSON (gana el más reciente)">Importar</button>
+        <button class="boton-mini" id="btn-gist-exportar-pararevisar" title="Subir este archivo al Gist">☁️ Subir</button>
+        <button class="boton-mini" id="btn-gist-importar-pararevisar" title="Bajar este archivo del Gist">☁️ Bajar</button>
+        <input type="file" id="input-importar-pararevisar" accept=".json,application/json" style="display:none">
       </span>
     </div>
     <div class="fila-backup-zona">
@@ -4411,6 +4719,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div id="vinc-zonas" style="display:none;">
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="dificiles" checked> ☆ Difíciles</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="notas" checked> 💡 Notas</label>
+      <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="pararevisar" checked> 🚩 Para revisar</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="razones" checked> 🏷 Razones</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="imagenes" checked> 🖼 Imágenes</label>
       <label class="vinc-zona-item"><input type="checkbox" class="vinc-zona-chk" value="listas" checked> 📋 Listas</label>
@@ -4735,11 +5044,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-sesion-pendiente">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>♻️ Sesión sin terminar</h3>
+    <p>Quedó una sesión de estudio sin finalizar en este evaluador. ¿Querés continuarla?</p>
+    <ul id="sesion-pendiente-detalles" style="text-align:left; padding-left: 22px; font-size: 13px; color: var(--texto-cabecera); margin: 0 0 8px;"></ul>
+    <p id="sesion-pendiente-aviso" style="display:none; font-weight:700; color:#a4402f;">⚠️ Cerrar la pestaña durante un examen puede considerarse trampa. ¿Continuar?</p>
+    <button class="boton-reiniciar" id="btn-sesion-pendiente-continuar">Continuar sesión</button>
+    <button class="boton-secundario" id="btn-sesion-pendiente-descartar">Descartar</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-confirmacion">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <p id="modal-confirmacion-texto"></p>
     <button class="boton-reiniciar" id="btn-confirmacion-aceptar">Confirmar</button>
     <button class="modal-cancelar" id="btn-confirmacion-cancelar">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-primero-editado">
+  <div class="modal-caja" role="dialog" aria-modal="true">
+    <h3>Esta tarjeta tiene un «primero» editado.</h3>
+    <p>¿Qué querés hacer al desmarcarla?</p>
+    <button class="boton-reiniciar" id="btn-primero-editado-revertir">Revertir al original</button>
+    <button class="boton-secundario" id="btn-primero-editado-conservar">Desmarcar sin revertir</button>
+    <button class="modal-cancelar" id="btn-primero-editado-cancelar">Cancelar</button>
   </div>
 </div>
 
@@ -4830,6 +5160,34 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let modoObservador = false;  // NUEVO: viendo tarjetas sin evaluarse (sin cronómetro ni calificación)
   let observadorAbiertos = new Set();  // NUEVO: subT abiertos en la lista del observador
   let pausaManual = false;     // NUEVO: cronómetro pausado a mano (botón ⏸ Pausar)
+  let _avisoCuotaMs = 0;
+  function escribirLocalSeguro(clave, valor) {
+    try {
+      localStorage.setItem(clave, valor);
+      return true;
+    } catch (errorGuardado) {
+      try { console.error('No se pudo guardar "' + clave + '":', errorGuardado); } catch (e0) { }
+      const ahora = Date.now();
+      if (ahora - _avisoCuotaMs > 600000) {
+        _avisoCuotaMs = ahora;
+        if (typeof avisar === 'function') {
+          try {
+            avisar('⚠️ No se pudo guardar en este navegador (almacenamiento lleno o bloqueado). Los últimos cambios NO quedaron guardados. ' +
+              'Exportá un backup completo desde «Sincronización» y liberá espacio (por ejemplo, borrando historial antiguo, notas muy largas o datos de evaluadores que ya no uses).');
+          } catch (e1) { }
+        }
+      }
+      return false;
+    }
+  }
+
+  function hashTextoSync(t) {
+    const texto = String(t);
+    let h = 5381;
+    for (let i = 0; i < texto.length; i++) h = ((h * 33) ^ texto.charCodeAt(i)) >>> 0;
+    return h.toString(36) + ':' + texto.length;
+  }
+
   function cargarRevisarLocal(clave) {
     try {
       const o = JSON.parse(localStorage.getItem(clave) || '{}');
@@ -4837,17 +5195,49 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } catch (e) { return {}; }
   }
   function guardarRevisarLocal(clave, obj) {
-    try { localStorage.setItem(clave, JSON.stringify(obj)); } catch (e) {}
+    try { escribirLocalSeguro(clave, JSON.stringify(obj)); } catch (e) {}
   }
   let revisarEnMemoria = cargarRevisarLocal('revisar_tarjetas_v1');
+  const movidasVinculo = cargarRevisarLocal('vinculo_movidas_v1');   // claves de hash ya movidas por «Vincular»: no se reimportan
 
   function esRevisar(t) { return !!revisarEnMemoria[hashTarjeta(t)]; }
 
-  function toggleRevisarActual() {
+  const elModalPrimeroEditado = document.getElementById('modal-primero-editado');
+  let _resolverPrimeroEditado = null;
+
+  function pedirDecisionPrimeroEditado() {
+    return new Promise((resolve) => {
+      elModalPrimeroEditado.classList.add('abierto');
+      _resolverPrimeroEditado = resolve;
+    });
+  }
+
+  function cerrarModalPrimeroEditado(decision) {
+    elModalPrimeroEditado.classList.remove('abierto');
+    if (_resolverPrimeroEditado) {
+      const r = _resolverPrimeroEditado;
+      _resolverPrimeroEditado = null;
+      r(decision);
+    }
+  }
+
+  document.getElementById('btn-primero-editado-revertir').addEventListener('click', () => cerrarModalPrimeroEditado('revertir'));
+  document.getElementById('btn-primero-editado-conservar').addEventListener('click', () => cerrarModalPrimeroEditado('conservar'));
+  document.getElementById('btn-primero-editado-cancelar').addEventListener('click', () => cerrarModalPrimeroEditado('cancelar'));
+  elModalPrimeroEditado.addEventListener('click', (evento) => {
+    if (evento.target === elModalPrimeroEditado) cerrarModalPrimeroEditado('cancelar');
+  });
+
+  async function toggleRevisarActual() {
     if (tarjetasSesion.length === 0) return;
     const t = tarjetasSesion[indiceActual];
     const h = hashTarjeta(t);
     if (revisarEnMemoria[h]) {
+      if (primeroEditadoDe(t)) {
+        const decision = await pedirDecisionPrimeroEditado();
+        if (decision === 'cancelar') return;
+        if (decision === 'revertir') borrarPrimeroEditado(h);
+      }
       delete revisarEnMemoria[h];
     } else {
       revisarEnMemoria[h] = { p: t.primero || '', s: t.segundo || '', t: Date.now() };
@@ -4943,11 +5333,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function guardarGamificacionYa() {
     try {
-      localStorage.setItem(CLAVE_GAMIFICACION, JSON.stringify(gamificacion));
+      escribirLocalSeguro(CLAVE_GAMIFICACION, JSON.stringify(gamificacion));
     } catch (e) {
     }
   }
-
   var _guardarGamificacionDiferido = crearGuardadoDiferidoPerezoso(guardarGamificacionYa, 250);
   function guardarGamificacion() {
     _guardarGamificacionDiferido();
@@ -5049,7 +5438,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     cont._nodosPorClave = null;
     reemplazarHijos(cont, null);
   }
-
   function reconciliarHijos(cont, items, claveFn, firmaFn, crearFn) {
     const previos = cont._nodosPorClave || new Map();
     const nuevos = new Map();
@@ -5126,7 +5514,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   })();
   function guardarRelojLogicoYa() {
-    try { localStorage.setItem(CLAVE_RELOJ_LOGICO, String(relojLogicoLocal)); } catch (e) { }
+    try { escribirLocalSeguro(CLAVE_RELOJ_LOGICO, String(relojLogicoLocal)); } catch (e) { }
   }
   var _guardarRelojDiferido = crearGuardadoDiferidoPerezoso(guardarRelojLogicoYa, 250);
   function guardarRelojLogico() {
@@ -5204,6 +5592,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!datosZona || typeof datosZona !== 'object') return null;
     if (zona === 'dificiles') return Array.isArray(datosZona.tarjetas) ? datosZona.tarjetas : null;
     if (zona === 'notas') return Array.isArray(datosZona.notas) ? datosZona.notas : null;
+    if (zona === 'pararevisar') return Array.isArray(datosZona.paraRevisar) ? datosZona.paraRevisar : null;
     if (zona === 'notaseval') return Array.isArray(datosZona.notasEvaluador) ? datosZona.notasEvaluador : null;
     if (zona === 'analisis') return Array.isArray(datosZona.analisisGuardados) ? datosZona.analisisGuardados : null;
     if (zona === 'retencion') return Array.isArray(datosZona.retencionRutas) ? datosZona.retencionRutas : null;
@@ -5237,6 +5626,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const entrantes = new Set(lista.filter((x) => x && typeof x.h === 'string' && x.h).map((x) => x.h));
       Object.keys(notasLocales).forEach((h) => {
         const loc = notasLocales[h];
+        if (!loc) return;
+        if (!entrantes.has(h) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.t || 0)) {
+          idsAEliminar.push(h);
+        }
+      });
+    } else if (zona === 'pararevisar') {
+      const entrantes = new Set(lista.filter((x) => x && typeof x.h === 'string' && x.h).map((x) => x.h));
+      Object.keys(paraRevisar).forEach((h) => {
+        const loc = paraRevisar[h];
         if (!loc) return;
         if (!entrantes.has(h) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.t || 0)) {
           idsAEliminar.push(h);
@@ -5283,10 +5681,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
       });
     } else if (zona === 'listas') {
-      const entrantes = new Set(lista.filter((x) => x && typeof x.nombre === 'string' && Array.isArray(x.hashes)).map(claveNaturalLista));
+      const entrantes = new Set();
+      lista.forEach((x) => {
+        if (!x || typeof x.nombre !== 'string' || !Array.isArray(x.hashes)) return;
+        entrantes.add(claveNaturalLista(x));
+        if (typeof x.id === 'string' && x.id) entrantes.add('id:' + (x.espacio || ESPACIO_HASH) + ':' + x.id);
+      });
       listas.forEach((loc) => {
         const clave = claveNaturalLista(loc);
-        if (!entrantes.has(clave) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.modificada || loc.creada || 0)) {
+        const estaPorId = typeof loc.id === 'string' && loc.id && entrantes.has('id:' + (loc.espacio || ESPACIO_HASH) + ':' + loc.id);
+        if (!estaPorId && !entrantes.has(clave) && esEliminacionSegura(meta.rev, meta.ts, loc.rev, loc.modificada || loc.creada || 0)) {
           idsAEliminar.push(clave);
         }
       });
@@ -5304,6 +5708,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else if (zona === 'notas') {
       idsAEliminar.forEach((h) => { delete notasLocales[h]; });
       guardarNotas();
+    } else if (zona === 'pararevisar') {
+      idsAEliminar.forEach((h) => { delete paraRevisar[h]; });
+      guardarParaRevisar();
+      repintarTarjetaSiActiva();
     } else if (zona === 'razones') {
       idsAEliminar.forEach((h) => { delete razonesGuardadas[h]; });
       guardarRazones();
@@ -5340,6 +5748,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function textoConteoEliminacionZona(zona, n) {
     if (zona === 'dificiles') return 'Se ' + (n === 1 ? 'eliminaría 1 difícil' : 'eliminarían ' + n + ' difíciles') + ' localmente';
     if (zona === 'notas') return 'Se ' + (n === 1 ? 'eliminaría 1 nota' : 'eliminarían ' + n + ' notas') + ' localmente';
+    if (zona === 'pararevisar') return 'Se ' + (n === 1 ? 'eliminaría 1 primero editado' : 'eliminarían ' + n + ' primeros editados') + ' localmente';
     if (zona === 'notaseval') return 'Se ' + (n === 1 ? 'eliminaría 1 nota del evaluador' : 'eliminarían ' + n + ' notas del evaluador') + ' localmente';
     if (zona === 'analisis') return 'Se ' + (n === 1 ? 'eliminaría 1 análisis' : 'eliminarían ' + n + ' análisis') + ' localmente';
     if (zona === 'retencion') return 'Se ' + (n === 1 ? 'eliminaría 1 registro de retención' : 'eliminarían ' + n + ' registros de retención') + ' localmente';
@@ -5352,6 +5761,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const ETIQUETA_ZONA_MODAL = {
     dificiles: '☆ Difíciles',
     notas: '💡 Notas',
+    pararevisar: '🚩 Para revisar',
     notaseval: '📝 Notas del evaluador',
     analisis: '📑 Análisis de Sesión',
     retencion: '🧠 Retención de rutas',
@@ -5362,7 +5772,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function guardarDificilesYa() {
     try {
-      localStorage.setItem(CLAVE_DIFICILES, JSON.stringify(dificiles));
+      escribirLocalSeguro(CLAVE_DIFICILES, JSON.stringify(dificiles));
     } catch (e) {
     }
   }
@@ -5383,9 +5793,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
   }
 
+  function idListaDeterministico(l) {
+    const esp = (l && typeof l.espacio === 'string' && l.espacio) ? l.espacio : ESPACIO_HASH;
+    return 'l' + hashTextoSync(esp + '|' + String(l.nombre || '').toLowerCase() + '|' + (Number(l.creada) || 0));
+  }
+  function asegurarIdsListas() {
+    listas.forEach((l) => { if (typeof l.id !== 'string' || !l.id) l.id = idListaDeterministico(l); });
+  }
+
   function guardarListasYa() {
     try {
-      localStorage.setItem(CLAVE_LISTAS, JSON.stringify(listas));
+      escribirLocalSeguro(CLAVE_LISTAS, JSON.stringify(listas));
     } catch (e) {
     }
   }
@@ -5403,6 +5821,56 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function buscarListaPropia(nombre) {
     return buscarListaEnEspacio(nombre, ESPACIO_HASH);
+  }
+
+  function buscarListaPropiaPorId(id) {
+    if (!id) return null;
+    return listas.find((l) => l.id === id && (l.espacio || ESPACIO_HASH) === ESPACIO_HASH) || null;
+  }
+
+  function sesionPerteneceALista(sesion, lista) {
+    if (!lista) return false;
+    if (sesion.listado_id) return sesion.listado_id === lista.id;
+    return !!sesion.listado && sesion.listado.toLowerCase() === lista.nombre.toLowerCase();
+  }
+
+  function idListaDeSesionActual() {
+    const nombre = srsSesionActiva
+      ? (srsSesionActiva.nombres.length === 1 ? srsSesionActiva.nombres[0] : '')
+      : (listaActivaNombre || '');
+    const lista = nombre ? buscarListaPropia(nombre) : null;
+    return lista ? lista.id : '';
+  }
+
+  function refsSrsDeSesion(s) {
+    if (Array.isArray(s.listas_srs)) return s.listas_srs;
+    if (s.niveles_srs && typeof s.niveles_srs === 'object') {
+      return Object.keys(s.niveles_srs).map((nombre) => ({
+        id: '', nombre: nombre, nivel: typeof s.niveles_srs[nombre] === 'number' ? s.niveles_srs[nombre] : null,
+      }));
+    }
+    if (s.listado && s.listado !== 'SRS Múltiple') {
+      return [{ id: s.listado_id || '', nombre: s.listado, nivel: typeof s.nivel_srs === 'number' ? s.nivel_srs : null }];
+    }
+    return [];
+  }
+
+  function fijarIdListaEnSesiones(lista) {
+    const clave = lista.nombre.toLowerCase();
+    gamificacion.historial.forEach((s) => {
+      if (espacioDeSesion(s) !== ESPACIO_HASH) return;
+      if (!s.listado_id && s.listado && s.listado.toLowerCase() === clave) s.listado_id = lista.id;
+      if (s.modo === 'srs' && !Array.isArray(s.listas_srs)) {
+        const refs = refsSrsDeSesion(s);
+        if (refs.some((r) => !r.id && r.nombre.toLowerCase() === clave)) {
+          s.listas_srs = refs.map((r) => {
+            const l = r.id ? buscarListaPropiaPorId(r.id) : buscarListaPropia(r.nombre);
+            return { id: r.id || (l ? l.id : ''), nombre: r.nombre, nivel: r.nivel };
+          });
+        }
+      }
+    });
+    guardarGamificacion();
   }
 
   const SRS_DEFAULT = { activated: false, startDate: 0, currentLevel: 1, lastReviewDate: 0, graduated: false, snoozeUntil: 0 };
@@ -5464,6 +5932,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   const ESPACIO_HASH = __ESPACIO__;
+  asegurarIdsListas();
   document.getElementById('nombre-evaluador').textContent = ESPACIO_HASH;
 
   const CLAVE_REGISTRO_ESPACIOS = 'registro_espacios_v1';
@@ -5497,7 +5966,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         cantidad_espacios: Object.keys(espacios).length,
         espacios: espacios,
       };
-      localStorage.setItem(CLAVE_REGISTRO_ESPACIOS, JSON.stringify(registro));
+      escribirLocalSeguro(CLAVE_REGISTRO_ESPACIOS, JSON.stringify(registro));
     } catch (e) {
     }
   }
@@ -5573,6 +6042,152 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     renderTarjeta();
   }
 
+  const CLAVE_PARA_REVISAR = 'para_revisar_v1';
+  let paraRevisar = cargarRevisarLocal(CLAVE_PARA_REVISAR);
+  const guardarParaRevisar = crearGuardadoDebounced(() => guardarRevisarLocal(CLAVE_PARA_REVISAR, paraRevisar), 250);
+
+  function primeroEditadoDe(t) {
+    const e = paraRevisar[hashTarjeta(t)];
+    return (e && typeof e.p === 'string') ? e.p : '';
+  }
+  function primeroVisibleDe(t) { return primeroEditadoDe(t) || t.primero; }
+  function repintarTarjetaSiActiva() {
+    if (tarjetasSesion.length > 0 && elAreaTarjeta.style.display !== 'none') renderTarjeta();
+  }
+  function borrarPrimeroEditado(h) {
+    if (!paraRevisar[h]) return;
+    delete paraRevisar[h];
+    siguienteRev();
+    guardarParaRevisar();
+  }
+
+  const elFilaPrimero = document.getElementById('tarjeta-primero').parentNode;
+  const elBtnEditarPrimero = document.getElementById('btn-editar-primero');
+  const elEditorPrimero = document.getElementById('editor-primero');
+  const elInputEditarPrimero = document.getElementById('input-editar-primero');
+  let editorPrimeroHash = null;
+
+  function claveTextoPrimero(texto) {
+    return normalizarPalabra(String(texto || '')).split(' ').filter(Boolean).join(' ');
+  }
+
+  function cerrarEditorPrimero() {
+    editorPrimeroHash = null;
+    elEditorPrimero.style.display = 'none';
+    elFilaPrimero.style.display = '';
+  }
+
+  function abrirEditorPrimero() {
+    if (!modoObservador || tarjetasSesion.length === 0) return;
+    const t = tarjetasSesion[indiceActual];
+    if (!esRevisar(t)) return;
+    editorPrimeroHash = hashTarjeta(t);
+    elInputEditarPrimero.value = primeroVisibleDe(t);
+    elFilaPrimero.style.display = 'none';
+    elEditorPrimero.style.display = 'flex';
+    elInputEditarPrimero.focus();
+    elInputEditarPrimero.select();
+  }
+
+  function sincronizarControlesPrimero(t) {
+    if (editorPrimeroHash !== null && editorPrimeroHash !== hashTarjeta(t)) cerrarEditorPrimero();
+    elBtnEditarPrimero.style.display = (modoObservador && esRevisar(t)) ? 'inline-block' : 'none';
+    if (!modoObservador && editorPrimeroHash !== null) cerrarEditorPrimero();
+  }
+
+  function ocultarControlesPrimero() {
+    elBtnEditarPrimero.style.display = 'none';
+    if (editorPrimeroHash !== null) cerrarEditorPrimero();
+  }
+
+  async function guardarPrimeroEditado() {
+    if (!modoObservador || tarjetasSesion.length === 0 || editorPrimeroHash === null) return;
+    const t = tarjetasSesion[indiceActual];
+    const h = hashTarjeta(t);
+    if (h !== editorPrimeroHash) { cerrarEditorPrimero(); return; }
+    const texto = elInputEditarPrimero.value.trim();
+    elInputEditarPrimero.blur();
+    if (texto === '') {
+      await avisar('El «primero» no puede quedar vacío.');
+      elInputEditarPrimero.focus();
+      return;
+    }
+    const clave = claveTextoPrimero(texto);
+    const duplicada = tarjetasCompletas.some((o) => {
+      const ho = hashTarjeta(o);
+      if (ho === h) return false;
+      if (claveTextoPrimero(o.primero) === clave) return true;
+      const e = paraRevisar[ho];
+      return !!(e && typeof e.p === 'string' && e.p && claveTextoPrimero(e.p) === clave);
+    });
+    if (duplicada) {
+      await avisar('Ya existe otra tarjeta con ese mismo «primero». Elegí un texto distinto.');
+      elInputEditarPrimero.focus();
+      return;
+    }
+    if (claveTextoPrimero(t.primero) === clave) {
+      borrarPrimeroEditado(h);
+    } else {
+      paraRevisar[h] = { p: texto, espacio: ESPACIO_HASH, t: Date.now(), rev: siguienteRev() };
+      guardarParaRevisar();
+    }
+    cerrarEditorPrimero();
+    renderTarjeta();
+  }
+
+  elBtnEditarPrimero.addEventListener('click', () => abrirEditorPrimero());
+  document.getElementById('btn-guardar-primero').addEventListener('click', () => guardarPrimeroEditado());
+  document.getElementById('btn-cancelar-primero').addEventListener('click', () => cerrarEditorPrimero());
+  elInputEditarPrimero.addEventListener('keydown', (e) => {
+    if (elModalAviso.classList.contains('abierto') || elModalConfirmacion.classList.contains('abierto')) return;
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); guardarPrimeroEditado(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cerrarEditorPrimero(); }
+  });
+
+  function construirExportParaRevisar() {
+    const lista = Object.keys(paraRevisar).map((h) => ({
+      h: h,
+      p: paraRevisar[h].p || '',
+      espacio: paraRevisar[h].espacio || ESPACIO_HASH,
+      t: paraRevisar[h].t || 0,
+      rev: typeof paraRevisar[h].rev === 'number' ? paraRevisar[h].rev : undefined,
+    }));
+    return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), paraRevisar: lista };
+  }
+
+  function fusionarParaRevisarLista(lista) {
+    let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+    lista.forEach((item) => {
+      if (!item || typeof item.h !== 'string' || !item.h || typeof item.p !== 'string' || item.p.trim() === '') {
+        invalidas++;
+        return;
+      }
+      if (movidasVinculo[item.h]) { iguales++; return; }
+      const local = paraRevisar[item.h];
+      const entrada = {
+        p: item.p,
+        espacio: (typeof item.espacio === 'string' && item.espacio) ? item.espacio : ((local && local.espacio) ? local.espacio : ESPACIO_HASH),
+        t: typeof item.t === 'number' ? item.t : 0,
+        rev: typeof item.rev === 'number' ? item.rev : undefined,
+      };
+      registrarRevVista(entrada.rev);
+      if (!local) {
+        paraRevisar[item.h] = entrada;
+        nuevas++;
+      } else if ((local.p || '') === entrada.p) {
+        iguales++;
+      } else if (entranteEsMasReciente(entrada.rev, entrada.t, local.rev, local.t)) {
+        paraRevisar[item.h] = entrada;
+        actualizadas++;
+      } else {
+        conservadas++;
+      }
+    });
+    guardarParaRevisar();
+    return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
+  }
+
   const CLAVE_NOTAS = 'notas_tarjetas_v1';
   let notasLocales = cargarNotas();
 
@@ -5590,7 +6205,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function guardarNotasYa() {
     try {
-      localStorage.setItem(CLAVE_NOTAS, JSON.stringify(notasLocales));
+      escribirLocalSeguro(CLAVE_NOTAS, JSON.stringify(notasLocales));
     } catch (e) {
     }
   }
@@ -5652,7 +6267,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function guardarNotasEvaluadorYa() {
     try {
-      localStorage.setItem(CLAVE_NOTAS_EVALUADOR, JSON.stringify(notasEvaluador));
+      escribirLocalSeguro(CLAVE_NOTAS_EVALUADOR, JSON.stringify(notasEvaluador));
     } catch (e) {
     }
   }
@@ -5897,6 +6512,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     let r;
     if (zona === 'dificiles') r = fusionarDificilesLista(det.lista);
     else if (zona === 'notas') r = fusionarNotasLista(det.lista);
+    else if (zona === 'pararevisar') r = fusionarParaRevisarLista(det.lista);
     else if (zona === 'notaseval') r = fusionarNotasEvaluadorLista(det.lista);
     else if (zona === 'analisis') r = fusionarAnalisisLista(det.lista);
     else if (zona === 'retencion') r = fusionarRetencionLista(det.lista);
@@ -5934,7 +6550,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const nuevo = actual === 'oscuro' ? 'claro' : 'oscuro';
     document.documentElement.classList.add('sin-transiciones');
     document.documentElement.setAttribute('data-tema', nuevo);
-    try { localStorage.setItem(CLAVE_TEMA, nuevo); } catch (e) {}
+    try { escribirLocalSeguro(CLAVE_TEMA, nuevo); } catch (e) {}
     actualizarBotonTema(nuevo);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => document.documentElement.classList.remove('sin-transiciones'));
@@ -5956,6 +6572,42 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   const elTemaTexto = document.getElementById('tema-texto');
   const elPrimero = document.getElementById('tarjeta-primero');
+
+  // Lectura en voz alta del «primero» (API nativa, funciona offline)
+  const elBtnLeerPrimero = document.getElementById('btn-leer-primero');
+  const ttsDisponible = ('speechSynthesis' in window) && (typeof SpeechSynthesisUtterance !== 'undefined');
+  let _utteranceActual = null;
+
+  function detenerLecturaPrimero() {
+    _utteranceActual = null;
+    elBtnLeerPrimero.classList.remove('leyendo');
+    if (ttsDisponible) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+  }
+
+  function leerPrimeroEnVoz() {
+    if (!ttsDisponible) return;
+    const texto = (elPrimero.textContent || '').trim();
+    if (!texto) return;
+    detenerLecturaPrimero();   // si ya estaba sonando, se corta y se reinicia
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'es-AR';
+    const fin = () => {
+      if (_utteranceActual === u) { _utteranceActual = null; elBtnLeerPrimero.classList.remove('leyendo'); }
+    };
+    u.onend = fin;
+    u.onerror = fin;
+    _utteranceActual = u;
+    elBtnLeerPrimero.classList.add('leyendo');
+    // pequeño diferimiento: algunos navegadores ignoran speak() inmediatamente después de cancel()
+    setTimeout(() => { if (_utteranceActual === u) window.speechSynthesis.speak(u); }, 50);
+  }
+
+  if (!ttsDisponible) elBtnLeerPrimero.style.display = 'none';
+  elBtnLeerPrimero.addEventListener('click', () => leerPrimeroEnVoz());
+  // Cualquier cambio del texto del «primero» (navegar, cambiar de tarjeta o de modo) corta la lectura
+  new MutationObserver(() => detenerLecturaPrimero()).observe(elPrimero, { childList: true, characterData: true, subtree: true });
+  window.addEventListener('beforeunload', detenerLecturaPrimero);
+  window.addEventListener('pagehide', detenerLecturaPrimero);
   const elSegundo = document.getElementById('tarjeta-segundo');
   const elSeparador = document.getElementById('separador-tarjeta');
   const elBtnPista = document.getElementById('btn-pista');
@@ -6047,6 +6699,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function rutasValidasDe(tarjeta) {
     return (tarjeta.rutas || []).filter((id) => rutasDisp.hasOwnProperty(id));
+  }
+
+  const rutasConNotaDuda = (() => {
+    const set = new Set();
+    try {
+      notasEvaluadorPropias().forEach((n) => {
+        const cat = (n && typeof n.categoria === 'string') ? n.categoria : '';
+        if (cat.indexOf('duda_ruta_') !== 0) return;
+        if (typeof n.texto !== 'string' || n.texto.trim() === '') return;
+        set.add(cat.slice('duda_ruta_'.length));
+      });
+    } catch (e) { /* sin advertencias si algo falla */ }
+    return set;
+  })();
+
+  function sufijoAdvertenciaRutas(idsValidos) {
+    return idsValidos.some((id) => rutasConNotaDuda.has(String(id))) ? ' ⚠️' : '';
   }
 
   function mostrarPantalla(nombre) {
@@ -6319,7 +6988,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
   }
 
-  // Los grupos y filas son constantes (tarjetas inmutables): solo cambian las marcas ★ 🚩 💡 🏷.
   function refrescarMarcasObservador() {
     elListaObservador.querySelectorAll('.fila-observador').forEach((fila) => {
       const t = tarjetasCompletas[Number(fila.dataset.idx)];
@@ -6475,7 +7143,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function guardarImagenesStorageYa() {
     try {
-      localStorage.setItem(CLAVE_IMAGENES, JSON.stringify(datosImagenes));
+      escribirLocalSeguro(CLAVE_IMAGENES, JSON.stringify(datosImagenes));
     } catch (e) {
     }
   }
@@ -6538,7 +7206,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const h = hashImagen(ruta, indice);
     const actual = datosImagenes[h] || { ruta: ruta, indice: indice, nota: '', base: '', dificil: false, t: 0, espacio: ESPACIO_HASH };
     const nueva = Object.assign({}, actual, cambios, { ruta: ruta, indice: indice, t: Date.now(), rev: siguienteRev() });
-    if (!nueva.nota && !nueva.dificil) {
+    if (!nueva.nota && !nueva.base && !nueva.dificil) {
       delete datosImagenes[h];
     } else {
       datosImagenes[h] = nueva;
@@ -6754,7 +7422,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function tokenizarParaIndice(texto) {
     return normalizarPalabra(texto || '')
       .split(/[^a-z0-9áéíóúñ]+/)
-      .filter((tok) => tok.length >= 3 && !STOPWORDS.has(tok));
+      .filter((tok) => tok.length > 0);
   }
 
   function construirIndiceInvertido(items, extraerTexto) {
@@ -6835,28 +7503,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function obtenerIndiceHuerfanas() { return _indiceHuerfanas || (_indiceHuerfanas = _construirIndiceHuerfanas()); }
   function obtenerIndiceImagenes() { return _indiceImagenes || (_indiceImagenes = _construirIndiceImagenes()); }
 
-  let revisarRutasEnMemoria = cargarRevisarLocal('revisar_rutas_v1');
-  function esRevisarRuta(numeroRuta) { return !!revisarRutasEnMemoria[numeroRuta]; }
-  function toggleRevisarHuerfana(numeroRuta) {
-    if (revisarRutasEnMemoria[numeroRuta]) {
-      delete revisarRutasEnMemoria[numeroRuta];
-    } else {
-      revisarRutasEnMemoria[numeroRuta] = { ruta: numeroRuta, t: Date.now() };
-    }
-    guardarRevisarLocal('revisar_rutas_v1', revisarRutasEnMemoria);
-  }
-
   function agregarLineaPlana(contenedor, linea) {
     const div = document.createElement('div');
     div.className = 'ruta-linea';
     div.textContent = linea;
     contenedor.appendChild(div);
-  }
-
-  function actualizarBotonRevisarHuerfana(boton, numeroRuta) {
-    const activa = esRevisarRuta(numeroRuta);
-    boton.classList.toggle('activa', activa);
-    boton.textContent = activa ? '🚩 Para revisar' : '🚩 Revisar';
   }
 
   function construirListaHuerfanas() {
@@ -6877,12 +7528,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       titulo.textContent = 'Ruta ' + numeroRuta;
       fila.appendChild(titulo);
 
-      const btnRevisar = document.createElement('button');
-      btnRevisar.type = 'button';
-      btnRevisar.className = 'boton-revisar-huerfana';
-      btnRevisar.dataset.ruta = String(numeroRuta);
-      actualizarBotonRevisarHuerfana(btnRevisar, numeroRuta);
-      fila.appendChild(btnRevisar);
       sum.appendChild(fila);
 
       det.appendChild(sum);
@@ -6913,15 +7558,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   construirListaHuerfanas();  // una sola vez: no cambia durante la sesión
 
   elListaHuerfanas.addEventListener('click', (evento) => {
-    const btnRev = evento.target.closest('.boton-revisar-huerfana');
-    if (btnRev && elListaHuerfanas.contains(btnRev)) {
-      evento.preventDefault();
-      evento.stopPropagation();
-      const numeroRuta = Number(btnRev.dataset.ruta);
-      toggleRevisarHuerfana(numeroRuta);
-      actualizarBotonRevisarHuerfana(btnRev, numeroRuta);
-      return;
-    }
     if (evento.target.classList.contains('ruta-img-thumb')) {
       abrirLightbox(evento.target.src);
     }
@@ -6982,7 +7618,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function sincronizarGeometriaSvgMapa() {
     if (!elMapaImg || !elMapaSvgOverlay) return;
-    // 1) todas las lecturas juntas
     const cs = getComputedStyle(elMapaImg);
     const num = (v) => parseFloat(v) || 0;
 
@@ -7074,10 +7709,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     todosLosSubt.forEach((nombreSubt) => {
       const score = calcularScoreSubtema(nombreSubt);
       const sesgo = calcularSesgoSubT(nombreSubt);
-      const esSobreconfianza = (sesgo.pctAnalisis - sesgo.pctRetencion) > 20;
+      const esSobreconfianza = sesgo.tipo === 'sobreconfianza';
       const esUrgente = score >= 75;
       let esOlvido = false;
-      if (sValido) {
+      if (sValido && pctNoRetenidaPorSubtema(nombreSubt) !== null) {
         const pctNoRet = pctNoRetenidaPorSubtema(nombreSubt);
         const retActual = 1 - ((pctNoRet || 0) / 100);
         const t = retActual > 0 ? (-sAjustado * Math.log(0.60 / retActual)) : -Infinity;
@@ -8078,7 +8713,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (opciones.conPista) return 8;
       return 15;
     }
-    if (resultado === 'casi') return modoEspecial === 'cloze' ? 8 : 3;
+    if (resultado === 'casi') return 8;
     if (resultado === 'no') return 0;
     if (resultado === 'saltar') {
       if (modoEspecial === 'cloze') return 0;
@@ -8708,6 +9343,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function iniciarSesionCloze(lista) {
+    registrarInicioSesionNueva();
     modoObservador = false;
     srsSesionActiva = null;
     elAreaTarjeta.classList.remove('observador');
@@ -8771,7 +9407,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const nRutas = rutasValidasDe(t).length;
     if (nRutas > 0) {
-      elBadgeRutas.textContent = 'rutas = ' + nRutas;
+      elBadgeRutas.textContent = 'rutas = ' + nRutas + sufijoAdvertenciaRutas(rutasValidasDe(t));
       elBadgeRutas.style.display = 'block';
     } else {
       elBadgeRutas.style.display = 'none';
@@ -8779,6 +9415,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     elBtnRevisar.style.display = 'inline-block';
     elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
     elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
 
     elPrimero.style.display = 'block';
@@ -8996,6 +9633,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function iniciarSesionEspecialBase(lista, prepararDatos) {
+    registrarInicioSesionNueva();
     modoObservador = false;
     srsSesionActiva = null;
     elAreaTarjeta.classList.remove('observador');
@@ -9086,6 +9724,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elBadgeRutas.style.display = 'none';
     elBtnRevisar.style.display = 'inline-block';
     elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
     elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
 
     elPrimero.style.display = 'block';
@@ -9475,7 +10114,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     const nRutas = rutasValidasDe(t).length;
     if (nRutas > 0) {
-      elBadgeRutas.textContent = 'rutas = ' + nRutas;
+      elBadgeRutas.textContent = 'rutas = ' + nRutas + sufijoAdvertenciaRutas(rutasValidasDe(t));
       elBadgeRutas.style.display = 'block';
     } else {
       elBadgeRutas.style.display = 'none';
@@ -9483,6 +10122,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     elBtnRevisar.style.display = 'inline-block';
     elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
     elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
 
     elPrimero.style.display = 'block';
@@ -9717,6 +10357,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function iniciarSesionMatching(rondas) {
+    registrarInicioSesionNueva();
     modoObservador = false;
     srsSesionActiva = null;
     elAreaTarjeta.classList.remove('observador');
@@ -10567,6 +11208,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     actualizarBarraGamificacion();
     estadisticasConstruidas = false;
     srsConstruido = false;
+    nodosHistorial.delete(entrada.fecha);   // el historial cachea el nodo por fecha: sin esto seguiría mostrando nota/puntos viejos
+    delete _firmasRender.historial;
   }
 
   function registrarTumbaHistorial(fecha) {
@@ -10597,19 +11240,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       listado: srsSesionActiva
         ? (srsSesionActiva.nombres.length === 1 ? srsSesionActiva.nombres[0] : 'SRS Múltiple')
         : (listaActivaNombre || ''),
+      listado_id: idListaDeSesionActual(),
     });
 
     if (srsSesionActiva) {
       const entradaNueva = gamificacion.historial[gamificacion.historial.length - 1];
+      const refs = [];
+      const niveles = {};
+      srsSesionActiva.nombres.forEach((nombre) => {
+        const lista = buscarListaPropia(nombre);
+        if (!lista) return;
+        const nivel = obtenerSrsLista(lista).currentLevel;
+        refs.push({ id: lista.id, nombre: lista.nombre, nivel: nivel });
+        niveles[nombre] = nivel;
+      });
+      entradaNueva.listas_srs = refs;
       if (srsSesionActiva.nombres.length === 1) {
-        const lista = buscarListaPropia(srsSesionActiva.nombres[0]);
-        if (lista) entradaNueva.nivel_srs = obtenerSrsLista(lista).currentLevel;
+        if (refs.length === 1) entradaNueva.nivel_srs = refs[0].nivel;
       } else {
-        const niveles = {};
-        srsSesionActiva.nombres.forEach((nombre) => {
-          const lista = buscarListaPropia(nombre);
-          if (lista) niveles[nombre] = obtenerSrsLista(lista).currentLevel;
-        });
         entradaNueva.niveles_srs = niveles;
       }
     }
@@ -11082,12 +11730,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     entrantes.forEach((imp) => {
       if (!imp || typeof imp.nombre !== 'string' || !Array.isArray(imp.hashes)) return;
       const impEspacio = typeof imp.espacio === 'string' && imp.espacio ? imp.espacio : ESPACIO_HASH;
-      const existente = buscarListaEnEspacio(imp.nombre, impEspacio);
+      const impId = (typeof imp.id === 'string' && imp.id) ? imp.id : null;
+      let existente = impId ? (listas.find((l) => l.id === impId && (l.espacio || ESPACIO_HASH) === impEspacio) || null) : null;
+      if (!existente) existente = buscarListaEnEspacio(imp.nombre, impEspacio);   // listas viejas sin id: por nombre
       const impModificada = typeof imp.modificada === 'number' ? imp.modificada : 0;
       const impRev = typeof imp.rev === 'number' ? imp.rev : undefined;
       registrarRevVista(impRev);
       if (!existente) {
-        listas.push({
+        const nuevaLista = {
+          id: impId || idListaDeterministico({ nombre: imp.nombre, espacio: impEspacio, creada: typeof imp.creada === 'number' ? imp.creada : 0 }),
           nombre: imp.nombre,
           hashes: imp.hashes.slice(),
           creada: typeof imp.creada === 'number' ? imp.creada : Date.now(),
@@ -11095,10 +11746,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           rev: impRev,
           srs: normalizarSrsImportado(imp.srs),   // NUEVO: el progreso de Repaso Espaciado viaja con la lista
           espacio: impEspacio,   // NUEVO: el espacio que traía el JSON (o este evaluador si no traía)
-        });
+        };
+        listas.push(nuevaLista);
         nuevas++;
       } else if (entranteEsMasReciente(impRev, impModificada, existente.rev, existente.modificada)) {
-        existente.nombre = imp.nombre;
+        const choqueNombre = listas.find((l) => l !== existente && (l.espacio || ESPACIO_HASH) === impEspacio && l.nombre.toLowerCase() === imp.nombre.toLowerCase());
+        if (!choqueNombre) {
+          if (existente.nombre !== imp.nombre) fijarIdListaEnSesiones(existente);
+          if (listaActivaNombre === existente.nombre && impEspacio === ESPACIO_HASH) listaActivaNombre = imp.nombre;
+          existente.nombre = imp.nombre;
+        }
+        if (impId) existente.id = impId;
         existente.hashes = imp.hashes.slice();
         existente.creada = typeof imp.creada === 'number' ? imp.creada : existente.creada;
         existente.modificada = impModificada;
@@ -11378,7 +12036,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function guardarAnalisisGuardadosYa() {
     try {
-      localStorage.setItem(CLAVE_ANALISIS_GUARDADOS, JSON.stringify(analisisGuardados));
+      escribirLocalSeguro(CLAVE_ANALISIS_GUARDADOS, JSON.stringify(analisisGuardados));
     } catch (e) {
     }
   }
@@ -11665,7 +12323,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     gamificacion.historial.forEach((s) => {
       if (s.listado) return;   // ya tenía un listado asignado: no se toca
       if (!Array.isArray(s.tarjetas)) return;   // sesiones viejas sin este dato: no se puede comparar
-      if (mismoConjuntoHashes(s.tarjetas, lista.hashes)) { s.listado = lista.nombre; n++; }
+      if (mismoConjuntoHashes(s.tarjetas, lista.hashes)) { s.listado = lista.nombre; s.listado_id = lista.id; n++; }
     });
     if (n > 0) guardarGamificacion();
   }
@@ -11683,6 +12341,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         return;
       }
       if (listaActivaNombre === lista.nombre) listaActivaNombre = nombre;
+      fijarIdListaEnSesiones(lista);
       lista.nombre = nombre;
       lista.modificada = Date.now();
       lista.rev = siguienteRev();
@@ -11702,6 +12361,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     const ahora = Date.now();
     const lista = { nombre: nombre, hashes: hashes, creada: ahora, modificada: ahora, rev: siguienteRev(), srs: Object.assign({}, SRS_DEFAULT), espacio: ESPACIO_HASH };
+    lista.id = idListaDeterministico(lista);
     listas.push(lista);
     guardarListas();
     asociarRetroactivamente(lista);
@@ -11716,7 +12376,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function renderResumenListado() {
     const nombre = listaActivaNombre;   // siempre una lista PROPIA (viene de seleccionarListaActiva)
     if (!nombre || !buscarListaPropia(nombre)) { elNotaListado.style.display = 'none'; return; }
-    const sesiones = gamificacion.historial.filter((s) => esSesionLocal(s) && s.listado === nombre);
+    const listaActiva = buscarListaPropia(nombre);
+    const sesiones = gamificacion.historial.filter((s) => esSesionLocal(s) && sesionPerteneceALista(s, listaActiva));
     if (sesiones.length === 0) { elNotaListado.style.display = 'none'; return; }
     const ordenadas = sesiones.slice().sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
     const mejor = Math.max(...ordenadas.map((s) => Number(s.nota) || 0));
@@ -11752,8 +12413,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function marcarUltimoBackup() {
     try {
-      localStorage.setItem(claveUltimoBackup(), String(Date.now()));
-      localStorage.setItem(claveSnapshotBackup(), JSON.stringify({
+      escribirLocalSeguro(claveUltimoBackup(), String(Date.now()));
+      escribirLocalSeguro(claveSnapshotBackup(), JSON.stringify({
         puntosTotales: gamificacion.puntosTotales,
         inventario: Object.assign({}, gamificacion.inventario),
       }));
@@ -11767,6 +12428,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (Object.keys(dificiles).some((h) => (dificiles[h].t || 0) > ultimo)) return true;
     if (Object.keys(notasLocales).some((h) => (notasLocales[h].t || 0) > ultimo)) return true;
     if (Object.keys(razonesGuardadas).some((h) => (razonesGuardadas[h].t || 0) > ultimo)) return true;
+    if (Object.keys(paraRevisar).some((h) => (paraRevisar[h].t || 0) > ultimo)) return true;
     if (Object.keys(datosImagenes).some((h) => (datosImagenes[h].t || 0) > ultimo)) return true;
     if (listas.some((l) => (l.modificada || 0) > ultimo)) return true;
     if (notasEvaluador.some((n) => (n.modificada || n.creada || 0) > ultimo)) return true;
@@ -11801,13 +12463,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       gamificacion: construirExportGamificacion(),
       dificiles: construirExportDificiles(),
       notas: construirExportNotas(),
+      paraRevisar: construirExportParaRevisar(),
       razones: construirExportRazones(),
       imagenes: construirExportImagenes(),
       listas: construirExportListas(),
       notasEvaluador: construirExportNotasEvaluador(),
       retencionRutas: construirExportRetencion(),
       analisisSesion: construirExportAnalisis(),
-      revisar: { tarjetas: revisarEnMemoria, rutas: revisarRutasEnMemoria },
+      revisar: { tarjetas: revisarEnMemoria },
     };
   }
 
@@ -11834,7 +12497,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return { error: 'El backup no tiene el campo "evaluador" (formato viejo o inválido).' };
     }
 
-    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'razones', 'imagenes', 'listas', 'notasEvaluador', 'retencionRutas', 'analisisSesion', 'revisar'];
+    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'paraRevisar', 'razones', 'imagenes', 'listas', 'notasEvaluador', 'retencionRutas', 'analisisSesion', 'revisar'];
     const presentes = ZONAS.filter((z) => datos[z] !== undefined && datos[z] !== null);
     if (presentes.length === 0) return { error: 'El archivo no tiene ninguna sección reconocida.' };
 
@@ -11846,6 +12509,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const MAPA_CAMPOS_ZONA = [
       { prop: 'dificiles', zona: 'dificiles' },
       { prop: 'notas', zona: 'notas' },
+      { prop: 'paraRevisar', zona: 'pararevisar' },
       { prop: ' notasEvaluador'.trim(), zona: 'notaseval' },
       { prop: 'analisisSesion', zona: 'analisis' },
       { prop: 'retencionRutas', zona: 'retencion' },
@@ -11907,6 +12571,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const r = fusionarNotasLista(lista);
       contar(r.nuevas > 0 || r.actualizadas > 0 || (eliminadasPorZona.notas || 0) > 0);
     }
+    if (datos.paraRevisar) {
+      const lista = Array.isArray(datos.paraRevisar) ? datos.paraRevisar : (datos.paraRevisar.paraRevisar || []);
+      const r = fusionarParaRevisarLista(lista);
+      contar(r.nuevas > 0 || r.actualizadas > 0 || (eliminadasPorZona.pararevisar || 0) > 0);
+    }
     if (datos.razones) {
       const lista = Array.isArray(datos.razones) ? datos.razones : (datos.razones.razones || []);
       const r = fusionarRazonesLista(lista);
@@ -11952,8 +12621,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         return cambio;
       };
       const cTar = unirRevisar(revisarEnMemoria, datos.revisar.tarjetas, 'revisar_tarjetas_v1');
-      const cRut = unirRevisar(revisarRutasEnMemoria, datos.revisar.rutas, 'revisar_rutas_v1');
-      contar(cTar || cRut);
+      contar(cTar);
     }
 
     marcarUltimoBackup();
@@ -12002,7 +12670,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       });
 
       if (Object.keys(mapaGlobalSync).length > 0) {
-        localStorage.setItem(CLAVE_GIST_ULTIMA_SYNC, JSON.stringify(mapaGlobalSync));
+        escribirLocalSeguro(CLAVE_GIST_ULTIMA_SYNC, JSON.stringify(mapaGlobalSync));
       }
 
       const idGlobalActual = localStorage.getItem(CLAVE_GIST_ID) || '';
@@ -12019,7 +12687,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             mejorId = val;
           }
         });
-        if (mejorId) localStorage.setItem(CLAVE_GIST_ID, mejorId);
+        if (mejorId) escribirLocalSeguro(CLAVE_GIST_ID, mejorId);
       }
 
       clavesIdViejas.forEach((k) => localStorage.removeItem(k));
@@ -12040,7 +12708,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     try { return localStorage.getItem(CLAVE_GIST_ID) || ''; } catch (e) { return ''; }
   }
   function guardarGistId(id) {
-    try { id ? localStorage.setItem(CLAVE_GIST_ID, id) : localStorage.removeItem(CLAVE_GIST_ID); } catch (e) { }
+    try { id ? escribirLocalSeguro(CLAVE_GIST_ID, id) : localStorage.removeItem(CLAVE_GIST_ID); } catch (e) { }
   }
   function obtenerUltimasSyncGist() {
     try {
@@ -12054,7 +12722,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     try {
       const mapa = obtenerUltimasSyncGist();
       mapa[nombreArchivo] = Date.now();
-      localStorage.setItem(CLAVE_GIST_ULTIMA_SYNC, JSON.stringify(mapa));
+      escribirLocalSeguro(CLAVE_GIST_ULTIMA_SYNC, JSON.stringify(mapa));
     } catch (e) { }
   }
 
@@ -12095,20 +12763,59 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   async function gistAsegurarId() {
     const existente = obtenerGistId();
     if (existente) return existente;
+    const contenidoInicial = JSON.stringify(construirBackupCompleto(), null, 2);
     const creado = await gistApi('POST', '/gists', {
       description: 'Backup evaluador (global)',
       public: false,
-      files: { 'backup_completo.json': { content: JSON.stringify(construirBackupCompleto(), null, 2) } },
+      files: { 'backup_completo.json': { content: contenidoInicial } },
     });
+    guardarHashVistoGist('backup_completo.json', contenidoInicial);
     guardarGistId(creado.id);
     return creado.id;
   }
 
+  const CLAVE_GIST_HASHES = 'gist_hash_visto_v1';
+  function leerHashVistoGist(nombreArchivo) {
+    try { return (JSON.parse(localStorage.getItem(CLAVE_GIST_HASHES) || '{}'))[nombreArchivo] || null; } catch (e) { return null; }
+  }
+  function guardarHashVistoGist(nombreArchivo, contenido) {
+    try {
+      const mapa = JSON.parse(localStorage.getItem(CLAVE_GIST_HASHES) || '{}');
+      mapa[nombreArchivo] = hashTextoSync(contenido);
+      escribirLocalSeguro(CLAVE_GIST_HASHES, JSON.stringify(mapa));
+    } catch (e) { }
+  }
+
   async function gistEscribirArchivo(nombreArchivo, objeto) {
     const id = await gistAsegurarId();
+    const contenidoNuevo = JSON.stringify(objeto, null, 2);
+
+    const remoto = await gistApi('GET', '/gists/' + id);
+    const archivoRemoto = remoto && remoto.files && remoto.files[nombreArchivo];
+    if (archivoRemoto) {
+      let contenidoRemoto = archivoRemoto.content;
+      if (archivoRemoto.truncated && archivoRemoto.raw_url) {
+        try {
+          const respRaw = await fetch(archivoRemoto.raw_url);
+          if (respRaw.ok) contenidoRemoto = await respRaw.text();
+        } catch (e) { }
+      }
+      if (typeof contenidoRemoto === 'string' && contenidoRemoto !== contenidoNuevo &&
+          hashTextoSync(contenidoRemoto) !== leerHashVistoGist(nombreArchivo)) {
+        const seguir = await confirmarAccion('El archivo «' + nombreArchivo + '» en Gist cambió desde la última vez que sincronizaste (puede haberlo subido otro dispositivo). ' +
+          'Si subís ahora, esos cambios se pisan. «Cancelar» = no subir (importalo primero y volvé a subir); «Aceptar» = reemplazarlo igual.');
+        if (!seguir) {
+          const err = new Error('Subida cancelada: importá primero lo que hay en Gist para no perder los cambios del otro dispositivo.');
+          err.tipo = 'cancelado';
+          throw err;
+        }
+      }
+    }
+
     await gistApi('PATCH', '/gists/' + id, {
-      files: { [nombreArchivo]: { content: JSON.stringify(objeto, null, 2) } },
+      files: { [nombreArchivo]: { content: contenidoNuevo } },
     });
+    guardarHashVistoGist(nombreArchivo, contenidoNuevo);
     marcarSyncGist(nombreArchivo);
   }
 
@@ -12126,11 +12833,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     let contenido = archivo.content;
     if (archivo.truncated && archivo.raw_url) {
-      const resp = await fetch(archivo.raw_url);
+      let resp;
+      try {
+        resp = await fetch(archivo.raw_url);
+      } catch (e) {
+        const err = new Error('Sin conexión a internet'); err.tipo = 'red'; throw err;
+      }
+      if (!resp.ok) {
+        const err = new Error('No se pudo leer el archivo completo desde GitHub (' + resp.status + ').'); err.tipo = 'otro'; throw err;
+      }
       contenido = await resp.text();
     }
+    let parseado;
+    try {
+      parseado = JSON.parse(contenido);
+    } catch (e) {
+      const err = new Error('El archivo «' + nombreArchivo + '» en Gist no es un JSON válido.'); err.tipo = 'otro'; throw err;
+    }
+    guardarHashVistoGist(nombreArchivo, contenido);
     marcarSyncGist(nombreArchivo);
-    return JSON.parse(contenido);
+    return parseado;
   }
 
   function mensajeErrorGist(e) {
@@ -12149,13 +12871,19 @@ const ZONAS_SYNC_GIST = [
       return r;
     } },
     { zona: 'historial', archivo: 'gamificacion_export.json', exportar: construirExportGamificacion, importar: async (d) => {
+      if (!d || typeof d !== 'object' || (!Array.isArray(d.historial) && typeof d.puntosTotales !== 'number' && !d.inventario)) {
+        return { errorFormato: true };
+      }
+      const antesN = gamificacion.historial.length;
       fusionarGamificacionImportada(d);
-      return { ok: true };
+      return { ok: true, nuevas: Math.max(0, gamificacion.historial.length - antesN) };
     } },
     { zona: 'dificiles', archivo: 'dificiles_tarjetas.json', exportar: construirExportDificiles, importar: (d) =>
       procesarImportacionZonaIndividual('dificiles', d) },
     { zona: 'notas', archivo: 'notas_tarjetas.json', exportar: construirExportNotas, importar: (d) =>
       procesarImportacionZonaIndividual('notas', d) },
+    { zona: 'pararevisar', archivo: 'primeros_editados.json', exportar: construirExportParaRevisar, importar: (d) =>
+      procesarImportacionZonaIndividual('pararevisar', d) },
     { zona: 'notaseval', archivo: 'notas_evaluador.json', exportar: construirExportNotasEvaluador, importar: (d) =>
       procesarImportacionZonaIndividual('notaseval', d) },
     { zona: 'analisis', archivo: 'analisis_sesion.json', exportar: construirExportAnalisis, importar: (d) =>
@@ -12186,7 +12914,16 @@ const ZONAS_SYNC_GIST = [
       const r = await cfg.importar(datos);
       if (r && r.cancelado) return;
       if (r && r.errorFormato) throw new Error('El archivo en Gist no tiene el formato esperado.');
-      await avisar('☁️ Importado desde Gist: ' + cfg.archivo);
+      let detalle = '';
+      if (r && Array.isArray(r.zonasActualizadas)) {
+        detalle = r.zonasActualizadas.length > 0 ? ' Actualizado: ' + r.zonasActualizadas.join(', ') + '.' : ' Sin cambios: ya estaba todo al día.';
+      } else if (r && typeof r === 'object') {
+        const nNuevas = r.nuevas || 0, nAct = r.actualizadas || 0, nElim = r.eliminadas || 0;
+        detalle = (nNuevas + nAct + nElim > 0)
+          ? ' Nuevas: ' + nNuevas + (r.actualizadas !== undefined ? ', actualizadas: ' + nAct : '') + (nElim ? ', eliminadas: ' + nElim : '') + '.'
+          : ' Sin cambios: ya estaba todo al día.';
+      }
+      await avisar('☁️ Importado desde Gist: ' + cfg.archivo + '.' + detalle);
       actualizarEstadoGist();
     } catch (e) {
       await avisar('☁️ ' + mensajeErrorGist(e));
@@ -12372,8 +13109,9 @@ const ZONAS_SYNC_GIST = [
       item.querySelector('.item-historial-detalle').appendChild(listadoTxt);
     }
     listadoTxt.innerHTML = '';
-    if (buscarListaPropia(entrada.listado)) {
-      listadoTxt.textContent = '📋 ' + entrada.listado;
+    const listaRef = entrada.listado_id ? buscarListaPropiaPorId(entrada.listado_id) : buscarListaPropia(entrada.listado);
+    if (listaRef) {
+      listadoTxt.textContent = '📋 ' + listaRef.nombre;
     } else {
       const s = document.createElement('s');
       s.textContent = '📋 ' + entrada.listado;
@@ -12384,6 +13122,7 @@ const ZONAS_SYNC_GIST = [
   function renderHistorial() {
     delete _firmasRender.historial;   // cualquier render directo invalida la cache de apertura
     renderHistorialCompleto();
+    refrescarHeatmapHistorialSiAbierto();
   }
 
   function renderHistorialCompleto() {
@@ -12458,6 +13197,229 @@ const ZONAS_SYNC_GIST = [
     el.appendChild(texto);
     el.appendChild(btnSiguiente);
   }
+
+
+  const NOMBRES_MESES_HEATMAP = [
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+  ];
+  const DIAS_CORTOS_HEATMAP = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+  const elBtnHeatmapHistorial = document.getElementById('btn-historial-heatmap');
+  const elHeatmapHistorial = document.getElementById('heatmap-bloque-historial');
+  const elHeatmapHistorialMeses = document.getElementById('heatmap-historial-meses');
+  const elHeatmapHistorialDetalle = document.getElementById('heatmap-historial-detalle');
+  const elHeatmapHistorialPeriodo = document.getElementById('heatmap-historial-periodo');
+  const elBtnHeatmapAnterior = document.getElementById('btn-heatmap-historial-anterior');
+  const elBtnHeatmapSiguiente = document.getElementById('btn-heatmap-historial-siguiente');
+  let heatmapHistorialBloque = 0;
+  let _cacheHeatmapHistorial = null;
+
+  function claveDiaLocal(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + dd;
+  }
+
+  function mapaSesionesHeatmap() {
+    const h = gamificacion.historial;
+    const primera = h.length ? h[0].fecha : '';
+    const ultima = h.length ? h[h.length - 1].fecha : '';
+    const c = _cacheHeatmapHistorial;
+    if (c && c.ref === h && c.len === h.length && c.primera === primera && c.ultima === ultima) return c;
+    const porDia = new Map();
+    let minTs = Infinity;
+    h.forEach((sesion) => {
+      if (!esSesionLocal(sesion)) return;
+      const ts = new Date(sesion.fecha).getTime();
+      if (!Number.isFinite(ts)) return;
+      const clave = claveDiaLocal(new Date(ts));
+      let lista = porDia.get(clave);
+      if (!lista) { lista = []; porDia.set(clave, lista); }
+      lista.push({ s: sesion, ts: ts });
+      if (ts < minTs) minTs = ts;
+    });
+    _cacheHeatmapHistorial = { ref: h, len: h.length, primera: primera, ultima: ultima, porDia: porDia, minTs: minTs };
+    return _cacheHeatmapHistorial;
+  }
+
+  function textoSesiones(n) { return n + ' sesión' + (n === 1 ? '' : 'es'); }
+
+  function crearMesHeatmapHistorial(anio, mes, porDia, claveHoy) {
+    const bloque = document.createElement('div');
+    bloque.className = 'heatmap-mes';
+
+    const nombre = document.createElement('div');
+    nombre.className = 'heatmap-mes-nombre';
+    nombre.textContent = NOMBRES_MESES_HEATMAP[mes] + ' ' + anio;
+    bloque.appendChild(nombre);
+
+    const grid = document.createElement('div');
+    grid.className = 'heatmap-grid';
+    DIAS_CORTOS_HEATMAP.forEach((d) => {
+      const c = document.createElement('div');
+      c.className = 'heatmap-dia-cab';
+      c.textContent = d;
+      grid.appendChild(c);
+    });
+
+    const offset = (new Date(anio, mes, 1).getDay() + 6) % 7;
+    const totalDias = new Date(anio, mes + 1, 0).getDate();
+    const relleno = (7 - ((offset + totalDias) % 7)) % 7;
+    const agregarVacia = () => {
+      const v = document.createElement('div');
+      v.className = 'heatmap-celda hm-vacia';
+      grid.appendChild(v);
+    };
+
+    for (let i = 0; i < offset; i++) agregarVacia();
+    for (let dia = 1; dia <= totalDias; dia++) {
+      const clave = claveDiaLocal(new Date(anio, mes, dia));
+      const n = (porDia.get(clave) || []).length;
+      const celda = document.createElement('div');
+      celda.className = 'heatmap-celda';
+      celda.textContent = String(dia);
+      if (n > 0) {
+        celda.classList.add(n >= 4 ? 'hm-n3' : (n >= 2 ? 'hm-n2' : 'hm-n1'), 'hm-con-datos');
+        celda.dataset.clave = clave;
+        celda.tabIndex = 0;
+        celda.setAttribute('role', 'button');
+        const resumen = dia + ' de ' + NOMBRES_MESES_HEATMAP[mes] + ': ' + textoSesiones(n);
+        celda.setAttribute('aria-label', resumen);
+        celda.title = resumen;
+      }
+      if (clave === claveHoy) celda.classList.add('hm-hoy');
+      grid.appendChild(celda);
+    }
+    for (let i = 0; i < relleno; i++) agregarVacia();
+
+    bloque.appendChild(grid);
+    return bloque;
+  }
+
+  function cerrarDetalleHeatmapHistorial() {
+    elHeatmapHistorialDetalle.hidden = true;
+    elHeatmapHistorialDetalle.dataset.clave = '';
+  }
+
+  function etiquetaModoHeatmap(sesion) {
+    const m = String(sesion.modo || '');
+    if (m === 'pomodoro' || sesion.pomodoro) return '⏲️ Pomodoro';
+    const n = nombreModoJuego(m);
+    return (m === 'light' || m === 'normal' || m === 'tryhard' || m === '') ? '🎮 ' + n : n;
+  }
+
+  function sesionSinPuntos(sesion) {
+    const m = String(sesion.modo || '');
+    return m === 'light' || m === 'examen' || m.endsWith('_light') || m.endsWith('_examen');
+  }
+
+  function alternarDetalleHeatmapHistorial(clave) {
+    const panel = elHeatmapHistorialDetalle;
+    if (!panel.hidden && panel.dataset.clave === clave) { cerrarDetalleHeatmapHistorial(); return; }
+
+    const entradas = (mapaSesionesHeatmap().porDia.get(clave) || []).slice().sort((a, b) => b.ts - a.ts);
+    if (entradas.length === 0) return;
+    const partes = clave.split('-');
+    const fecha = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+
+    const frag = document.createDocumentFragment();
+    const titulo = document.createElement('div');
+    titulo.className = 'heatmap-detalle-titulo';
+    const texto = document.createElement('span');
+    texto.textContent = fecha.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }) +
+      ' — ' + textoSesiones(entradas.length);
+    titulo.appendChild(texto);
+    const cerrar = document.createElement('button');
+    cerrar.type = 'button';
+    cerrar.className = 'heatmap-detalle-cerrar';
+    cerrar.textContent = '×';
+    cerrar.setAttribute('aria-label', 'Cerrar detalle');
+    cerrar.addEventListener('click', cerrarDetalleHeatmapHistorial);
+    titulo.appendChild(cerrar);
+    frag.appendChild(titulo);
+
+    entradas.forEach((e) => {
+      const sesion = e.s;
+      const fila = document.createElement('div');
+      fila.className = 'heatmap-detalle-item';
+      const badge = document.createElement('span');
+      badge.className = 'hm-badge hm-badge-real';
+      badge.textContent = etiquetaModoHeatmap(sesion);
+      fila.appendChild(badge);
+      const datos = [];
+      const nota = Number(sesion.nota);
+      if (Number.isFinite(nota)) datos.push('🎓 ' + nota.toFixed(1) + '/10');
+      datos.push('⏱ ' + formatearTiempo(sesion.duracion_ms || 0));
+      if (!sesionSinPuntos(sesion)) datos.push('⭐ ' + (sesion.puntos_ganados || 0));
+      datos.forEach((d) => {
+        const sp = document.createElement('span');
+        sp.className = 'heatmap-detalle-nivel';
+        sp.textContent = d;
+        fila.appendChild(sp);
+      });
+      frag.appendChild(fila);
+    });
+
+    reemplazarHijos(panel, frag);
+    panel.dataset.clave = clave;
+    panel.hidden = false;
+    panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  function renderHeatmapHistorial() {
+    const c = mapaSesionesHeatmap();
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const claveHoy = claveDiaLocal(hoy);
+
+    let maxBloque = 0;
+    if (Number.isFinite(c.minTs)) {
+      const p = new Date(c.minTs);
+      const mesesAtras = (hoy.getFullYear() - p.getFullYear()) * 12 + hoy.getMonth() - p.getMonth();
+      maxBloque = Math.max(0, Math.floor(mesesAtras / 3));
+    }
+    heatmapHistorialBloque = Math.min(Math.max(0, heatmapHistorialBloque), maxBloque);
+
+    const meses = [0, 1, 2].map((i) => new Date(hoy.getFullYear(), hoy.getMonth() - (heatmapHistorialBloque * 3 + i), 1));
+    const frag = document.createDocumentFragment();
+    meses.forEach((f) => frag.appendChild(crearMesHeatmapHistorial(f.getFullYear(), f.getMonth(), c.porDia, claveHoy)));
+    reemplazarHijos(elHeatmapHistorialMeses, frag);
+
+    const etiqueta = (f) => NOMBRES_MESES_HEATMAP[f.getMonth()] + ' ' + f.getFullYear();
+    elHeatmapHistorialPeriodo.textContent = 'Período: ' + etiqueta(meses[2]) + ' — ' + etiqueta(meses[0]);
+    elBtnHeatmapAnterior.disabled = heatmapHistorialBloque >= maxBloque;
+    elBtnHeatmapSiguiente.disabled = heatmapHistorialBloque <= 0;
+    cerrarDetalleHeatmapHistorial();
+  }
+
+  function refrescarHeatmapHistorialSiAbierto() {
+    if (elHeatmapHistorial.style.display !== 'none') renderHeatmapHistorial();
+  }
+
+  elBtnHeatmapHistorial.addEventListener('click', () => {
+    const abrir = elHeatmapHistorial.style.display === 'none';
+    elHeatmapHistorial.style.display = abrir ? '' : 'none';
+    elBtnHeatmapHistorial.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+    if (abrir) {
+      heatmapHistorialBloque = 0;
+      renderHeatmapHistorial();
+    }
+  });
+  elBtnHeatmapAnterior.addEventListener('click', () => { heatmapHistorialBloque++; renderHeatmapHistorial(); });
+  elBtnHeatmapSiguiente.addEventListener('click', () => { heatmapHistorialBloque--; renderHeatmapHistorial(); });
+  elHeatmapHistorialMeses.addEventListener('click', (ev) => {
+    const celda = ev.target.closest('.hm-con-datos');
+    if (celda) alternarDetalleHeatmapHistorial(celda.dataset.clave);
+  });
+  elHeatmapHistorialMeses.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const celda = ev.target.closest('.hm-con-datos');
+    if (!celda) return;
+    ev.preventDefault();
+    alternarDetalleHeatmapHistorial(celda.dataset.clave);
+  });
 
   function renderGruposOtrosEvaluadores(elDet, elSuma, elLista, items, fnEspacio, etiquetaUnidad, zonaVinculo, antesDeAbrir, prefijoSuma) {
     if (!elDet || !elSuma || !elLista) return;
@@ -12760,6 +13722,7 @@ const ZONAS_SYNC_GIST = [
     mostrarPantalla('historial');
     renderSiCambioDatos('historial', Math.floor(Date.now() / 60000), renderHistorialCompleto);
     renderIndicadorStorage();
+    refrescarHeatmapHistorialSiAbierto();
   }
 
   elBtnAbrirHistorial.addEventListener('click', () => abrirHistorial());
@@ -12775,6 +13738,11 @@ const ZONAS_SYNC_GIST = [
       plural: 'difíciles', titulo: 'difíciles',
       almacen: () => dificiles, guardar: () => guardarDificiles(),
       repintar: () => renderDificilesPreview(), explicitas: ['activa'],
+    },
+    pararevisar: {
+      plural: 'primeros editados', titulo: 'primeros editados',
+      almacen: () => paraRevisar, guardar: () => guardarParaRevisar(),
+      repintar: () => repintarTarjetaSiActiva(), explicitas: ['p'],
     },
     notas: {
       plural: 'notas', titulo: 'notas',
@@ -12885,7 +13853,28 @@ const ZONAS_SYNC_GIST = [
     });
     return movs;
   }
+  function analizarDescarteVinculoListas(viejo) {
+    const mapa = new Map(movimientosVinculoListas(viejo).map((m) => [m.de, m.a]));
+    const vigentes = hashesVigentesActuales();
+    let descartadas = 0;
+    const vaciadas = [];
+    listas.forEach((lista) => {
+      if (!perteneceAVinculoListas(lista, viejo)) return;
+      let quedan = 0;
+      lista.hashes.forEach((h) => { if (mapa.has(h) || vigentes.has(h)) quedan++; else descartadas++; });
+      if (quedan === 0) vaciadas.push(lista.nombre);
+    });
+    return { descartadas: descartadas, vaciadas: vaciadas };
+  }
+
+  function textoDescarteVinculoListas(d) {
+    if (d.descartadas === 0 && d.vaciadas.length === 0) return '';
+    return ' ⚠️ Se descartarían ' + d.descartadas + ' tarjeta(s) de las listas que no corresponden a ninguna tarjeta actual' +
+      (d.vaciadas.length > 0 ? ' y se ELIMINARÍAN las listas que quedan vacías: ' + d.vaciadas.map((n) => '«' + n + '»').join(', ') : '') + '.';
+  }
+
   function ejecutarVinculoListas(viejo) {
+    const descarte = analizarDescarteVinculoListas(viejo);
     const mapa = new Map(movimientosVinculoListas(viejo).map((m) => [m.de, m.a]));
     const vigentes = hashesVigentesActuales();
     let movidas = 0;
@@ -12908,7 +13897,7 @@ const ZONAS_SYNC_GIST = [
     });
     guardarListas();
     renderListasGuardadas();
-    return { movidas: movidas, sin: contarOtrasListas() };
+    return { movidas: movidas, sin: contarOtrasListas(), descartadas: descarte.descartadas, eliminadas: descarte.vaciadas.length };
   }
 
   function resumenVinculo(zona, viejo) {
@@ -12921,7 +13910,7 @@ const ZONAS_SYNC_GIST = [
       if (mismoEspacioQueActual(viejo)) return { cantidad: 0, texto: 'Ese es el nombre de ESTE evaluador: no hay nada que vincular.' };
       const n = movimientosVinculoListas(viejo).length;
       if (n === 0) return { cantidad: 0, texto: 'No se encontraron tarjetas de listas guardadas bajo «' + viejo + '».' };
-      return { cantidad: n, texto: 'Se actualizarían ' + n + ' tarjeta(s) dentro de las listas guardadas.' };
+      return { cantidad: n, texto: 'Se actualizarían ' + n + ' tarjeta(s) dentro de las listas guardadas.' + textoDescarteVinculoListas(analizarDescarteVinculoListas(viejo)) };
     }
     if (zona === 'notasEvaluador') {
       if (!viejo) return { cantidad: 0, texto: 'Escribí el nombre anterior del recordatorio para ver qué se movería.' };
@@ -12977,7 +13966,7 @@ const ZONAS_SYNC_GIST = [
     } else if (zona === 'notasEvaluador') {
       let n = 0;
       notasEvaluador.forEach((nt) => {
-        if (nt.espacio === viejo) { nt.espacio = ESPACIO_HASH; n++; }
+        if (nt.espacio === viejo) { nt.espacio = ESPACIO_HASH; nt.modificada = Date.now(); nt.rev = siguienteRev(); n++; }
       });
       depurarPretestsDuplicados();
       guardarNotasEvaluador();
@@ -12989,12 +13978,14 @@ const ZONAS_SYNC_GIST = [
         if (espacioDeSesion(s) === viejo) { s.espacio = ESPACIO_HASH; n++; }
       });
       guardarGamificacion();
+      estadisticasConstruidas = false;
+      srsConstruido = false;
       renderHistorial();
       resultado = { movidas: n, sin: 0 };
     } else if (zona === 'retencionRutas') {
       let n = 0;
       retencionRutas.forEach((r) => {
-        if (r.espacio === viejo) { r.espacio = ESPACIO_HASH; n++; }
+        if (r.espacio === viejo) { r.espacio = ESPACIO_HASH; r.rev = siguienteRev(); n++; }
       });
       guardarRetencionRutas();
       recalcularYGuardarSAjustadoPomodoro();
@@ -13007,7 +13998,7 @@ const ZONAS_SYNC_GIST = [
     } else if (zona === 'analisisSesion') {
       let n = 0;
       analisisGuardados.forEach((a) => {
-        if (a.espacio === viejo) { a.espacio = ESPACIO_HASH; n++; }
+        if (a.espacio === viejo) { a.espacio = ESPACIO_HASH; a.rev = siguienteRev(); n++; }
       });
       guardarAnalisisGuardados();
       estadisticasConstruidas = false;
@@ -13021,12 +14012,14 @@ const ZONAS_SYNC_GIST = [
       const almacen = z.almacen();
       const movs = movimientosVinculo(zona, viejo);
       const tomadas = movs.map((m) => ({ a: m.a, v: almacen[m.de] }));
-      movs.forEach((m) => { delete almacen[m.de]; });
+      movs.forEach((m) => { delete almacen[m.de]; movidasVinculo[m.de] = Date.now(); });   // la clave vieja no debe resucitar al importar
+      guardarRevisarLocal('vinculo_movidas_v1', movidasVinculo);
       tomadas.forEach((x) => {
         const fusionada = tieneClave(almacen, x.a)
           ? fusionarEntradaVinculo(almacen[x.a], x.v, z.explicitas)
           : x.v;
         fusionada.espacio = ESPACIO_HASH;
+        fusionada.rev = siguienteRev();
         almacen[x.a] = fusionada;
       });
       z.guardar();
@@ -13037,8 +14030,8 @@ const ZONAS_SYNC_GIST = [
     return resultado;
   }
 
-  const ICONOS_ZONA_VINCULO = { dificiles: '☆', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐', notasEvaluador: '📝', retencionRutas: '🧠', analisisSesion: '📑' };
-  const ZONAS_HASH_PURGABLES = ['dificiles', 'notas', 'razones', 'imagenes'];   // las únicas donde puede quedar un residuo que valga la pena ofrecer borrar
+  const ICONOS_ZONA_VINCULO = { dificiles: '☆', pararevisar: '✎', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐', notasEvaluador: '📝', retencionRutas: '🧠', analisisSesion: '📑' };
+  const ZONAS_HASH_PURGABLES = ['dificiles', 'pararevisar', 'notas', 'razones', 'imagenes'];   // las únicas donde puede quedar un residuo que valga la pena ofrecer borrar
 
   function zonasSeleccionadasTodo() {
     return Array.from(document.querySelectorAll('.vinc-zona-chk:checked')).map((c) => c.value);
@@ -13130,6 +14123,15 @@ const ZONAS_SYNC_GIST = [
   async function aceptarVinculoTodo() {
     const zonas = zonasSeleccionadasTodo();
     const viejo = espacioViejoActual();
+    if (zonas.indexOf('listas') !== -1) {
+      const d = analizarDescarteVinculoListas(viejo);
+      if (d.descartadas > 0 || d.vaciadas.length > 0) {
+        _vincConfirmando = true;
+        const ok = await confirmarAccion('Al vincular las listas:' + textoDescarteVinculoListas(d) + ' Esto no se puede deshacer. ¿Continuar con toda la vinculación?');
+        _vincConfirmando = false;
+        if (!ok) return;
+      }
+    }
     const { resultados, errores, residuos, zonasResiduo } = ejecutarVinculoTodo(zonas, viejo);
     cerrarModalVincular();
 
@@ -13160,6 +14162,7 @@ const ZONAS_SYNC_GIST = [
     analisisGuardados.forEach((a) => { if (a.espacio && a.espacio !== ESPACIO_HASH) set.add(a.espacio); });
     Object.values(dificiles).forEach((v) => { if (v.espacio && v.espacio !== ESPACIO_HASH) set.add(v.espacio); });
     Object.values(notasLocales).forEach((v) => { if (v.espacio && v.espacio !== ESPACIO_HASH) set.add(v.espacio); });
+    Object.values(paraRevisar).forEach((v) => { if (v.espacio && v.espacio !== ESPACIO_HASH) set.add(v.espacio); });
     Object.values(razonesGuardadas).forEach((v) => { if (v.espacio && v.espacio !== ESPACIO_HASH) set.add(v.espacio); });
     Object.values(datosImagenes).forEach((v) => { if (v.espacio && v.espacio !== ESPACIO_HASH) set.add(v.espacio); });
     return Array.from(set).sort();
@@ -13219,6 +14222,8 @@ const ZONAS_SYNC_GIST = [
     if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes, listas, notas del evaluador, retención de rutas y análisis de sesión)? ' +
       'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.'))) return;
 
+    gamificacion.historial.filter((s) => espacioDeSesion(s) === espacio).forEach((s) => registrarTumbaHistorial(s.fecha));   // que no resuciten al importar
+    if (gamificacion.resumenPorEvaluador) delete gamificacion.resumenPorEvaluador[espacio];
     gamificacion.historial = gamificacion.historial.filter((s) => espacioDeSesion(s) !== espacio);
     guardarGamificacion();
 
@@ -13229,6 +14234,10 @@ const ZONAS_SYNC_GIST = [
     Object.keys(notasLocales).forEach((h) => {
       if (hashesTarjetas.has(h) || notasLocales[h].espacio === espacio) delete notasLocales[h];
     });
+    Object.keys(paraRevisar).forEach((h) => {
+      if (paraRevisar[h].espacio === espacio) delete paraRevisar[h];
+    });
+    guardarParaRevisar();
     Object.keys(razonesGuardadas).forEach((h) => {
       if (hashesTarjetas.has(h) || razonesGuardadas[h].espacio === espacio) delete razonesGuardadas[h];
     });
@@ -13254,11 +14263,13 @@ const ZONAS_SYNC_GIST = [
 
     retencionRutas = retencionRutas.filter((r) => r.espacio !== espacio);
     guardarRetencionRutas();
+    recalcularYGuardarSAjustadoPomodoro();   // la duración ajustada del Pomodoro depende de la retención borrada
     renderRetencionHistorial();
 
     analisisGuardados = analisisGuardados.filter((a) => a.espacio !== espacio);
     guardarAnalisisGuardados();
     estadisticasConstruidas = false;
+    srsConstruido = false;
     curvaOlvidoConstruido = false;
     subtRepasarConstruido = false;
     sesgoConfianzaConstruido = false;
@@ -13366,11 +14377,21 @@ const ZONAS_SYNC_GIST = [
     vincEspacioFijo = null;
   }
 
-  function aceptarVinculo() {
-    if (!vincZona || elBtnVincAceptar.disabled) return;
+  let _vincConfirmando = false;
+  async function aceptarVinculo() {
+    if (!vincZona || elBtnVincAceptar.disabled || _vincConfirmando) return;
     if (vincZona === 'todo') { aceptarVinculoTodo(); return; }
     const zona = vincZona;
     const viejo = espacioViejoActual();
+    if (zona === 'listas') {
+      const d = analizarDescarteVinculoListas(viejo);
+      if (d.descartadas > 0 || d.vaciadas.length > 0) {
+        _vincConfirmando = true;
+        const ok = await confirmarAccion('Al vincular las listas:' + textoDescarteVinculoListas(d) + ' Esto no se puede deshacer. ¿Continuar?');
+        _vincConfirmando = false;
+        if (!ok) return;
+      }
+    }
     let r;
     try {
       r = ejecutarVinculo(zona, viejo);
@@ -13381,7 +14402,9 @@ const ZONAS_SYNC_GIST = [
     }
     cerrarModalVincular();
     avisar('Vinculación terminada: movidas ' + r.movidas + ', sin corresponder ' + r.sin + '.' +
-      (r.sin > 0 ? ' Las ' + r.sin + ' sin corresponder quedan sin mover (en «De otros evaluadores»).' : ''));
+      (r.sin > 0 ? ' Las ' + r.sin + ' sin corresponder quedan sin mover (en «De otros evaluadores»).' : '') +
+      (r.descartadas > 0 ? ' Se descartaron ' + r.descartadas + ' tarjeta(s) huérfanas de las listas.' : '') +
+      (r.eliminadas > 0 ? ' Se eliminaron ' + r.eliminadas + ' lista(s) que quedaron vacías.' : ''));
   }
 
   elVincEspacio.addEventListener('input', refrescarModalVincular);
@@ -13657,10 +14680,12 @@ const ZONAS_SYNC_GIST = [
   document.addEventListener('keydown', (evento) => {
     if (evento.key !== 'Escape') return;
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
+    if (elModalTutorial.classList.contains('abierto')) { cerrarModalTutorial(); return; }   // tutorial: va encima del modal de inicio
 
     if (elModalConfirmacion.classList.contains('abierto')) { cerrarModalConfirmacion(false); return; }
     if (elModalAviso.classList.contains('abierto')) { cerrarModalAviso(); return; }
     if (elModalSyncEliminaciones.classList.contains('abierto')) { cerrarModalSyncEliminaciones('cancelar'); return; }   // el modal de decisión está arriba de todo
+    if (elModalPrimeroEditado.classList.contains('abierto')) { cerrarModalPrimeroEditado('cancelar'); return; }
     if (elModalSegunda.classList.contains('abierto')) { document.getElementById('btn-segunda-no').click(); return; }
     if (elModalContinuar.classList.contains('abierto')) { cerrarModalContinuar(); return; }
     if (elModalExamenOpciones.classList.contains('abierto')) { document.getElementById('btn-examen-opciones-cancelar').click(); return; }
@@ -13704,7 +14729,11 @@ const ZONAS_SYNC_GIST = [
 
     if (elModalConfirmacion.classList.contains('abierto')) { evento.preventDefault(); elBtnConfirmacionAceptar.click(); return; }
     if (elModalAviso.classList.contains('abierto')) { evento.preventDefault(); elBtnAvisoAceptar.click(); return; }
-    if (elModalPomodoroIniciar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-iniciar-normal').click(); return; }
+    if (elModalTutorial.classList.contains('abierto')) return;   // Enter no debe iniciar el Pomodoro desde el tutorial
+    if (elModalPomodoroIniciar.classList.contains('abierto')) {
+      if (document.activeElement && document.activeElement.id === 'btn-pomodoro-tutorial') return;   // Enter sobre el botón del tutorial solo lo abre
+      evento.preventDefault(); document.getElementById('btn-pomodoro-iniciar-normal').click(); return;
+    }
     if (elModalPomodoroAbandonar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-abandonar-si').click(); return; }
     if (elModalPomodoroResumen.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-resumen-cerrar').click(); return; }
     if (elModalContinuar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-modal-sesion').click(); return; }
@@ -13875,6 +14904,11 @@ const ZONAS_SYNC_GIST = [
       nota.className = 'bloque-version';
       nota.textContent = entrada.nota;
       div.appendChild(nota);
+    } else if (entrada.base) {
+      const anterior = document.createElement('div');
+      anterior.className = 'bloque-version';
+      anterior.textContent = 'Versión anterior: ' + entrada.base;
+      div.appendChild(anterior);
     }
 
     const acc = document.createElement('div');
@@ -13905,6 +14939,7 @@ const ZONAS_SYNC_GIST = [
         invalidas++;
         return;
       }
+      if (movidasVinculo[item.h]) { iguales++; return; }
       const local = datosImagenes[item.h];
       const entrada = {
         ruta: item.ruta,
@@ -14073,7 +15108,7 @@ const ZONAS_SYNC_GIST = [
       const tieneUrgente = score >= 75;
 
       let tieneOlvido = false;
-      if (sValido && subtemasConRutas.has(g.nombre)) {
+      if (sValido && subtemasConRutas.has(g.nombre) && pctNoRetenidaPorSubtema(g.nombre) !== null) {
         const pctNoRet = pctNoRetenidaPorSubtema(g.nombre);
         const retencionActual = 1 - ((pctNoRet || 0) / 100);
         const t = retencionActual > 0 ? (-sAjustado * Math.log(0.60 / retencionActual)) : -Infinity;
@@ -14433,6 +15468,7 @@ const ZONAS_SYNC_GIST = [
     let nuevas = 0, repetidas = 0, invalidas = 0;
     lista.forEach((item) => {
       if (!item || typeof item.h !== 'string' || !item.h) { invalidas++; return; }
+      if (movidasVinculo[item.h]) { repetidas++; return; }
       const itemRev = typeof item.rev === 'number' ? item.rev : undefined;
       registrarRevVista(itemRev);
       if (dificiles[item.h] && dificiles[item.h].activa) { repetidas++; return; }
@@ -14627,6 +15663,7 @@ const ZONAS_SYNC_GIST = [
         invalidas++;
         return;
       }
+      if (movidasVinculo[item.h]) { iguales++; return; }
       const local = notasLocales[item.h];
       const entrada = {
         p: typeof item.p === 'string' ? item.p : '',
@@ -14677,6 +15714,45 @@ const ZONAS_SYNC_GIST = [
     }));
     return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), notas: lista };
   }
+
+  document.getElementById('btn-exportar-pararevisar').addEventListener('click', () => {
+    const contenido = JSON.stringify(construirExportParaRevisar(), null, 2);
+    const blob = new Blob([contenido], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'primeros_editados.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  document.getElementById('btn-importar-pararevisar').addEventListener('click', () => {
+    document.getElementById('input-importar-pararevisar').click();
+  });
+
+  document.getElementById('input-importar-pararevisar').addEventListener('change', (evento) => {
+    const archivo = evento.target.files && evento.target.files[0];
+    evento.target.value = '';
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = async () => {
+      try {
+        const obj = JSON.parse(lector.result);
+        const r = await procesarImportacionZonaIndividual('pararevisar', obj);
+        if (r.cancelado) return;
+        if (r.errorFormato) throw new Error('formato');
+        repintarTarjetaSiActiva();
+        await avisar('Importación: ' + r.nuevas + ' nueva(s), ' + r.actualizadas + ' actualizada(s), ' + r.conservadas +
+          ' conservada(s), ' + r.iguales + ' ya estaban igual' + (r.eliminadas > 0 ? ', ' + r.eliminadas + ' eliminada(s)' : '') +
+          (r.invalidas > 0 ? ', ' + r.invalidas + ' inválida(s)' : '') + '.');
+      } catch (e) {
+        await avisar('El archivo no es un JSON válido de primeros editados.');
+      }
+    };
+    lector.readAsText(archivo);
+  });
 
   document.getElementById('btn-exportar-notas').addEventListener('click', () => {
     const contenido = JSON.stringify(construirExportNotas(), null, 2);
@@ -15670,7 +16746,7 @@ const ZONAS_SYNC_GIST = [
 
   function guardarRetencionRutasYa() {
     try {
-      localStorage.setItem(CLAVE_RETENCION_RUTAS, JSON.stringify(retencionRutas));
+      escribirLocalSeguro(CLAVE_RETENCION_RUTAS, JSON.stringify(retencionRutas));
     } catch (e) {
     }
   }
@@ -17081,7 +18157,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         if (parsed && typeof parsed === 'object') mapa = parsed;
       }
       mapa[ESPACIO_HASH] = (typeof sValor === 'number' && Number.isFinite(sValor)) ? sValor : null;
-      localStorage.setItem(CLAVE_S_AJUSTADO_POMODORO, JSON.stringify(mapa));
+      escribirLocalSeguro(CLAVE_S_AJUSTADO_POMODORO, JSON.stringify(mapa));
     } catch (e) {}
   }
 
@@ -17414,10 +18490,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       hayDificiles ? leyendaSeries(seriesDificiles) : null);
   }
 
-  function nivelDeSesionSrs(s, nombre) {
-    if (typeof s.nivel_srs === 'number') return s.nivel_srs;
-    if (s.niveles_srs && typeof s.niveles_srs[nombre] === 'number') return s.niveles_srs[nombre];
-    return null;
+  function resolverListaDeRefSrs(ref) {
+    const lista = ref.id ? buscarListaPropiaPorId(ref.id) : buscarListaPropia(ref.nombre);
+    return {
+      clave: lista ? 'id:' + lista.id : (ref.id ? 'id:' + ref.id : 'n:' + ref.nombre.toLowerCase()),
+      nombre: lista ? lista.nombre : ref.nombre,
+      lista: lista,
+    };
   }
 
   function construirGraficoLineaSrs(sesiones, nombre) {
@@ -17447,7 +18526,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     coords.forEach((c, i) => {
       svg.appendChild(elSvg('circle', { cx: c.x.toFixed(1), cy: c.y.toFixed(1), r: 4, fill: 'var(--color-boton)' }));
-      const nivel = nivelDeSesionSrs(sesiones[i], nombre);
+      const nivel = sesiones[i].nivel;
       const etqNivel = elSvg('text', { x: c.x.toFixed(1), y: (c.y - 10).toFixed(1), 'text-anchor': 'middle', 'font-size': 9, fill: 'var(--texto-cabecera)', 'font-weight': 700 });
       etqNivel.textContent = 'N' + (nivel === null ? '?' : nivel);
       svg.appendChild(etqNivel);
@@ -17459,7 +18538,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const lineasTooltip = sesiones.map((s, i) => {
       const fechaCorta = formatearFechaCortaGrafico(s.fecha) || '—';
       const notaVal = typeof s.nota === 'number' ? s.nota : 0;
-      const nivel = nivelDeSesionSrs(s, nombre);
+      const nivel = s.nivel;
       return 'Sesión ' + (i + 1) + ' — ' + fechaCorta + ' — nota ' + notaVal + '/10 — Nivel ' + (nivel === null ? '?' : nivel);
     });
     svg.setAttribute('data-tooltip-texto', lineasTooltip.join('\\n'));
@@ -17474,15 +18553,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return 'Desactivado';
   }
 
-  function sesionesSrsDeLista(nombre) {
-    return gamificacion.historial
-      .filter((s) => espacioDeSesion(s) === ESPACIO_HASH && s.modo === 'srs' &&
-        (s.listado === nombre || (s.niveles_srs && typeof s.niveles_srs[nombre] === 'number')))
-      .slice()
-      .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)))
-      .slice(-10);
-  }
-
   let srsConstruido = false;
   let srsDiagramasOcultos = new Set();
 
@@ -17490,36 +18560,38 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const cont = document.getElementById('srs-tab-contenido');
     cont.innerHTML = '';
 
-    const nombresConHistoria = new Set();
-    gamificacion.historial.forEach((s) => {
-      if (espacioDeSesion(s) !== ESPACIO_HASH || s.modo !== 'srs') return;
-      if (s.niveles_srs && typeof s.niveles_srs === 'object') {
-        Object.keys(s.niveles_srs).forEach((nombre) => nombresConHistoria.add(nombre));
-      } else if (s.listado && s.listado !== 'SRS Múltiple') {
-        nombresConHistoria.add(s.listado);
-      }
-    });
+    const grupos = new Map();
+    gamificacion.historial
+      .filter((s) => espacioDeSesion(s) === ESPACIO_HASH && s.modo === 'srs')
+      .slice()
+      .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)))
+      .forEach((s) => {
+        refsSrsDeSesion(s).forEach((ref) => {
+          const r = resolverListaDeRefSrs(ref);
+          if (!grupos.has(r.clave)) grupos.set(r.clave, { clave: r.clave, nombre: r.nombre, lista: r.lista, sesiones: [] });
+          grupos.get(r.clave).sesiones.push({ fecha: s.fecha, nota: s.nota, nivel: typeof ref.nivel === 'number' ? ref.nivel : null });
+        });
+      });
 
-    Array.from(nombresConHistoria).sort((a, b) => a.localeCompare(b)).forEach((nombre) => {
-      if (srsDiagramasOcultos.has(nombre)) return;
-      const sesiones = sesionesSrsDeLista(nombre);
+    Array.from(grupos.values()).sort((a, b) => a.nombre.localeCompare(b.nombre)).forEach((g) => {
+      if (srsDiagramasOcultos.has(g.clave)) return;
+      const sesiones = g.sesiones.slice(-10);
       if (sesiones.length === 0) return;
 
-      const lista = buscarListaPropia(nombre);
-      const srs = lista ? obtenerSrsLista(lista) : Object.assign({}, SRS_DEFAULT);
+      const srs = g.lista ? obtenerSrsLista(g.lista) : Object.assign({}, SRS_DEFAULT);
 
       const wrap = document.createElement('div');
       wrap.className = 'grafico-wrap';
       const tit = document.createElement('div');
       tit.className = 'grafico-titulo';
-      tit.textContent = nombre + ' — ' + estadoActualSrsTexto(srs);
+      tit.textContent = g.nombre + ' — ' + estadoActualSrsTexto(srs);
       wrap.appendChild(tit);
-      wrap.appendChild(construirGraficoLineaSrs(sesiones, nombre));
+      wrap.appendChild(construirGraficoLineaSrs(sesiones, g.nombre));
 
       const esActivaVigente = srs.activated && !srs.graduated;
       if (!esActivaVigente) {
-        const btn = botonMini('🗑 Borrar diagrama', () => {
-          srsDiagramasOcultos.add(nombre);
+        const btn = botonMini('🙈 Ocultar diagrama', () => {
+          srsDiagramasOcultos.add(g.clave);
           construirPestanaSrs();
         });
         btn.style.marginTop = '8px';
@@ -17536,6 +18608,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       cont.appendChild(p);
     }
   }
+
 
   function analisisPropiosParaScore() {
     return analisisPropios().filter((a) => !esModoEspecialHistorial(a.modo));
@@ -17563,7 +18636,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function pctNoRetenidaPorSubtema(nombreSubtema) {
     let total = 0, noRet = 0;
-    retencionPropias().forEach((entrada) => {
+    retencionPropias().slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 10).forEach((entrada) => {
       (entrada.rutas || []).forEach((r) => {
         if (r.subtema !== nombreSubtema) return;
         total++;
@@ -17574,17 +18647,35 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return (noRet / total) * 100;
   }
 
+  function combinarScoreSubtema(pctNoRet, hayAnalisis, pctFallosTotal, pctCasi, pctPista, pctResp) {
+    if (pctNoRet === null && !hayAnalisis) return 50;
+    let base = 0;
+    let pesoTotal = 0;
+    if (pctNoRet !== null) {
+      base += pctNoRet * PESO_NO_RET;
+      pesoTotal += PESO_NO_RET;
+    }
+    let ayuda = 0;
+    if (hayAnalisis) {
+      const pctNo = Math.max(0, pctFallosTotal - pctCasi);
+      base += pctNo * PESO_FALLOS + pctCasi * PESO_CASI;
+      pesoTotal += PESO_FALLOS + PESO_CASI;
+      ayuda = pctPista + pctResp;
+    }
+    const normalizado = pesoTotal > 0 ? base / pesoTotal : 50;
+    return Math.round(Math.min(100, normalizado * (1 + ayuda / 200)));
+  }
+
   function calcularScoreSubtema(nombreSubtema) {
-    if (!tieneAnalisisGuardado(nombreSubtema)) return 50;
-    const pctNoRet = pctNoRetenidaPorSubtema(nombreSubtema) || 0;
-    const pctFallos = promedioCampoAnalisis(nombreSubtema, 'pctFallos') || 0;
-    const pctCasi = promedioCampoAnalisis(nombreSubtema, 'pctCasi') || 0;
-    const pctPista = promedioCampoAnalisis(nombreSubtema, 'pctPista') || 0;
-    const pctResp = promedioCampoAnalisis(nombreSubtema, 'pctResp') || 0;
-    const base = pctNoRet * PESO_NO_RET + pctFallos * PESO_FALLOS + pctCasi * PESO_CASI;
-    const dependencia = 1 + (pctPista + pctResp) / 200;
-    const score = Math.min(100, base * dependencia);
-    return Math.round(score);
+    const hayAnalisis = tieneAnalisisGuardado(nombreSubtema);
+    return combinarScoreSubtema(
+      pctNoRetenidaPorSubtema(nombreSubtema),   // null = sin datos de retención
+      hayAnalisis,
+      hayAnalisis ? (promedioCampoAnalisis(nombreSubtema, 'pctFallos') || 0) : 0,
+      hayAnalisis ? (promedioCampoAnalisis(nombreSubtema, 'pctCasi') || 0) : 0,
+      hayAnalisis ? (promedioCampoAnalisis(nombreSubtema, 'pctPista') || 0) : 0,
+      hayAnalisis ? (promedioCampoAnalisis(nombreSubtema, 'pctResp') || 0) : 0
+    );
   }
 
   function nivelPrioridad(score) {
@@ -17641,7 +18732,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     let tipo = 'calibrado';
     let ordenSesgo = 2;
-    if (diferencia > 20) {
+    if (sumaEvaluadas === 0 || totalRutas === 0) {
+      tipo = 'sin_datos';
+      ordenSesgo = 4;
+    } else if (diferencia > 20) {
       tipo = 'sobreconfianza';
       ordenSesgo = 1;
     } else if (diferencia < -20) {
@@ -17675,6 +18769,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     let textoSesgo;
     if (tipoSesgo === 'sobreconfianza') {
       textoSesgo = '⚠️ Sobreconfianza (' + signoDiff + '%)';
+    } else if (tipoSesgo === 'sin_datos') {
+      textoSesgo = 'Sin datos suficientes';
     } else if (tipoSesgo === 'subestimacion') {
       textoSesgo = '📉 Subestimación (' + signoDiff + '%)';
     } else {
@@ -17712,12 +18808,14 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       'Score: ' + score + '/100',
       '',
       'Desglose:',
-      '- Fallos: ' + pctFallos + '%',
+      '- Fallos: ' + Math.max(0, pctFallos - pctCasi) + '%',
       '- Casi: ' + pctCasi + '%',
       '- No retenidas: ' + pctNoRetDesglose + '%',
       '',
       'Sesgo: ' + textoSesgo,
-      '(análisis: ' + pctAnalisis + '% vs retención: ' + pctRetencion + '%)',
+      tipoSesgo === 'sin_datos'
+        ? '(falta ' + ([analisisDisponibles === 0 ? 'análisis' : null, totalRutas === 0 ? 'retención' : null].filter(Boolean).join(' y ') || 'información') + ')'
+        : '(análisis: ' + pctAnalisis + '% vs retención: ' + pctRetencion + '%)',
       '',
       'Detalle de retención:',
       '- Retenidas: ' + retenidas + ' de ' + totalRutas + ' rutas (' + pctRetDetalle + '%)',
@@ -17841,8 +18939,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       });
     });
 
-    if (itemsSubt.length === 0) return 50;
-
     const promedioCampo = (campo) => {
       const vals = itemsSubt.filter((s) => typeof s[campo] === 'number').map((s) => s[campo]);
       return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
@@ -17850,8 +18946,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     let totalRutas = 0;
     let noRet = 0;
-    retencionPropias().forEach((entrada) => {
-      if (tsCorte > 0 && (entrada.timestamp || 0) > tsCorte) return;
+    retencionPropias()
+      .filter((entrada) => !(tsCorte > 0 && (entrada.timestamp || 0) > tsCorte))
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+      .slice(0, 10)
+      .forEach((entrada) => {
       (entrada.rutas || []).forEach((r) => {
         if (r.subtema !== nombreSubT) return;
         totalRutas++;
@@ -17859,14 +18958,14 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       });
     });
 
-    const pctNoRet = totalRutas > 0 ? (noRet / totalRutas) * 100 : 0;
-    const pctFallos = promedioCampo('pctFallos');
-    const pctCasi = promedioCampo('pctCasi');
-    const pctPista = promedioCampo('pctPista');
-    const pctResp = promedioCampo('pctResp');
-    const base = pctNoRet * PESO_NO_RET + pctFallos * PESO_FALLOS + pctCasi * PESO_CASI;
-    const dependencia = 1 + (pctPista + pctResp) / 200;
-    return Math.round(Math.min(100, base * dependencia));
+    return combinarScoreSubtema(
+      totalRutas > 0 ? (noRet / totalRutas) * 100 : null,
+      itemsSubt.length > 0,
+      promedioCampo('pctFallos'),
+      promedioCampo('pctCasi'),
+      promedioCampo('pctPista'),
+      promedioCampo('pctResp')
+    );
   }
 
   function construirGraficoVelocidadAprendizaje() {
@@ -18064,6 +19163,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     acc.appendChild(botonMini('🗑 Quitar', () => {
       delete revisarEnMemoria[hash];
       guardarRevisarLocal('revisar_tarjetas_v1', revisarEnMemoria);
+      borrarPrimeroEditado(hash);
       renderRevisarGuardadoPreview();
     }));
     div.appendChild(acc);
@@ -18088,6 +19188,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (!(await confirmarAccion('¿Vaciar todas las tarjetas para revisar? No se puede deshacer.'))) return;
     revisarEnMemoria = {};
     guardarRevisarLocal('revisar_tarjetas_v1', revisarEnMemoria);
+    if (Object.keys(paraRevisar).length > 0) {
+      paraRevisar = {};
+      siguienteRev();
+      guardarParaRevisar();
+    }
     renderRevisarGuardadoPreview();
   });
 
@@ -18233,6 +19338,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         invalidas++;
         return;
       }
+      if (movidasVinculo[item.h]) { iguales++; return; }
       const codigosValidos = item.razones.filter((c) => MAPA_RAZONES.has(c));
       const local = razonesGuardadas[item.h];
       const entrada = {
@@ -18337,6 +19443,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }));
 
   function iniciarSesion(lista) {
+    registrarInicioSesionNueva();
     detenerCountdownExamen();
     detenerCountdownGlobalExamen();
     globalExamenPendientesAlVencer = 0;
@@ -18410,7 +19517,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function renderTarjeta() {
-    if (hookInicioRenderTarjeta()) return;
+    if (hookInicioRenderTarjeta()) { ocultarControlesPrimero(); return; }
     if (tarjetasSesion.length === 0) {
       elAreaTarjeta.innerHTML = '<p class="sin-tarjetas">No hay tarjetas para estudiar con los temas elegidos.</p>';
       return;
@@ -18426,8 +19533,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const mostrarSegundo = revelado[indiceActual] || marcada !== null || !actual.segundo;
 
     elTemaTexto.textContent = nombreTema(actual);
-    elPrimero.textContent = actual.primero;
+    elPrimero.textContent = primeroVisibleDe(actual);
     elSegundo.textContent = actual.segundo;
+    sincronizarControlesPrimero(actual);
 
     if (mostrarSegundo) {
       elBtnPista.style.display = 'none';
@@ -18525,7 +19633,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
 
     if (validas.length > 0) {
-      elBadgeRutas.textContent = 'rutas = ' + validas.length;
+      elBadgeRutas.textContent = 'rutas = ' + validas.length + sufijoAdvertenciaRutas(validas);
       elBadgeRutas.style.display = 'block';
     } else {
       elBadgeRutas.style.display = 'none';
@@ -18533,6 +19641,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     elBtnPausa.style.display = (cronometroActivo && !modoObservador) ? 'inline-block' : 'none';
     elBtnRevisar.classList.toggle('activa', esRevisar(actual));
+    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(actual));
     elBtnRevisar.textContent = esRevisar(actual) ? '🚩 Para revisar' : '🚩 Revisar';
 
     const esDif = esDificil(actual);
@@ -19599,7 +20708,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function guardarRazonesYa() {
     try {
-      localStorage.setItem(CLAVE_RAZONES, JSON.stringify(razonesGuardadas));
+      escribirLocalSeguro(CLAVE_RAZONES, JSON.stringify(razonesGuardadas));
     } catch (e) {
     }
   }
@@ -20027,6 +21136,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function mostrarResumen() {
+    descartarSesionPendiente();   // la sesión terminó: ya no hay nada pendiente de recuperar
     const conteos = { si: 0, casi: 0, no: 0, saltar: 0, pista: 0, resp: 0, evaluadas: 0 };
     const indices = { si: [], casi: [], no: [], saltar: [] };
 
@@ -20251,6 +21361,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   let srsListasVencidasAviso = [];
   let ultimoAvisoSrsMs = 0;
   function evaluarAvisoSRS() {
+    if (elModalSesionPendiente.classList.contains('abierto')) return;   // primero se resuelve la sesión pendiente
     limpiarListasContraTarjetasActuales();
     const vencidas = listas.filter((l) => (!l.espacio || l.espacio === ESPACIO_HASH) && srsListaParaAviso(l));
     if (vencidas.length === 0) return;
@@ -20422,6 +21533,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const elSlotPomodoroMapa = document.getElementById('pomodoro-badge-slot-mapa');
   const elBtnObservadorSalir = document.getElementById('btn-observador-salir');
   const elModalPomodoroIniciar = document.getElementById('modal-pomodoro-iniciar');
+  const elModalTutorial = document.getElementById('modal-tutorial');
   const elModalPomodoroAbandonar = document.getElementById('modal-pomodoro-abandonar');
   const elModalPomodoroResumen = document.getElementById('modal-pomodoro-resumen');
   const elTituloPausa = document.getElementById('titulo-pausa');
@@ -20549,7 +21661,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
   }
 
-  // Cuenta con reloj de pared: si el navegador throttlea el intervalo (pestaña en segundo plano), no se pierde tiempo.
   function tickPomodoro() {
     const ahoraTick = Date.now();
     let delta = Math.round((ahoraTick - pomodoroUltimoTick) / 1000);
@@ -20613,6 +21724,19 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function cerrarModalPomodoroIniciar() {
     elModalPomodoroIniciar.classList.remove('abierto');
   }
+  function abrirModalTutorial() {
+    elModalTutorial.classList.add('abierto');
+    const caja = elModalTutorial.querySelector('.modal-caja');
+    if (caja) caja.scrollTop = 0;
+  }
+  function cerrarModalTutorial() {
+    elModalTutorial.classList.remove('abierto');
+  }
+  document.getElementById('btn-pomodoro-tutorial').addEventListener('click', () => abrirModalTutorial());
+  document.getElementById('btn-tutorial-cerrar').addEventListener('click', () => cerrarModalTutorial());
+  elModalTutorial.addEventListener('click', (evento) => {
+    if (evento.target === elModalTutorial) cerrarModalTutorial();
+  });
   elBtnPomodoro.addEventListener('click', () => {
     if (!pomodoroActivo) { abrirModalPomodoroIniciar(); return; }
     if (pomodoroRetencionPresionada) { abrirModalRetencionRutas(); }
@@ -20809,7 +21933,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
   document.getElementById('btn-pomodoro-resumen-cerrar').addEventListener('click', () => cerrarModalPomodoroResumen());
 
-  // El Pomodoro vive solo en memoria: avisar antes de recargar/cerrar la pestaña.
   window.addEventListener('beforeunload', (e) => {
     if (pomodoroActivo) {
       e.preventDefault();
@@ -20817,6 +21940,491 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       return '';
     }
   });
+
+  const PREFIJO_SESION_PENDIENTE = 'sesion_pendiente_';
+  const CLAVE_SESION_PENDIENTE = PREFIJO_SESION_PENDIENTE + ESPACIO_HASH;
+  const VERSION_SESION_PENDIENTE = 1;
+  const EDAD_MAXIMA_SESION_PENDIENTE_MS = 2 * 24 * 60 * 60 * 1000;   // 2 días
+  const elModalSesionPendiente = document.getElementById('modal-sesion-pendiente');
+  let tiempoInicioSesion = 0;
+  let _ultimoGuardadoSesionPendienteMs = 0;
+
+  function registrarInicioSesionNueva() {
+    tiempoInicioSesion = Date.now();
+    descartarSesionPendiente();   // sesión nueva: sobrescribe/borra la pendiente anterior
+  }
+
+  function descartarSesionPendiente() {
+    try { localStorage.removeItem(CLAVE_SESION_PENDIENTE); } catch (e) { }
+  }
+
+  function limpiarSesionesAntiguas() {
+    try {
+      const borrar = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const clave = localStorage.key(i);
+        if (!clave || clave.indexOf(PREFIJO_SESION_PENDIENTE) !== 0) continue;
+        let ts = 0;
+        try {
+          const o = JSON.parse(localStorage.getItem(clave) || 'null');
+          ts = o && Number(o.timestampUltimaActividad);
+        } catch (e) { ts = 0; }
+        if (!Number.isFinite(ts) || ts <= 0 || (Date.now() - ts) > EDAD_MAXIMA_SESION_PENDIENTE_MS) borrar.push(clave);
+      }
+      borrar.forEach((clave) => localStorage.removeItem(clave));
+    } catch (e) { }
+  }
+
+  function hashContenidoTarjetas() {
+    const n = tarjetasCompletas.length;
+    let acum = String(n);
+    for (let i = 0; i < Math.min(10, n); i++) acum += '|' + hashTarjeta(tarjetasCompletas[i]);
+    return hashTextoSync(acum);
+  }
+
+  function sesionActivaParaGuardar() {
+    if (pomodoroActivo || modoObservador) return false;
+    if (elAreaTarjeta.style.display === 'none') return false;
+    if (!Array.isArray(tarjetasSesion) || tarjetasSesion.length === 0) return false;
+    if (resultados.length !== tarjetasSesion.length) return false;
+    return true;
+  }
+
+  function copiarSetComoArray(x) { return Array.from(x || []); }
+
+  function serializarDatosCloze(d) {
+    if (!d) return null;
+    return Object.assign({}, d, { abiertas: copiarSetComoArray(d.abiertas) });
+  }
+
+  function serializarDatosDetective(d) {
+    if (!d) return null;
+    const c = Object.assign({}, d, {
+      abiertas: copiarSetComoArray(d.abiertas),
+      alteraciones: copiarSetComoArray(d.alteraciones),
+      marcadas: copiarSetComoArray(d.marcadas),
+      alteradasIdx: (d.alteradas || []).map((sg) => sg.idx),
+    });
+    delete c.alteradas;   // referencias compartidas con rutas: se reconstruyen al recuperar
+    delete c.segPorIdx;
+    return c;
+  }
+
+  function serializarRondaMatching(r) {
+    const estado = {};
+    r.rutaEstadoResultado.forEach((v, k) => { estado[String(k)] = v; });
+    return Object.assign({}, r, {
+      primeros: r.primeros.map((p) => {
+        const c = Object.assign({}, p, { hashTarjeta: hashTarjeta(p.tarjeta) });
+        delete c.tarjeta;
+        return c;
+      }),
+      rutasBloqueadas: copiarSetComoArray(r.rutasBloqueadas),
+      rutaEstadoResultado: estado,
+    });
+  }
+
+  function serializarSrsSesion(x) {
+    if (!x) return null;
+    const hashes = {};
+    Object.keys(x.hashesPorLista || {}).forEach((nombre) => { hashes[nombre] = copiarSetComoArray(x.hashesPorLista[nombre]); });
+    return { nombres: (x.nombres || []).slice(), hashesPorLista: hashes, previos: x.previos || null };
+  }
+
+  function construirSesionPendiente() {
+    const ahora = Date.now();
+    const esMatching = modoEspecial === 'matching';
+
+    const tiemposGuardar = tiempos.slice();   // incluye el tiempo de la tarjeta en curso, sin tocar el cronómetro vivo
+    if (cronometroActivo && !cronometroCongelado() && indiceActual < tiemposGuardar.length) {
+      tiemposGuardar[indiceActual] += Math.max(0, ahora - tiempoInicioTarjeta);
+    }
+
+    return {
+      version: VERSION_SESION_PENDIENTE,
+      espacio: ESPACIO_HASH,
+
+      indiceActual: indiceActual,
+      resultados: resultados.slice(),
+      tiempos: tiemposGuardar,
+      revelado: revelado.slice(),
+      pistaMostrada: pistaMostrada.slice(),
+      respuestaMostrada: respuestaMostrada.slice(),
+      rutasVisibles: rutasVisibles.slice(),
+      escritos: escritos.slice(),
+      evaluaciones: evaluaciones.slice(),
+      porComprension: porComprension.slice(),
+      modoJuego: modoJuego,
+      modoEspecial: modoEspecial,
+      modoDemostracionesCloze: modoDemostracionesCloze,
+      interaccionExamen: interaccionExamen,
+      segundosPorTarjetaExamen: segundosPorTarjetaExamen,
+      tiempoGlobalExamen: tiempoGlobalExamen,
+      listaActivaNombre: listaActivaNombre,
+      repasoInteligenteActivo: repasoInteligenteActivo,
+      srsSesionActiva: serializarSrsSesion(srsSesionActiva),
+      ordenMezclado: esMatching ? null : tarjetasSesion.map((t) => hashTarjeta(t)),
+      cronometroActivo: cronometroActivo,
+      indiceCongelado: indiceCongelado,
+
+      puntosSesion: puntosSesion,
+      rachaActual: rachaActual,
+      mejorRacha: mejorRacha,
+      multiplicadorActual: multiplicadorActual,
+      vidasActuales: vidasActuales,
+      vidasMaximas: vidasMaximas,
+      puntosPorTarjeta: puntosPorTarjeta.slice(),
+      pistaGratisUsadaPorTarjeta: pistaGratisUsadaPorTarjeta.slice(),
+      gameOverDisparado: gameOverDisparado,
+      gameOverModalAbierto: elModalGameOver.classList.contains('abierto'),
+      reintentadasSesion: Array.from(reintentadasSesion).map((t) => hashTarjeta(t)),
+      primerIntentoFallido: copiarSetComoArray(primerIntentoFallido),
+      reintentoExitoso: copiarSetComoArray(reintentoExitoso),
+      reveladasAlSaltar: copiarSetComoArray(reveladasAlSaltar),
+      segundaPendiente: segundaPendiente,
+      modoZombie: modoZombie,
+      historialGuardadoEstaSesion: historialGuardadoEstaSesion,
+      fechaEntradaHistorial: ultimaEntradaHistorial ? ultimaEntradaHistorial.fecha : null,
+      puntosSumadosHistorial: puntosSumadosHistorial,
+
+      notaAbierta: notaAbierta,
+      editandoNota: editandoNota,
+      versionNota: versionNota,
+      textoNotaEnEdicion: (notaAbierta && editandoNota) ? elNotaEditor.value : null,
+      razonesAbierto: razonesAbierto,
+      razonesPendientes: razonesPendientes === null ? null : razonesPendientes.slice(),
+      pausaManual: pausaManual,
+
+      datosClozeSesion: datosClozeSesion.map(serializarDatosCloze),
+      datosQuizSesion: datosQuizSesion.slice(),
+      datosDetectiveSesion: datosDetectiveSesion.map(serializarDatosDetective),
+      rondasMatching: esMatching ? rondasMatching.map(serializarRondaMatching) : [],
+      primeroSeleccionadoMatching: primeroSeleccionadoMatching,
+      asociacionesTempMatching: copiarSetComoArray(asociacionesTempMatching),
+
+      tiempoAcumuladoTotalMs: tiemposGuardar.reduce((a, b) => a + b, 0),
+      tiempoInicioSesion: tiempoInicioSesion || ahora,
+      countdownExamenRestante: countdownExamenRestante,
+      globalExamenActivo: globalExamenIntervalId !== null,
+      globalExamenRestanteMs: globalExamenRestanteMs,
+      globalExamenUltimoTick: globalExamenUltimoTick,
+
+      ultimoAnalisisFilas: Array.isArray(ultimoAnalisisFilas) ? ultimoAnalisisFilas : [],
+      analisisGuardadoEstaSesion: analisisGuardadoEstaSesion,
+
+      timestampCreacion: ahora,
+      timestampUltimaActividad: ahora,
+      hashTarjetas: hashContenidoTarjetas(),
+    };
+  }
+
+  function guardarSesionPendiente() {
+    if (!sesionActivaParaGuardar()) return false;
+    const ahora = Date.now();
+    if (ahora - _ultimoGuardadoSesionPendienteMs < 200) return true;   // beforeunload + pagehide seguidos
+    try {
+      const ok = escribirLocalSeguro(CLAVE_SESION_PENDIENTE, JSON.stringify(construirSesionPendiente()));
+      if (ok) _ultimoGuardadoSesionPendienteMs = ahora;
+      return ok;
+    } catch (e) {
+      try { console.error('No se pudo serializar la sesión pendiente:', e); } catch (e2) { }
+      return false;
+    }
+  }
+  _guardadosPendientes.push({ flush: guardarSesionPendiente });   // beforeunload + pagehide + visibilitychange (oculta)
+  window.addEventListener('beforeunload', guardarSesionPendiente);
+
+  function sesionTerminadaDespues(sesion) {
+    return gamificacion.historial.some((h) => {
+      if (!h || espacioDeSesion(h) !== ESPACIO_HASH) return false;
+      const t = Date.parse(h.fecha);
+      return Number.isFinite(t) && t > sesion.timestampCreacion;
+    });
+  }
+
+  function validarContenidoSesion(sesion) {
+    if (!sesion || typeof sesion !== 'object') return false;
+    if (sesion.version !== VERSION_SESION_PENDIENTE || sesion.espacio !== ESPACIO_HASH) return false;
+    if (!Array.isArray(sesion.resultados) || sesion.resultados.length === 0) return false;
+    if (!Number.isFinite(sesion.timestampCreacion) || !Number.isFinite(sesion.timestampUltimaActividad)) return false;
+    if ((Date.now() - sesion.timestampUltimaActividad) > EDAD_MAXIMA_SESION_PENDIENTE_MS) return false;
+    if (sesion.hashTarjetas !== hashContenidoTarjetas()) return false;   // el contenido del evaluador cambió
+    if (sesionTerminadaDespues(sesion)) return false;                    // otra sesión terminó mientras tanto
+    return true;
+  }
+
+  function cargarSesionPendiente() {
+    let crudo = null;
+    try { crudo = localStorage.getItem(CLAVE_SESION_PENDIENTE); } catch (e) { return null; }
+    if (!crudo) return null;
+    let sesion = null;
+    try { sesion = JSON.parse(crudo); } catch (e) { sesion = null; }
+    if (!validarContenidoSesion(sesion)) { descartarSesionPendiente(); return null; }
+    return sesion;
+  }
+
+  function codigoModoDeSesionGuardada(x) {
+    if (x.srsSesionActiva) return 'srs';
+    if (x.modoEspecial) return x.modoEspecial + '_' + x.modoJuego;
+    if (x.repasoInteligenteActivo) return 'inteligente';
+    return x.modoJuego;
+  }
+
+  function restanteGlobalSesionGuardada(x) {
+    if (x.modoJuego !== 'examen' || !x.tiempoGlobalExamen || !x.globalExamenActivo) return null;
+    const transcurrido = x.pausaManual ? 0 : Math.max(0, Date.now() - (x.globalExamenUltimoTick || x.timestampCreacion));
+    return (x.globalExamenRestanteMs || 0) - transcurrido;
+  }
+
+  function mostrarModalRecuperacion(sesion) {
+    const elDetalles = document.getElementById('sesion-pendiente-detalles');
+    elDetalles.innerHTML = '';
+    const total = sesion.resultados.length;
+    const filas = [
+      '🎮 Modo: ' + nombreModoJuego(codigoModoDeSesionGuardada(sesion)),
+      '📇 Tarjeta ' + (Math.min(sesion.indiceActual, total - 1) + 1) + ' de ' + total,
+      '⏱ Tiempo acumulado: ' + formatearTiempo(sesion.tiempoAcumuladoTotalMs || 0),
+      '🕐 Última actividad: ' + new Date(sesion.timestampUltimaActividad).toLocaleString(),
+    ];
+    filas.forEach((texto) => {
+      const li = document.createElement('li');
+      li.textContent = texto;
+      elDetalles.appendChild(li);
+    });
+    const restante = restanteGlobalSesionGuardada(sesion);
+    document.getElementById('sesion-pendiente-aviso').style.display = (restante !== null && restante <= 0) ? 'block' : 'none';
+
+    document.getElementById('btn-sesion-pendiente-continuar').onclick = () => {
+      elModalSesionPendiente.classList.remove('abierto');
+      let ok = false;
+      try { ok = restaurarSesionPendiente(sesion); } catch (e) {
+        try { console.error('No se pudo restaurar la sesión pendiente:', e); } catch (e2) { }
+      }
+      if (!ok) {
+        descartarSesionPendiente();
+        avisar('No se pudo recuperar la sesión (el contenido del evaluador cambió). Se descartó.');
+        evaluarAvisoSRS();
+      }
+    };
+    document.getElementById('btn-sesion-pendiente-descartar').onclick = () => {
+      descartarSesionPendiente();
+      elModalSesionPendiente.classList.remove('abierto');
+      evaluarAvisoSRS();   // se había pospuesto mientras el modal estaba abierto
+    };
+    elModalSesionPendiente.classList.add('abierto');
+  }
+
+  function restaurarSesionPendiente(x) {
+    const porHash = new Map();
+    tarjetasCompletas.forEach((t) => {
+      const h = hashTarjeta(t);
+      if (!porHash.has(h)) porHash.set(h, []);
+      porHash.get(h).push(t);
+    });
+    const usados = new Map();
+    const resolver = (h) => {
+      const lista = porHash.get(h);
+      if (!lista) throw new Error('tarjeta inexistente: ' + h);
+      const k = usados.get(h) || 0;
+      usados.set(h, k + 1);
+      return lista[Math.min(k, lista.length - 1)];
+    };
+
+    const esMatching = x.modoEspecial === 'matching';
+    let tarjetasNuevas = [];
+    let rondasNuevas = [];
+    if (esMatching) {
+      rondasNuevas = (x.rondasMatching || []).map((r) => {
+        const rutasR = Array.isArray(r.rutas) ? r.rutas : [];
+        const estado = new Map();
+        Object.keys(r.rutaEstadoResultado || {}).forEach((k) => {
+          const orig = rutasR.find((idR) => String(idR) === k);
+          estado.set(orig !== undefined ? orig : k, r.rutaEstadoResultado[k]);
+        });
+        return Object.assign({}, r, {
+          primeros: r.primeros.map((p) => {
+            const c = Object.assign({}, p, { tarjeta: resolver(p.hashTarjeta) });
+            delete c.hashTarjeta;
+            return c;
+          }),
+          rutasBloqueadas: new Set(r.rutasBloqueadas || []),
+          rutaEstadoResultado: estado,
+        });
+      });
+      tarjetasNuevas = rondasNuevas.map((r) => ({ tema: r.tema, primero: r.tema, segundo: '', rutas: r.rutas }));
+    } else {
+      if (!Array.isArray(x.ordenMezclado)) throw new Error('orden de tarjetas ausente');
+      tarjetasNuevas = x.ordenMezclado.map(resolver);
+    }
+    const n = tarjetasNuevas.length;
+    ['resultados', 'tiempos', 'revelado', 'pistaMostrada', 'respuestaMostrada', 'rutasVisibles', 'escritos',
+      'evaluaciones', 'porComprension', 'puntosPorTarjeta', 'pistaGratisUsadaPorTarjeta'].forEach((campo) => {
+      if (!Array.isArray(x[campo]) || x[campo].length !== n) throw new Error('longitud inconsistente en ' + campo);
+    });
+
+    const datosCloze = (x.datosClozeSesion || []).map((d) => d ? Object.assign({}, d, { abiertas: new Set(d.abiertas || []) }) : d);
+    const datosDetective = (x.datosDetectiveSesion || []).map((d) => {
+      if (!d) return d;
+      const segPorIdx = new Map();
+      Object.keys(d.rutas || {}).forEach((idR) => {
+        (d.rutas[idR] || []).forEach((linea) => {
+          if (linea && Array.isArray(linea.segmentos)) {
+            linea.segmentos.forEach((sg) => { if (sg && sg.tipo === 'palabra') segPorIdx.set(sg.idx, sg); });
+          }
+        });
+      });
+      const c = Object.assign({}, d, {
+        abiertas: new Set(d.abiertas || []),
+        alteraciones: new Set(d.alteraciones || []),
+        marcadas: new Set(d.marcadas || []),
+        segPorIdx: segPorIdx,
+        alteradas: (d.alteradasIdx || []).map((i) => segPorIdx.get(i)).filter(Boolean),
+      });
+      delete c.alteradasIdx;
+      return c;
+    });
+    if (x.modoEspecial === 'cloze' && datosCloze.length !== n) throw new Error('datos Cloze inconsistentes');
+    if (x.modoEspecial === 'detective' && datosDetective.length !== n) throw new Error('datos Detective inconsistentes');
+
+    let srsNuevo = null;
+    if (x.srsSesionActiva) {
+      const hashesPorLista = {};
+      Object.keys(x.srsSesionActiva.hashesPorLista || {}).forEach((nombre) => {
+        hashesPorLista[nombre] = new Set(x.srsSesionActiva.hashesPorLista[nombre]);
+      });
+      srsNuevo = { nombres: (x.srsSesionActiva.nombres || []).slice(), hashesPorLista: hashesPorLista };
+      if (x.srsSesionActiva.previos) srsNuevo.previos = x.srsSesionActiva.previos;
+    }
+
+    const restanteGlobal = restanteGlobalSesionGuardada(x);
+
+    detenerCountdownExamen();
+    detenerCountdownGlobalExamen();
+    detenerCronometro();
+    globalExamenPendientesAlVencer = 0;
+    modoObservador = false;
+    elAreaTarjeta.classList.remove('observador');
+    limpiarModoEspecialAlSalir();
+
+    modoEspecial = x.modoEspecial || null;
+    modoDemostracionesCloze = !!x.modoDemostracionesCloze;
+    repasoInteligenteActivo = !!x.repasoInteligenteActivo;
+    configurarModoJuego(x.modoJuego);
+    interaccionExamen = x.interaccionExamen || 'libre';
+    segundosPorTarjetaExamen = x.segundosPorTarjetaExamen || 15;
+    tiempoGlobalExamen = !!x.tiempoGlobalExamen;
+    listaActivaNombre = x.listaActivaNombre || null;
+    srsSesionActiva = srsNuevo;
+    srsReaplicable = null;
+
+    tarjetasSesion = tarjetasNuevas;
+    resultados = x.resultados.slice();
+    tiempos = x.tiempos.slice();
+    revelado = x.revelado.slice();
+    pistaMostrada = x.pistaMostrada.slice();
+    respuestaMostrada = x.respuestaMostrada.slice();
+    rutasVisibles = x.rutasVisibles.slice();
+    escritos = x.escritos.slice();
+    evaluaciones = x.evaluaciones.slice();
+    porComprension = x.porComprension.slice();
+    indiceActual = Math.min(Math.max(0, x.indiceActual | 0), n - 1);
+    cronometroActivo = !!x.cronometroActivo;
+    indiceCongelado = Number.isFinite(x.indiceCongelado) ? x.indiceCongelado : -1;
+    tiempoInicioSesion = x.tiempoInicioSesion || Date.now();
+
+    datosClozeSesion = modoEspecial === 'cloze' ? datosCloze : [];
+    datosQuizSesion = modoEspecial === 'quiz' ? (x.datosQuizSesion || []) : [];
+    datosDetectiveSesion = modoEspecial === 'detective' ? datosDetective : [];
+    rondasMatching = rondasNuevas;
+    primeroSeleccionadoMatching = (x.primeroSeleccionadoMatching === undefined) ? null : x.primeroSeleccionadoMatching;
+    asociacionesTempMatching = new Set(x.asociacionesTempMatching || []);
+
+    puntosSesion = x.puntosSesion || 0;
+    rachaActual = x.rachaActual || 0;
+    mejorRacha = x.mejorRacha || 0;
+    multiplicadorActual = x.multiplicadorActual || 1;
+    vidasMaximas = x.vidasMaximas || 0;
+    vidasActuales = x.vidasActuales || 0;
+    puntosPorTarjeta = x.puntosPorTarjeta.slice();
+    pistaGratisUsadaPorTarjeta = x.pistaGratisUsadaPorTarjeta.slice();
+    gameOverDisparado = !!x.gameOverDisparado;
+    modoZombie = !!x.modoZombie;
+    segundaPendiente = false;   // si estaba pendiente, se vuelve a ofrecer más abajo
+    reintentadasSesion = new Set((x.reintentadasSesion || [])
+      .map((h) => tarjetasSesion.find((t) => hashTarjeta(t) === h)).filter(Boolean));
+    primerIntentoFallido = new Set(x.primerIntentoFallido || []);
+    reintentoExitoso = new Set(x.reintentoExitoso || []);
+    reveladasAlSaltar = new Set(x.reveladasAlSaltar || []);
+
+    historialGuardadoEstaSesion = false;
+    ultimaEntradaHistorial = null;
+    puntosSumadosHistorial = 0;
+    if (x.historialGuardadoEstaSesion && x.fechaEntradaHistorial) {
+      const entrada = gamificacion.historial.find((h) => h && h.fecha === x.fechaEntradaHistorial && espacioDeSesion(h) === ESPACIO_HASH);
+      if (entrada) {
+        historialGuardadoEstaSesion = true;
+        ultimaEntradaHistorial = entrada;
+        puntosSumadosHistorial = x.puntosSumadosHistorial || 0;
+      }
+    }
+
+    ultimoAnalisisFilas = Array.isArray(x.ultimoAnalisisFilas) ? x.ultimoAnalisisFilas : [];
+    analisisGuardadoEstaSesion = !!x.analisisGuardadoEstaSesion;
+    ultimaEntradaAnalisisSesion = null;
+    elBtnAnalisisSesionGuardar.disabled = analisisGuardadoEstaSesion;
+    elBtnAnalisisSesionGuardar.textContent = analisisGuardadoEstaSesion ? '✓ Guardado' : '💾 Guardar análisis';
+
+    notaAbierta = !!x.notaAbierta;
+    editandoNota = !!x.editandoNota;
+    versionNota = x.versionNota || 'local';
+    razonesAbierto = !!x.razonesAbierto;
+    razonesPendientes = Array.isArray(x.razonesPendientes) ? x.razonesPendientes.slice() : null;
+    if (razonesPendientes === null) razonesAbierto = false;
+    pausaManual = !!x.pausaManual;
+    elOverlayPausa.classList.remove('abierto');
+
+    limpiarAviso();
+    actualizarBadgeNotaActual();
+    actualizarBadgeSrs();
+    actualizarBarraGamificacion();
+    mostrarPantalla('estudio');
+    iniciarCronometro();   // el tiempo acumulado ya está en tiempos[]; la tarjeta en curso arranca desde ahora
+    renderTarjeta();
+
+    if (notaAbierta && editandoNota && typeof x.textoNotaEnEdicion === 'string') elNotaEditor.value = x.textoNotaEnEdicion;
+    if (pausaManual && !x.gameOverModalAbierto) {
+      elOverlayPausa.classList.add('abierto');
+      actualizarCronometro();
+    }
+    if (x.gameOverModalAbierto) {
+      pausaManual = true;
+      elModalGameOver.classList.add('abierto');
+    }
+
+    if (modoJuego === 'examen' && !tiempoGlobalExamen && countdownExamenId && x.countdownExamenRestante > 0) {
+      countdownExamenRestante = x.countdownExamenRestante;
+      elCountdownExamen.textContent = '⏳ ' + countdownExamenRestante + 's';
+    }
+    if (restanteGlobal !== null) {
+      globalExamenRestanteMs = Math.max(0, restanteGlobal);
+      globalExamenUltimoTick = Date.now();
+      elCountdownGlobalExamen.style.display = 'inline-block';
+      renderCountdownGlobalExamen();
+      globalExamenIntervalId = setInterval(tickCountdownGlobalExamen, 500);
+      if (restanteGlobal <= 0) venceTiempoGlobalExamen();   // tiempo agotado: las pendientes cuentan como no entendidas
+    }
+
+    mostrarAviso('♻️ Sesión recuperada: seguís en la tarjeta ' + (indiceActual + 1) + ' de ' + n + '.');
+
+    if (x.segundaPendiente && !modoEspecial && !pausaManual && resultados[indiceActual] === null && elTextoEval.value.trim() !== '') {
+      evaluarRespuesta();
+    }
+    return true;
+  }
+
+  limpiarSesionesAntiguas();
+  const _sesionPendienteAlCargar = cargarSesionPendiente();
+  if (_sesionPendienteAlCargar) mostrarModalRecuperacion(_sesionPendienteAlCargar);   // antes de mostrar "temas"
 
   construirListaTemas();
   mostrarPantalla('temas');

@@ -784,6 +784,14 @@
     text-transform: capitalize;
   }
 
+  .orion-progreso-llorando {
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #e07b00;
+    text-align: center;
+  }
+
   .orion-zona-inferior {
     display: flex;
     flex-direction: column;
@@ -1281,6 +1289,7 @@
       <div class="orion-tiempo-badge" id="orion-tiempo-badge" hidden></div>
       <img id="orion-imagen" class="orion-img" alt="Orion" hidden>
       <div class="orion-estado-badge" id="orion-estado-texto"></div>
+      <div class="orion-progreso-llorando" id="orion-progreso-llorando" hidden>Falta 1 plato para recuperar a Orion</div>
     </div>
 
     <div class="orion-zona-inferior">
@@ -2422,6 +2431,7 @@
       ultimaAlimentacion: 0,
       estado: 'feliz',
       platos: 0,
+      platosRecibidosLlorando: 0,
       activo: false,
       evaluadoresRecompensados: [],
       sesionesRecompensadas: []
@@ -2435,11 +2445,13 @@
       const obj = JSON.parse(crudo);
       if (!obj || typeof obj !== 'object') return valoresPorDefectoOrion();
       const base = valoresPorDefectoOrion();
+      const estadoValido = ['feliz', 'triste', 'llorando', 'quep', 'satisfecho'].includes(obj.estado) ? obj.estado : base.estado;
       return {
         fechaNacimiento: typeof obj.fechaNacimiento === 'number' ? obj.fechaNacimiento : base.fechaNacimiento,
         ultimaAlimentacion: typeof obj.ultimaAlimentacion === 'number' ? obj.ultimaAlimentacion : base.ultimaAlimentacion,
-        estado: ['feliz', 'triste', 'llorando', 'quep', 'satisfecho'].includes(obj.estado) ? obj.estado : base.estado,
+        estado: estadoValido,
         platos: typeof obj.platos === 'number' ? obj.platos : base.platos,
+        platosRecibidosLlorando: (estadoValido === 'llorando' && obj.platosRecibidosLlorando === 1) ? 1 : 0,
         activo: Boolean(obj.activo),
         evaluadoresRecompensados: Array.isArray(obj.evaluadoresRecompensados) ? obj.evaluadoresRecompensados : [],
         sesionesRecompensadas: Array.isArray(obj.sesionesRecompensadas) ? obj.sesionesRecompensadas : []
@@ -2473,6 +2485,7 @@
   let orionDatos = cargarOrion();
   const elOrionImg = document.getElementById('orion-imagen');
   const elOrionEstadoTxt = document.getElementById('orion-estado-texto');
+  const elOrionProgresoLlorando = document.getElementById('orion-progreso-llorando');
   const elOrionPlatos = document.getElementById('orion-contador-platos');
   const elOrionDrag = document.getElementById('orion-comida-drag');
   const elOrionPts = document.getElementById('orion-pts-disp');
@@ -2534,12 +2547,19 @@
     const g = cargarGamificacionIdx();
     const vivo = orionDatos.activo && orionDatos.estado !== 'quep';
     const muerto = orionDatos.activo && orionDatos.estado === 'quep';
+    const llorandoConUnPlato =
+      orionDatos.activo &&
+      orionDatos.estado === 'llorando' &&
+      orionDatos.platosRecibidosLlorando === 1;
 
     elBtnOrionActivar.disabled = vivo;
     elBtnOrionDesactivar.disabled = !orionDatos.activo;
 
     cambiarImagenOrionConFade(orionDatos.estado, orionDatos.activo);
     elOrionEstadoTxt.textContent = orionDatos.activo ? `Estado: ${orionDatos.estado}` : 'Orion inactivo';
+    if (elOrionProgresoLlorando) {
+      elOrionProgresoLlorando.hidden = !llorandoConUnPlato;
+    }
 
     const elTiempoBadge = document.getElementById('orion-tiempo-badge');
     if (!orionDatos.activo) {
@@ -2577,10 +2597,10 @@
       }
     }
 
-    elOrionPlatos.textContent = `× ${orionDatos.platos}`;
+    elOrionPlatos.textContent = llorandoConUnPlato ? '1/2' : `× ${orionDatos.platos}`;
     elOrionPts.textContent = g.puntosTotales;
 
-    const puedeDarComida = vivo && orionDatos.platos > 0;
+    const puedeDarComida = vivo && orionDatos.estado !== 'satisfecho' && orionDatos.platos > 0;
     elOrionDrag.classList.toggle('deshabilitado', !puedeDarComida);
     elOrionDrag.draggable = puedeDarComida;
 
@@ -2603,6 +2623,10 @@
       const nuevoEstado = recalcularEstadoOrion(orionDatos);
       if (nuevoEstado !== orionDatos.estado) {
         orionDatos.estado = nuevoEstado;
+        orionDatos.platosRecibidosLlorando = 0;
+        guardarOrion(orionDatos);
+      } else if (orionDatos.estado !== 'llorando' && orionDatos.platosRecibidosLlorando !== 0) {
+        orionDatos.platosRecibidosLlorando = 0;
         guardarOrion(orionDatos);
       }
     }
@@ -2641,6 +2665,7 @@
         ultimaAlimentacion: 0,
         estado: 'feliz',
         platos: 0,
+        platosRecibidosLlorando: 0,
         activo: true,
         evaluadoresRecompensados: evaluadoresUnidos,
         sesionesRecompensadas: sesionesUnidas
@@ -2656,6 +2681,7 @@
       '¿Desactivar a Orion? Si volvés a activarlo más adelante, su ciclo y sus platos se reiniciarán desde cero.',
       () => {
         orionDatos.activo = false;
+        orionDatos.platosRecibidosLlorando = 0;
         guardarOrion(orionDatos);
         renderVistaOrion();
       }
@@ -2663,8 +2689,32 @@
   });
 
   function alimentarOrion() {
-    if (!orionDatos.activo || orionDatos.estado === 'quep' || orionDatos.platos <= 0) return;
+    if (!orionDatos.activo || orionDatos.estado === 'quep' || orionDatos.estado === 'satisfecho' || orionDatos.platos <= 0) return;
+
+    const estadoActual = recalcularEstadoOrion(orionDatos);
+    if (estadoActual !== orionDatos.estado) {
+      orionDatos.estado = estadoActual;
+      orionDatos.platosRecibidosLlorando = 0;
+      guardarOrion(orionDatos);
+      if (orionDatos.estado === 'quep' || orionDatos.estado === 'satisfecho') {
+        renderVistaOrion();
+        return;
+      }
+    }
+
     orionDatos.platos -= 1;
+
+    if (orionDatos.estado === 'llorando') {
+      const recibidos = (orionDatos.platosRecibidosLlorando || 0) + 1;
+      if (recibidos < 2) {
+        orionDatos.platosRecibidosLlorando = recibidos;
+        guardarOrion(orionDatos);
+        renderVistaOrion();
+        return;
+      }
+    }
+
+    orionDatos.platosRecibidosLlorando = 0;
     orionDatos.ultimaAlimentacion = Date.now();
     orionDatos.estado = 'satisfecho';
     guardarOrion(orionDatos);
@@ -2852,7 +2902,7 @@
   });
 
   elOrionDrag.addEventListener('dragstart', (e) => {
-    if (!orionDatos.activo || orionDatos.estado === 'quep' || orionDatos.platos <= 0) {
+    if (!orionDatos.activo || orionDatos.estado === 'quep' || orionDatos.estado === 'satisfecho' || orionDatos.platos <= 0) {
       e.preventDefault();
       return;
     }
@@ -2860,7 +2910,7 @@
   });
 
   elOrionImg.addEventListener('dragover', (e) => {
-    if (orionDatos.activo && orionDatos.estado !== 'quep' && orionDatos.platos > 0) {
+    if (orionDatos.activo && orionDatos.estado !== 'quep' && orionDatos.estado !== 'satisfecho' && orionDatos.platos > 0) {
       e.preventDefault();
     }
   });
@@ -2873,7 +2923,7 @@
   let clonTouch = null;
 
   elOrionDrag.addEventListener('touchstart', (e) => {
-    if (!orionDatos.activo || orionDatos.estado === 'quep' || orionDatos.platos <= 0) return;
+    if (!orionDatos.activo || orionDatos.estado === 'quep' || orionDatos.estado === 'satisfecho' || orionDatos.platos <= 0) return;
     const touch = e.touches[0];
     clonTouch = elOrionDrag.cloneNode(true);
     clonTouch.style.position = 'fixed';
