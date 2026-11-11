@@ -16473,8 +16473,8 @@ const ZONAS_SYNC_GIST = [
       return;
     }
     if (modoHojaNotasEval === 'braindump') {
-      if (pomodoroEnBraindumpFinal) {
-        finalizarBraindumpPomodoro();
+      if (pomodoroActivo && pomodoroEnBraindumpFinal) {
+        cancelarBraindumpPomodoro();
         return;
       }
       cerrarHojaBraindumpALista();
@@ -16872,7 +16872,7 @@ const ZONAS_SYNC_GIST = [
   function cerrarNotasEvaluador(opciones) {
     const opts = opciones || {};
     if (pomodoroEnBraindumpFinal && !opts.desdeFinalizarBraindump) {
-      finalizarBraindumpPomodoro();
+      cancelarBraindumpPomodoro();
       return;
     }
     const textareaNueva = document.getElementById('notaseval-texto-nueva');
@@ -22234,6 +22234,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   let pomodoroEnBraindumpFinal = false;
   let pomodoroTotalSegCongelado = null;
   let pomodoroBraindumpNotaId = null;
+  let pomodoroBraindumpInicioMs = 0;
   let retencionSesionToggles = {};
 
   function formatoMMSS(segundos) {
@@ -22499,11 +22500,12 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       elTituloPausa.textContent = '⏸ En pausa';
       elTextoPausa.textContent = 'El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.';
     }
-    pomodoroTotalSegCongelado = Math.max(0, Math.round((Date.now() - pomodoroHoraInicio - pomodoroPausaAcumMs) / 1000));
+    const ahora = Date.now();
+    pomodoroBraindumpInicioMs = ahora;
+    pomodoroTotalSegCongelado = Math.max(0, Math.round((ahora - pomodoroHoraInicio - pomodoroPausaAcumMs) / 1000));
     pomodoroEnBraindumpFinal = true;
     elPomodoroBadge.style.display = 'none';
 
-    const ahora = Date.now();
     const nueva = {
       id: generarIdNotaEvaluador(),
       texto: '',
@@ -22518,6 +22520,38 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroBraindumpNotaId = nueva.id;
 
     abrirNotasEvaluador('braindump', nueva.id);
+  }
+
+  async function cancelarBraindumpPomodoro() {
+    if (!pomodoroActivo || !pomodoroEnBraindumpFinal) return;
+    detenerDictadoHojaCompartida();
+    const textoEscrito = elHojaEditor.value.trim();
+    if (textoEscrito !== '') {
+      const confirmar = await confirmarAccion('¿Descartar lo escrito y volver al Pomodoro?', 'Sí');
+      if (!confirmar) return;
+      if (!pomodoroActivo || !pomodoroEnBraindumpFinal) return;
+    }
+    elHojaEditor.value = '';
+    if (pomodoroBraindumpNotaId) {
+      const idBorrar = pomodoroBraindumpNotaId;
+      notasEvaluador = notasEvaluador.filter((n) => n.id !== idBorrar);
+      siguienteRev();
+      guardarNotasEvaluador();
+    }
+    const ahora = Date.now();
+    const inicioBdMs = pomodoroBraindumpInicioMs > 0
+      ? pomodoroBraindumpInicioMs
+      : (pomodoroTotalSegCongelado !== null ? (pomodoroHoraInicio + pomodoroPausaAcumMs + pomodoroTotalSegCongelado * 1000) : ahora);
+    pomodoroPausaAcumMs += Math.max(0, ahora - inicioBdMs);
+    pomodoroBraindumpInicioMs = 0;
+    pomodoroEnBraindumpFinal = false;
+    pomodoroBraindumpNotaId = null;
+    pomodoroTotalSegCongelado = null;
+    cerrarNotasEvaluador({ desdeFinalizarBraindump: true, desdeTransicionPomodoro: true });
+    elPomodoroBadge.style.display = 'flex';
+    reubicarBadgePomodoro(nombrePantallaActivaActual());
+    actualizarBadgePomodoro();
+    iniciarIntervaloPomodoro();
   }
 
   function finalizarBraindumpPomodoro() {
