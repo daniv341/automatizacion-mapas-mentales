@@ -3859,6 +3859,144 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     white-space: nowrap;
     flex-shrink: 0;
   }
+
+  #modal-confirmacion-texto { white-space: pre-line; max-height: 50vh; overflow-y: auto; }
+  #btn-listas-repasar-vencidas { width: 100%; margin-bottom: 10px; }
+  .badge-avisos {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    margin: 4px auto 6px;
+    padding: 3px 12px 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--color-boton);
+    background: var(--bg-superficie);
+    color: var(--color-boton);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px var(--color-sombra);
+  }
+  .badge-avisos-n {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #e0574c;
+    color: #fff;
+    font-size: 12px;
+    line-height: 20px;
+    text-align: center;
+  }
+  .aviso-item {
+    text-align: left;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--color-borde-medio);
+    border-radius: 12px;
+    background: var(--bg-superficie-alt);
+  }
+  .aviso-titulo { font-size: 14px; font-weight: 700; color: var(--texto-cabecera); }
+  .aviso-detalle {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: var(--texto-secundario);
+    overflow-wrap: anywhere;
+  }
+  .ordenar-ayuda { font-size: 13px; color: var(--texto-secundario); margin-bottom: 8px; }
+  .ordenar-ruta-titulo {
+    margin: 10px 0 4px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-boton);
+  }
+  .ordenar-slots { display: flex; flex-direction: column; gap: 6px; }
+  .ordenar-slot {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    min-height: 42px;
+    padding: 4px;
+    border: 2px dashed var(--color-borde-fuerte);
+    border-radius: 10px;
+    background: var(--bg-superficie-alt);
+  }
+  .ordenar-slot.lleno { border-style: solid; border-color: var(--color-borde-medio); }
+  .ordenar-slot.ok { border-style: solid; border-color: #3aa76d; background: rgba(58, 167, 109, 0.12); }
+  .ordenar-slot.mal { border-style: solid; border-color: #e0574c; background: rgba(224, 87, 76, 0.1); }
+  .ordenar-slot.ordenar-destino, .ordenar-pool.ordenar-destino {
+    border-color: var(--color-boton);
+    background: var(--bg-superficie-hover);
+  }
+  .ordenar-slot-n {
+    flex: 0 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--texto-suave);
+  }
+  .ordenar-slot-cuerpo {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    text-align: left;
+    font-size: 13px;
+    color: var(--texto-tenue);
+  }
+  .ordenar-correcta { font-size: 12px; color: #3aa76d; overflow-wrap: anywhere; }
+  .ordenar-frag {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--color-borde-medio);
+    border-radius: 8px;
+    background: var(--bg-superficie);
+    color: var(--texto-cabecera);
+    font-size: 14px;
+    line-height: 1.4;
+    text-align: left;
+    overflow-wrap: anywhere;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .ordenar-frag.ordenar-arrastrando { opacity: 0.35; }
+  .ordenar-frag.ordenar-fantasma {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 9999;
+    margin: 0;
+    opacity: 0.92;
+    pointer-events: none;
+    box-shadow: 0 8px 20px var(--color-sombra-fuerte);
+    will-change: transform;
+  }
+  .ordenar-frag.bloqueado { cursor: default; }
+  .ordenar-pool {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 8px;
+    min-height: 48px;
+    border: 2px dashed var(--color-borde-fuerte);
+    border-radius: 12px;
+  }
+  .ordenar-pool-titulo { font-size: 12px; font-weight: 700; color: var(--texto-suave); text-align: left; }
+  .ordenar-pool-vacio { font-size: 13px; color: var(--texto-tenue); }
+  .ordenar-img { pointer-events: auto; -webkit-user-drag: none; user-select: none; }
+  body.ordenar-en-arrastre { user-select: none; -webkit-user-select: none; cursor: grabbing; }
 </style>
 </style>
 </head>
@@ -3866,6 +4004,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 <div class="contenedor">
   <div class="nombre-evaluador" id="nombre-evaluador"></div>
+  <button type="button" class="badge-avisos" id="btn-avisos" title="Avisos"><span>🔔</span><span class="badge-avisos-n" id="badge-avisos-n">0</span></button>
   <h1>Tarjetas de Estudio</h1>
 
   <div id="pantalla-temas">
@@ -4665,6 +4804,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
     <h3>📋 Listas guardadas</h3>
     <p class="modal-ayuda">Guardá selecciones de tarjetas para reutilizarlas sin volver a marcarlas.</p>
+    <button type="button" class="boton-reiniciar" id="btn-listas-repasar-vencidas" style="display:none;">🧠 Repasar vencidas (0)</button>
     <div class="fila-acciones-listas">
       <button class="boton-mini boton-mini-peligro" id="btn-listas-vaciar">Vaciar todas</button>
     </div>
@@ -4676,6 +4816,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <div id="lista-listas-otras"></div>
     </details>
     <button class="modal-cancelar" id="btn-listas-cerrar">Cerrar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-avisos">
+  <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
+    <h3>🔔 Avisos</h3>
+    <div id="avisos-lista"></div>
+    <button class="modal-cancelar" id="btn-avisos-cerrar">Cerrar</button>
   </div>
 </div>
 
@@ -4930,7 +5078,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </div>
 
 <div class="modal-overlay" id="modal-otros-modos">
-  <div class="modal-caja" role="dialog" aria-modal="true">
+  <div class="modal-caja" role="dialog" aria-modal="true" style="max-height:92vh; overflow-y:auto;">
     <h3>🎮 Otros Modos</h3>
     <div class="opciones-modo">
       <button type="button" class="opcion-modo seleccionada" id="opcion-otro-cloze" data-otro-modo="cloze">
@@ -4952,6 +5100,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="opcion-modo-icono">🕵️</span>
         <span class="opcion-modo-nombre">Detective</span>
         <span class="opcion-modo-detalle">Encontrá las palabras alteradas en las rutas</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-otro-ordenar" data-otro-modo="ordenar">
+        <span class="opcion-modo-icono">🧩</span>
+        <span class="opcion-modo-nombre">Ordenar Rutas</span>
+        <span class="opcion-modo-detalle">Arrastrá los renglones para reconstruir las rutas en orden</span>
       </button>
     </div>
     <label class="opcion-demostraciones-wrap" id="wrap-modo-demostraciones" for="chk-modo-demostraciones">
@@ -6424,9 +6577,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elBtnConfirmacionCancelar = document.getElementById('btn-confirmacion-cancelar');
   let _resolverConfirmacion = null;
 
-  function confirmarAccion(mensaje) {
+  function confirmarAccion(mensaje, etiquetaAceptar) {
     return new Promise((resolve) => {
       elModalConfirmacionTexto.textContent = mensaje;
+      elBtnConfirmacionAceptar.textContent = etiquetaAceptar || 'Confirmar';
       elModalConfirmacion.classList.add('abierto');
       _resolverConfirmacion = resolve;
     });
@@ -6727,7 +6881,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return idsValidos.some((id) => rutasConNotaDuda.has(String(id))) ? ' ⚠️' : '';
   }
 
+  const elBtnAvisos = document.getElementById('btn-avisos');
+  const elBadgeAvisosN = document.getElementById('badge-avisos-n');
+  const elModalAvisos = document.getElementById('modal-avisos');
+  const elAvisosLista = document.getElementById('avisos-lista');
+  let avisosActuales = [];
+
   function mostrarPantalla(nombre) {
+    if (nombre !== 'temas') elBtnAvisos.style.display = 'none';
     elPantallaTemas.style.display = nombre === 'temas' ? 'block' : 'none';
     elAreaTarjeta.style.display = nombre === 'estudio' ? 'block' : 'none';
     elPantallaResumen.style.display = nombre === 'resumen' ? 'block' : 'none';
@@ -6751,6 +6912,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         renderSiCambioDatos('revisar', JSON.stringify(revisarEnMemoria), renderRevisarGuardadoPreview);
         renderSiCambioDatos('razones', '', renderRazonesPreview);
         actualizarMarcasTemas();   // NUEVO: refresca ★/💡/🏷 sin resetear las casillas marcadas
+        actualizarAvisos();
         evaluarAvisoSRS();         // NUEVO: §4 — avisa si hay listas de Repaso Espaciado vencidas
       });
     }
@@ -8715,6 +8877,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function calcularPuntosBase(resultado, opciones) {
     opciones = opciones || {};
+    if (resultado === 'saltar') return opciones.comodinUsado ? 0 : -5;
     if (modoEspecial === 'quiz') return resultado === 'si' ? 8 : 0;
     if (modoEspecial === 'detective') return resultado === 'si' ? 15 : (resultado === 'casi' ? 8 : 0);
     if (resultado === 'si') {
@@ -8724,10 +8887,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     if (resultado === 'casi') return 8;
     if (resultado === 'no') return 0;
-    if (resultado === 'saltar') {
-      if (modoEspecial === 'cloze') return 0;
-      return opciones.comodinUsado ? 0 : -5;
-    }
     return 0;
   }
 
@@ -8852,6 +9011,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let datosClozeSesion = [];
   let datosQuizSesion = [];
   let datosDetectiveSesion = [];
+  let datosOrdenarSesion = [];
   let rondasMatching = [];
   let primeroSeleccionadoMatching = null;
   let asociacionesTempMatching = new Set();
@@ -8874,13 +9034,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (modoEspecial === 'matching') return 'matching_' + modoJuego;
     if (modoEspecial === 'quiz') return 'quiz_' + modoJuego;
     if (modoEspecial === 'detective') return 'detective_' + modoJuego;
+    if (modoEspecial === 'ordenar') return 'ordenar_' + modoJuego;
     if (repasoInteligenteActivo) return 'inteligente';
     return modoJuego;
   }
 
   function esModoEspecialHistorial(modo) {
     const m = String(modo || '');
-    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0;
+    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0 || m.indexOf('ordenar_') === 0;
   }
 
   function nombreModoJuego(modo) {
@@ -8896,6 +9057,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (modo === 'detective_light') return '🕵️ Detective Light';
     if (modo === 'detective_normal') return '🕵️ Detective Normal';
     if (modo === 'detective_tryhard') return '🕵️ Detective Tryhard';
+    if (modo === 'ordenar_light') return '🧩 Ordenar Rutas Light';
+    if (modo === 'ordenar_normal') return '🧩 Ordenar Rutas Normal';
+    if (modo === 'ordenar_tryhard') return '🧩 Ordenar Rutas Tryhard';
     if (modo === 'inteligente') return '🧠 Repaso inteligente';
     if (modo === 'srs') return '🧠 SRS';
     if (modo === 'examen') return '📝 Examen';
@@ -9006,6 +9170,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       modoEspecialPendiente = 'detective';
       modoDemostracionesPendiente = false;
       abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'detective');
+    } else if (otroModoElegidoEnModal === 'ordenar') {
+      const elegibles = base.filter((t) => esElegibleOrdenar(t));
+      if (elegibles.length === 0) {
+        cerrarModalOtrosModos();
+        await avisar('No hay tarjetas con al menos dos renglones de ruta en los temas seleccionados para iniciar Ordenar Rutas.');
+        return;
+      }
+      elModalOtrosModos.classList.remove('abierto');
+      resetearCheckboxDemostracionesModal();
+      modoEspecialPendiente = 'ordenar';
+      modoDemostracionesPendiente = false;
+      abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'ordenar');
     }
   }
 
@@ -9014,6 +9190,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('opcion-otro-matching').addEventListener('click', () => seleccionarOtroModoEnModal('matching'));
   document.getElementById('opcion-otro-quiz').addEventListener('click', () => seleccionarOtroModoEnModal('quiz'));
   document.getElementById('opcion-otro-detective').addEventListener('click', () => seleccionarOtroModoEnModal('detective'));
+  document.getElementById('opcion-otro-ordenar').addEventListener('click', () => seleccionarOtroModoEnModal('ordenar'));
   document.getElementById('btn-otros-modos-comenzar').addEventListener('click', () => confirmarOtrosModos());
   document.getElementById('btn-otros-modos-cancelar').addEventListener('click', () => cerrarModalOtrosModos());
   function actualizarBarraGamificacion() {
@@ -9034,7 +9211,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elStatEscudo.style.display = esLight ? 'none' : 'inline';
     elStatEscudo.textContent = '🛡 ' + nEscudos;
     elStatEscudo.style.opacity = nEscudos > 0 ? '1' : '0.4';
-    elStatSegunda.style.display = esLight ? 'none' : 'inline';
+    elStatSegunda.style.display = (esLight || modoEspecial !== null) ? 'none' : 'inline';
     elStatSegunda.textContent = '🔁 ' + nSegundas;
     elStatSegunda.style.opacity = nSegundas > 0 ? '1' : '0.4';
 
@@ -9048,7 +9225,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elStatVidas.textContent = corazones;
     }
 
-    if (!esLight && gamificacion.inventario.pistasGratis > 0) {
+    if (!esLight && modoEspecial === null && gamificacion.inventario.pistasGratis > 0) {
       elBadgePistaGratis.textContent = 'x' + gamificacion.inventario.pistasGratis;
       elBadgePistaGratis.style.display = 'block';
     } else {
@@ -9088,6 +9265,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elOpcionModoExamen.style.display = 'none';
     } else if (modoEspecialPendiente === 'detective') {
       elTituloModalModo.textContent = 'Elegí el modo de juego — 🕵️ Detective';
+      elOpcionModoExamen.style.display = 'none';
+    } else if (modoEspecialPendiente === 'ordenar') {
+      elTituloModalModo.textContent = 'Elegí el modo de juego — 🧩 Ordenar Rutas';
       elOpcionModoExamen.style.display = 'none';
     } else {
       elTituloModalModo.textContent = 'Elegí el modo de juego';
@@ -9143,6 +9323,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       iniciarSesionQuiz(lista);
     } else if (modoEspecial === 'detective') {
       iniciarSesionDetective(lista);
+    } else if (modoEspecial === 'ordenar') {
+      iniciarSesionOrdenar(lista);
     } else {
       iniciarSesion(lista);
     }
@@ -9786,8 +9968,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       btn.appendChild(texto);
       if (yaEvaluada) {
         btn.disabled = true;
-        if (op.correcta) btn.classList.add('correcta');
+        if (d.evaluada && op.correcta) btn.classList.add('correcta');
         else if (d.evaluada && d.seleccion === idx) btn.classList.add('incorrecta');
+        else if (d.seleccion === idx) btn.classList.add('seleccionada');
       } else {
         btn.classList.toggle('seleccionada', d.seleccion === idx);
         btn.addEventListener('click', () => seleccionarOpcionQuiz(idx));
@@ -10076,14 +10259,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             span.className = 'detective-palabra';
             span.textContent = seg.valor;
             const marcada = d.marcadas.has(seg.idx);
-            if (!yaEvaluada) {
+            if (!d.evaluada) {
               span.classList.toggle('sospechosa', marcada);
-              span.addEventListener('click', () => {
-                if (pausaManual || d.evaluada || resultados[indiceActual] !== null) return;
-                if (d.marcadas.has(seg.idx)) d.marcadas.delete(seg.idx);
-                else d.marcadas.add(seg.idx);
-                span.classList.toggle('sospechosa', d.marcadas.has(seg.idx));
-              });
+              if (yaEvaluada) {
+                span.classList.add('fija');
+              } else {
+                span.addEventListener('click', () => {
+                  if (pausaManual || d.evaluada || resultados[indiceActual] !== null) return;
+                  if (d.marcadas.has(seg.idx)) d.marcadas.delete(seg.idx);
+                  else d.marcadas.add(seg.idx);
+                  span.classList.toggle('sospechosa', d.marcadas.has(seg.idx));
+                });
+              }
               div.appendChild(span);
               return;
             }
@@ -10245,6 +10432,457 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     actualizarCronometro();
     renderTarjeta();
   }
+
+  let ordArr = null;
+
+  function esElegibleOrdenar(t) {
+    const ids = rutasValidasDe(t);
+    let n = 0;
+    for (let i = 0; i < ids.length; i++) {
+      const ls = lineasDeRutaDetective(ids[i]);
+      for (let j = 0; j < ls.length; j++) {
+        if (!esImagen(ls[j]) && String(ls[j]).trim() !== '') {
+          n++;
+          if (n >= 2) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function generarOrdenarTarjeta(t) {
+    const lineas = [];
+    const estructura = [];
+    let numRuta = 0;
+    rutasValidasDe(t).forEach((id) => {
+      const bloque = lineasDeRutaDetective(id);
+      const parcial = [];
+      let hayTexto = false;
+      numRuta++;
+      bloque.forEach((linea, j) => {
+        if (esImagen(linea)) {
+          parcial.push({ t: 'i', id: id, j: j });
+          return;
+        }
+        const texto = String(linea).trim();
+        if (texto === '') return;
+        hayTexto = true;
+        parcial.push({ t: 's', k: lineas.length });
+        lineas.push(texto);
+      });
+      if (!hayTexto) {
+        numRuta--;
+        return;
+      }
+      estructura.push({ t: 'h', r: numRuta });
+      parcial.forEach((e) => estructura.push(e));
+    });
+    if (lineas.length < 2) return null;
+    return {
+      lineas: lineas,
+      estructura: estructura,
+      pool: mezclar(lineas.map((_, i) => i)),
+      slots: new Array(lineas.length).fill(-1),
+      evaluada: false,
+    };
+  }
+
+  function iniciarSesionOrdenar(lista) {
+    const validas = [];
+    const datos = [];
+    lista.forEach((t) => {
+      const d = generarOrdenarTarjeta(t);
+      if (d) {
+        validas.push(t);
+        datos.push(d);
+      }
+    });
+    if (validas.length === 0) {
+      avisar('Ninguna de estas tarjetas tiene al menos dos renglones de ruta para ordenar.');
+      return;
+    }
+    iniciarSesionEspecialBase(validas, () => { datosOrdenarSesion = datos; });
+  }
+
+  function ordenarAciertos(d) {
+    let ok = 0;
+    for (let k = 0; k < d.lineas.length; k++) {
+      const f = d.slots[k];
+      if (f !== -1 && d.lineas[f] === d.lineas[k]) ok++;
+    }
+    return ok;
+  }
+
+  function crearFragmentoOrdenar(d, f, desde, bloqueado) {
+    const el = document.createElement('div');
+    el.className = 'ordenar-frag' + (bloqueado ? ' bloqueado' : '');
+    el.textContent = d.lineas[f];
+    if (!bloqueado) el.addEventListener('pointerdown', (ev) => ordenarPointerDown(ev, el, f, desde));
+    return el;
+  }
+
+  function renderRutasOrdenar() {
+    const d = datosOrdenarSesion[indiceActual];
+    elRutasContenedor.textContent = '';
+    if (!d) {
+      elRutasContenedor.style.display = 'none';
+      return;
+    }
+    elRutasContenedor.style.display = 'block';
+    const yaEvaluada = d.evaluada || resultados[indiceActual] !== null;
+    const revelar = d.evaluada;
+    const frag = document.createDocumentFragment();
+
+    if (!yaEvaluada) {
+      const ayuda = document.createElement('div');
+      ayuda.className = 'ordenar-ayuda';
+      ayuda.textContent = 'Arrastrá los fragmentos de abajo a su lugar para reconstruir las rutas en orden.';
+      frag.appendChild(ayuda);
+    }
+
+    const slots = document.createElement('div');
+    slots.className = 'ordenar-slots';
+    d.estructura.forEach((e) => {
+      if (e.t === 'h') {
+        const h = document.createElement('div');
+        h.className = 'ordenar-ruta-titulo';
+        h.textContent = 'Ruta ' + e.r;
+        slots.appendChild(h);
+        return;
+      }
+      if (e.t === 'i') {
+        const linea = lineasDeRutaDetective(e.id)[e.j];
+        if (!esImagen(linea)) return;
+        const img = document.createElement('img');
+        img.className = 'ruta-img-thumb ordenar-img';
+        img.draggable = false;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.src = linea.substring(4);
+        slots.appendChild(img);
+        return;
+      }
+      const k = e.k;
+      const f = d.slots[k];
+      const slot = document.createElement('div');
+      slot.className = 'ordenar-slot';
+      slot.setAttribute('data-ord-slot', String(k));
+      const n = document.createElement('span');
+      n.className = 'ordenar-slot-n';
+      n.textContent = String(k + 1);
+      const cuerpo = document.createElement('div');
+      cuerpo.className = 'ordenar-slot-cuerpo';
+      if (f !== -1) {
+        slot.classList.add('lleno');
+        cuerpo.appendChild(crearFragmentoOrdenar(d, f, k, yaEvaluada));
+      } else {
+        cuerpo.textContent = yaEvaluada ? '(vacío)' : 'Soltá un fragmento aquí';
+      }
+      if (revelar) {
+        const correcto = f !== -1 && d.lineas[f] === d.lineas[k];
+        slot.classList.add(correcto ? 'ok' : 'mal');
+        if (!correcto) {
+          const c = document.createElement('div');
+          c.className = 'ordenar-correcta';
+          c.textContent = 'Correcto: ' + d.lineas[k];
+          cuerpo.appendChild(c);
+        }
+      }
+      slot.appendChild(n);
+      slot.appendChild(cuerpo);
+      slots.appendChild(slot);
+    });
+    frag.appendChild(slots);
+
+    if (!yaEvaluada) {
+      const pool = document.createElement('div');
+      pool.className = 'ordenar-pool';
+      pool.setAttribute('data-ord-pool', '1');
+      const tit = document.createElement('div');
+      tit.className = 'ordenar-pool-titulo';
+      tit.textContent = 'Fragmentos (' + d.pool.length + ')';
+      pool.appendChild(tit);
+      if (d.pool.length === 0) {
+        const vacio = document.createElement('div');
+        vacio.className = 'ordenar-pool-vacio';
+        vacio.textContent = 'Todos los fragmentos están colocados.';
+        pool.appendChild(vacio);
+      }
+      d.pool.forEach((f) => pool.appendChild(crearFragmentoOrdenar(d, f, -1, false)));
+      frag.appendChild(pool);
+    }
+    elRutasContenedor.appendChild(frag);
+  }
+
+  function renderTarjetaOrdenar() {
+    const t = tarjetasSesion[indiceActual];
+    const d = datosOrdenarSesion[indiceActual];
+    const r = resultados[indiceActual];
+    const yaEvaluada = d.evaluada || r !== null;
+
+    ocultarContenedoresEspeciales();
+    elTemaTexto.textContent = nombreTema(t);
+    elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
+    const contestadas = resultados.filter((x) => x !== null).length;
+    elBarraRelleno.style.width = ((contestadas / tarjetasSesion.length) * 100) + '%';
+
+    const nRutas = rutasValidasDe(t).length;
+    if (nRutas > 0) {
+      elBadgeRutas.textContent = 'rutas = ' + nRutas + sufijoAdvertenciaRutas(rutasValidasDe(t));
+      elBadgeRutas.style.display = 'block';
+    } else {
+      elBadgeRutas.style.display = 'none';
+    }
+
+    elBtnRevisar.style.display = 'inline-block';
+    elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
+    elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
+
+    elPrimero.style.display = 'block';
+    elPrimero.textContent = t.primero;
+    elBtnRespuesta.style.display = 'none';
+
+    const mostrarSegundo = !!t.segundo && d.evaluada;
+    elBtnPista.style.display = 'none';
+    elSeparador.style.display = mostrarSegundo ? 'block' : 'none';
+    elSegundo.style.display = mostrarSegundo ? 'block' : 'none';
+    elSegundo.textContent = mostrarSegundo ? t.segundo : '';
+
+    renderPanelNota(t);
+    renderRazonesUI(t);
+
+    if (elRutasContenedor.nextElementSibling !== elZonaEval) {
+      elZonaEval.parentNode.insertBefore(elRutasContenedor, elZonaEval);
+    }
+    renderRutasOrdenar();
+
+    elTextoEval.parentElement.style.display = 'none';
+    elBtnDictadoTextoEval.style.display = 'none';
+    elRespuestaUsuarioResaltada.style.display = 'none';
+    elZonaEval.style.display = yaEvaluada ? 'none' : 'block';
+    elFilaEval.style.display = yaEvaluada ? 'none' : 'flex';
+    elBtnEvaluar.disabled = yaEvaluada;
+
+    const ev = evaluaciones[indiceActual];
+    if (d.evaluada && ev) {
+      elResultadoEval.style.display = 'block';
+      elResultadoEval.className = 'resultado-eval ' + (ev.resultado === 'si' ? 'bien' : (ev.resultado === 'casi' ? 'casi' : 'mal'));
+      elResultadoEval.textContent = ev.textoDetalle;
+    } else {
+      elResultadoEval.style.display = 'none';
+      elResultadoEval.textContent = '';
+    }
+
+    elEstadoMarca.className = 'estado-marca' + (r ? ' ' + r : '');
+    if (r === 'si') elEstadoMarca.textContent = '✓ Marcada como entendida';
+    else if (r === 'casi') elEstadoMarca.textContent = '~ Casi entendida';
+    else if (r === 'no') elEstadoMarca.textContent = '✗ Marcada como no entendida';
+    else if (r === 'saltar') elEstadoMarca.textContent = '— Pasada sin marcar';
+    else elEstadoMarca.textContent = '';
+
+    const yaMarcada = r !== null;
+    document.querySelector('.botonera').style.display = 'flex';
+    elBtnSi.classList.remove('comprension');
+    elBtnSi.textContent = '✓';
+    elBtnSi.title = 'Entendido';
+    elBtnSi.style.display = 'none';
+    elBtnNo.style.display = 'none';
+    elBtnSaltar.style.display = 'inline-block';
+    elBtnDificil.style.display = 'inline-block';
+    elBtnRazones.style.display = 'inline-block';
+    elBtnSi.disabled = yaMarcada;
+    elBtnNo.disabled = yaMarcada;
+    elBtnSaltar.disabled = yaMarcada;
+
+    elBtnDificil.classList.toggle('activa', esDificil(t));
+    elBtnDificil.textContent = esDificil(t) ? '★ Difícil' : '☆ Difícil';
+
+    elBtnPausa.style.display = cronometroActivo ? 'inline-block' : 'none';
+    elBtnAnterior.disabled = indiceActual === 0;
+    elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+    actualizarBadgeNotaActual();
+  }
+
+  function evaluarOrdenarActual() {
+    const d = datosOrdenarSesion[indiceActual];
+    if (!d || d.evaluada || resultados[indiceActual] !== null) return;
+
+    ordenarTerminar();
+    acumularTiempoActual();
+    indiceCongelado = indiceActual;
+
+    const total = d.lineas.length;
+    const ok = ordenarAciertos(d);
+    const prop = ok / total;
+    const pct = Math.round(prop * 100);
+    const res = ok === total ? 'si' : (prop >= UMBRAL_CASI ? 'casi' : 'no');
+
+    d.evaluada = true;
+    revelado[indiceActual] = true;
+    rutasVisibles[indiceActual] = true;
+
+    const etq = res === 'si' ? '✓ Bien' : (res === 'casi' ? '~ Casi' : '✗ Mal');
+    const textoDetalle = etq + ' — ' + ok + ' de ' + total + ' renglón(es) en su posición correcta (' + pct + '%).';
+
+    evaluaciones[indiceActual] = {
+      resultado: res,
+      acertadas: ok,
+      clavesTotal: total,
+      textoDetalle: textoDetalle,
+    };
+    escritos[indiceActual] = d.slots.map((f) => (f === -1 ? '' : d.lineas[f])).join(' | ');
+    resultados[indiceActual] = res;
+
+    procesarResultadoGamificacion(indiceActual, res, { conPista: false, pistaGratisUsada: false });
+    if (resultados.every((x) => x !== null)) {
+      cronometroActivo = false;
+    }
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function ordenarDestino(x, y) {
+    const el = document.elementFromPoint(x, y);
+    return el ? el.closest('[data-ord-slot], [data-ord-pool]') : null;
+  }
+
+  function ordenarPointerDown(ev, el, f, desde) {
+    if (ordArr || pausaManual || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+    const d = datosOrdenarSesion[indiceActual];
+    if (!d || d.evaluada || resultados[indiceActual] !== null) return;
+    const a = {
+      el: el, f: f, desde: desde, id: ev.pointerId,
+      x0: ev.clientX, y0: ev.clientY, x: ev.clientX, y: ev.clientY,
+      dx: 0, dy: 0, activo: false, ghost: null, dest: null, frame: 0, timer: 0,
+      indice: indiceActual, tactil: ev.pointerType !== 'mouse',
+    };
+    ordArr = a;
+    if (a.tactil) {
+      a.timer = setTimeout(() => {
+        if (ordArr === a && !a.activo) ordenarActivar(a);
+      }, 200);
+    }
+  }
+
+  function ordenarActivar(a) {
+    a.activo = true;
+    const r = a.el.getBoundingClientRect();
+    a.dx = a.x0 - r.left;
+    a.dy = a.y0 - r.top;
+    const g = a.el.cloneNode(true);
+    g.className = 'ordenar-frag ordenar-fantasma';
+    g.style.width = r.width + 'px';
+    document.body.appendChild(g);
+    a.ghost = g;
+    a.el.classList.add('ordenar-arrastrando');
+    document.body.classList.add('ordenar-en-arrastre');
+    ordenarProgramarFrame(a);
+  }
+
+  function ordenarProgramarFrame(a) {
+    if (!a.frame) a.frame = requestAnimationFrame(() => ordenarFrame(a));
+  }
+
+  function ordenarFrame(a) {
+    a.frame = 0;
+    if (ordArr !== a || !a.ghost) return;
+    a.ghost.style.transform = 'translate(' + (a.x - a.dx) + 'px,' + (a.y - a.dy) + 'px)';
+    const dest = ordenarDestino(a.x, a.y);
+    if (dest !== a.dest) {
+      if (a.dest) a.dest.classList.remove('ordenar-destino');
+      if (dest) dest.classList.add('ordenar-destino');
+      a.dest = dest;
+    }
+    const margen = 80;
+    const alto = window.innerHeight;
+    let paso = 0;
+    if (a.y < margen) paso = -Math.ceil((margen - a.y) / 5);
+    else if (a.y > alto - margen) paso = Math.ceil((a.y - (alto - margen)) / 5);
+    if (paso !== 0) {
+      window.scrollBy(0, paso);
+      ordenarProgramarFrame(a);
+    }
+  }
+
+  function ordenarTerminar() {
+    const a = ordArr;
+    if (!a) return;
+    ordArr = null;
+    clearTimeout(a.timer);
+    if (a.frame) cancelAnimationFrame(a.frame);
+    if (a.ghost) a.ghost.remove();
+    if (a.dest) a.dest.classList.remove('ordenar-destino');
+    a.el.classList.remove('ordenar-arrastrando');
+    document.body.classList.remove('ordenar-en-arrastre');
+  }
+
+  function ordenarSoltar(a, dest) {
+    if (!dest || a.indice !== indiceActual) return;
+    const d = datosOrdenarSesion[a.indice];
+    if (!d || d.evaluada || resultados[a.indice] !== null) return;
+    if (dest.hasAttribute('data-ord-slot')) {
+      const k = Number(dest.getAttribute('data-ord-slot'));
+      if (a.desde === k) return;
+      const previo = d.slots[k];
+      if (a.desde >= 0) {
+        d.slots[a.desde] = previo;
+      } else {
+        const pos = d.pool.indexOf(a.f);
+        if (pos !== -1) d.pool.splice(pos, 1);
+        if (previo !== -1) d.pool.push(previo);
+      }
+      d.slots[k] = a.f;
+    } else if (a.desde >= 0) {
+      d.slots[a.desde] = -1;
+      d.pool.push(a.f);
+    } else {
+      return;
+    }
+    renderRutasOrdenar();
+  }
+
+  document.addEventListener('pointermove', (ev) => {
+    const a = ordArr;
+    if (!a || ev.pointerId !== a.id) return;
+    a.x = ev.clientX;
+    a.y = ev.clientY;
+    if (!a.activo) {
+      const mx = a.x - a.x0;
+      const my = a.y - a.y0;
+      const dist = mx * mx + my * my;
+      if (a.tactil) {
+        if (dist > 100) ordenarTerminar();
+        return;
+      }
+      if (dist < 25) return;
+      ordenarActivar(a);
+    }
+    ordenarProgramarFrame(a);
+  }, { passive: true });
+
+  document.addEventListener('pointerup', (ev) => {
+    const a = ordArr;
+    if (!a || ev.pointerId !== a.id) return;
+    const dest = a.activo ? ordenarDestino(ev.clientX, ev.clientY) : null;
+    const activo = a.activo;
+    ordenarTerminar();
+    if (activo) ordenarSoltar(a, dest);
+  });
+
+  document.addEventListener('pointercancel', (ev) => {
+    if (ordArr && ev.pointerId === ordArr.id) ordenarTerminar();
+  });
+
+  document.addEventListener('touchmove', (ev) => {
+    if (ordArr && ordArr.activo && ev.cancelable) ev.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('contextmenu', (ev) => {
+    if (ordArr) ev.preventDefault();
+  });
+
+  window.addEventListener('blur', () => ordenarTerminar());
 
   function construirRondasMatching(tarjetasBase) {
     const gruposPorSubt = new Map();
@@ -10823,6 +11461,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       renderTarjetaDetective();
       return true;
     }
+    if (modoEspecial === 'ordenar') {
+      renderTarjetaOrdenar();
+      return true;
+    }
     limpiarContenedoresModoEspecial();
     return false;
   }
@@ -10842,6 +11484,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     if (modoEspecial === 'detective') {
       evaluarDetectiveActual();
+      return true;
+    }
+    if (modoEspecial === 'ordenar') {
+      evaluarOrdenarActual();
       return true;
     }
     return false;
@@ -10864,8 +11510,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       } else {
         indiceCongelado = -1;
       }
-    } else if (modoEspecial === 'quiz' || modoEspecial === 'detective') {
-      const datos = modoEspecial === 'quiz' ? datosQuizSesion[indiceActual] : datosDetectiveSesion[indiceActual];
+    } else if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+      const datos = modoEspecial === 'quiz' ? datosQuizSesion[indiceActual]
+        : (modoEspecial === 'ordenar' ? datosOrdenarSesion[indiceActual] : datosDetectiveSesion[indiceActual]);
       if ((datos && datos.evaluada) || resultados[indiceActual] !== null) {
         indiceCongelado = indiceActual;
       } else {
@@ -10902,7 +11549,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           ronda.completada = true;
         }
       });
-    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective') {
+    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
       resultados.forEach((r, i) => {
         if (r === null) resultados[i] = 'saltar';
       });
@@ -11018,11 +11665,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
-    if (modoEspecial === 'quiz' || modoEspecial === 'detective') {
+    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
       let lista = tarjetasSesion.filter((_, i) => predicado(i));
       if (lista.length === 0) { avisar('No hay tarjetas para repasar con ese criterio.'); return true; }
       if (modoAleatorio) lista = mezclar(lista);
       if (modoEspecial === 'quiz') iniciarSesionQuiz(lista);
+      else if (modoEspecial === 'ordenar') iniciarSesionOrdenar(lista);
       else iniciarSesionDetective(lista);
       return true;
     }
@@ -11041,9 +11689,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
-    if (modoEspecial === 'quiz' || modoEspecial === 'detective') {
+    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
       const base = modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion];
       if (modoEspecial === 'quiz') iniciarSesionQuiz(base);
+      else if (modoEspecial === 'ordenar') iniciarSesionOrdenar(base);
       else iniciarSesionDetective(base);
       return true;
     }
@@ -11060,6 +11709,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     datosClozeSesion = [];
     datosQuizSesion = [];
     datosDetectiveSesion = [];
+    datosOrdenarSesion = [];
     rondasMatching = [];
     primeroSeleccionadoMatching = null;
     asociacionesTempMatching.clear();
@@ -11413,6 +12063,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elDetListasOtras = document.getElementById('det-listas-otras');
   const elSumaListasOtras = document.getElementById('suma-listas-otras');
   const elListaListasOtras = document.getElementById('lista-listas-otras');
+  const elBtnListasVencidas = document.getElementById('btn-listas-repasar-vencidas');
 
   function hashesVigentesActuales() {
     return new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
@@ -11488,25 +12139,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   async function alternarSrsLista(nombre) {
-    const lista = buscarListaPropia(nombre);   // NUEVO: nunca una lista ajena con el mismo nombre
+    const lista = buscarListaPropia(nombre);
     if (!lista) return;
-    const srs = obtenerSrsLista(lista);
-    if (srs.graduated) {
-      if (!(await confirmarAccion('¿Reiniciar el progreso SRS de esta lista?'))) return;
-      srs.currentLevel = 1;
-      srs.lastReviewDate = Date.now();
-      srs.graduated = false;
-      srs.activated = true;
-      srs.snoozeUntil = 0;
-    } else if (srs.activated) {
+    const previo = obtenerSrsLista(lista);
+    const accionSrs = previo.graduated ? 'reiniciar' : (previo.activated ? 'desactivar' : 'activar');
+    const lf = String.fromCharCode(10);
+    let mensaje;
+    if (accionSrs === 'reiniciar') {
+      mensaje = 'Vas a reiniciar el SRS de «' + lista.nombre + '».' + lf + 'El progreso se PIERDE: la lista vuelve al nivel 1 y deja de ser Experto.' + lf + '¿Querés continuar?';
+    } else if (accionSrs === 'desactivar') {
+      mensaje = 'Vas a desactivar el SRS de «' + lista.nombre + '».' + lf + 'El progreso se PIERDE: se borran el nivel actual (' + previo.currentLevel + ') y las fechas de repaso. Si lo volvés a activar, empieza de cero en el nivel 1.' + lf + '¿Querés continuar?';
+    } else {
+      mensaje = 'Vas a activar el SRS de «' + lista.nombre + '».' + lf + 'Empieza en el nivel 1 y el primer repaso será en 1 día.' + lf + '¿Querés continuar?';
+    }
+    if (!(await confirmarAccion(mensaje, 'Sí'))) return;
+    if (accionSrs === 'desactivar') {
       lista.srs = Object.assign({}, SRS_DEFAULT);
     } else {
+      const srs = obtenerSrsLista(lista);
       srs.activated = true;
-      srs.startDate = Date.now();
       srs.currentLevel = 1;
       srs.lastReviewDate = Date.now();
       srs.graduated = false;
       srs.snoozeUntil = 0;
+      if (accionSrs === 'activar') srs.startDate = Date.now();
     }
     lista.modificada = Date.now();
     lista.rev = siguienteRev();
@@ -11653,7 +12309,45 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       () => cerrarModalListas(),
       'De otros evaluadores'
     );
+    actualizarBotonListasVencidas();
   }
+
+  function listasSrsPendientesRepaso() {
+    const ahora = Date.now();
+    const vigentes = hashesVigentesActuales();
+    return listas.filter((l) => {
+      if (l.espacio && l.espacio !== ESPACIO_HASH) return false;
+      const srs = obtenerSrsLista(l);
+      if (!srs.activated || srs.graduated || !l.hashes || !l.hashes.some((h) => vigentes.has(h))) return false;
+      const vence = srs.lastReviewDate + calcularIntervaloDias(srs.currentLevel) * SRS_MS_DIA;
+      return ahora >= vence || ahora < (srs.snoozeUntil || 0);
+    });
+  }
+
+  function actualizarBotonListasVencidas() {
+    const n = listasSrsPendientesRepaso().length;
+    elBtnListasVencidas.style.display = n > 0 ? '' : 'none';
+    elBtnListasVencidas.textContent = '🧠 Repasar vencidas (' + n + ')';
+  }
+
+  elBtnListasVencidas.addEventListener('click', async () => {
+    const pendientes = listasSrsPendientesRepaso();
+    if (pendientes.length === 0) {
+      actualizarBotonListasVencidas();
+      return;
+    }
+    const lf = String.fromCharCode(10);
+    const mensaje = 'Se iniciará el repaso SRS de las siguientes listas:' + lf + lf +
+      pendientes.map((l) => '• ' + l.nombre).join(lf) + lf + lf + '¿Querés continuar?';
+    if (!(await confirmarAccion(mensaje, 'Continuar'))) return;
+    const actuales = listasSrsPendientesRepaso();
+    if (actuales.length === 0) {
+      actualizarBotonListasVencidas();
+      return;
+    }
+    cerrarModalListas();
+    iniciarSesionSRS(actuales);
+  });
 
   function abrirModalListas() {
     elModalListas.classList.add('abierto');
@@ -14711,6 +15405,7 @@ const ZONAS_SYNC_GIST = [
 
     if (elModalNotasEvaluador.classList.contains('abierto')) { cerrarNotasEvaluador(); return; }
     if (elModalSync.classList.contains('abierto')) { elModalSync.classList.remove('abierto'); return; }
+    if (elModalAvisos.classList.contains('abierto')) { cerrarModalAvisos(); return; }
     if (elModalListas.classList.contains('abierto')) { cerrarModalListas(); return; }
     if (elModalGuardarLista.classList.contains('abierto')) { cerrarModalGuardarLista(); return; }
     if (elModalAnalisisSesion.classList.contains('abierto')) { cerrarModalAnalisisSesion(); return; }
@@ -14815,6 +15510,13 @@ const ZONAS_SYNC_GIST = [
           if (d && !d.evaluada && resultados[indiceActual] === null) {
             evento.preventDefault();
             evaluarDetectiveActual();
+            return;
+          }
+        } else if (modoEspecial === 'ordenar') {
+          const d = datosOrdenarSesion[indiceActual];
+          if (d && !d.evaluada && resultados[indiceActual] === null) {
+            evento.preventDefault();
+            evaluarOrdenarActual();
             return;
           }
         }
@@ -18415,6 +19117,79 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     cont.appendChild(wrap);
   }
 
+  function partirEtiquetaRazon(texto) {
+    const palabras = texto.split(' ');
+    if (palabras.length < 2) return [texto, ''];
+    const corte = Math.ceil(palabras.length / 2);
+    return [palabras.slice(0, corte).join(' '), palabras.slice(corte).join(' ')];
+  }
+
+  function construirGraficoBarrasRazones(datos) {
+    const w = 600;
+    const h = 250;
+    const padL = 16;
+    const padR = 16;
+    const padT = 26;
+    const padB = 56;
+    const innerW = w - padL - padR;
+    const innerH = h - padT - padB;
+    const maximo = Math.max(1, ...datos.map((d) => d.valor));
+    const paso = innerW / datos.length;
+    const anchoBarra = paso * 0.5;
+    const svg = elSvg('svg', { viewBox: '0 0 ' + w + ' ' + h, class: 'grafico-svg', role: 'img' });
+    datos.forEach((d, i) => {
+      const altura = (d.valor / maximo) * innerH;
+      const cx = padL + paso * (i + 0.5);
+      const y = padT + innerH - altura;
+      svg.appendChild(elSvg('rect', {
+        x: (cx - anchoBarra / 2).toFixed(1), y: y.toFixed(1),
+        width: anchoBarra.toFixed(1), height: altura.toFixed(1), fill: d.color, rx: 4,
+      }));
+      const num = elSvg('text', {
+        x: cx.toFixed(1), y: (y - 6).toFixed(1), 'text-anchor': 'middle',
+        'font-size': 12, 'font-weight': 700, fill: 'var(--texto-cabecera)',
+      });
+      num.textContent = String(d.valor);
+      svg.appendChild(num);
+      partirEtiquetaRazon(d.etiqueta).forEach((linea, j) => {
+        if (!linea) return;
+        const tx = elSvg('text', {
+          x: cx.toFixed(1), y: (padT + innerH + 16 + j * 13).toFixed(1), 'text-anchor': 'middle',
+          'font-size': 10.5, fill: 'var(--texto-suave)',
+        });
+        tx.textContent = linea;
+        svg.appendChild(tx);
+      });
+    });
+    svg.appendChild(elSvg('line', {
+      x1: padL, y1: padT + innerH, x2: w - padR, y2: padT + innerH, stroke: 'var(--color-borde-fuerte)', 'stroke-width': 1,
+    }));
+    return svg;
+  }
+
+  function renderGraficoRazones() {
+    const cont = document.getElementById('estadisticas-razones');
+    if (!cont) return;
+    cont.textContent = '';
+    const hashes = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
+    const conteo = new Map(RAZONES_DEF.map((r) => [r.codigo, 0]));
+    let total = 0;
+    Object.keys(razonesGuardadas).forEach((h) => {
+      if (!hashes.has(h)) return;
+      const e = razonesGuardadas[h];
+      if (!e || !Array.isArray(e.razones)) return;
+      e.razones.forEach((c) => {
+        if (conteo.has(c)) {
+          conteo.set(c, conteo.get(c) + 1);
+          total++;
+        }
+      });
+    });
+    const datos = RAZONES_DEF.map((r) => ({ etiqueta: r.texto, color: r.color, valor: conteo.get(r.codigo) }));
+    agregarSeccionGrafico(cont, '🏷 Razones por tarjeta (cantidad de tarjetas)',
+      total > 0 ? construirGraficoBarrasRazones(datos) : null, null);
+  }
+
   function construirEstadisticas() {
     const cont = document.getElementById('estadisticas-contenido');
     cont.innerHTML = '';
@@ -18499,6 +19274,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     agregarSeccionGrafico(cont, '⚠️ Dificultad de rutas (últimos 10 Pomodoros)',
       hayDificiles ? construirGraficoStackedBarras(pomodorosDificiles, seriesDificiles, etiquetasPomodoros, 'rutas') : null,
       hayDificiles ? leyendaSeries(seriesDificiles) : null);
+
+    const contRazones = document.createElement('div');
+    contRazones.id = 'estadisticas-razones';
+    cont.appendChild(contRazones);
+    renderGraficoRazones();
   }
 
   function resolverListaDeRefSrs(ref) {
@@ -19126,6 +19906,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       if (!estadisticasConstruidas) {
         construirEstadisticas();
         estadisticasConstruidas = true;
+      } else {
+        renderGraficoRazones();
       }
     } else if (tab === 'subt') {
       if (!subtRepasarConstruido || !sesgoConfianzaConstruido) {
@@ -19722,6 +20504,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       return;
     }
 
+    if (modoEspecial === 'ordenar') {
+      renderRutasOrdenar();
+      return;
+    }
+
     if (modoEspecial === 'cloze') {
       const clozeData = datosClozeSesion[indiceActual];
       if (!clozeData) {
@@ -20103,6 +20890,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function puedeSegundaOportunidad(idx) {
     if (modoObservador || modoZombie || segundaPendiente) return false;
+    if (modoEspecial !== null) return false;
     if (esModoSinGamificacion()) return false;   // CORREGIDO: consumible de Normal/Tryhard, no de Light
     if ((gamificacion.inventario.segundasOportunidades || 0) <= 0) return false;
     return !reintentadasSesion.has(tarjetasSesion[idx]);
@@ -20403,7 +21191,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
-    if (resultado === 'saltar') reveladasAlSaltar.add(indiceActual);   // al saltar se ve la respuesta
+    if (resultado === 'saltar' && modoEspecial !== 'quiz' && modoEspecial !== 'detective' && modoEspecial !== 'ordenar') reveladasAlSaltar.add(indiceActual);   // al saltar se ve la respuesta
 
     if (!modoObservador) {
       procesarResultadoGamificacion(indiceActual, resultado, {
@@ -20854,6 +21642,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   });
 
   elBtnPista.addEventListener('click', () => {
+    if (modoEspecial !== null) return;
     revelado[indiceActual] = true;
     pistaMostrada[indiceActual] = true;
     if (!modoObservador && !modoZombie && !esModoSinGamificacion() && gamificacion.inventario.pistasGratis > 0) {
@@ -21303,6 +22092,34 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elModalContinuar.classList.remove('abierto');
   }
 
+  function resetearDatosClozeSaltado(d) {
+    if (!d) return;
+    d.respuestasUsuario = new Array(d.totalHuecos).fill('');
+    d.aciertosDetalle = new Array(d.totalHuecos).fill(false);
+    d.evaluada = false;
+    d.abiertas.clear();
+  }
+
+  function resetearDatosQuizSaltado(d) {
+    if (!d) return;
+    d.seleccion = null;
+    d.evaluada = false;
+  }
+
+  function resetearDatosDetectiveSaltado(d) {
+    if (!d) return;
+    d.marcadas.clear();
+    d.evaluada = false;
+    d.abiertas.clear();
+  }
+
+  function resetearDatosOrdenarSaltado(d) {
+    if (!d) return;
+    d.slots = new Array(d.lineas.length).fill(-1);
+    d.pool = mezclar(d.lineas.map((_, i) => i));
+    d.evaluada = false;
+  }
+
   function continuarEnEstaSesion() {
     cerrarModalContinuar();
     if (gameOverDisparado) {
@@ -21313,6 +22130,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         resultados[i] = null;
         revelado[i] = !!pistaMostrada[i];
         if (modoEspecial === 'matching') resetearRondaMatching(rondasMatching[i]);
+        else if (modoEspecial === 'cloze') resetearDatosClozeSaltado(datosClozeSesion[i]);
+        else if (modoEspecial === 'quiz') resetearDatosQuizSaltado(datosQuizSesion[i]);
+        else if (modoEspecial === 'detective') resetearDatosDetectiveSaltado(datosDetectiveSesion[i]);
+        else if (modoEspecial === 'ordenar') resetearDatosOrdenarSaltado(datosOrdenarSesion[i]);
       }
     });
     if (modoEspecial === 'matching') {
@@ -21472,6 +22293,119 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     guardarListas();
     document.getElementById('modal-srs-aviso').classList.remove('abierto');
   });
+
+  const LIMITE_ALMACENAMIENTO_CARACTERES = 5 * 1024 * 1024;
+
+  function proporcionAlmacenamientoLocal() {
+    try {
+      let total = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        total += k.length + (localStorage.getItem(k) || '').length;
+      }
+      return total / LIMITE_ALMACENAMIENTO_CARACTERES;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function calcularAvisos() {
+    const avisos = [];
+    const ahora = Date.now();
+    const candidatos = calcularCandidatosRepasoInteligente();
+    const agregar = (icono, titulo, items) => {
+      if (items.length > 0) avisos.push({ icono: icono, titulo: titulo + ' (' + items.length + ')', items: items });
+    };
+
+    agregar('🔴', 'SubT urgentes', candidatos.filter((c) => c.urgentes).map((c) => c.nombre + ' (' + Math.round(c.score) + '/100)'));
+    agregar('🎭', 'SubT con sobreconfianza', candidatos.filter((c) => c.sobreconfianza).map((c) => c.nombre));
+    agregar('🧠', 'SubT próximos a olvido', candidatos.filter((c) => c.olvido).map((c) => c.nombre));
+
+    const vencidas = [];
+    const proximas = [];
+    listas.forEach((l) => {
+      if ((l.espacio && l.espacio !== ESPACIO_HASH) || !l.hashes || l.hashes.length === 0) return;
+      const srs = obtenerSrsLista(l);
+      if (!srs.activated || srs.graduated) return;
+      const falta = srs.lastReviewDate + calcularIntervaloDias(srs.currentLevel) * SRS_MS_DIA - ahora;
+      if (falta <= 0) vencidas.push(l.nombre + ' (nivel ' + srs.currentLevel + ')');
+      else if (falta <= 2 * SRS_MS_DIA) proximas.push(l.nombre + ' (' + srsTextoProximoRepaso(srs) + ')');
+    });
+    agregar('📚', 'Listas SRS vencidas', vencidas);
+    agregar('⏳', 'Listas SRS próximas a vencer', proximas);
+
+    const ultimo = obtenerUltimoPomodoroCompleto();
+    if (ultimo) {
+      const sAj = obtenerSAjustadoActual();
+      const S = (typeof sAj === 'number' && sAj > 0) ? sAj : 1;
+      const dias = Math.max(0, (ahora - (ultimo.timestamp || 0)) / 86400000);
+      if (-S * Math.log(0.60) - dias <= 0) {
+        avisos.push({
+          icono: '🍅',
+          titulo: 'Pomodoro pendiente',
+          items: ['Retención predicha: ' + Math.round(calcularSRetenido(dias, S) * 100) + '% (último Pomodoro ' + formatearTiempoTranscurridoDias(dias) + ')'],
+        });
+      }
+    }
+
+    const dificiles = candidatos.filter((c) => c.dificiles).map((c) => c.nombre);
+    if (dificiles.length > 0 && !obtenerSkimmingPropio()) {
+      avisos.push({ icono: '👀', titulo: 'Skimming sin crear (hay temas difíciles)', items: dificiles });
+    }
+
+    const uso = proporcionAlmacenamientoLocal();
+    if (uso > 0.8) {
+      avisos.push({ icono: '💾', titulo: 'Almacenamiento cerca del límite', items: ['Uso estimado: ' + Math.round(uso * 100) + '%'] });
+    }
+    return avisos;
+  }
+
+  function actualizarAvisos() {
+    try {
+      avisosActuales = calcularAvisos();
+    } catch (e) {
+      avisosActuales = [];
+    }
+    const n = avisosActuales.length;
+    const enTemas = elPantallaTemas.style.display !== 'none';
+    elBadgeAvisosN.textContent = String(n);
+    elBtnAvisos.title = n + (n === 1 ? ' aviso' : ' avisos');
+    elBtnAvisos.style.display = (n > 0 && enTemas) ? 'inline-flex' : 'none';
+  }
+
+  function renderPanelAvisos() {
+    elAvisosLista.textContent = '';
+    avisosActuales.forEach((a) => {
+      const caja = document.createElement('div');
+      caja.className = 'aviso-item';
+      const tit = document.createElement('div');
+      tit.className = 'aviso-titulo';
+      tit.textContent = a.icono + ' ' + a.titulo;
+      caja.appendChild(tit);
+      const ul = document.createElement('ul');
+      ul.className = 'aviso-detalle';
+      a.items.forEach((txt) => {
+        const li = document.createElement('li');
+        li.textContent = txt;
+        ul.appendChild(li);
+      });
+      caja.appendChild(ul);
+      elAvisosLista.appendChild(caja);
+    });
+  }
+
+  function abrirModalAvisos() {
+    renderPanelAvisos();
+    elModalAvisos.classList.add('abierto');
+  }
+
+  function cerrarModalAvisos() {
+    elModalAvisos.classList.remove('abierto');
+  }
+
+  elBtnAvisos.addEventListener('click', () => abrirModalAvisos());
+  document.getElementById('btn-avisos-cerrar').addEventListener('click', () => cerrarModalAvisos());
+  elModalAvisos.addEventListener('click', (ev) => { if (ev.target === elModalAvisos) cerrarModalAvisos(); });
 
   (function () {
     const RecognitionCtor = window.webkitSpeechRecognition || window.SpeechRecognition;
@@ -22168,6 +23102,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       datosClozeSesion: datosClozeSesion.map(serializarDatosCloze),
       datosQuizSesion: datosQuizSesion.slice(),
       datosDetectiveSesion: datosDetectiveSesion.map(serializarDatosDetective),
+      datosOrdenarSesion: datosOrdenarSesion.slice(),
       rondasMatching: esMatching ? rondasMatching.map(serializarRondaMatching) : [],
       primeroSeleccionadoMatching: primeroSeleccionadoMatching,
       asociacionesTempMatching: copiarSetComoArray(asociacionesTempMatching),
@@ -22355,6 +23290,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     });
     if (x.modoEspecial === 'cloze' && datosCloze.length !== n) throw new Error('datos Cloze inconsistentes');
     if (x.modoEspecial === 'detective' && datosDetective.length !== n) throw new Error('datos Detective inconsistentes');
+    if (x.modoEspecial === 'ordenar' && (x.datosOrdenarSesion || []).length !== n) throw new Error('datos Ordenar inconsistentes');
 
     let srsNuevo = null;
     if (x.srsSesionActiva) {
@@ -22405,6 +23341,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     datosClozeSesion = modoEspecial === 'cloze' ? datosCloze : [];
     datosQuizSesion = modoEspecial === 'quiz' ? (x.datosQuizSesion || []) : [];
     datosDetectiveSesion = modoEspecial === 'detective' ? datosDetective : [];
+    datosOrdenarSesion = modoEspecial === 'ordenar' ? (x.datosOrdenarSesion || []) : [];
     rondasMatching = rondasNuevas;
     primeroSeleccionadoMatching = (x.primeroSeleccionadoMatching === undefined) ? null : x.primeroSeleccionadoMatching;
     asociacionesTempMatching = new Set(x.asociacionesTempMatching || []);
