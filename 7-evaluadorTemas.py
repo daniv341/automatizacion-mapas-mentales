@@ -16416,10 +16416,9 @@ const ZONAS_SYNC_GIST = [
     elChkRISobreconfianza.checked = true;
     elChkRIOlvido.checked = true;
     elChkRIUrgentes.checked = true;
+    elChkRIRazones.checked = true;
+    elChkRIRazones.disabled = false;
     candidatosRepasoInteligente = calcularCandidatosRepasoInteligente();
-    const hayRazonesRI = candidatosRepasoInteligente.some((c) => c.razones);
-    elChkRIRazones.checked = hayRazonesRI;
-    elChkRIRazones.disabled = !hayRazonesRI;
     renderListaModalRepasoInteligente();
     elModalRepasoInteligente.classList.add('abierto');
   }
@@ -16433,7 +16432,9 @@ const ZONAS_SYNC_GIST = [
       candidatosRepasoInteligente.filter((c) => c.seleccionado).map((c) => c.nombre)
     );
     if (subtsElegidos.size === 0) return;
-    const paraRepasar = tarjetasCompletas.filter((t) => subtsElegidos.has(nombreTema(t)));
+    const paraRepasar = tarjetasCompletas.filter(
+      (t) => subtsElegidos.has(nombreTema(t)) && (esDificil(t) || tarjetaTieneRazonRepaso(t))
+    );
     if (paraRepasar.length === 0) return;
     cerrarModalRepasoInteligente();
     abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar, null, true);
@@ -16453,7 +16454,7 @@ const ZONAS_SYNC_GIST = [
   document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
     abrirModalRepasoInteligente();
   });
-
+  
   const nodosDificiles = new Map();   // hash -> { fila, grupo: 'propia'|'otros'|'desm' }
 
   const elListaDificiles = document.getElementById('lista-dificiles');
