@@ -2431,6 +2431,20 @@
   .estadisticas-tab { opacity: 0.6; }
   .estadisticas-tab.activa { opacity: 1; font-weight: 700; }
 
+  .modal-caja-fuente { width: min(96vw, 900px); max-height: 92vh; }
+  .fuente-aviso { border: 1px solid var(--color-borde); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; font-size: 12px; color: var(--texto-secundario); }
+  .fuente-aviso summary { cursor: pointer; font-weight: 700; }
+  .fuente-aviso-texto { white-space: pre-line; margin-top: 6px; line-height: 1.4; }
+  .fuente-estado { margin-bottom: 8px; }
+  .fuente-mensaje { white-space: pre-line; font-size: 12px; color: var(--texto-secundario); margin-bottom: 4px; }
+  .fuente-textarea {
+    width: 100%; height: 55vh; min-height: 260px; resize: vertical; box-sizing: border-box;
+    border: 2px solid var(--color-boton); border-radius: 10px; padding: 10px 12px;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.45;
+    color: var(--texto-principal); background: var(--bg-superficie);
+  }
+  .fuente-botones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+
   .subt-repasar-acordeon {
     border-bottom: 1px solid var(--color-borde-suave);
   }
@@ -3246,6 +3260,7 @@
     <div class="fila-obs-botones">
       <button class="boton-secundario" id="btn-ver-huerfanas">📄 Rutas Huérfanas</button>
       <button class="boton-secundario" id="btn-ver-imagenes">🖼 Ver imágenes</button>
+      <button class="boton-secundario" id="btn-ver-fuente">📄 Archivos fuente</button>
       <button class="boton-secundario" id="btn-observador-salir">&larr; Volver a temas</button>
     </div>
 
@@ -3933,6 +3948,29 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-fuente">
+  <div class="modal-caja modal-caja-ancha modal-caja-fuente" role="dialog" aria-modal="true">
+    <h3>📄 Archivos fuente</h3>
+    <details class="fuente-aviso" id="fuente-aviso" open>
+      <summary>Qué podés y qué no podés hacer</summary>
+      <div class="fuente-aviso-texto" id="fuente-aviso-texto"></div>
+    </details>
+    <div class="estadisticas-tabs">
+      <button class="boton-mini estadisticas-tab activa" id="tab-fuente-recordatorio" type="button">recordatorio.txt</button>
+      <button class="boton-mini estadisticas-tab" id="tab-fuente-respuestas" type="button">respuestas.txt</button>
+    </div>
+    <div class="fuente-estado" id="fuente-estado"></div>
+    <textarea class="fuente-textarea" id="fuente-textarea" spellcheck="false" autocomplete="off"></textarea>
+    <input type="file" id="input-fuente-archivo" accept=".txt,text/plain" style="display:none;">
+    <div class="fuente-botones">
+      <button class="boton-mini" id="btn-fuente-cargar" type="button">📂 Cargar</button>
+      <button class="boton-mini" id="btn-fuente-borrador" type="button">💾 Guardar borrador</button>
+      <button class="boton-mini" id="btn-fuente-descargar" type="button">💾 Descargar .txt</button>
+    </div>
+    <button class="modal-cancelar" id="btn-fuente-cerrar">Cerrar</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-avisos">
   <div class="modal-caja modal-caja-ancha" role="dialog" aria-modal="true">
     <h3>🔔 Avisos</h3>
@@ -4183,6 +4221,7 @@
       <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-sobreconfianza" checked> ⚠️ Sobreconfianza</label>
       <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-olvido" checked> 😵‍ Olvido</label>
       <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-urgentes" checked> 🔴 Urgentes</label>
+      <label class="ri-filtro-item" title="SubT con tarjetas marcadas por olvido, incompleto, mezcla de conceptos o confusión"><input type="checkbox" id="chk-ri-razones" checked> 🏷 Por razones</label>
     </div>
     <div class="ri-lista-subt" id="ri-lista-subt" style="display:none;"></div>
     <p class="galeria-vacia" id="ri-estado-vacio" style="display:none;">Ningún subT cumple con las características seleccionadas</p>
@@ -14865,6 +14904,428 @@ const ZONAS_SYNC_GIST = [
   document.getElementById('btn-ver-imagenes').addEventListener('click', () => abrirGaleria());
   document.getElementById('btn-galeria-volver').addEventListener('click', () => volverListaDesdeGaleria());
   document.getElementById('btn-ver-huerfanas').addEventListener('click', () => abrirHuerfanas());
+
+  const CLAVES_BORRADOR_FUENTE = {
+    recordatorio: 'borrador_recordatorio_' + ESPACIO_HASH,
+    respuestas: 'borrador_respuestas_' + ESPACIO_HASH,
+  };
+  const NOMBRES_ARCHIVO_FUENTE = { recordatorio: 'recordatorio.txt', respuestas: 'respuestas.txt' };
+  const PREFIJO_IMG_FUENTE = 'IMG:data:image/';
+  const MARCA_IMAGEN_FUENTE = '<imagen>';
+  const PATRON_CABECERA_RUTA_FUENTE = /^ruta\s+(\d+)\s*$/i;
+  const PATRON_RUTAS_TARJETA_FUENTE = /&\s*([0-9]+(?:\s*,\s*[0-9]+)*)\s*[.,;]*\s*$/;
+  const PATRON_AMPERSAND_SUELTO_FUENTE = /&[\s,;]*$/;
+  const PATRON_SALTO_FUENTE = /\r\n|\n|\r/;
+  const TEXTO_AVISO_FUENTE = [
+    'Este modal te permite ver y editar los archivos .txt originales.',
+    '',
+    '✅ Podés:',
+    '• Ver los TXT con tus ediciones locales fusionadas',
+    '• Editar el contenido y descargarlo',
+    '• Cargar un TXT modificado desde tu dispositivo',
+    '• Guardar borradores en este navegador',
+    '• En respuestas.txt las imágenes se ven como <imagen>, pero al descargar salen completas en Base64',
+    '',
+    '❌ No podés:',
+    '• Agregar tarjetas nuevas que se apliquen automáticamente',
+    '• Re-procesar el TXT para actualizar la base de datos',
+    '',
+    'Para aplicar cambios permanentes, editá los archivos .txt originales y regenerá el evaluador con el script de Python.',
+  ].join('\n');
+
+  const estadoFuente = {
+    tab: 'recordatorio',
+    recordatorio: { texto: '', guardado: '', imagenes: [], fijos: [] },
+    respuestas: { texto: '', guardado: '', imagenes: [], fijos: [] },
+  };
+  const elModalFuente = document.getElementById('modal-fuente');
+  const elFuenteTextarea = document.getElementById('fuente-textarea');
+  const elFuenteEstado = document.getElementById('fuente-estado');
+  const elFuenteArchivo = document.getElementById('input-fuente-archivo');
+  let temporizadorEvalFuente = null;
+
+  function extraerClavesFuente(segundo) {
+    if (!segundo) return [];
+    const claves = [];
+    const tokens = segundo.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g) || [];
+    tokens.forEach((token) => {
+      const normalizada = normalizarPalabraSinCache(token);
+      if (STOPWORDS.has(normalizada)) return;
+      if (claves.indexOf(normalizada) === -1) claves.push(normalizada);
+    });
+    for (const caracter of segundo) {
+      if (Object.prototype.hasOwnProperty.call(SIMBOLOS_ESPECIALES, caracter)) {
+        const nombre = normalizarPalabraSinCache(SIMBOLOS_ESPECIALES[caracter]);
+        if (claves.indexOf(nombre) === -1) claves.push(nombre);
+      }
+    }
+    return claves;
+  }
+
+  function parsearRecordatorioFuente(texto) {
+    const tarjetas = [];
+    const ampersandsSueltos = [];
+    const lineasSoloNota = [];
+    let temaActual = '';
+    texto.replace(/^\uFEFF/, '').split(PATRON_SALTO_FUENTE).forEach((crudo) => {
+      let renglon = crudo.trim();
+      if (!renglon) return;
+      let nota = '';
+      const posBarra = renglon.indexOf('|');
+      if (posBarra !== -1) {
+        nota = renglon.slice(posBarra + 1).trim().replace(/\\n/g, '\n');
+        renglon = renglon.slice(0, posBarra).trim();
+        if (!renglon) {
+          lineasSoloNota.push(nota);
+          return;
+        }
+      }
+      if (renglon.indexOf('subT') !== -1) {
+        temaActual = renglon.split('subT').join('').trim();
+        return;
+      }
+      const rutas = [];
+      const m = PATRON_RUTAS_TARJETA_FUENTE.exec(renglon);
+      if (m) {
+        m[1].split(',').forEach((num) => {
+          const valor = parseInt(num, 10);
+          if (rutas.indexOf(valor) === -1) rutas.push(valor);
+        });
+        renglon = renglon.slice(0, m.index).trim();
+      } else if (PATRON_AMPERSAND_SUELTO_FUENTE.test(renglon)) {
+        renglon = renglon.replace(PATRON_AMPERSAND_SUELTO_FUENTE, '').trim();
+        ampersandsSueltos.push(renglon);
+      }
+      let primero = renglon;
+      let segundo = '';
+      const posMas = renglon.indexOf('+');
+      if (posMas !== -1) {
+        primero = renglon.slice(0, posMas).trim();
+        segundo = renglon.slice(posMas + 1).trim();
+      }
+      tarjetas.push({ tema: temaActual, primero: primero, segundo: segundo, rutas: rutas, claves: extraerClavesFuente(segundo), nota: nota });
+    });
+    return { tarjetas: tarjetas, ampersandsSueltos: ampersandsSueltos, lineasSoloNota: lineasSoloNota };
+  }
+
+  function prepararLineaRutaFuente(linea) {
+    if (linea.startsWith(PREFIJO_IMG_FUENTE)) {
+      let datos = linea.slice(4);
+      if (datos.indexOf(';base64,') === -1) {
+        const coma = datos.indexOf(',');
+        if (coma !== -1) datos = datos.slice(0, coma) + ';base64' + datos.slice(coma);
+      }
+      return 'IMG:' + datos;
+    }
+    return linea;
+  }
+
+  function parsearRespuestasFuente(texto) {
+    const rutas = {};
+    let rutaActual = null;
+    let temaActual = '';
+    let contenido = [];
+    let esperandoTema = false;
+    const cerrarBloque = () => {
+      if (rutaActual !== null && contenido.length && !Object.prototype.hasOwnProperty.call(rutas, rutaActual)) {
+        rutas[rutaActual] = { tema: temaActual, lineas: contenido };
+      }
+      rutaActual = null;
+      temaActual = '';
+      contenido = [];
+      esperandoTema = false;
+    };
+    texto.replace(/^\uFEFF/, '').split(PATRON_SALTO_FUENTE).forEach((crudo) => {
+      const renglon = crudo.trim();
+      const m = PATRON_CABECERA_RUTA_FUENTE.exec(renglon);
+      if (m) {
+        cerrarBloque();
+        rutaActual = parseInt(m[1], 10);
+        esperandoTema = true;
+        return;
+      }
+      if (!renglon) return;
+      if (esperandoTema) {
+        temaActual = renglon;
+        esperandoTema = false;
+        return;
+      }
+      contenido.push(prepararLineaRutaFuente(renglon));
+    });
+    cerrarBloque();
+    return rutas;
+  }
+
+  function generarRecordatorioFuente() {
+    const salida = [];
+    let temaPrevio = '';
+    tarjetasCompletas.forEach((t) => {
+      const tema = t.tema || '';
+      if (tema !== temaPrevio) {
+        if (salida.length) salida.push('');
+        salida.push('subT ' + tema);
+        temaPrevio = tema;
+      }
+      let linea = primeroVisibleDe(t);
+      if (t.segundo) linea += ' + ' + t.segundo;
+      if (t.rutas && t.rutas.length) linea += ' & ' + t.rutas.join(', ');
+      const nota = notaEfectivaDe(t);
+      if (nota) linea += ' | ' + nota.replace(/\r?\n/g, '\\n');
+      salida.push(linea);
+    });
+    return salida.join('\n') + '\n';
+  }
+
+  function generarRespuestasFuente() {
+    const numeros = Object.keys(rutasDisp).map(Number).sort((a, b) => a - b);
+    const salida = [];
+    const imagenes = [];
+    numeros.forEach((n) => {
+      const ruta = rutasDisp[n];
+      salida.push('Ruta ' + n);
+      salida.push(ruta.tema || '');
+      (ruta.lineas || []).forEach((linea) => {
+        if (linea.startsWith(PREFIJO_IMG_FUENTE)) {
+          imagenes.push(linea);
+          salida.push(MARCA_IMAGEN_FUENTE);
+        } else {
+          salida.push(linea);
+        }
+      });
+      salida.push('');
+    });
+    return { texto: salida.join('\n'), imagenes: imagenes };
+  }
+
+  function ocultarImagenesFuente(texto) {
+    const imagenes = [];
+    const vista = texto.replace(/^\uFEFF/, '').split(PATRON_SALTO_FUENTE).map((linea) => {
+      const recortada = linea.trim();
+      if (recortada.startsWith(PREFIJO_IMG_FUENTE)) {
+        imagenes.push(prepararLineaRutaFuente(recortada));
+        return MARCA_IMAGEN_FUENTE;
+      }
+      return linea;
+    }).join('\n');
+    return { texto: vista, imagenes: imagenes };
+  }
+
+  function restaurarImagenesFuente(vista, imagenes) {
+    let usadas = 0;
+    const salida = [];
+    vista.split(PATRON_SALTO_FUENTE).forEach((linea) => {
+      if (linea.trim() === MARCA_IMAGEN_FUENTE) {
+        if (usadas < imagenes.length) salida.push(imagenes[usadas++]);
+      } else {
+        salida.push(linea);
+      }
+    });
+    return salida.join('\n');
+  }
+
+  function contarMarcasImagenFuente(vista) {
+    let cuenta = 0;
+    vista.split(PATRON_SALTO_FUENTE).forEach((linea) => { if (linea.trim() === MARCA_IMAGEN_FUENTE) cuenta++; });
+    return cuenta;
+  }
+
+  function validarFuente(tab, texto) {
+    const rutas = parsearRespuestasFuente(texto);
+    const cantidadRutas = Object.keys(rutas).length;
+    if (tab === 'respuestas') return cantidadRutas > 0;
+    if (cantidadRutas > 0 && texto.indexOf('subT') === -1) return false;
+    const r = parsearRecordatorioFuente(texto);
+    return r.tarjetas.length > 0 && (texto.indexOf('subT') !== -1 || texto.indexOf('+') !== -1);
+  }
+
+  function mensajesDinamicosFuente(tab) {
+    const est = estadoFuente[tab];
+    const mensajes = [];
+    if (tab === 'recordatorio') {
+      const r = parsearRecordatorioFuente(est.texto);
+      const nuevas = r.tarjetas.length - tarjetasCompletas.length;
+      if (nuevas > 0) {
+        mensajes.push('⚠️ Detecté ' + nuevas + ' tarjetas nuevas en el TXT cargado.\nLas tarjetas nuevas NO se aplicarán automáticamente.\nSolo podés modificar las existentes para descargar el TXT actualizado.');
+      }
+      if (r.lineasSoloNota.length) {
+        mensajes.push('ℹ️ ' + r.lineasSoloNota.length + ' línea(s) empiezan con «|» y no tienen tarjeta: el generador las ignora.');
+      }
+      if (r.ampersandsSueltos.length) {
+        mensajes.push('ℹ️ ' + r.ampersandsSueltos.length + ' tarjeta(s) tienen «&» sin número de ruta: no tendrán botón «Mostrar respuesta».');
+      }
+    } else {
+      const marcas = contarMarcasImagenFuente(est.texto);
+      if (marcas !== est.imagenes.length) {
+        mensajes.push('⚠️ Hay ' + marcas + ' marca(s) ' + MARCA_IMAGEN_FUENTE + ' y ' + est.imagenes.length + ' imagen(es) guardadas. Se reemplazan en orden de aparición: las marcas sobrantes se descartan y las imágenes sin marca se omiten.');
+      }
+      if (est.imagenes.length) {
+        let caracteres = 0;
+        est.imagenes.forEach((img) => { caracteres += img.length; });
+        mensajes.push('⚠️ Al descargar se incluirán ' + est.imagenes.length + ' imagen(es) en Base64 (≈ ' + (caracteres / 1048576).toFixed(1) + ' MB). El archivo puede ser muy grande.');
+      }
+    }
+    return mensajes;
+  }
+
+  function renderEstadoFuente() {
+    const est = estadoFuente[estadoFuente.tab];
+    const todos = est.fijos.concat(mensajesDinamicosFuente(estadoFuente.tab));
+    elFuenteEstado.textContent = '';
+    todos.forEach((mensaje) => {
+      const div = document.createElement('div');
+      div.className = 'fuente-mensaje';
+      div.textContent = mensaje;
+      elFuenteEstado.appendChild(div);
+    });
+  }
+
+  function volcarTextareaFuente() {
+    estadoFuente[estadoFuente.tab].texto = elFuenteTextarea.value;
+  }
+
+  function mostrarTabFuente(tab) {
+    estadoFuente.tab = tab;
+    document.getElementById('tab-fuente-recordatorio').classList.toggle('activa', tab === 'recordatorio');
+    document.getElementById('tab-fuente-respuestas').classList.toggle('activa', tab === 'respuestas');
+    elFuenteTextarea.value = estadoFuente[tab].texto;
+    elFuenteTextarea.scrollTop = 0;
+    renderEstadoFuente();
+  }
+
+  function leerBorradorFuente(tab) {
+    try { return localStorage.getItem(CLAVES_BORRADOR_FUENTE[tab]); } catch (e) { return null; }
+  }
+
+  function prepararEstadosFuente() {
+    const rec = estadoFuente.recordatorio;
+    rec.texto = generarRecordatorioFuente();
+    rec.guardado = rec.texto;
+    rec.fijos = [];
+    const borradorRec = leerBorradorFuente('recordatorio');
+    if (borradorRec !== null) {
+      rec.texto = borradorRec;
+      rec.guardado = borradorRec;
+      rec.fijos.push('💾 Se cargó un borrador guardado anteriormente.');
+    }
+    const res = estadoFuente.respuestas;
+    const generada = generarRespuestasFuente();
+    res.texto = generada.texto;
+    res.imagenes = generada.imagenes;
+    res.guardado = res.texto;
+    res.fijos = [];
+    const borradorRes = leerBorradorFuente('respuestas');
+    if (borradorRes !== null) {
+      res.texto = borradorRes;
+      res.guardado = borradorRes;
+      res.fijos.push('💾 Se cargó un borrador guardado anteriormente.');
+    }
+  }
+
+  function abrirModalFuente() {
+    document.getElementById('fuente-aviso').open = true;
+    elModalFuente.classList.add('abierto');
+    requestAnimationFrame(() => {
+      prepararEstadosFuente();
+      mostrarTabFuente('recordatorio');
+    });
+  }
+
+  async function cerrarModalFuente() {
+    volcarTextareaFuente();
+    const hayCambios = estadoFuente.recordatorio.texto !== estadoFuente.recordatorio.guardado ||
+      estadoFuente.respuestas.texto !== estadoFuente.respuestas.guardado;
+    if (hayCambios && !(await confirmarAccion('Tenés cambios sin guardar como borrador ni descargar. ¿Cerrar igual?', 'Cerrar'))) return;
+    elModalFuente.classList.remove('abierto');
+    elFuenteTextarea.value = '';
+    estadoFuente.recordatorio.texto = '';
+    estadoFuente.respuestas.texto = '';
+    estadoFuente.respuestas.imagenes = [];
+  }
+
+  function guardarBorradorFuente() {
+    volcarTextareaFuente();
+    const tab = estadoFuente.tab;
+    const est = estadoFuente[tab];
+    if (!escribirLocalSeguro(CLAVES_BORRADOR_FUENTE[tab], est.texto)) return;
+    est.guardado = est.texto;
+    est.fijos = ['💾 Borrador guardado en este navegador.'];
+    renderEstadoFuente();
+  }
+
+  function descargarFuente() {
+    volcarTextareaFuente();
+    const tab = estadoFuente.tab;
+    const est = estadoFuente[tab];
+    const contenido = tab === 'respuestas' ? restaurarImagenesFuente(est.texto, est.imagenes) : est.texto;
+    const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = NOMBRES_ARCHIVO_FUENTE[tab];
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    est.guardado = est.texto;
+  }
+
+  function cargarArchivoFuente(archivo) {
+    if (!archivo) return;
+    const tab = estadoFuente.tab;
+    const lector = new FileReader();
+    lector.onload = () => {
+      const texto = String(lector.result || '');
+      const est = estadoFuente[tab];
+      if (!validarFuente(tab, texto)) {
+        est.fijos = ['❌ El archivo no tiene el formato esperado de ' + NOMBRES_ARCHIVO_FUENTE[tab]];
+        renderEstadoFuente();
+        return;
+      }
+      if (tab === 'respuestas') {
+        const oculto = ocultarImagenesFuente(texto);
+        est.texto = oculto.texto;
+        est.imagenes = oculto.imagenes;
+      } else {
+        est.texto = texto.replace(/^\uFEFF/, '');
+      }
+      est.fijos = ['📂 Archivo cargado: ' + archivo.name];
+      if (estadoFuente.tab === tab) mostrarTabFuente(tab);
+    };
+    lector.onerror = () => {
+      estadoFuente[tab].fijos = ['❌ No se pudo leer el archivo.'];
+      renderEstadoFuente();
+    };
+    lector.readAsText(archivo, 'utf-8');
+  }
+
+  document.getElementById('btn-ver-fuente').addEventListener('click', () => abrirModalFuente());
+  document.getElementById('btn-fuente-cerrar').addEventListener('click', () => cerrarModalFuente());
+  document.getElementById('tab-fuente-recordatorio').addEventListener('click', () => {
+    if (estadoFuente.tab === 'recordatorio') return;
+    volcarTextareaFuente();
+    mostrarTabFuente('recordatorio');
+  });
+  document.getElementById('tab-fuente-respuestas').addEventListener('click', () => {
+    if (estadoFuente.tab === 'respuestas') return;
+    volcarTextareaFuente();
+    mostrarTabFuente('respuestas');
+  });
+  document.getElementById('btn-fuente-cargar').addEventListener('click', () => elFuenteArchivo.click());
+  elFuenteArchivo.addEventListener('change', () => {
+    const archivo = elFuenteArchivo.files && elFuenteArchivo.files[0];
+    elFuenteArchivo.value = '';
+    cargarArchivoFuente(archivo);
+  });
+  document.getElementById('btn-fuente-borrador').addEventListener('click', () => guardarBorradorFuente());
+  document.getElementById('btn-fuente-descargar').addEventListener('click', () => descargarFuente());
+  elFuenteTextarea.addEventListener('input', () => {
+    clearTimeout(temporizadorEvalFuente);
+    temporizadorEvalFuente = setTimeout(() => {
+      volcarTextareaFuente();
+      renderEstadoFuente();
+    }, 400);
+  });
+  document.getElementById('fuente-aviso-texto').textContent = TEXTO_AVISO_FUENTE;
   document.getElementById('btn-huerfanas-volver').addEventListener('click', () => volverDesdeHuerfanas());
 
   actualizarEstadoBotonMapa();
@@ -14917,6 +15378,16 @@ const ZONAS_SYNC_GIST = [
   const elChkRISobreconfianza = document.getElementById('chk-ri-sobreconfianza');
   const elChkRIOlvido = document.getElementById('chk-ri-olvido');
   const elChkRIUrgentes = document.getElementById('chk-ri-urgentes');
+  const elChkRIRazones = document.getElementById('chk-ri-razones');
+  const RAZONES_REPASO_INTELIGENTE = ['olvido', 'incompleto', 'mezcla', 'confusion'];
+
+  function tarjetaTieneRazonRepaso(t) {
+    try {
+      return razonesDeTarjeta(t).some((codigo) => RAZONES_REPASO_INTELIGENTE.indexOf(codigo) !== -1);
+    } catch (e) {
+      return false;
+    }
+  }
 
   let candidatosRepasoInteligente = [];
 
@@ -14933,6 +15404,7 @@ const ZONAS_SYNC_GIST = [
       const tieneDificil = g.indices.some((i) => esDificil(tarjetasCompletas[i]));
       const tieneSobreconfianza = sesgo.tipo === 'sobreconfianza';
       const tieneUrgente = score >= 75;
+      const tieneRazones = g.indices.some((i) => tarjetaTieneRazonRepaso(tarjetasCompletas[i]));
 
       let tieneOlvido = false;
       if (sValido && subtemasConRutas.has(g.nombre) && pctNoRetenidaPorSubtema(g.nombre) !== null) {
@@ -14942,7 +15414,7 @@ const ZONAS_SYNC_GIST = [
         if (t <= 1) tieneOlvido = true;
       }
 
-      if (tieneDificil || tieneSobreconfianza || tieneOlvido || tieneUrgente) {
+      if (tieneDificil || tieneSobreconfianza || tieneOlvido || tieneUrgente || tieneRazones) {
         lista.push({
           nombre: g.nombre,
           score: score,
@@ -14951,6 +15423,7 @@ const ZONAS_SYNC_GIST = [
           sobreconfianza: tieneSobreconfianza,
           olvido: tieneOlvido,
           urgentes: tieneUrgente,
+          razones: tieneRazones,
           seleccionado: true,
           manualmenteMarcado: false,
         });
@@ -14980,6 +15453,7 @@ const ZONAS_SYNC_GIST = [
       sobreconfianza: elChkRISobreconfianza.checked,
       olvido: elChkRIOlvido.checked,
       urgentes: elChkRIUrgentes.checked,
+      razones: elChkRIRazones.checked,
     };
   }
 
@@ -14987,7 +15461,8 @@ const ZONAS_SYNC_GIST = [
     return (activas.dificiles && item.dificiles) ||
       (activas.sobreconfianza && item.sobreconfianza) ||
       (activas.olvido && item.olvido) ||
-      (activas.urgentes && item.urgentes);
+      (activas.urgentes && item.urgentes) ||
+      (activas.razones && item.razones);
   }
 
   function actualizarEstadoVacioYBotonRI() {
@@ -15056,6 +15531,9 @@ const ZONAS_SYNC_GIST = [
     elChkRIOlvido.checked = true;
     elChkRIUrgentes.checked = true;
     candidatosRepasoInteligente = calcularCandidatosRepasoInteligente();
+    const hayRazonesRI = candidatosRepasoInteligente.some((c) => c.razones);
+    elChkRIRazones.checked = hayRazonesRI;
+    elChkRIRazones.disabled = !hayRazonesRI;
     renderListaModalRepasoInteligente();
     elModalRepasoInteligente.classList.add('abierto');
   }
@@ -15079,6 +15557,7 @@ const ZONAS_SYNC_GIST = [
   elChkRISobreconfianza.addEventListener('change', () => alCambiarCategoriaRI('sobreconfianza', elChkRISobreconfianza.checked));
   elChkRIOlvido.addEventListener('change', () => alCambiarCategoriaRI('olvido', elChkRIOlvido.checked));
   elChkRIUrgentes.addEventListener('change', () => alCambiarCategoriaRI('urgentes', elChkRIUrgentes.checked));
+  elChkRIRazones.addEventListener('change', () => alCambiarCategoriaRI('razones', elChkRIRazones.checked));
   elBtnComenzarRI.addEventListener('click', () => comenzarSesionRepasoInteligente());
   document.getElementById('btn-repaso-inteligente-cancelar').addEventListener('click', () => cerrarModalRepasoInteligente());
   elModalRepasoInteligente.addEventListener('click', (evento) => {
@@ -20607,6 +21086,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   const CLAVE_RAZONES = 'razones_tarjetas_v1';
   let razonesGuardadas = cargarRazones();
+  try { actualizarBotonRepasoInteligente(); } catch (e) { }
 
   function cargarRazones() {
     try {
@@ -20624,6 +21104,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       escribirLocalSeguro(CLAVE_RAZONES, JSON.stringify(razonesGuardadas));
     } catch (e) {
     }
+    try { actualizarBotonRepasoInteligente(); } catch (e) { }
   }
   const guardarRazones = crearGuardadoDebounced(guardarRazonesYa, 250);
 
