@@ -4535,6 +4535,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>¿Empezar a estudiar?</h3>
     <button class="boton-secundario" id="btn-pomodoro-tutorial" style="width:100%;">📖 Método de estudio</button>
+    <button class="boton-secundario" id="btn-pomodoro-repaso-pasivo" style="width:100%; display:none;">👁 Repaso pasivo</button>
     <div class="pomodoro-banner-repaso" id="pomodoro-aviso-repaso"></div>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-normal">Normal</button>
     <button class="boton-secundario" id="btn-pomodoro-iniciar-dificil">Difícil</button>
@@ -5238,8 +5239,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 <div class="modal-overlay" id="modal-sesion-pendiente">
   <div class="modal-caja" role="dialog" aria-modal="true">
-    <h3>♻️ Sesión sin terminar</h3>
-    <p>Quedó una sesión de estudio sin finalizar en este evaluador. ¿Querés continuarla?</p>
+    <h3 id="sesion-pendiente-titulo">♻️ Sesión sin terminar</h3>
+    <p id="sesion-pendiente-texto">Quedó una sesión de estudio sin finalizar en este evaluador. ¿Querés continuarla?</p>
     <ul id="sesion-pendiente-detalles" style="text-align:left; padding-left: 22px; font-size: 13px; color: var(--texto-cabecera); margin: 0 0 8px;"></ul>
     <p id="sesion-pendiente-aviso" style="display:none; font-weight:700; color:#a4402f;">⚠️ Cerrar la pestaña durante un examen puede considerarse trampa. ¿Continuar?</p>
     <button class="boton-reiniciar" id="btn-sesion-pendiente-continuar">Continuar sesión</button>
@@ -7280,7 +7281,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
   }
 
-  function abrirTarjetaObservador(idx) {
+  function abrirTarjetaObservador(idx, lista) {
     configurarModoJuego('light');
     limpiarModoEspecialAlSalir();
     detenerCountdownExamen();
@@ -7290,8 +7291,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     segundaPendiente = false;
     modoZombie = false;
     limpiarAviso();
-    const n = tarjetasCompletas.length;
-    tarjetasSesion = [...tarjetasCompletas];   // orden del txt
+    tarjetasSesion = lista ? lista.slice() : [...tarjetasCompletas];   // orden del txt
+    const n = tarjetasSesion.length;
     resultados = new Array(n).fill(null);
     tiempos = new Array(n).fill(0);
     revelado = new Array(n).fill(false);
@@ -7314,7 +7315,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   async function salirObservador() {
     if (!(await confirmarDescartarBorrador())) return;
-    const ultimo = indiceActual;
+    const idxEnCompletas = tarjetasCompletas.indexOf(tarjetasSesion[indiceActual]);
+    const ultimo = idxEnCompletas !== -1 ? idxEnCompletas : indiceActual;
     resetPanelesUI();
     modoObservador = false;
     elAreaTarjeta.classList.remove('observador');
@@ -15476,7 +15478,7 @@ const ZONAS_SYNC_GIST = [
     if (elModalAviso.classList.contains('abierto')) { evento.preventDefault(); elBtnAvisoAceptar.click(); return; }
     if (elModalTutorial.classList.contains('abierto')) return;   // Enter no debe iniciar el Pomodoro desde el tutorial
     if (elModalPomodoroIniciar.classList.contains('abierto')) {
-      if (document.activeElement && document.activeElement.id === 'btn-pomodoro-tutorial') return;   // Enter sobre el botón del tutorial solo lo abre
+      if (document.activeElement && (document.activeElement.id === 'btn-pomodoro-tutorial' || document.activeElement.id === 'btn-pomodoro-repaso-pasivo')) return;   // Enter sobre estos botones solo los activa
       evento.preventDefault(); document.getElementById('btn-pomodoro-iniciar-normal').click(); return;
     }
     if (elModalPomodoroAbandonar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-abandonar-si').click(); return; }
@@ -16416,9 +16418,10 @@ const ZONAS_SYNC_GIST = [
     elChkRISobreconfianza.checked = true;
     elChkRIOlvido.checked = true;
     elChkRIUrgentes.checked = true;
-    elChkRIRazones.checked = true;
-    elChkRIRazones.disabled = false;
     candidatosRepasoInteligente = calcularCandidatosRepasoInteligente();
+    const hayRazonesRI = candidatosRepasoInteligente.some((c) => c.razones);
+    elChkRIRazones.checked = hayRazonesRI;
+    elChkRIRazones.disabled = !hayRazonesRI;
     renderListaModalRepasoInteligente();
     elModalRepasoInteligente.classList.add('abierto');
   }
@@ -16432,9 +16435,7 @@ const ZONAS_SYNC_GIST = [
       candidatosRepasoInteligente.filter((c) => c.seleccionado).map((c) => c.nombre)
     );
     if (subtsElegidos.size === 0) return;
-    const paraRepasar = tarjetasCompletas.filter(
-      (t) => subtsElegidos.has(nombreTema(t)) && (esDificil(t) || tarjetaTieneRazonRepaso(t))
-    );
+    const paraRepasar = tarjetasCompletas.filter((t) => subtsElegidos.has(nombreTema(t)));
     if (paraRepasar.length === 0) return;
     cerrarModalRepasoInteligente();
     abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar, null, true);
@@ -16454,7 +16455,7 @@ const ZONAS_SYNC_GIST = [
   document.getElementById('btn-modo-dificiles').addEventListener('click', () => {
     abrirModalRepasoInteligente();
   });
-  
+
   const nodosDificiles = new Map();   // hash -> { fila, grupo: 'propia'|'otros'|'desm' }
 
   const elListaDificiles = document.getElementById('lista-dificiles');
@@ -18082,9 +18083,36 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     }
   });
 
+  let _mapaTarjetasPorRutaRetencion = null;
+  function tarjetasQueCitanRuta(id) {
+    if (!_mapaTarjetasPorRutaRetencion) {
+      const mapa = new Map();
+      tarjetasCompletas.forEach((t) => {
+        const vistas = new Set();
+        (t.rutas || []).forEach((r) => {
+          const clave = String(r);
+          if (vistas.has(clave)) return;
+          vistas.add(clave);
+          if (!mapa.has(clave)) mapa.set(clave, []);
+          mapa.get(clave).push(t);
+        });
+      });
+      _mapaTarjetasPorRutaRetencion = mapa;
+    }
+    return _mapaTarjetasPorRutaRetencion.get(String(id)) || [];
+  }
+
   function pintarFilaRetencionSesion(div, id) {
     const estado = retencionSesionToggles[id] || { retenida: false, dificil: false };
     const r = div._refs;
+    const citantes = tarjetasQueCitanRuta(id);
+    const hayDificil = citantes.some((t) => esDificil(t));
+    const hayRazon = citantes.some((t) => razonesDeTarjeta(t).length > 0);
+    r.num.textContent = '#' + id + (hayDificil ? ' ★' : '') + (hayRazon ? ' 🏷' : '');
+    const detalleMarcas = [];
+    if (hayDificil) detalleMarcas.push('Alguna tarjeta que cita esta ruta es difícil');
+    if (hayRazon) detalleMarcas.push('Alguna tarjeta que cita esta ruta tiene razones guardadas');
+    r.num.title = detalleMarcas.join(' · ');
     r.btnRet.className = 'toggle-retencion' + (estado.retenida ? ' activa-retenida' : '');
     r.btnRet.textContent = estado.retenida ? '✓ Retenida' : 'Retenida';
     r.btnDif.className = 'toggle-retencion' + (estado.dificil ? ' activa-dificil' : '');
@@ -18128,7 +18156,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     toggles.appendChild(btnDif);
     div.appendChild(toggles);
 
-    div._refs = { toggles: toggles, btnRet: btnRet, btnDif: btnDif, btnNota: null };
+    div._refs = { num: num, toggles: toggles, btnRet: btnRet, btnDif: btnDif, btnNota: null };
     pintarFilaRetencionSesion(div, id);
     return div;
   }
@@ -18150,21 +18178,38 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
 
   function gruposRetencionPorTarjeta(ids) {
     const activas = new Set(ids.map(String));
-    const vistas = new Set();
-    const grupos = [];
+    const citantes = new Map();
+    const propiasPorTarjeta = [];
     tarjetasCompletas.forEach((t, idx) => {
       const propias = [];
       (t.rutas || []).forEach((id) => {
         const clave = String(id);
-        if (!activas.has(clave) || vistas.has(clave)) return;
-        vistas.add(clave);
-        propias.push(id);
+        if (!activas.has(clave) || propias.indexOf(clave) !== -1) return;
+        propias.push(clave);
       });
-      if (propias.length === 0) return;
-      propias.sort((a, b) => Number(a) - Number(b));
-      grupos.push({ clave: idx, pregunta: t.primero || '', ids: propias });
+      propias.sort((x, y) => Number(x) - Number(y));
+      propias.forEach((clave) => {
+        if (!citantes.has(clave)) citantes.set(clave, []);
+        citantes.get(clave).push({ idx: idx, texto: t.primero || '' });
+      });
+      propiasPorTarjeta.push(propias);
+    });
+    const grupos = [];
+    tarjetasCompletas.forEach((t, idx) => {
+      const rutas = [];
+      propiasPorTarjeta[idx].forEach((clave) => {
+        const lista = citantes.get(clave);
+        if (lista[0].idx !== idx) return;
+        rutas.push({ id: clave, extras: lista.slice(1).map((c) => c.texto) });
+      });
+      if (rutas.length === 0) return;
+      grupos.push({ clave: idx, pregunta: t.primero || '', rutas: rutas });
     });
     return grupos;
+  }
+
+  function firmaGrupoRetencion(grupo) {
+    return grupo.pregunta + '||' + grupo.rutas.map((r) => r.id + ':' + r.extras.join('|')).join('||');
   }
 
   function grupoRetencionTarjeta(grupo) {
@@ -18174,7 +18219,15 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     pregunta.className = 'retencion-tarjeta-pregunta';
     pregunta.textContent = grupo.pregunta;
     div.appendChild(pregunta);
-    grupo.ids.forEach((id) => div.appendChild(filaRetencionSesion(id)));
+    grupo.rutas.forEach((ruta) => {
+      ruta.extras.forEach((texto) => {
+        const extra = document.createElement('div');
+        extra.className = 'retencion-tarjeta-pregunta';
+        extra.textContent = texto;
+        div.appendChild(extra);
+      });
+      div.appendChild(filaRetencionSesion(ruta.id));
+    });
     return div;
   }
 
@@ -18204,7 +18257,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       return;
     }
     elVacio.style.display = 'none';
-    reconciliarHijos(el, gruposRetencionPorTarjeta(ids), (g) => g.clave, (g) => g.ids.join(','), grupoRetencionTarjeta);
+    reconciliarHijos(el, gruposRetencionPorTarjeta(ids), (g) => g.clave, firmaGrupoRetencion, grupoRetencionTarjeta);
     el.querySelectorAll('.fila-retencion-ruta').forEach((fila) => pintarFilaRetencionSesion(fila, fila._rutaId));
   }
 
@@ -22803,6 +22856,35 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     agregar('🎭', 'SubT con sobreconfianza', candidatos.filter((c) => c.sobreconfianza).map((c) => c.nombre));
     agregar('🧠', 'SubT próximos a olvido', candidatos.filter((c) => c.olvido).map((c) => c.nombre));
 
+    let nTarjetasDificiles = 0;
+    let nTarjetasConRazon = 0;
+    let nTarjetasPorReforzar = 0;
+    const conteoRazonesAviso = {};
+    tarjetasCompletas.forEach((t) => {
+      const esDif = esDificil(t);
+      const razonesT = razonesDeTarjeta(t);
+      if (esDif) nTarjetasDificiles++;
+      if (razonesT.length > 0) {
+        nTarjetasConRazon++;
+        razonesT.forEach((codigo) => { conteoRazonesAviso[codigo] = (conteoRazonesAviso[codigo] || 0) + 1; });
+      }
+      if (esDif || razonesT.length > 0) nTarjetasPorReforzar++;
+    });
+    if (nTarjetasPorReforzar > 0) {
+      const itemsRefuerzo = [];
+      if (nTarjetasDificiles > 0) {
+        itemsRefuerzo.push('★ ' + nTarjetasDificiles + (nTarjetasDificiles === 1 ? ' tarjeta difícil' : ' tarjetas difíciles'));
+      }
+      if (nTarjetasConRazon > 0) {
+        const detalleRazones = RAZONES_DEF
+          .filter((d) => conteoRazonesAviso[d.codigo])
+          .map((d) => d.texto + ': ' + conteoRazonesAviso[d.codigo])
+          .join(' · ');
+        itemsRefuerzo.push('🏷 ' + nTarjetasConRazon + (nTarjetasConRazon === 1 ? ' tarjeta con razones' : ' tarjetas con razones') + (detalleRazones ? ' (' + detalleRazones + ')' : ''));
+      }
+      avisos.push({ icono: '🏷', titulo: 'Tarjetas difíciles o con razones (' + nTarjetasPorReforzar + ')', items: itemsRefuerzo });
+    }
+
     const vencidas = [];
     const proximas = [];
     listas.forEach((l) => {
@@ -23203,7 +23285,20 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroIntervalo = setInterval(tickPomodoro, 1000);
   }
 
+  function tarjetaEntraRepasoPasivo(t) {
+    return esDificil(t) || tarjetaTieneRazonRepaso(t);
+  }
+
+  function iniciarRepasoPasivo() {
+    const filtradas = tarjetasCompletas.filter((t) => tarjetaEntraRepasoPasivo(t));
+    if (filtradas.length === 0) return;
+    cerrarModalPomodoroIniciar();
+    abrirTarjetaObservador(0, filtradas);
+  }
+
   function abrirModalPomodoroIniciar() {
+    document.getElementById('btn-pomodoro-repaso-pasivo').style.display =
+      tarjetasCompletas.some((t) => tarjetaEntraRepasoPasivo(t)) ? '' : 'none';
     renderSiCambioDatos('avisoPomodoro', Math.floor(Date.now() / 60000), renderAvisoRepasoPomodoro);
     elModalPomodoroIniciar.classList.add('abierto');
   }
@@ -23219,6 +23314,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elModalTutorial.classList.remove('abierto');
   }
   document.getElementById('btn-pomodoro-tutorial').addEventListener('click', () => abrirModalTutorial());
+  document.getElementById('btn-pomodoro-repaso-pasivo').addEventListener('click', () => iniciarRepasoPasivo());
   document.getElementById('btn-tutorial-cerrar').addEventListener('click', () => cerrarModalTutorial());
   elModalTutorial.addEventListener('click', (evento) => {
     if (evento.target === elModalTutorial) cerrarModalTutorial();
@@ -23246,6 +23342,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroBraindumpNotaId = null;
     retencionSesionToggles = {};
     retencionSubtemasActivos = {};
+
+    descartarSesionPendiente();            // un Pomodoro nuevo anula cualquier sesión de evaluación pendiente
+    descartarSesionPomodoroPendiente();    // y reemplaza cualquier Pomodoro pendiente anterior
 
     obtenerContextoAudio();
 
@@ -23399,6 +23498,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     poblarAnalisisRetencionPomodoro(entradaRetencion);
 
     pomodoroActivo = false;
+    borrarClaveSesionPomodoro();   // el Pomodoro terminó: ya no hay nada pendiente de recuperar
     pomodoroRetencionPresionada = false;
     pomodoroEnBraindumpFinal = false;
     pomodoroTotalSegCongelado = null;
@@ -23438,6 +23538,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function registrarInicioSesionNueva() {
     tiempoInicioSesion = Date.now();
     descartarSesionPendiente();   // sesión nueva: sobrescribe/borra la pendiente anterior
+    descartarSesionPomodoroPendiente();   // una evaluación nueva anula cualquier Pomodoro pendiente
   }
 
   function descartarSesionPendiente() {
@@ -23459,6 +23560,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       }
       borrar.forEach((clave) => localStorage.removeItem(clave));
     } catch (e) { }
+    limpiarSesionesPomodoroAntiguas();   // y las sesiones Pomodoro vencidas
   }
 
   function hashContenidoTarjetas() {
@@ -23911,9 +24013,383 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return true;
   }
 
+  // ===================================================================================
+  // Persistencia y recuperación de la sesión Pomodoro (capa paralela a la de evaluación)
+  // ===================================================================================
+  const PREFIJO_SESION_POMODORO = 'sesion_pomodoro_';
+  const CLAVE_SESION_POMODORO = PREFIJO_SESION_POMODORO + ESPACIO_HASH;
+  const VERSION_SESION_POMODORO = 1;
+  const EDAD_MAXIMA_SESION_POMODORO_MS = EDAD_MAXIMA_SESION_PENDIENTE_MS;   // 2 días, igual que la evaluación
+  const FASES_POMODORO_VALIDAS = ['pretest', 'skimming', 'descanso_largo', 'retencion', 'descanso'];
+  const FASES_POMODORO_PAUSABLES = ['pretest', 'skimming', 'retencion'];
+  let _ultimoGuardadoSesionPomodoroMs = 0;
+
+  function pomEsNum(v) { return typeof v === 'number' && Number.isFinite(v); }
+  function pomEsObj(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
+
+  function borrarClaveSesionPomodoro() {
+    try { localStorage.removeItem(CLAVE_SESION_POMODORO); } catch (e) { }
+  }
+
+  function leerSesionPomodoroCruda() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_SESION_POMODORO);
+      return crudo ? JSON.parse(crudo) : null;
+    } catch (e) { return null; }
+  }
+
+  // Hoja compartida abierta (pretest / skimming / braindump final) con el texto actual, guardado o no.
+  function hojaPomodoroActual() {
+    if (!elModalNotasEvaluador.classList.contains('abierto')) return null;
+    let notaId = null;
+    if (modoHojaNotasEval === 'pretest' || modoHojaNotasEval === 'skimming') {
+      const nota = obtenerNotaUnicaPropia(modoHojaNotasEval);
+      notaId = nota ? nota.id : null;
+    } else if (modoHojaNotasEval === 'braindump' && pomodoroEnBraindumpFinal) {
+      notaId = pomodoroBraindumpNotaId;
+    }
+    if (!notaId) return null;
+    return { modo: modoHojaNotasEval, notaId: notaId, texto: elHojaEditor.value };
+  }
+
+  function sesionPomodoroActivaParaGuardar() {
+    // "Repaso pasivo" no activa pomodoroActivo, así que nunca se persiste.
+    return pomodoroActivo && FASES_POMODORO_VALIDAS.indexOf(pomodoroFase) !== -1;
+  }
+
+  function construirSesionPomodoroPendiente() {
+    const ahora = Date.now();
+    // La pausa manual en curso todavía no está en pomodoroPausaAcumMs: se suma aquí (tiempo no válido).
+    const pausaEnCurso = (pomodoroPausado && pomodoroPausaInicio > 0) ? Math.max(0, ahora - pomodoroPausaInicio) : 0;
+    return {
+      version: VERSION_SESION_POMODORO,
+      espacio: ESPACIO_HASH,
+
+      pomodoroModo: pomodoroModo,
+      pomodoroFase: pomodoroFase,
+      pomodoroCiclo: pomodoroCiclo,
+      pomodoroSegundosRestantes: pomodoroSegundosRestantes,
+      pomodoroPausado: pomodoroPausado,
+      pomodoroAcumulado: { pretest: pomodoroAcumulado.pretest, retencion: pomodoroAcumulado.retencion },
+      pomodoroHoraInicio: pomodoroHoraInicio,
+      pomodoroPausaAcumMs: pomodoroPausaAcumMs + pausaEnCurso,
+      pomodoroRetencionPresionada: pomodoroRetencionPresionada,
+      pomodoroEnBraindumpFinal: pomodoroEnBraindumpFinal,
+      pomodoroBraindumpNotaId: pomodoroBraindumpNotaId,
+      pomodoroTotalSegCongelado: pomodoroTotalSegCongelado,   // total "congelado" al entrar al braindump
+
+      retencionSesionToggles: retencionSesionToggles,
+      retencionSubtemasActivos: retencionSubtemasActivos,
+      hoja: hojaPomodoroActual(),
+
+      timestampCreacion: pomodoroHoraInicio,
+      timestampUltimaActividad: ahora,
+      hashTarjetas: hashContenidoTarjetas(),
+    };
+  }
+
+  function guardarSesionPomodoroPendiente() {
+    if (!sesionPomodoroActivaParaGuardar()) return false;
+    const ahora = Date.now();
+    if (ahora - _ultimoGuardadoSesionPomodoroMs < 200) return true;   // beforeunload + pagehide seguidos
+    try {
+      const ok = escribirLocalSeguro(CLAVE_SESION_POMODORO, JSON.stringify(construirSesionPomodoroPendiente()));
+      if (ok) _ultimoGuardadoSesionPomodoroMs = ahora;
+      return ok;
+    } catch (e) {
+      try { console.error('No se pudo serializar la sesión Pomodoro pendiente:', e); } catch (e2) { }
+      return false;
+    }
+  }
+  // Mismos eventos que la sesión de evaluación (beforeunload + pagehide + visibilitychange oculta). Sin intervalo periódico.
+  _guardadosPendientes.push({ flush: guardarSesionPomodoroPendiente });
+  window.addEventListener('beforeunload', guardarSesionPomodoroPendiente);
+
+  function validarContenidoSesionPomodoro(s) {
+    if (!pomEsObj(s)) return false;
+    if (s.version !== VERSION_SESION_POMODORO || s.espacio !== ESPACIO_HASH) return false;
+    if (s.pomodoroModo !== 'normal' && s.pomodoroModo !== 'dificil') return false;
+    if (FASES_POMODORO_VALIDAS.indexOf(s.pomodoroFase) === -1) return false;
+    if (!pomEsNum(s.pomodoroCiclo) || s.pomodoroCiclo < 1) return false;
+    if (!pomEsNum(s.pomodoroSegundosRestantes) || s.pomodoroSegundosRestantes < 0) return false;
+    if (!pomEsNum(s.pomodoroHoraInicio) || s.pomodoroHoraInicio <= 0) return false;
+    if (!pomEsNum(s.pomodoroPausaAcumMs) || s.pomodoroPausaAcumMs < 0) return false;
+    const ac = s.pomodoroAcumulado;
+    if (!pomEsObj(ac) || !pomEsNum(ac.pretest) || !pomEsNum(ac.retencion) || ac.pretest < 0 || ac.retencion < 0) return false;
+    if (!pomEsNum(s.timestampUltimaActividad) || s.timestampUltimaActividad <= 0) return false;
+    if ((Date.now() - s.timestampUltimaActividad) > EDAD_MAXIMA_SESION_POMODORO_MS) return false;
+    if (s.hashTarjetas !== hashContenidoTarjetas()) return false;   // el contenido del evaluador cambió
+    if (!pomEsObj(s.retencionSesionToggles) || !pomEsObj(s.retencionSubtemasActivos)) return false;
+    if (s.pomodoroTotalSegCongelado !== null && s.pomodoroTotalSegCongelado !== undefined && !pomEsNum(s.pomodoroTotalSegCongelado)) return false;
+    if (s.pomodoroEnBraindumpFinal) {
+      if (s.pomodoroFase !== 'retencion' && s.pomodoroFase !== 'descanso') return false;
+      if (typeof s.pomodoroBraindumpNotaId !== 'string' || s.pomodoroBraindumpNotaId === '') return false;
+    }
+    if (s.hoja !== null && s.hoja !== undefined) {
+      const h = s.hoja;
+      if (!pomEsObj(h) || typeof h.notaId !== 'string' || typeof h.texto !== 'string') return false;
+      if (h.modo !== 'pretest' && h.modo !== 'skimming' && h.modo !== 'braindump') return false;
+      if (h.modo === 'braindump' && !s.pomodoroEnBraindumpFinal) return false;
+    }
+    return true;
+  }
+
+  function buscarNotaHojaPomodoro(hoja) {
+    if (!hoja) return null;
+    const porId = notasEvaluador.find((n) => n.id === hoja.notaId && n.categoria === hoja.modo);
+    if (porId) return porId;
+    if (hoja.modo === 'pretest' || hoja.modo === 'skimming') return obtenerNotaUnicaPropia(hoja.modo);   // p. ej. depuración de duplicados
+    return null;
+  }
+
+  function buscarNotaBraindumpPomodoro(s) {
+    if (!s || typeof s.pomodoroBraindumpNotaId !== 'string') return null;
+    return notasEvaluador.find((n) => n.id === s.pomodoroBraindumpNotaId && n.categoria === 'braindump') || null;
+  }
+
+  // Al descartar (o expirar) una sesión con braindump final: si tiene contenido (incluido el texto aún sin guardar
+  // de la hoja) se conserva como nota braindump normal; si quedó vacía se elimina, como hace finalizarBraindumpPomodoro.
+  function resolverBraindumpDeSesionPomodoro(s) {
+    const nota = buscarNotaBraindumpPomodoro(s);
+    if (!nota) return;
+    const hoja = pomEsObj(s.hoja) ? s.hoja : null;
+    const textoHoja = (hoja && hoja.modo === 'braindump' && hoja.notaId === nota.id && typeof hoja.texto === 'string') ? hoja.texto : null;
+    const texto = (textoHoja !== null ? textoHoja : (nota.texto || '')).trim();
+    if (texto === '') {
+      notasEvaluador = notasEvaluador.filter((n) => n.id !== nota.id);
+    } else if (nota.texto !== texto) {
+      nota.texto = texto;
+      nota.modificada = Date.now();
+    }
+    nota.rev = siguienteRev();
+    guardarNotasEvaluador();
+  }
+
+  // Braindump cuya nota ya no existe: se descarta el braindump y el Pomodoro vuelve a la fase previa
+  // (pomodoroFase no cambia al entrar al braindump). El tiempo pasado en braindump no cuenta, igual que
+  // el total "congelado" que usa finalizarBraindumpPomodoro.
+  function volverAFaseAnteriorAlBraindumpPomodoro(s) {
+    if (pomEsNum(s.pomodoroTotalSegCongelado)) {
+      const entradaMs = s.pomodoroHoraInicio + s.pomodoroPausaAcumMs + s.pomodoroTotalSegCongelado * 1000;
+      s.pomodoroPausaAcumMs += Math.max(0, s.timestampUltimaActividad - entradaMs);
+    }
+    s.pomodoroEnBraindumpFinal = false;
+    s.pomodoroBraindumpNotaId = null;
+    s.pomodoroTotalSegCongelado = null;
+    s.pomodoroPausado = false;
+    s.hoja = null;
+  }
+
+  function descartarSesionPomodoroPendiente(sesion) {
+    const s = (sesion !== undefined) ? sesion : leerSesionPomodoroCruda();
+    try { resolverBraindumpDeSesionPomodoro(s); } catch (e) { }
+    borrarClaveSesionPomodoro();
+  }
+
+  function limpiarSesionesPomodoroAntiguas() {
+    try {
+      const borrar = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const clave = localStorage.key(i);
+        if (!clave || clave.indexOf(PREFIJO_SESION_POMODORO) !== 0) continue;
+        let sesion = null;
+        try { sesion = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (e) { sesion = null; }
+        const ts = sesion && Number(sesion.timestampUltimaActividad);
+        if (!Number.isFinite(ts) || ts <= 0 || (Date.now() - ts) > EDAD_MAXIMA_SESION_POMODORO_MS) borrar.push({ clave: clave, sesion: sesion });
+      }
+      borrar.forEach((b) => {
+        try { resolverBraindumpDeSesionPomodoro(b.sesion); } catch (e) { }
+        localStorage.removeItem(b.clave);
+      });
+    } catch (e) { }
+  }
+
+  function cargarSesionPomodoroPendiente() {
+    let crudo = null;
+    try { crudo = localStorage.getItem(CLAVE_SESION_POMODORO); } catch (e) { return null; }
+    if (!crudo) return null;
+    let sesion = null;
+    try { sesion = JSON.parse(crudo); } catch (e) { sesion = null; }
+    if (!validarContenidoSesionPomodoro(sesion)) { descartarSesionPomodoroPendiente(sesion); return null; }
+    // Pretest / skimming abierto en la hoja y borrado externamente: la sesión ya no es coherente.
+    if (sesion.hoja && sesion.hoja.modo !== 'braindump' && !buscarNotaHojaPomodoro(sesion.hoja)) {
+      descartarSesionPomodoroPendiente(sesion);
+      return null;
+    }
+    // Nota del braindump borrada: se sigue sin braindump, en la fase previa.
+    if (sesion.pomodoroEnBraindumpFinal && !buscarNotaBraindumpPomodoro(sesion)) {
+      volverAFaseAnteriorAlBraindumpPomodoro(sesion);
+    }
+    return sesion;
+  }
+
+  const ETIQUETAS_FASE_POMODORO = {
+    pretest: '📝 Pretest',
+    skimming: '👀 Skimming',
+    descanso_largo: '☕ Descanso largo',
+    retencion: '🧠 Retención activa',
+    descanso: '☕ Descanso',
+  };
+
+  function mostrarModalRecuperacionPomodoro(sesion) {
+    document.getElementById('sesion-pendiente-titulo').textContent = '⏲️ Pomodoro sin terminar';
+    document.getElementById('sesion-pendiente-texto').textContent =
+      'Quedó un Pomodoro en curso en este evaluador. ¿Querés continuarlo? El tiempo que estuviste fuera no cuenta: la fase se retoma donde quedó.';
+    document.getElementById('sesion-pendiente-aviso').style.display = 'none';
+    document.getElementById('btn-sesion-pendiente-continuar').textContent = 'Continuar Pomodoro';
+
+    const esFaseCiclo = sesion.pomodoroFase === 'retencion' || sesion.pomodoroFase === 'descanso';
+    const enBraindump = !!sesion.pomodoroEnBraindumpFinal;
+    const pausado = !!sesion.pomodoroPausado && FASES_POMODORO_PAUSABLES.indexOf(sesion.pomodoroFase) !== -1 && !enBraindump;
+    const filas = [
+      '⏲️ Modo: ' + (sesion.pomodoroModo === 'dificil' ? 'Difícil (con skimming)' : 'Normal'),
+      '📍 Fase: ' + (enBraindump ? '🧠 Braindump final en curso' : (ETIQUETAS_FASE_POMODORO[sesion.pomodoroFase] || sesion.pomodoroFase)) + (pausado ? ' · ⏸ en pausa' : ''),
+      '🔁 Ciclo: ' + (esFaseCiclo ? sesion.pomodoroCiclo : 'todavía en la fase de lectura'),
+    ];
+    if (!enBraindump) filas.push('⏳ Quedan ' + formatoMMSS(sesion.pomodoroSegundosRestantes) + ' de la fase');
+    filas.push('📖 Lectura acumulada (pretest + skimming): ' + formatoMMSS(sesion.pomodoroAcumulado.pretest));
+    filas.push('🧠 Retención activa acumulada: ' + formatoMMSS(sesion.pomodoroAcumulado.retencion));
+    if (sesion.hoja && sesion.hoja.texto.trim() !== '') filas.push('✍️ Se recuperará el texto que tenías escrito en la hoja');
+    filas.push('🕐 Última actividad: ' + new Date(sesion.timestampUltimaActividad).toLocaleString());
+
+    const elDetalles = document.getElementById('sesion-pendiente-detalles');
+    elDetalles.innerHTML = '';
+    filas.forEach((texto) => {
+      const li = document.createElement('li');
+      li.textContent = texto;
+      elDetalles.appendChild(li);
+    });
+
+    document.getElementById('btn-sesion-pendiente-continuar').onclick = () => {
+      elModalSesionPendiente.classList.remove('abierto');
+      let ok = false;
+      try { ok = restaurarSesionPomodoroPendiente(sesion); } catch (e) {
+        try { console.error('No se pudo restaurar el Pomodoro pendiente:', e); } catch (e2) { }
+        revertirRestauracionPomodoroFallida();
+      }
+      if (!ok) {
+        descartarSesionPomodoroPendiente(sesion);
+        avisar('No se pudo recuperar el Pomodoro (el contenido del evaluador cambió). Se descartó.');
+        evaluarAvisoSRS();
+      }
+    };
+    document.getElementById('btn-sesion-pendiente-descartar').onclick = () => {
+      descartarSesionPomodoroPendiente(sesion);
+      elModalSesionPendiente.classList.remove('abierto');
+      evaluarAvisoSRS();   // se había pospuesto mientras el modal estaba abierto
+    };
+    elModalSesionPendiente.classList.add('abierto');
+  }
+
+  function copiarMapaPomodoro(origen, esperaBooleano) {
+    const destino = {};
+    Object.keys(origen || {}).forEach((k) => {
+      if (k === '__proto__') return;
+      const v = origen[k];
+      if (esperaBooleano) { if (typeof v === 'boolean') destino[k] = v; }
+      else if (pomEsObj(v)) destino[k] = { retenida: !!v.retenida, dificil: !!v.dificil };
+    });
+    return destino;
+  }
+
+  function revertirRestauracionPomodoroFallida() {
+    clearInterval(pomodoroIntervalo);
+    pomodoroActivo = false;
+    pomodoroFase = null;
+    pomodoroPausado = false;
+    pomodoroPausaInicio = 0;
+    pomodoroRetencionPresionada = false;
+    pomodoroEnBraindumpFinal = false;
+    pomodoroTotalSegCongelado = null;
+    pomodoroBraindumpNotaId = null;
+    retencionSesionToggles = {};
+    retencionSubtemasActivos = {};
+    elPomodoroBadge.style.display = 'none';
+    elBtnPomodoro.disabled = false;
+    elBtnObservadorSalir.disabled = false;
+    elOverlayPausa.classList.remove('abierto');
+    if (elModalNotasEvaluador.classList.contains('abierto')) {
+      cerrarNotasEvaluador({ desdeTransicionPomodoro: true, desdeFinalizarBraindump: true });
+    }
+  }
+
+  function restaurarSesionPomodoroPendiente(x) {
+    // Todas las comprobaciones antes de tocar estado.
+    if (pomodoroActivo) throw new Error('ya hay un Pomodoro activo');
+    if (tarjetasCompletas.length === 0) throw new Error('el evaluador no tiene tarjetas');
+    const enBraindump = !!x.pomodoroEnBraindumpFinal;
+    if (enBraindump && !buscarNotaBraindumpPomodoro(x)) throw new Error('la nota del braindump ya no existe');
+    if (x.hoja && x.hoja.modo !== 'braindump' && !buscarNotaHojaPomodoro(x.hoja)) throw new Error('la nota de la hoja ya no existe');
+
+    const ahora = Date.now();
+    // Tiempo fuera de línea: no se cuenta (se suma a la pausa acumulada) y no se avanzan fases.
+    const fuera = Math.max(0, ahora - x.timestampUltimaActividad);
+    const pausado = !!x.pomodoroPausado && !enBraindump && FASES_POMODORO_PAUSABLES.indexOf(x.pomodoroFase) !== -1;
+
+    clearInterval(pomodoroIntervalo);
+    pomodoroModo = x.pomodoroModo;
+    pomodoroActivo = true;
+    pomodoroFase = x.pomodoroFase;
+    pomodoroCiclo = Math.max(1, Math.floor(x.pomodoroCiclo));
+    pomodoroSegundosRestantes = Math.max(0, Math.round(x.pomodoroSegundosRestantes));
+    pomodoroPausado = pausado;
+    pomodoroPausaInicio = pausado ? ahora : 0;   // la pausa vuelve a contar como no válida desde ahora
+    pomodoroPausaAcumMs = x.pomodoroPausaAcumMs + fuera;
+    pomodoroHoraInicio = x.pomodoroHoraInicio;
+    pomodoroUltimoTick = ahora;
+    pomodoroAcumulado = { pretest: Math.round(x.pomodoroAcumulado.pretest), retencion: Math.round(x.pomodoroAcumulado.retencion) };
+    pomodoroRetencionPresionada = !!x.pomodoroRetencionPresionada;
+    pomodoroEnBraindumpFinal = enBraindump;
+    pomodoroBraindumpNotaId = enBraindump ? x.pomodoroBraindumpNotaId : null;
+    pomodoroTotalSegCongelado = enBraindump && pomEsNum(x.pomodoroTotalSegCongelado) ? x.pomodoroTotalSegCongelado : null;
+    retencionSesionToggles = copiarMapaPomodoro(x.retencionSesionToggles, false);
+    retencionSubtemasActivos = copiarMapaPomodoro(x.retencionSubtemasActivos, true);
+
+    obtenerContextoAudio();
+    cerrarModalRetencionRutas();   // los toggles se restauran, pero el modal nunca se reabre solo
+    elOverlayPausa.classList.remove('abierto');
+    elBtnPomodoro.disabled = !pomodoroRetencionPresionada;
+    elBtnObservadorSalir.disabled = true;
+    elPomodoroBadge.style.display = enBraindump ? 'none' : 'flex';
+
+    entrarObservador();   // el Pomodoro siempre vive sobre el observador y sus pantallas hijas
+    reubicarBadgePomodoro(nombrePantallaActivaActual());
+    actualizarBadgePomodoro();
+
+    if (enBraindump) {
+      abrirNotasEvaluador('braindump', pomodoroBraindumpNotaId);
+      if (x.hoja && x.hoja.modo === 'braindump' && x.hoja.notaId === pomodoroBraindumpNotaId) elHojaEditor.value = x.hoja.texto;
+    } else if (x.hoja || pomodoroFase === 'pretest') {
+      const modo = x.hoja ? x.hoja.modo : 'pretest';
+      if (!x.hoja) crearPretestPropio('');   // la fase pretest siempre vive en la hoja compartida
+      abrirNotasEvaluador(modo);
+      if (x.hoja && modoHojaNotasEval === modo) elHojaEditor.value = x.hoja.texto;
+    }
+
+    if (enBraindump) {
+      // braindump final: sin cronómetro (como al entrar la primera vez)
+    } else if (pausado) {
+      elTituloPausa.textContent = '⏸ En pausa';
+      elTextoPausa.textContent = 'Pomodoro en pausa · Quedan ' + formatoMMSS(pomodoroSegundosRestantes) + ' de la fase actual';
+      elOverlayPausa.classList.add('abierto');
+      elBtnReanudar.focus();
+    } else {
+      iniciarIntervaloPomodoro();
+    }
+    return true;
+  }
+
   limpiarSesionesAntiguas();
   const _sesionPendienteAlCargar = cargarSesionPendiente();
   if (_sesionPendienteAlCargar) mostrarModalRecuperacion(_sesionPendienteAlCargar);   // antes de mostrar "temas"
+
+  // No coexisten: si hay evaluación pendiente tiene prioridad (solo su modal) y la de Pomodoro se descarta.
+  if (_sesionPendienteAlCargar) {
+    descartarSesionPomodoroPendiente();
+  } else {
+    const _sesionPomodoroAlCargar = cargarSesionPomodoroPendiente();
+    if (_sesionPomodoroAlCargar) mostrarModalRecuperacionPomodoro(_sesionPomodoroAlCargar);
+  }
 
   construirListaTemas();
   mostrarPantalla('temas');
