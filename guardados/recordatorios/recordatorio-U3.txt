@@ -10,7 +10,7 @@ que no garantiza? + control, estabilidad & 10
 controladores PI + sensible, deseado & 11
 
 subT FUNCIONAMIENTO PID
-que se necesita para correcto funcionamiento? + sensor, controlador, actuador & 12, 13, 14
+que se necesita para correcto funcionamiento? + sensor, controlador, actuador & 12
 
 subT PASOS PID
 1 paso + lee & 15
@@ -21,34 +21,69 @@ subT PASOS PID
 6 paso + variable manipulada, transformada & 20
 
 subT ACCION PROPORCIONAL
-en que consiste? + producto, estacionario & 21
-existe un limite? + algunos, a deseados, sobreoscilacion & 22
+en que consiste la accion prporcional? + producto, estacionario & 21
+existe un limite para la accion proporcional? + algunos, a deseados, sobreoscilacion & 22
 considera el tiempo? + estacionario, variacion, incluyendo & 23
+que pasa si la ganancia aumenta? + pequeña, rapido, inestibilidad & 25
+que pasa si K tiende a infinito? + on off & 26
+que inconveniente tiene la accion proporcional? + desviacion permanente, consigna & 27
+como podemosreducir el offset? + banda, inestabilidad & 28
+que relacion hay entre ganancia y banda proporcional? + aumento, disminuyo & 29
+que es la banda proporcional? + porcentaje, carrera completa & 30
+que es el criterio de sintonia? + valor, caracteristicas & 32
+cuando usar solo proporcional? + aceptable, ninguna & 33
+cual es la funcion de la banda integral y derivativa? + acompañan, reducir, brusca & 34
 
 subT ACCION INTEGRAL
-cual es su proposito? + disminuir, estado estacionario & 24
-cuando actua? + persiste, desviacion, promediarlo & 25
-una vez obtenida la integral del error, que hago? + I, adicionada, estable & 27
-por que se caracteriza? + repeticiones, reciproca & 28
+cual es proposito accion integral? + disminuir, estado estacionario & 35
+cuando actua esta banda integral? + persiste, desviacion, promediarlo & 36
+una vez obtenida la integral del error, que hago? + I, adicionada, estable & 38
+por que se caracteriza? + repeticiones, reciproca & 39
+funciona bien ante perturbaciones pequeñas? + pequeñas, desestabiliza & 41
+cuando utilizar banda integral? + mantener, determinado & 40
 
 subT ACCION DERIVATIVA
-cuando se manifiesta? + cambio, absoluto & 29
-que es un error? + desviacion existente & 30
-cual es su funcion respecto al error? + mantener, velocidad & 31
-como es el proceso de este controlador? + deriva, multiplica, suma & 32
-por que debo adaptar respuesta? + derivativa, rapido & 33
-por que se caracteriza el controlador derivativo? + derivada, inestabilidad, oscila & 34, 35, 36
-cuando es adecuada accion derivativa? + retraso, repercusion & 37
-por que no se la usa mucho? + sensibilidad, complicaciones & 38
+cuando se manifiesta? + cambio, absoluto & 42
+que es un error? + desviacion existente & 43
+cual es su funcion respecto al error? + mantener, velocidad & 44
+como es el proceso de este controlador? + deriva, multiplica, suma & 45
+por que debo adaptar respuesta? + derivativa, rapido & 46
+por que se caracteriza el controlador derivativo? + derivada, inestabilidad, oscila & 56
+cuando es adecuada accion derivativa? + retraso, repercusion & 49
+por que no se la usa mucho? + sensibilidad, complicaciones & 52
+que problema tiene esta accion derivativa? + reacciona, velocidad & 50
+en que nos ayuda a disminuir? + Sobrepico, arranque, retardo, recuperacion & 51
+cuando es optimo tiempo derivativo? + retoma, minima & 56
+que pasa si tiempo derivativo es grande? +  reaccion, rapidez & 57
+que pasa si tiempo derivativo es pequeño? + frenar, alrededor & 58
+que pasa si sistema es sensible? + pequeño, turbulencias, inofensivas & 53, 54
 
 subT LIMITACION DE UN CONTROL PID
-siempre es eficiente? + ineficiente & 39
-como mejorarlo? + combinando, lazo abierto & 40
-cuando puede dar desempeño inadecuado + reducida, no dispare & 41
-en donde se desempeña mejor? + lineales, variable & 42
-que afecta a la parte derivativa? + ruido, pequeñas & 43
+siempre es eficiente? + ineficiente & 59
+como mejorarlo? + combinando, lazo abierto & 60
+cuando puede dar desempeño inadecuado + reducida, no dispare & 61
+en donde se desempeña mejor? + lineales, variable & 62
+que afecta a la parte derivativa? + ruido, pequeñas & 63
 
 subT APLICACIONES PID
-para que fueron inventados? + simplificar, mejor & 44
-donde se lo utiliza mucho? + presion, fuerza, quimica & 45
+para que fueron inventados? + simplificar, mejor & 64
+donde se lo utiliza mucho? + presion, fuerza, quimica & 65
 
+subT CONCEPTOS PREVIOS
+que es el rango? + dentro limite, instrumento & 70
+que es el span? + aritmetica, lectura & 71
+que es la banda muerta? + variar, respuestas, retroalimentacion, corrija & 72
+es necesario siempre el error 0? + practico, aceptable, estable & 74
+que es un sistema robusto y uno sensible? + integral, bruscas, conviene & 75
+
+subT ELEMENTOS DE RETROALIMENTACION
+de que se encargan los elementos primarios? + medir, transmitirla, & 76
+que y que hace el elemento secundario de retroalimentacion? + transductor,convierte, electrica & 77
+
+subT SEÑALES DE PID
+que hace la señal P? + mueve, multiplicados & 80
+a que conduce una mayor ganancia? + accion, control & 81
+que hace la señal I? + sumando, repitiendo & 82
+que implica una disminucion de I? + mayor, control & 83
+que hace la señal D? + pendiente, anticipa, aumento & 84
+la señal D es proporcional al error? + proyeccion, consecuencia, pendiente & 85

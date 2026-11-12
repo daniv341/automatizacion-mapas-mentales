@@ -1,101 +1,149 @@
-1. Contenido Teórico del Documento
+=== RUTA 1 a 9 - DEFINICIÓN FUNCIÓN TRANSFERENCIA ===
 
+imP la función transferencia 1 sistema,
+imP es 1 modelo matemático en sentido
+imP que es 1 método operacional
+imP que permite
+imP relacionar variable salida
+imP con variable entrada,
+imP mediante transformadas Laplace ecuaciones diferenciales
 
+comP lo que me da FT
+comP es capacidad entender dinámica del sistema,
+comP no cómo está formado
+comP (no me dice nada eso).
+comP Por eso
+comP si analizo salida
+*comP puedo definir si FT
 
-Definición de Decisión
++comP son iguales o
 
-Decisión: «El proceso para identificar y solucionar un curso de acción para resolver un problema específico». Stoner, et al (2003:260).
++comP distintas
 
-Para tomar buenas decisiones…
-1. Identificar restricciones y limitaciones.
-2. Conocer la relación costo – beneficio y/o rendimientos esperado.
-3. Entender cuándo usar métodos cuantitativos o cualitativos.
-4. Conocer factores internos formales (cultura organizacional, políticas internas, estructura, etc.) e informales (políticas implícitas, hábitos, experiencia, etc.).
-5. Identificar factores externos (políticos, económicos, sociales, internacionales, culturales).
+comP Si tengo dos sistemas y
+comP aplico misma entrada y
+comP salida es distinta,
+comP FT es distinta
 
-Técnicas
+comP Pero si yo a misma entrada
+comP tengo igual respuesta
+comP significa
+comP que FT esos sistemas
+comP son iguales independientemente su naturaleza,
+comP sin importar
+comP cómo están constituidos sistemas
 
-Técnicas cuantitativas: PL (Programación Lineal), stock, colas, BI.
-Técnicas cualitativas: Experiencia, sentido común, madurez, creatividad.
+cuR Sistemas naturaleza distinta
+cuR pueden tener misma FT
+cuR porque dinámica interna
+cuR hace que se comporten
+cuR manera similar
 
-Elementos de una Decisión
+imP la FT es 1 propiedad intrínseca
+imP del sistema y
+imP no depende entrada,
+imP rta depende entrada,
+imP pero FT no
 
-Decisor: Persona o grupo de personas (un comité, una empresa, una nación, etc.) que se encarga de tomar la decisión y elegir la alternativa óptima para cumplir el objetivo de la empresa bajo ciertos criterios.
-Alternativas: Acciones que puede realizar y controlar el decisor, con características propias (beneficios, pérdidas, costos, etc.) consistentes con el análisis que hace el decisor (instalar una planta pequeña, mediana o grande, implementar entre diferentes tecnologías la que presente mejores beneficios, etc.).
-Estados de la naturaleza: Eventos o escenarios que pueden ocurrir, no controlables, mutuamente excluyentes.
-Pagos: Medición del beneficio (ingresos, utilidad, aumento de clientes) o pérdida (costo) resultante de haber tomado una decisión, elegido una alternativa y la ocurrencia de un evento.
-Relación en Matriz de Pagos: Valor Monetario Esperado (VME = Σ(XijPi)).
+caR la función transferencia
+caR incluye unidades necesarias
+caR para relacionar entrada
+caR con salida;
+cuR no obstante,
+cuR no brinda ninguna información respecto
+cuR a estructura física del sistema
+cuR (funciones transferencias muchos sistemas
+cuR físicamente distintos
+cuR pueden ser idénticas)
 
-Etapas en la Toma de Decisiones
+*comP Ahora
 
-1. Inteligencia: Descubrimiento del problema: ¿cuál es el problema?
-2. Diseño: Descubrimiento de la solución: ¿cuáles son las posibles soluciones?
-3. Elección: Elección de soluciones: ¿cuál es la mejor solución?
-4. Implementación: Prueba de la solución: ¿está funcionando la solución? ¿podemos hacer que funcione mejor?
++@comP si no conozco P(s) y
 
-Criterios y Ambientes de Decisión
++@comP conozco R(s)
 
-Certeza: Solo hay un escenario posible.
-Riesgo: Hay distintos escenarios pero se conoce la probabilidad de ocurrir.
-Incertidumbre: Hay distintos escenarios pero no se sabe la probabilidad de ocurrir.
+$comP lo que puedo hacer es
+comP excitar a P(s)
+comP con R(s) y
+comP estudiar salida y
+comP obtenerla
+comP porque yo sé que
+comP P(s) es Y(s) sobre R(s)
 
-Criterios utilizados para tomar una decisión (Matriz de decisión en incertidumbre):
+caR las ED
+caR deben ser consideradas
+caR con condiciones iniciales
+caR igual a 0,
+comP en TC entendemos
+comP que sistema viene del reposo o
+comP sea que n condiciones iniciales
+comP son iguales a 0
+comP porque recién comienza dinámica
+comP desde que mido
 
-1. Criterio optimista
-2. Criterio pesimista
-3. Criterio ni optimista ni pesimista
-4. Criterio de Hurwics
-5. Criterio de Savage
+=== RUTA 24 y 25 - GANANCIA y CÁLCULO GANANCIA ===
 
-Clasificación de las Decisiones
+comP Para calcular ganancia
+*comP usamos dos conceptos:
 
-Según Información:
++comP concepto estabilidad y
 
-Decisiones en certidumbre: cuenta con información confiable, exacta, medible (técnicas cuantitativas y cualitativas).
-Decisiones en incertidumbre: falta de información, datos. Impredecible (técnicas cuantitativas). Programadas y no programadas.
-Decisiones en riesgo: restricciones identificadas, información incompleta pero objetiva y confiable, se conocen probabilidades asociadas (técnicas cuantitativas).
++comP teorema valor final
 
-Según Frecuencia:
-Decisiones rutinarias: frecuencia diaria, repetitivas (técnicas cualitativas).
-Decisiones de emergencia: sin precedentes, mientras transcurren eventos.
-Decisiones operativas: establecidas en políticas y manuales (técnicas cualitativas y cuantitativas).
+comP Por teorema valor final
+comP cuando en plano real t -> ∞,
+comP s -> 0 en plano complejo
 
-2. Estilos de Decisor (Toma de Decisiones)
+comP Por eso
+comP luego vamos a particularizar
+comP para s = 0
 
-El modelo de referencia más empleado en administración y teoría de la decisión fue propuesto por Alan J. Rowe y Richard O. Mason, y difundido por autores como Stephen P. Robbins y Mary Coulter. Se basa en dos dimensiones cognitivas:
-Forma de pensar: Racional/lógica (procesa la información de forma secuencial y consistente) vs. Intuitiva/creativa (mira la situación en su conjunto).
-Tolerancia a la ambigüedad: Baja (necesita orden, certidumbre y estructura) vs. Alta (se siente cómodo procesando múltiples posibilidades simultáneas).
+=== RUTA 26 y 27 - EFP MÉTODO GRÁFICO: DIAGRAMA POLOS Y CEROS y RESIDUOS ===
 
-Al cruzar estas dimensiones, surgen cuatro estilos principales de decisor:
+clasP Hay 3 tipos polos en denominador:
+caR Simple,
+caR Múltiple 
+caR y complejos
 
-1. Estilo Directivo
-Perfil: Pensamiento racional y baja tolerancia a la ambigüedad.
+imP Para que mi sistema
+imP sea estable solo debo
+imP tener polos negativos en R(s),
+cuR sin embargo Y(s)
+cuR puede tener polos en origen
 
-Características:
-Son rápidos, pragmáticos y orientados a la acción inmediata y al corto plazo.
-Evalúan pocas alternativas y utilizan poca información (la justa y necesaria).
-Prefieren reglas claras, procedimientos preestablecidos y control.
+*caR Para diferenciar
 
-2. Estilo Analítico
-Perfil: Pensamiento racional y alta tolerancia a la ambigüedad.
++@caR que polo es entrada y
 
-Características:
-Demandan abundante cantidad de datos e información antes de decidir.
-Analizan meticulosamente múltiples variables, escenarios y alternativas posibles.
-Son metódicos y objetivos; tienen gran capacidad de adaptación ante problemas complejos e imprevistos.
++@caR no P(s)
 
-3. Estilo Conceptual
-Perfil: Pensamiento intuitivo y alta tolerancia a la ambigüedad.
+$caR a polos que genera entrada
+caR se le pone una X (cruz)
 
-Características:
-Enfocados en el «panorama general» (big picture) y con perspectiva a largo plazo.
-Muy creativos e innovadores, abiertos a considerar soluciones novedosas y diversos puntos de vista.
-Fomentan la discusión de ideas, aunque en ocasiones pueden postergar la ejecución concreta por analizar demasiadas alternativas abstractas.
+comP Si polo R(s) estuviera
+comP donde esta X
+comP (polo entrada)
+comP ahi si seria inestable,
+comP Y(s) si puede tener polos en origen
+comP sin inestabilizar
 
-4. Estilo Conductual (o de Comportamiento)
-Perfil: Pensamiento intuitivo y baja tolerancia a la ambigüedad.
+imP y(t) va a depender
+imP no solo polos y ceros P(s)
+imP si no también entrada
 
-Características:
-Centrados en las personas, las relaciones humanas y la cultura del equipo.
-Buscan el consenso, la aceptación colectiva y la participación de los miembros de la organización.
-Fomentan la comunicación abierta y procuran evitar el conflicto interpersonal.
+=== RUTA 28 a 34 - POLOS COMPLEJOS y ÁNGULOS ===
+
+caR los ángulos en sentido antihorario
+caR son positivos y
+caR en sentido horario
+caR negativos
+comP Entonces uso angulos suplementarios
+
+=== RUTA 31 - FORMAS EXPRESAR P(s) y ESTABILIDAD ===
+
+imP Si tengo 1 σ ≥ 0
+imP sistema es inestable
+
+cuR lo único que puedo
+cuR permitir en origen
+cuR son R(s) provenientes funciones singularidad

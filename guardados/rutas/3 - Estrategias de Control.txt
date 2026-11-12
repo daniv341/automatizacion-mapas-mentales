@@ -249,6 +249,103 @@ integral y
 derivativa
 
 RUTA 24
+ACCION PROPORCIONAL
+la ganancia mide
+cuánto amplifica controlador
+respuesta del sistema
+ante 1 cambio en señal entrada
+
+RUTA 25
+ACCION PROPORCIONAL
+Cuanto mayor sea ganancia,
+mayor será respuesta del sistema
+ante una pequeña variación en entrada,
+que puede resultar
+en 1 control más rápido,
+pero también más susceptible a
+oscilaciones o
+inestabilidad
+
+RUTA 26
+ACCION PROPORCIONAL
+Si k> infinito
+estrategia control
+tiende a 1 control onoff
+
+RUTA 27
+ACCION PROPORCIONAL
+la acción proporcional
+tiene 1 inconveniente,
+que es desviación permanente variable
+una vez establecida
+con relación al punto consigna,
+denominada offset
+
+RUTA 28
+ACCION PROPORCIONAL
+el offset
+puede reducirse
+disminuyendo banda proporcional,
+con salvedad
+que esta disminución
+no debe producir inestabilidad en proceso
+
+RUTA 29
+ACCION PROPORCIONAL
+la ganancia (G)
+es recíproca o inversa
+banda proporcional (BP)
+A medida que aumento ganancia,
+disminuyo banda proporcional
+
+RUTA 30
+ACCION PROPORCIONAL
+Definición Banda Proporcional:
+Es porcentaje del rango control
+necesario para que
+elemento final control (válvula)
+haga una carrera completa
+(0% cerrada a 100% abierta,
+o viceversa)
+
+RUTA 31
+ACCION PROPORCIONAL
+Ganancia baja
+(Banda proporcional grande)
+la respuesta es más lenta,
+pero sistema se vuelve estable y
+se preservan elementos finales control
+para que no conmuten todo tiempo
+
+RUTA 32
+ACCION PROPORCIONAL
+Criterio Sintonía:
+ayuda a determinar vaor ganancia
+Depende
+características físicas del sistema y
+qué tan crítica sea su sintonía
+
+RUTA 33
+ACCION PROPORCIONAL
+Cuando usar solo Proporcional:
+Si para mí sistema error offset
+es aceptable,
+no se añade ninguna otra banda;
+acción control
+es puramente proporcional al error y
+no se busca
+1 ajuste más fino
+
+RUTA 34
+ACCION PROPORCIONAL
+Función bandas Integral y Derivativa:
+No actúan solas
+Siempre acompañan a banda proporcional
+para realizar 1 ajuste fino y
+reducir error offset
+cuando hay una entrada brusca
+
+RUTA 35
 ACCION INTEGRAL
 tiene como propósito
 disminuir y eliminar
@@ -257,7 +354,7 @@ error en estado estacionario
 generado al aplicar
 Acción Proporcional
 
-RUTA 25
+RUTA 36
 ACCION INTEGRAL
 Control Integral
 actúa cuando persiste
@@ -268,14 +365,14 @@ en tiempo y
 sumándola
 a acción proporcional
 
-RUTA 26
+RUTA 37
 ACCION INTEGRAL
 error es integrado,
 el cual tiene función
 promediarlo o sumarlo
 por 1 período determinado
 
-RUTA 27
+RUTA 38
 ACCION INTEGRAL
 Luego es multiplicado
 por una constante I
@@ -290,7 +387,7 @@ una respuesta estable del sistema,
 sin error Offset
 en estado estacionario
 
-RUTA 28
+RUTA 39
 ACCION INTEGRAL
 Control Integral
 se caracteriza
@@ -300,7 +397,26 @@ en minutos entre repeticiones
 o su recíproca,
 repeticiones por minuto
 
-RUTA 29
+RUTA 40
+ACCION INTEGRAL
+se utiliza solo
+cuando es preciso
+mantener 1 valor variable
+que iguale siempre al punto consigna
+Es decir,
+se ejecuta acción control proporcional
+luego ejecución dicha acción
+entra banda integral,
+que ejecuta acción control
+en 1 tiempo determinado
+
+RUTA 41
+ACCION INTEGRAL
+la integral no funciona bien
+porque frente a perturbaciones pequeñas
+sistema se desestabiliza
+
+RUTA 42
 ACCION DERIVATIVA
 se manifiesta
 cuando hay 1 cambio
@@ -312,7 +428,7 @@ modos
 proporcional e
 integral)
 
-RUTA 30
+RUTA 43
 ACCION DERIVATIVA
 error,
 es desviación existente
@@ -320,7 +436,7 @@ entre
 punto medida y
 valor consigna,
 
-RUTA 31
+RUTA 44
 ACCION DERIVATIVA
 Su funcion
 es mantener error al mínimo
@@ -330,7 +446,7 @@ consiguiéndose esta manera
 evitar que error
 se incremente
 
-RUTA 32
+RUTA 45
 ACCION DERIVATIVA
 se
 deriva
@@ -340,7 +456,7 @@ por una constante D y
 luego se suma
 a señales anteriores (PI)
 
-RUTA 33
+RUTA 46
 ACCION DERIVATIVA
 Es importante
 adaptar respuesta control
@@ -351,33 +467,28 @@ a 1 cambio más rápido y
 controlador puede responder
 acordemente
 
-RUTA 34
+RUTA 47
 ACCION DERIVATIVA
 Control Derivativo
 se caracteriza
 por tiempo acción derivada
 en minutos anticipo
-Cuando tiempo acción derivada
-es grande,
-hay inestabilidad en proceso
 
-RUTA 35
+RUTA 48
 ACCION DERIVATIVA
-Cuando tiempo acción derivada
-es pequeño
-variable oscila demasiado
-con relación
-al punto consigna
+el control derivativo
+actúa cuando ve una rampa
+(o parabola, etc.)
+Actua siempre que variable esté cambiando,
+no actúa cuando ve una entrada escalón
+porque si bien
+hay variación
+el que actúa
+es acción proporcional y
+en siguientes instantes no hay variación
+(pendiente cero)
 
-RUTA 36
-ACCION DERIVATIVA
-tiempo óptimo
-acción derivativa
-es el que retorna a la variable
-al punto consigna
-con mínimas oscilaciones
-
-RUTA 37
+RUTA 49
 ACCION DERIVATIVA
 acción derivada
 es adecuada
@@ -387,7 +498,23 @@ movimiento válvula control y
 su repercusión
 a variable controlada
 
-RUTA 38
+RUTA 50
+ACCION DERIVATIVA
+el problema acción derivativa
+es que reacciona
+a velocidad del cambio
+
+RUTA 51
+ACCION DERIVATIVA
+puede ayudar a
+disminuir Sobrepico variable
+durante arranque del proceso y
+puede emplearse en sistemas
+con tiempos retardo considerables
+porque permite una recuperación rápida variable
+después presentarse una perturbación en proceso
+
+RUTA 52
 ACCION DERIVATIVA
 Suele ser poco utilizada
 debido a sensibilidad
@@ -395,12 +522,68 @@ al ruido que manifiesta y
 a complicaciones
 que ello conlleva
 
-RUTA 39
+RUTA 53
+ACCION DERIVATIVA
+Si sistema físico
+es muy sensible,
+1 pequeño ajuste
+(como abrir válvula apenas 1
+1% o 2% más)
+genera
+pequeñas turbulencias o
+variaciones rápidas
+
+RUTA 54
+ACCION DERIVATIVA
+la acción derivativa interpreta
+esas variaciones inofensivas
+como 'ruido' o
+perturbaciones graves
+
+RUTA 55
+ACCION DERIVATIVA
+Tiempo acción derivada:
+Es intervalo durante el cual,
+variación señal salida del controlador,
+debida a acción proporcional,
+iguala a parte variación señal
+debido a acción derivativa
+cuando se
+aplica una señal en rampa
+al instrumento
+
+RUTA 56
+ACCION DERIVATIVA
+Tiempo de accion derivada
+tiempo óptimo
+acción derivativa
+es el que retorna a la variable
+al punto consigna
+con mínimas oscilaciones
+
+RUTA 57
+ACCION DERIVATIVA
+Si es muy grande:
+variable reacciona
+con demasiada
+violencia y
+rapidez
+
+RUTA 58
+ACCION DERIVATIVA
+Si es muy pequeño:
+empujón es tan débil
+que no logra frenar inercia,
+permitiendo que variable
+quede oscilando demasiado tiempo alrededor consigna
+antes estabilizarse
+
+RUTA 59
 LIMITACIONES UN CONTROL PID
 pueden ser ineficientes
 en otras aplicaciones
 
-RUTA 40
+RUTA 60
 LIMITACIONES UN CONTROL PID
 desempeño del Sistema Control
 puede ser mejorado
@@ -408,7 +591,7 @@ combinando
 lazo cerrado con 1 control PID
 con 1 lazo abierto
 
-RUTA 41
+RUTA 61
 LIMITACIONES UN CONTROL PID
 a
 pueden dar 1 desempeño inadecuado
@@ -418,7 +601,7 @@ para que respuesta de este
 no se dispare u oscile
 sobre valor del Set Point
 
-RUTA 42
+RUTA 62
 LIMITACIONES UN CONTROL PID
 b
 Principal desempeño
@@ -427,7 +610,7 @@ sistemas lineales
 en Sistemas No Lineales
 es variable
 
-RUTA 43
+RUTA 63
 LIMITACIONES UN CONTROL PID
 c
 en parte derivativa,
@@ -438,7 +621,7 @@ pequeñas variaciones,
 hagan que cambio en salida
 sea muy grande
 
-RUTA 44
+RUTA 64
 APLICACIONES
 fueron inventados
 para simplificar
@@ -446,7 +629,7 @@ labores de operadores y
 ejercer un mejor control
 sobre operaciones
 
-RUTA 45
+RUTA 65
 APLICACIONES
 se utiliza
 en aplicaciones más críticas
@@ -458,7 +641,7 @@ Fuerza,
 Velocidad,
 en muchas aplicaciones química
 
-RUTA 46
+RUTA 66
 APLICACIONES
 a
 Lazos de Temperatura
@@ -466,7 +649,7 @@ Lazos de Temperatura
 Calentadores,
 Refrigeradores, etc.)
 
-RUTA 47
+RUTA 67
 APLICACIONES
 b
 Lazos de Nivel
@@ -476,7 +659,7 @@ lácteos,
 mezclas,
 crudo, etc.)
 
-RUTA 48
+RUTA 68
 APLICACIONES
 c
 Lazos de Presión
@@ -485,11 +668,164 @@ en tanques,
 tubos,
 recipientes, etc.)
 
-RUTA 49
+RUTA 69
 APLICACIONES
 d
 Lazos de Flujo
 (mantienen la cantidad de flujo dentro de
 una línea
 o tubo)
+
+RUTA 70
+CONCEPTOS PREVIOS
+Rango:
+Es conjunto valores variable medida
+que están comprendidos
+dentro de límites
+superior e inferior
+de la
+capacidad
+medida, recepción o transmisión
+del instrumento
+
+RUTA 71
+CONCEPTOS PREVIOS
+el span
+está referido en instrumentos,
+es diferencia aritmética
+entre
+límite superior y límite inferior
+capacidad lectura del instrumento,
+
+RUTA 72
+CONCEPTOS PREVIOS
+la banda muerta
+es campo valores variable
+que no hace variar
+indicación o
+señal salida
+del instrumento,
+es decir
+que no produce respuestas
+Viene dada en tanto
+por ciento del alcance medida
+Donde fórmula sería:
+bandaMuerta = setPoint ± porcentajeDeBanda (alcance y 100)
+
+RUTA 73
+CONCEPTOS PREVIOS
+la banda muerta
+es margen
+donde elemento retroalimentación
+no manda señal corrección
+osea no manda señal real
+al controlador
+para que corrija
+
+RUTA 74
+CONCEPTOS PREVIOS
+Desde punto vista
+práctico y diseño,
+no siempre
+se necesita error cero:
+1 margen error ±1% o ±2%
+es perfectamente aceptable,
+desde punto vista diseño sistema
+es estable
+
+RUTA 75
+CONCEPTOS PREVIOS
+Sistemas robustos vs muy sensibles
+Sistemas robustos:
+Admiten
+una banda integral o integral derivada
+ante entradas bruscas
+Sistemas muy sensibles:
+Conviene usar únicamente banda proporcional
+
+RUTA 76
+ELEMENTOS DE RETROALIMENTACION
+los elementos primarios
+son encargados
+medir variable física,
+pero no transmitirla al controlador
+porque estos
+leen una variable
+física o
+química
+
+RUTA 77
+ELEMENTOS DE RETROALIMENTACION
+el transductor
+es elemento secundario control
+que convierte señal física en
+una señal eléctrica y
+se mandan al controlador
+
+RUTA 78
+ELEMENTOS DE RETROALIMENTACION
+Por eso se llama
+elementos primarios,
+porque leen en variable física,
+que se encargan transmitirla
+son elementos secundarios,
+quien retroalimenta
+
+RUTA 79
+ELEMENTOS DE RETROALIMENTACION
+Entonces quien retroalimenta
+es elemento secundario,
+que es transductor en definitiva
+
+RUTA 80
+SEÑALES DE PID
+la señal 'P' (Proporcional) mueve válvula
+siguiendo fielmente
+cambios temperatura
+multiplicados por ganancia
+
+RUTA 81
+SEÑALES DE PID
+Un aumento ganancia conduce a
+una mayor acción proporcional y
+1 control más rápido
+
+RUTA 82
+SEÑALES DE PID
+la señal 'I '(integral)
+va sumando áreas diferencia
+entre variable y punto consigna,
+repitiendo señal proporcional
+según su i
+
+RUTA 83
+SEÑALES DE PID
+Una disminución del tiempo acción integral
+(mayor cantidad repeticiones por minuto)
+proporciona
+una mayor acción integral y
+1 control más rápido
+
+RUTA 84
+SEÑALES DE PID
+la señal 'D' (derivada),
+como se dijo,
+es pendiente (tangente) descrita por variable,
+con que anticipa posición válvula en tiempo
+debido a acción proporcional
+según valor d
+(minutos anticipo).
+1 aumento del tiempo acción derivada (td)
+incrementa acción derivada y
+proporciona 1 control más rápido
+
+RUTA 85
+SEÑALES DE PID
+no es proporcional al error,
+sino a una proyección este,
+como consecuencia
+anticipar valor variable controlada
+en función evolución esta
+y por ende
+su pendiente
 

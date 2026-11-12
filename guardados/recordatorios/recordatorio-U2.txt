@@ -1,45 +1,53 @@
 subT Diagramas Bloques
 que representa un diagrama de bloques? + relacion, causa & 9
 en que nos ayuda su uso? + funcionales, componentes & 10
-cuales son los componentes de un sistema? + alternativamente & 11
+cuales son los componentes de un sistema? + alternativamente & 12
+cual es la forma mas simple de un sistema de control? + solo & 23
 
 subT DIAGRAMA BLOQUES SIN RETROALIMENTACION
-que representa el rectangulo? + bloque, ejecuta & 12
-que representan las flechas? + direccion, flujo & 13
-como se representan la adicion y sustraccion? + circulo, signo, flechas & 14
-que es la salida en el punto suma? + suma & 15
-que entradas pueden llegar a un punto suma? + cualquier & 14
-como puedo dividir una señal? + señal, toma & 16
+que representa el rectangulo? + bloque, ejecuta & 13
+que representan las flechas? + direccion, flujo & 14
+como se representan la adicion y sustraccion? + circulo, signo, flechas & 15
+que es la salida en el punto suma? + suma & 16
+que entradas pueden llegar a un punto suma? + cualquier & 15
+como puedo dividir una señal? + señal, toma & 17
+porque estudiamos los malla cerrada? + retroalimentar, buscar, compararse & 18, 19
+cuando es sistema es estable? + infinito & 20
 
 subT DIAGRAMAS BLOQUES SISTEMAS CONTINUOS CON RETROALIMENTACIÓN
-que representan estos diagramas? + diferentes, conectados, relaciones & 17
-que es el diagrama de bloques en este sistema? + intervienen, etapas & 18
+que representan estos diagramas? + diferentes, conectados, relaciones & 21
+que es el diagrama de bloques en este sistema? + intervienen, etapas & 22
 
 subT TERMINOLOGIA DEL DIAGRAMA BLOQUES EN MALLA CERRADA
-como se representan las variables? + letras minusculas & 19
-que representan las letras minusculas? + tiempo, contrario & 20
-que representan las letras mayusculas? + transformadas, compleja & 21
+como se representan las variables? + letras minusculas & 24
+que representan las letras minusculas? + tiempo, contrario & 25
+que representan las letras mayusculas? + transformadas, compleja & 26
 
 subT DEFINICIONES
-que es la planta? + sistema, proceso, cantidad & 22
-que es la salida controlada? + salida planta, controla & 23
-que es la trayectoria directa? + ruta, suma, salida & 24
-que son los elementos anticipativos? + trayectoria, señal control & 25
-que son la señal de control y la variable manipulada? + anticipativos, entrada & 27
-que es la trayectoria de retroalimentacion? + salida, suma & 28
-que son los elementos de retroalimentacion? + componentes, funcional, señal & 29
-que es la entrada? + externa, especifica, ideal & 31
-que es la señal de retroalimentacion? + funcion, algebraicamente, no tiene & 33, 34
-que es la señal actuante? + suma, retroalimentacion, igual & 35, 36
-que es la accion de control? + genera, actuante & 37
-cuales son los tipos de retroalimentacion? + negativa, positiva & 38, 39
-que es una perturbacion? + indeseable, manipulada, intermedio & 40, 41
-que es un muestreador? + transforma & 42
-que es un conversor A/D? + analogico & 44
-que es un conversor D/A? + digital & 45
-que es un transductor? + energia & 46
-que es el orden v? + entrada, misma, transductor & 47, 48
-que es un sistema multivariable? + ambas & 49
+que es la planta? + sistema, proceso, cantidad & 27
+que acciones afectan a g2? + dirigidas, modificar & 28
+que es la salida controlada? + salida planta, controla & 29
+que es la trayectoria directa? + ruta, suma, salida & 30
+que son los elementos anticipativos? + trayectoria, señal control & 31
+que permiten los elementos anticipativos de control? + comparar, diferencia, calcular & 33
+que son la señal de control y la variable manipulada? + anticipativos, entrada & 35
+que es la trayectoria de retroalimentacion? + salida, suma & 36
+que calcula la trayectoria de retroalimentacion? +  error & 37
+que son los elementos de retroalimentacion? + componentes, funcional, señal & 38
+que es la entrada? + externa, especifica, ideal & 40
+que es la señal de retroalimentacion? + funcion, algebraicamente, no tiene & 42
+que representa la señal de retroalimentacion? + transformada, modificado & 44
+que es la señal actuante? + suma, retroalimentacion, igual, error & 46, 47
+que es la accion de control? + genera, actuante & 48
+cuales son los tipos de retroalimentacion? + negativa, positiva & 49, 50
+cuando decimos que la retroalimentacion es positiva? + no tiende, reducirse & 51, 52
+que es una perturbacion? + indeseable, manipulada, intermedio espuria & 53, 54, 55
+que es un muestreador? + transforma & 56
+que es un conversor A/D? + analogico & 58
+que es un conversor D/A? + digital & 59
+que es un transductor? + energia & 60
+que es el orden v? + entrada, misma, transductor & 62
+que es un sistema multivariable? + ambas & 63
 
 subT CLASIFICACIÓN CONTROLADORES ANALÓGICOS
 que es un controlador industrial? + acciones control & 1
@@ -50,6 +58,8 @@ que es un controlador I? + mayoria, Ki & 6
 que es un controlador PID? + suma, combinaciones & 7, 8
 
 subT OTROS SISTEMAS CONTROL
-que son los servomecanismos? + amplificada, mecanica, tiempo & 50
-que es un regulador? + constante, intervalo & 52
-como se diferencian el servomecanismo y el regulador? + mantener, entrada variable & 53
+que son los servomecanismos? + amplificada, mecanica, tiempo & 64
+que me permiten los servomecanismo? + aplificar resultado & 66
+que es un regulador? + constante, intervalo & 67
+como se llama la entrada en regulador? + punto & 68
+como se diferencian el servomecanismo y el regulador? + mantener, entrada variable & 69

@@ -1,63 +1,72 @@
 subT definiciones
 Que es un sistema? + unidad completa & 1
 Que es el control? + asegurar & 2
-Que es un sistema de control? + dirigen & 3
-Que es una entrada? + estimulo & 4
-Que es una salida? + respuesta real, diferentes & 5, 6
-Cual es el proposito de un sistema de control? + identificar, naturaleza & 8, 9
-Que es un subsistema de control? + internas & 10
-Que es el ancho de banda? + medida & 11
+Que es un sistema de control? + dirigen & 4
+Que es una entrada? + estimulo & 7
+Que es una salida? + respuesta real, diferentes & 8, 9
+Cual es el proposito de un sistema de control? + identificar, naturaleza & 12
+Que es un subsistema de control? + internas & 13
+
+subT ancho de banda
+Que es el ancho de banda? + medida & 14
+Cual es la capacidad que se asocia a el? + capacidad, analogico & 15
+Como funciona en malla abierta y cerrada? + filtro, estable & 16, 17
 
 subT tipos sistemas control segun naturaleza
-Que define a un sistema de control natural? + dedo & 12
-Que define a un sistema de control artificial? + calentador & 13
-Que define a un sistema de control mixto? + conduciendo & 14
+Que define a un sistema de control natural? + dedo & 19
+Que define a un sistema de control artificial? + calentador & 20
+Que define a un sistema de control mixto? + conduciendo & 21
 
 subT importancia del control
-Cual es su importancia respecto a los objetivos? + objetivos & 15
-En que ambitos se aplica? + aplica todo & 16
-Como interviene frente a desviaciones? + causas, desviaciones & 17
-Que impacto economico o de eficiencia genera? + reduce, ahorra & 18
+Como ayuda a los objetivos? + objetivos & 22
+A que se aplica? + aplica todo & 23
+Que determina y analiza? + causas, desviaciones & 24
+Que impacto economico o de eficiencia genera? + reduce, ahorra & 25
 
 subT tipos sistemas control segun malla
-Que los distingue? + accion control, no movimiento & 19
+Que los distingue? + accion control, movimiento, energia & 26, 27
 
 subT malla abierta
-Que no tiene? + salida, efecto, medir & 20, 21
+Que no tiene? + salida, efecto, medir & 28, 29
 
 subT caracteristicas malla abierta
-Como se determina la condicion de entrada? + entrada, condicion & 22
-De que depende su precision o funcionamiento? + depende calibracion & 23
-Como responde ante perturbaciones o variaciones? + no adapta cambios & 24
-Que se necesita conocer para su operacion? + conocer relacion, no perturbaciones & 25, 26
-De que factor externo depende la accion? + depende criterio & 27
+Como se determina la condicion de entrada? + entrada, condicion & 31
+De que depende su exactitud? + depende calibracion & 32
+Que es calibrar? + establecer, relacion & 33
+Como responde ante perturbaciones o variaciones? + no adapta cambios & 34
+Que se necesita conocer para su operacion? + conocer relacion, no perturbaciones & 35, 36
+De que factor externo depende la accion? + depende criterio & 37
+Que es un punto de falla? + falta, iniciales & 30
 
 subT malla cerrada
-En que se diferencian? + depende salida & 28
-Que es la retroalimentacion? + propiedad, comparar & 29
+En que se diferencian? + depende salida & 38
+Que es la retroalimentacion? + propiedad, comparar & 39
+Que implica un lazo cerrado? + uso, reducir & 40
+Cuando decimos que hay retroalimentacion? + existe, secuencia, variables & 41
 
 subT caracteristicas malla cerrada
-Como influye la malla cerrada en la exactitud? + exactitud & 23
-Que ocurre con la razon o sensibilidad? + razon & 31
-Como se ve afectado el ancho de banda? + ancho banda & 32
+Como influye la malla cerrada en la exactitud? + exactitud & 32
+Que ocurre con la razon o sensibilidad? + razon & 43
+Como se ve afectado el ancho de banda? + ancho banda & 44
 
 subT tipos sistemas control segun su senal
-Que es una señal en control? + funcion, t & 33
-Que es una señal analogica? + continuum & 34
-Que es una señal digital? + discretos & 36
+Que es una señal en control? + funcion, t & 45
+Que es una señal analogica? + continuum & 46
+Que es una señal digital? + discretos & 48
+Que es el overclocking? + aumentar, reducir, frecuencia & 50. 51
 
 subT otras definiciones
-Cual es el objetivo de la ingenieria de control? + analisis, diseño & 38
-Que es el analisis en control? + investigacion & 39
-Que es el diseño en control? + ordenamiento, tarea & 40
-Que es el diseño por analisis? + modificar, existente & 40
-Que es el diseño por sintesis? + definir, especificaciones & 41
+Cual es el objetivo de la ingenieria de control? + analisis, diseño & 52
+Que es el analisis en control? + investigacion & 53
+Que es el diseño en control? + ordenamiento, tarea & 54
+Que es el diseño por analisis? + modificar, existente & 54
+Que es el diseño por sintesis? + definir, especificaciones & 55
 
 subT modelos o representaciones sistemas control
-Como los resuelvo? + especificar, analisis & 42
+Como los resuelvo? + especificar, analisis & 56
 
 subT modelos representativos
-Que modelo define la relacion cuantitativa y matematica? + relacion cuantitativa, aplicacion, complejidad & 43
-Que modelo utiliza diagramas de bloques? + diagrama & 45
-Que modelo utiliza grafos de flujo de señal? + grafos & 46
+Que modelo define la relacion cuantitativa y matematica? + relacion cuantitativa, aplicacion, complejidad & 57
+Que modelo utiliza diagramas de bloques? + diagrama & 59
+Que modelo utiliza grafos de flujo de señal? + grafos & 60
 

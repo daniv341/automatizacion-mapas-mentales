@@ -37,7 +37,7 @@ tarJ
 
 estilo de diseño para el mapa, nota: deberas seleccionar todos los bordes ir a fomato -> puntos de referencia -> recto para lograr la forma a la que nos acostumbramos
 [
-  {
+{
     "layout": "elkTree",
     "config": {
       "elk.spacing.nodeNode": "25",

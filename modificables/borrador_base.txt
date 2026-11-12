@@ -1,65 +1,22 @@
-temaP !er parcial AD 
+=== RUTA 1 a 9 - DEFINICIÓN DE FUNCIÓN DE TRANSFERENCIA ===
+La función de transferencia de un sistema, es un modelo matemático en el sentido de que es un método operacional que permite relacionar la variable de salida con la variable de entrada, mediante las transformadas de Laplace de las ecuaciones diferenciales que las describen.
+Lo que me da la F.T es la capacidad de entender la dinámica del sistema, no cómo está formado (no me dice nada de eso). Por eso si analizo la salida puedo definir si las F.T son iguales o distintas. Si tengo dos sistemas y aplico la misma entrada y la salida es distinta, F.T es distinta.
+Pero si yo a la misma entrada tengo igual respuesta significa que la F.T de esos sistemas son iguales independientemente de su naturaleza, sin importar cómo están constituidos los sistemas. Sistemas de naturaleza distinta pueden tener la misma F.T porque la dinámica interna hace que se comporten de manera similar. La F.T es un propiedad intrínseca del sistema y no depende de la entrada, la rta depende de la entrada, pero la F.T no.
+La función de transferencia incluye las unidades necesarias para relacionar la entrada con la salida; no obstante, no brinda ninguna información respecto a la estructura física del sistema (Las funciones de transferencias de muchos sistemas físicamente distintos pueden ser idénticas).
+Ahora si no conozco P(s) y conozco R(s) lo que puedo hacer es excitar a P(s) con R(s) y estudiar la salida y obtenerla porque yo sé que P(s) es Y(s) sobre R(s).
+Las E.D deben ser consideradas con condiciones iniciales igual a 0, en TC entendemos que el sistema viene del reposo o sea que las n condiciones iniciales son iguales a 0 porque recién comienza la dinámica desde que lo mido.
 
-temaS 
+=== RUTA 24 y 25 - GANANCIA / CÁLCULO DE GANANCIA ===
+Para calcular la ganancia usamos dos conceptos: El concepto de estabilidad y el teorema de valor final.
+Por teorema de valor final cuando en el plano real t -> ∞, s -> 0 en el plano complejo. Por eso luego vamos a particularizar para s = 0.
 
-subT IDEA CENTRAL
-El objetivo fue estimar el alquiler mensual de un departamento en rublos a partir de información como superficie, distrito, ubicación, antigüedad, tipo de edificio, estado de renovación y fecha del anuncio. El modelo final es una regresión lineal, pero antes se transformaron algunas variables para que pudiera representar relaciones más realistas. Por eso, “lineal” describe cómo el modelo combina las variables transformadas; no significa que el precio tenga que cambiar en línea recta con cada variable original.
+=== RUTA 26 y 27 - E.F.P. MÉTODO GRÁFICO: DIAGRAMA DE POLOS Y CEROS / RESIDUOS ===
+Hay 3 tipos de polos en el denominador: Simple (como (s+1)), Múltiple (como (s+1)^5) y complejos.
+Para que mi sistema sea estable solo debo tener polos negativos en R(s), sin embargo Y(s) puede tener polos en el origen. Para diferenciar que el polo es de la entrada y no de la P(s) a los polos que genera la entrada se le pone una X (cruz).
+Si el polo de R(s) estuviera donde esta la x (polo de la entrada) ahi si seria inestable, Y(s) si puede tener polos en el origen sin inestabilizar. y(t) va a depender no solo de los polos y ceros de P(s) si no también de los de la entrada.
 
-subT CONCEPTOS y PREGUNTAS
-El modelo aprende en escala logarítmica, pero el propietario necesita una estimación en rublos. Al volver de una escala logarítmica a la moneda original, simplemente deshacer la transformación puede subestimar el alquiler promedio, porque convertir de vuelta no compensa automáticamente la variabilidad de los errores. La corrección de Duan calcula un factor de ajuste a partir de los residuos del entrenamiento.
+=== RUTA 28 a 34 - POLOS COMPLEJOS / ÁNGULOS ===
+Los ángulos en sentido antihorario son positivos y en sentido horario negativos. Entonces uso angulos suplementarios.
 
-En el informe, el factor de Duan es aproximadamente 1,003500. Es una corrección pequeña, lo cual tiene sentido porque el factor está muy cerca de uno. En validación, el RMSE en rublos baja de 5.344,75 a 5.312,92 cuando se aplica la corrección. Por tanto, la corrección mejora ligeramente el resultado, pero no produce un cambio enorme.
-
-La multicolinealidad aparece cuando varias variables cuentan casi la misma historia. Por ejemplo, la distancia al centro y la distancia al metro pueden estar relacionadas; también la superficie y la cantidad de habitaciones. Eso puede volver inestables los coeficientes: al modelo le cuesta separar qué parte del efecto corresponde a cada variable. No significa necesariamente que la predicción vaya a ser mala, pero sí complica la interpretación y puede volver frágiles los coeficientes.
-
-El VIF mide cuánto se infla la incertidumbre de un predictor por su relación con los otros. El número de condición es una señal global de la estabilidad numérica del conjunto de variables. En el informe, el número de condición baja de 43,84 a 10,42 después del preprocesamiento. Ningún VIF final llega a 10; 53 de los 57 predictores tienen VIF menor que 5 y cuatro quedan en la franja moderada. El máximo es 8,01, así que sería incorrecto decir que toda colinealidad desapareció.
-
-One-Hot Encoding transforma una variable categórica en indicadores separados, normalmente con valores que identifican si un anuncio pertenece o no a una categoría. Es útil para variables con pocas categorías y sin orden numérico natural, como tipo de edificio o estado de renovación. Así, el modelo no interpreta por error que una categoría vale “más” que otra solo porque tenga un número asignado.
-
-Target Encoding resume una categoría mediante una estadística relacionada con el alquiler objetivo. En vez de crear una columna por cada distrito, genera una representación numérica del efecto asociado a ese distrito. Es útil cuando hay muchas categorías: en el informe `district` tiene 129 valores distintos.
-
-Data Leakage, o fuga de información, ocurre cuando el modelo recibe durante el entrenamiento una pista que no tendría disponible de forma legítima al predecir un caso nuevo. Entonces parece muy preciso, pero esa precisión es artificial.
-
-La elección depende principalmente de cuántas categorías existen, de cuántos casos hay en cada una y de cuánto se necesita interpretar cada efecto. Con pocas categorías —por ejemplo, seis tipos de edificio o cuatro estados de renovación— One-Hot resulta simple y transparente. Con 129 distritos, crear una columna por categoría puede volver la representación demasiado dispersa y hacer que los distritos raros se estimen con pocos datos; Target Encoding resume esa señal en menos columnas, aunque exige controles estrictos contra la fuga.
-
-Los splines permiten que el efecto de una variable cambie de forma gradual según el tramo de su rango, en vez de obligar al modelo a usar una sola pendiente para todos los casos. Son útiles cuando un metro cuadrado adicional no tiene el mismo efecto en departamentos pequeños y grandes, o cuando alejarse del centro encarece o abarata el alquiler de forma distinta según la distancia.
-
-PCA transforma varias columnas correlacionadas en nuevas combinaciones que concentran la información de esas columnas y quedan menos correlacionadas entre sí. En tu proyecto se aplicó a bloques de características spline para mejorar la estabilidad numérica y bajar la redundancia. No es una técnica que “descubra causalidad”, ni hace que el modelo sea automáticamente mejor.
-
-un estudio de ablación consiste en armar variantes de un modelo y agregar o quitar un bloque de características cada vez, manteniendo comparable la evaluación. La pregunta es: “¿Qué mejora realmente cuando incorporo esta pieza?”. Si el error baja de forma consistente en datos no usados para ajustar esa variante, hay evidencia de que el bloque aporta valor predictivo. Si el error no baja o empeora, la complejidad adicional quizá no se justifique.
-
-Jarque-Bera es una prueba formal que analiza si la distribución de los residuos se parece a una normal, prestando atención a su asimetría y a qué tan pesadas o ligeras son sus colas. La hipótesis nula es que los residuos siguen una distribución normal. Si el valor p es menor que el umbral elegido —en el informe, 0,05— se rechaza esa hipótesis; si es mayor, no hay evidencia suficiente para rechazarla.
-
-Durbin-Watson ayuda a detectar autocorrelación de primer orden: si un error tiende a parecerse al error inmediatamente anterior en una secuencia ordenada. En un análisis temporal importa porque los errores de meses cercanos podrían compartir una tendencia no capturada. Un valor alrededor de 2 suele indicar poca evidencia de autocorrelación de primer orden; por debajo de 2 puede sugerir autocorrelación positiva, aunque la interpretación completa depende del contexto y de los supuestos de la prueba.
-
-Una curva de aprendizaje muestra cómo cambia el error cuando el modelo recibe más filas de entrenamiento. En la versión K-Fold mezclada, los datos se reparten en pliegues sin respetar estrictamente el orden cronológico. Sirve para observar estabilidad dentro de una muestra tratada como si sus registros fueran intercambiables, pero es menos adecuada para demostrar cómo se comportará el modelo con meses futuros cuando existe una tendencia del mercado.
-
-Curva de Aprendizaje Fuera de Tiempo responde una pregunta más cercana al uso real: si entreno con cada vez más datos históricos, ¿mejoran las predicciones sobre períodos posteriores que el modelo no vio? El entrenamiento mantiene el orden temporal y valid/test pertenecen a períodos posteriores. Así se mide el desempeño ante un mercado que evoluciona, en lugar de asumir que anuncios antiguos y futuros son intercambiables.
-
-K-Fold mezcla los datos para evaluar el modelo en distintas particiones, mientras que la partición temporal respeta el orden cronológico: se entrena con períodos anteriores y se evalúa con períodos posteriores. Esto permite comprobar si el modelo puede predecir alquileres futuros sin aprovechar información del futuro.
-
-Kruskal-Wallis permite evaluar si los alquileres presentan diferencias entre grupos, como distintos barrios, sin exigir que los datos sigan una distribución normal. La V de Cramér mide la intensidad de la asociación entre dos variables categóricas y ayuda a detectar posibles redundancias entre características.
-
-OLS estima los coeficientes buscando minimizar los errores cuadrados. Ridge y Lasso penalizan los coeficientes para controlar la complejidad y la multicolinealidad, mientras que Huber reduce la influencia de ciertos errores extremos. OLS puede ganar si ofrece un mejor equilibrio entre precisión, estabilidad e interpretación en los datos evaluados.
-
-Ceteris paribus significa “manteniendo constantes las demás variables”. Un coeficiente representa cómo cambia la predicción del modelo cuando cambia una característica del departamento y las demás permanecen iguales. Si la variable está transformada o codificada, la interpretación debe considerar esa transformación.
-
-subT GRAFICOS EDA
-grafico 1 — distribución del alquiler: muestra la asimetría de la variable objetivo y ayuda a justificar `log1p`.
-grafico 2 — distribuciones de predictores numéricos: permite detectar asimetrías, rangos extraños y variables con valores extremos, sin eliminarlos automáticamente.
-grafico 3 — análisis categórico: compara distribuciones del alquiler entre tipos de edificio, renovaciones, distritos y otras categorías; ayuda a reconocer asociaciones y categorías con pocos casos.
-grafico 4 — correlaciones: identifica relaciones entre predictores, por ejemplo superficie con habitaciones y distancia al centro con distancia al metro; orienta el análisis de multicolinealidad.
-grafico 5 — relaciones bivariadas clave: evidencia la apertura en abanico del alquiler original y la curvatura de la relación con la distancia al centro; justifica transformación logarítmica y splines.
-grafico 6 — leakage y metro: muestra por qué `rent_per_sqm` filtraría la respuesta y documenta dudas sobre la validez de variables de estación y línea de metro.
-grafico 7 — tendencias temporales: muestra una evolución alcista nominal y una estacionalidad mensual poco marcada; ayuda a justificar el tratamiento temporal y la partición cronológica.
-grafico 8 — distribución espacial: muestra concentración de alquileres altos en la zona central y agrupamientos periféricos; justifica representar la ubicación con más de una variable.
-
-Después vienen los gráficos de diagnóstico de residuos, que verifican si esas decisiones dejaron patrones sistemáticos en los errores
-
-subT GRAFICOS DIAGNOSTICO
-grafico 1 — Histograma de residuos: debería verse aproximadamente centrado en cero y sin una asimetría extrema. En el informe, la asimetría residual es cercana a cero y la dispersión es parecida entre train, valid y test.
-grafico 2 — QQ-plot: compara la distribución de los residuos con una normal teórica. Tus puntos se aproximan mucho a la diagonal; en los extremos se curvan ligeramente hacia adentro, compatible con colas más ligeras que las de una normal. Visualmente es una buena aproximación, pero Jarque-Bera sí rechaza normalidad en test.
-grafico 3 — Scale-Location: busca cambios en la magnitud de los errores a lo largo de las predicciones. La curva se mantiene prácticamente horizontal en torno al nivel esperado; no se observa embudo marcado. Breusch-Pagan tampoco rechaza homocedasticidad en valid ni test.
-grafico 4 — Residuos vs. valores ajustados: busca curvas, embudos o agrupamientos. La nube está centrada alrededor de cero, sin forma de U ni abanico, y la línea media es horizontal. Eso apoya que no queda una no linealidad o una variación de dispersión evidente en el rango observado, aunque ningún gráfico prueba que el modelo capture absolutamente toda la estructura.
-grafico 5 — Real vs. predicho: contrasta directamente la predicción con el valor observado. Cuanto más cerca quedan los puntos de la diagonal ideal, más cercanas son las predicciones; se complementa con RMSE, MAE y R², porque una impresión visual no cuantifica el error por sí sola.
-grafico 6 — Residuos a lo largo del tiempo: busca deriva temporal. El informe describe una dispersión relativamente estable, pero también un sesgo medio positivo en los períodos posteriores, relacionado con la evolución nominal de los alquileres. Esto recuerda que errores estables no descartan que el mercado cambie de nivel.
+=== RUTA 31 - FORMAS DE EXPRESAR P(s) / ESTABILIDAD ===
+Si tengo un σ ≥ 0 el sistema es inestable. Lo único que puedo permitir en el origen son las R(s) provenientes de funciones de singularidad.

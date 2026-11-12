@@ -1,30 +1,45 @@
 subT DEFINICIÓN FUNCIONES TRANSFERENCIA UN SISTEMA CONTINUO
 que consideramos para FT? + continuas, define, multiplica & 1
-como se define la funcion de transferencia? + salida, entrada & 2
-que es polinimio caracteristico? + denominador, respuesta, iniciales & 3, 4
-todas las FT son expresiones algebraicas? + no todas & 5
-que podemos hacer si valores iniciales = 0? + conmutativa, inversa & 7
-que sucede en consecuencia si valores iniciales = 0? + depende, polos, ceros & 9
+como se define la funcion de transferencia? + salida, entrada & 3
+que nos permite la FT? + operacional, relacionar, laplace & 4
+que es polinimio caracteristico? + denominador, respuesta, iniciales & 5
+todas las FT son expresiones algebraicas? + no todas 
+que podemos hacer si valores iniciales = 0? + conmutativa, inversa & 9
+porque consideramos condiciones iniciales = 0? + reposo, comienza & 11
+que sucede en consecuencia si valores iniciales = 0? + depende, polos, ceros & 12
+que me permite entender la FT? + dinamica, formado & 13
+que pasa si tengo sistemas con salida distinta? + distinta & 14
+que pasa si tengo sistemas con salida igual? + iguales, naturaleza & 15
+la FT brinda informacion sobre su estructura fisica? + relacionar, distintos, identicas & 17
+que puedo hacer si conozco R(s)? + excitar, estudiar & 18
 
 subT PROPIEDADES FUNCIÓN TRANSFERENCIA UN SISTEMA CONTINUO
-que sucede ante impulso unitario? + iniciales, cero & 10
-que importancia tiene ec diferencial? + determinarse & 11
-que pasa si raices reales negativas? + estable & 12
-como podemos expresar la funcion? + constante, K & 13, 14
+que sucede ante impulso unitario? + iniciales, cero & 19
+que importancia tiene ec diferencial? + determinarse & 20
+que pasa si raices reales negativas? + estable & 21
+como podemos expresar la funcion? + constante, K & 22
 
 subT FORMA CANÓNICA UN SISTEMA EN MALLA CERRADA
-G y H + componentes & 15
-como es la retroalimentacion respecto a los signos? + positiva, negativa & 16
-que determina C/R? + ecuacion, a partir & 17
+G y H + componentes & 24
+como es la retroalimentacion respecto a los signos? + positiva, negativa & 25
+que determina C/R? + ecuacion, a partir & 26
+como puedo calcular ganancia? + estabilidad, teorema, plano & 27, 28
+
+subT EFP  metodo grafico - real
+que debo tener para que mi sistema sea estable? + negativos, origen & 39
+como puedo diferenciar polo entrada y un polo P(s)? + genera, pone & 40
+que pasa si X esta en origen? + inestable, origen & 41
+de que depende y(t)? + entrada & 42
+que tipos de polos hay? + simple, multiple & 38
 
 subT RESPUESTA EN TIEMPO
-que podemos obtener si conocemos FT lazo cerrado? + cerrado, salida, inversa & 21, 22
-los metodos graficos son utiles? + poderosa, plantas & 23
+que podemos obtener si conocemos FT lazo cerrado? + cerrado, salida, inversa & 32, 33
+los metodos graficos son utiles? + poderosa, plantas & 34
 
 subT EFP metodo grafico
-que es una var compleja? + binomica, triangulos & 28
-que pasa si obtenemos s1 y s2? + expresar, origen & 29
-que pasa si son polos reales? + aproximan & 30
-que pasa si es imaginario puro? + inestable & 31
-que uso si no especifican R(s)? + 1/s & 32
-que debo hacer con los angulos? + siempre, radianes, suplementarios & 33, 34
+que es una var compleja? + binomica, triangulos & 44
+que pasa si obtenemos s1 y s2? + expresar, origen & 45
+que pasa si son polos reales? + aproximan & 46
+que pasa si es imaginario puro? + inestable & 47
+que uso si no especifican R(s)? + 1/s & 48
+que debo hacer con los angulos? + siempre, radianes, suplementarios & 49, 50, 51
