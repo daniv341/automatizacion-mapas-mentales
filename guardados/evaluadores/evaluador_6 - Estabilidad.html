@@ -8852,6 +8852,7 @@
     indiceCongelado = indiceActual;
 
     let aciertos = 0;
+    let huecosConTypo = 0;   // huecos aceptados solo por tolerancia de errores
     const palabrasCorrectas = [];
 
     Object.keys(clozeData.rutas).forEach((idRuta) => {
@@ -8863,9 +8864,15 @@
           const resp = normalizarPalabra(crudo).replace(/\s+/g, ' ');
           const coincideDirecto = resp !== '' && (resp === seg.norm || crudo === seg.original);
           const coincideNombreSimbolo = resp !== '' && !!seg.nombreSimboloNorm && resp === seg.nombreSimboloNorm;
-          const ok = coincideDirecto || coincideNombreSimbolo;
+          // Fallback tolerante a errores (hasta MAX_ERRORES_POR_PALABRA ediciones), igual que el modo Normal:
+          // solo con palabras de >= 5 letras y sin dígitos, para no aceptar cifras o siglas cortas distintas (ADN/ARN, 1990/1991).
+          const aceptaTypo = (a, b) => !!b && !/[0-9]/.test(a) && !/[0-9]/.test(b) && dentroDeToleranciaEdicion(a, b);
+          const coincideTypo = !coincideDirecto && !coincideNombreSimbolo && resp !== '' &&
+            (aceptaTypo(resp, seg.norm) || aceptaTypo(resp, seg.nombreSimboloNorm));
+          const ok = coincideDirecto || coincideNombreSimbolo || coincideTypo;
           clozeData.aciertosDetalle[seg.indiceHueco] = ok;
           if (ok) aciertos++;
+          if (coincideTypo) huecosConTypo++;
           palabrasCorrectas.push(seg.original);
         });
       });
@@ -8881,9 +8888,16 @@
     if (aciertos === total) res = 'si';
     else if (prop >= 0.5) res = 'casi';
 
+    // más de 4 huecos con errores de escritura: si→casi, casi→no
+    const resSinDegradar = res;
+    const nivelDegradado = degradarPorTypos(res === 'si' ? 'bien' : (res === 'casi' ? 'casi' : 'mal'), huecosConTypo);
+    res = nivelDegradado === 'bien' ? 'si' : (nivelDegradado === 'casi' ? 'casi' : 'no');
+    const degradadoPorTypos = res !== resSinDegradar;
+
     const etq = res === 'si' ? '✓ Bien' : (res === 'casi' ? '~ Casi' : '✗ Mal');
     const textoDetalle = total > 0
-      ? etq + ' — Acertaste ' + aciertos + ' de ' + total + ' hueco(s). Correctas: ' + palabrasCorrectas.join(', ')
+      ? etq + ' — Acertaste ' + aciertos + ' de ' + total + ' hueco(s). Correctas: ' + palabrasCorrectas.join(', ') +
+        (degradadoPorTypos ? ' (' + huecosConTypo + ' huecos con errores de escritura: el resultado bajó un nivel)' : '')
       : etq + ' — Sin huecos para evaluar.';
 
     evaluaciones[indiceActual] = {
@@ -8891,6 +8905,8 @@
       acertadas: aciertos,
       clavesTotal: total,
       textoDetalle: textoDetalle,
+      huecosConTypo: huecosConTypo,
+      degradadoPorTypos: degradadoPorTypos,
     };
     escritos[indiceActual] = clozeData.respuestasUsuario.join(' | ');
     resultados[indiceActual] = res;
@@ -16411,6 +16427,33 @@ const ZONAS_SYNC_GIST = [
     document.getElementById('btn-vaciar-notaseval').style.display = (!bloqueado && notasEvaluador.length > 0) ? 'inline-block' : 'none';
   }
 
+  // Durante el Pomodoro: si la hoja de pretest / skimming / braindump está vacía, pregunta si de verdad
+  // se quiere seguir sin escribir nada. Devuelve true si se puede continuar.
+  let _confirmandoHojaVacia = false;
+  async function confirmarHojaPomodoroVacia(modoEsperado) {
+    if (!pomodoroActivo) return true;
+    const modo = modoEsperado || (pomodoroEnBraindumpFinal ? 'braindump' : pomodoroFase);
+    if (modo !== 'pretest' && modo !== 'skimming' && modo !== 'braindump') return true;
+    let texto;
+    if (elModalNotasEvaluador.classList.contains('abierto') && modoHojaNotasEval === modo) {
+      texto = elHojaEditor.value;
+    } else if (modo === 'pretest' || modo === 'skimming') {
+      const nota = obtenerNotaUnicaPropia(modo);
+      texto = nota ? (nota.texto || '') : '';
+    } else {
+      return true;
+    }
+    if (texto.trim() !== '') return true;
+    if (_confirmandoHojaVacia) return false;
+    _confirmandoHojaVacia = true;
+    try {
+      const nombre = modo === 'pretest' ? 'el pretest' : (modo === 'skimming' ? 'el skimming' : 'el braindump');
+      return await confirmarAccion('No escribiste nada en ' + nombre + '. ¿Seguro que querés continuar sin escribir nada?', 'Sí, continuar');
+    } finally {
+      _confirmandoHojaVacia = false;
+    }
+  }
+
   function guardarHojaCompartida() {
     detenerDictadoHojaCompartida();
     if (modoHojaNotasEval === 'pretest' || modoHojaNotasEval === 'skimming') {
@@ -16425,7 +16468,9 @@ const ZONAS_SYNC_GIST = [
     }
     if (modoHojaNotasEval === 'braindump') {
       if (pomodoroEnBraindumpFinal) {
-        finalizarBraindumpPomodoro();
+        confirmarHojaPomodoroVacia('braindump').then((ok) => {
+          if (ok && pomodoroEnBraindumpFinal) finalizarBraindumpPomodoro();
+        });
         return;
       }
       const texto = elHojaEditor.value.trim();
@@ -16907,7 +16952,14 @@ const ZONAS_SYNC_GIST = [
   }
 
   document.getElementById('btn-notas-evaluador').addEventListener('click', () => abrirNotasEvaluador('normales'));
-  document.getElementById('btn-notaseval-cerrar').addEventListener('click', () => cerrarNotasEvaluador());
+  document.getElementById('btn-notaseval-cerrar').addEventListener('click', async () => {
+    if (pomodoroActivo && pomodoroFase === 'pretest' && modoHojaNotasEval === 'pretest') {
+      detenerDictadoHojaCompartida();
+      if (!(await confirmarHojaPomodoroVacia('pretest'))) return;
+      if (!pomodoroActivo || pomodoroFase !== 'pretest') return;
+    }
+    cerrarNotasEvaluador();
+  });
   document.getElementById('btn-notaseval-agregar').addEventListener('click', () => agregarNotaEvaluador());
   elNotaEvalTextoNueva.addEventListener('keydown', (evento) => {
     if (evento.key === 'Enter' && (evento.ctrlKey || evento.metaKey)) {
@@ -20337,19 +20389,50 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return v;
   }
 
-  function distanciaMax1(a, b) {
-    if (a === b) return true;
+  // Tolerancia a errores de escritura: hasta MAX_ERRORES_POR_PALABRA ediciones por palabra y,
+  // como máximo, MAX_PALABRAS_CON_TYPO palabras con errores por respuesta sin penalización.
+  const MAX_ERRORES_POR_PALABRA = 2;
+  const MAX_PALABRAS_CON_TYPO = 4;
+
+  // Distancia de edición (Levenshtein + transposición de letras contiguas): mínimo de
+  // sustituciones, inserciones, eliminaciones y transposiciones para convertir a en b.
+  function distanciaEdicion(a, b) {
+    if (a === b) return 0;
     const la = a.length, lb = b.length;
-    if (Math.abs(la - lb) > 1) return false;
-    let i = 0;
-    while (i < la && i < lb && a[i] === b[i]) i++;
-    if (la === lb) {
-      if (a.slice(i + 1) === b.slice(i + 1)) return true;
-      if (i + 1 < la && a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2)) return true;
-      return false;
+    if (la === 0) return lb;
+    if (lb === 0) return la;
+    let prev2 = new Array(lb + 1).fill(0);
+    let prev = new Array(lb + 1);
+    let cur = new Array(lb + 1);
+    for (let j = 0; j <= lb; j++) prev[j] = j;
+    for (let i = 1; i <= la; i++) {
+      cur[0] = i;
+      for (let j = 1; j <= lb; j++) {
+        const costo = a[i - 1] === b[j - 1] ? 0 : 1;
+        let d = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + costo);
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+          d = Math.min(d, prev2[j - 2] + 1);
+        }
+        cur[j] = d;
+      }
+      const tmp = prev2; prev2 = prev; prev = cur; cur = tmp;
     }
-    if (la > lb) return a.slice(i + 1) === b.slice(i);
-    return b.slice(i + 1) === a.slice(i);
+    return prev[lb];
+  }
+
+  // Palabras de >= 5 letras y diferencia de largo <= MAX_ERRORES_POR_PALABRA (evita calcular la distancia de más).
+  function dentroDeToleranciaEdicion(x, y) {
+    return x.length >= 5 && y.length >= 5 &&
+      Math.abs(x.length - y.length) <= MAX_ERRORES_POR_PALABRA &&
+      distanciaEdicion(x, y) <= MAX_ERRORES_POR_PALABRA;
+  }
+
+  // Degrada un nivel el resultado si hubo más de MAX_PALABRAS_CON_TYPO palabras con errores.
+  function degradarPorTypos(nivel, cantidad) {
+    if (cantidad <= MAX_PALABRAS_CON_TYPO) return nivel;
+    if (nivel === 'bien') return 'casi';
+    if (nivel === 'casi') return 'mal';
+    return nivel;
   }
 
   function crearEntrada(w, orig) {
@@ -20415,16 +20498,18 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function seParecen(a, b) {
-    if (a.w.length >= 5 && b.w.length >= 5 && distanciaMax1(a.w, b.w)) return true;
+    if (dentroDeToleranciaEdicion(a.w, b.w)) return true;
     for (const x of a.v) {
       for (const y of b.v) {
-        if (x.length >= 5 && y.length >= 5 && distanciaMax1(x, y)) return true;
+        if (dentroDeToleranciaEdicion(x, y)) return true;
       }
     }
     return false;
   }
 
-  function emparejar(A, B) {
+  // alEmparejarConTolerancia(i, j): se llama solo cuando A[i] y B[j] emparejaron por tolerancia de errores
+  // (falló la coincidencia por raíz).
+  function emparejar(A, B, alEmparejarConTolerancia) {
     const usadosB = new Set();
     const pares = new Map();
     [compartenRaiz, seParecen].forEach((comparar) => {
@@ -20435,6 +20520,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
           if (comparar(a, B[j])) {
             usadosB.add(j);
             pares.set(i, j);
+            if (comparar === seParecen && alEmparejarConTolerancia) alEmparejarConTolerancia(i, j);
             break;
           }
         }
@@ -20502,6 +20588,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const linea3 = document.createElement('div');
     linea3.textContent = ev.comunes + ' palabra(s) en común';
     elResultadoEval.appendChild(linea3);
+
+    if (ev.degradadoPorTypos) {
+      const lineaTypos = document.createElement('div');
+      lineaTypos.textContent = '✍️ ' + ev.palabrasConTypo + ' palabras con errores de escritura (máximo ' +
+        MAX_PALABRAS_CON_TYPO + ' sin penalización): el resultado bajó un nivel';
+      elResultadoEval.appendChild(lineaTypos);
+    }
 
     if (porComprension[indiceActual]) {
       const extra = document.createElement('div');
@@ -20705,7 +20798,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const escritas = analizarTexto(texto);
 
     const entradasClaves = claves.map((c) => crearEntrada(c, c));
-    const paresClaves = emparejar(entradasClaves, escritas);
+    const palabrasConTypo = new Set();   // índices de palabras escritas que solo emparejaron por tolerancia de errores
+    const paresClaves = emparejar(entradasClaves, escritas, (i, j) => palabrasConTypo.add(j));
     const acertadas = [];
     const faltaron = [];
     const mapeo = [];
@@ -20720,7 +20814,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const propClaves = claves.length > 0 ? acertadas.length / claves.length : null;
 
     const referencia = analizarTexto(textoReferenciaDe(actual));
-    const comunes = emparejar(escritas, referencia).size;
+    const comunes = emparejar(escritas, referencia, (i, j) => palabrasConTypo.add(i)).size;
     const sim = (escritas.length === 0 || referencia.length === 0)
       ? 0 : (2 * comunes) / (escritas.length + referencia.length);
 
@@ -20741,8 +20835,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       else resultado = 'mal';
     }
 
+    const resultadoSinDegradar = resultado;
+    resultado = degradarPorTypos(resultado, palabrasConTypo.size);   // más de 4 palabras con errores: bien→casi, casi→mal
+
     const detalleEval = {
       resultado,
+      palabrasConTypo: palabrasConTypo.size,
+      degradadoPorTypos: resultado !== resultadoSinDegradar,
       acertadas,
       faltaron,
       mapeo,
@@ -22482,11 +22581,18 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     abrirModalRetencionRutas();
   });
 
-  elBtnPomodoroSkimming.addEventListener('click', () => saltarASkimmingPomodoro());
+  elBtnPomodoroSkimming.addEventListener('click', async () => {
+    if (!pomodoroActivo || pomodoroFase !== 'pretest') return;
+    if (!(await confirmarHojaPomodoroVacia('pretest'))) return;
+    saltarASkimmingPomodoro();
+  });
 
-  elBtnPomodoroRetencion.addEventListener('click', () => {
+  elBtnPomodoroRetencion.addEventListener('click', async () => {
     if (!pomodoroActivo) return;
-    if (pomodoroFase !== 'pretest' && pomodoroFase !== 'skimming' && pomodoroFase !== 'descanso_largo') return;
+    const faseAlClick = pomodoroFase;
+    if (faseAlClick !== 'pretest' && faseAlClick !== 'skimming' && faseAlClick !== 'descanso_largo') return;
+    if (faseAlClick !== 'descanso_largo' && !(await confirmarHojaPomodoroVacia(faseAlClick))) return;
+    if (!pomodoroActivo || pomodoroFase !== faseAlClick) return;
     entrarFaseRetencionPomodoro();
   });
 
