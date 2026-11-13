@@ -1695,7 +1695,6 @@
     grid-template-columns: 1fr 1fr;
     gap: 14px;
   }
-
   .item-tienda {
     border: 2px solid var(--color-borde-medio);
     border-radius: 14px;
@@ -4222,7 +4221,7 @@
       <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-sobreconfianza" checked> ⚠️ Sobreconfianza</label>
       <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-olvido" checked> 😵‍ Olvido</label>
       <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-urgentes" checked> 🔴 Urgentes</label>
-      <label class="ri-filtro-item" title="SubT con tarjetas marcadas por olvido, incompleto, mezcla de conceptos o confusión"><input type="checkbox" id="chk-ri-razones" checked> 🏷 Por razones</label>
+      <label class="ri-filtro-item" title="Tarjetas marcadas con alguna razón (olvido, incompleto, confusión, mezcla, terminología o contexto)"><input type="checkbox" id="chk-ri-razones" checked> 🏷 Por razones</label>
     </div>
     <div class="ri-lista-subt" id="ri-lista-subt" style="display:none;"></div>
     <p class="galeria-vacia" id="ri-estado-vacio" style="display:none;">Ningún subT cumple con las características seleccionadas</p>
@@ -5890,7 +5889,6 @@
   const elTemaTexto = document.getElementById('tema-texto');
   const elPrimero = document.getElementById('tarjeta-primero');
 
-  // Lectura en voz alta del «primero» (API nativa, funciona offline)
   const elBtnLeerPrimero = document.getElementById('btn-leer-primero');
   const ttsDisponible = ('speechSynthesis' in window) && (typeof SpeechSynthesisUtterance !== 'undefined');
   let _utteranceActual = null;
@@ -5915,13 +5913,11 @@
     u.onerror = fin;
     _utteranceActual = u;
     elBtnLeerPrimero.classList.add('leyendo');
-    // pequeño diferimiento: algunos navegadores ignoran speak() inmediatamente después de cancel()
     setTimeout(() => { if (_utteranceActual === u) window.speechSynthesis.speak(u); }, 50);
   }
 
   if (!ttsDisponible) elBtnLeerPrimero.style.display = 'none';
   elBtnLeerPrimero.addEventListener('click', () => leerPrimeroEnVoz());
-  // Cualquier cambio del texto del «primero» (navegar, cambiar de tarjeta o de modo) corta la lectura
   new MutationObserver(() => detenerLecturaPrimero()).observe(elPrimero, { childList: true, characterData: true, subtree: true });
   window.addEventListener('beforeunload', detenerLecturaPrimero);
   window.addEventListener('pagehide', detenerLecturaPrimero);
@@ -8864,8 +8860,6 @@
           const resp = normalizarPalabra(crudo).replace(/\s+/g, ' ');
           const coincideDirecto = resp !== '' && (resp === seg.norm || crudo === seg.original);
           const coincideNombreSimbolo = resp !== '' && !!seg.nombreSimboloNorm && resp === seg.nombreSimboloNorm;
-          // Fallback tolerante a errores (hasta MAX_ERRORES_POR_PALABRA ediciones), igual que el modo Normal:
-          // solo con palabras de >= 5 letras y sin dígitos, para no aceptar cifras o siglas cortas distintas (ADN/ARN, 1990/1991).
           const aceptaTypo = (a, b) => !!b && !/[0-9]/.test(a) && !/[0-9]/.test(b) && dentroDeToleranciaEdicion(a, b);
           const coincideTypo = !coincideDirecto && !coincideNombreSimbolo && resp !== '' &&
             (aceptaTypo(resp, seg.norm) || aceptaTypo(resp, seg.nombreSimboloNorm));
@@ -8888,7 +8882,6 @@
     if (aciertos === total) res = 'si';
     else if (prop >= 0.5) res = 'casi';
 
-    // más de 4 huecos con errores de escritura: si→casi, casi→no
     const resSinDegradar = res;
     const nivelDegradado = degradarPorTypos(res === 'si' ? 'bien' : (res === 'casi' ? 'casi' : 'mal'), huecosConTypo);
     res = nivelDegradado === 'bien' ? 'si' : (nivelDegradado === 'casi' ? 'casi' : 'no');
@@ -15397,7 +15390,7 @@ const ZONAS_SYNC_GIST = [
   const elChkRIOlvido = document.getElementById('chk-ri-olvido');
   const elChkRIUrgentes = document.getElementById('chk-ri-urgentes');
   const elChkRIRazones = document.getElementById('chk-ri-razones');
-  const RAZONES_REPASO_INTELIGENTE = ['olvido', 'incompleto', 'mezcla', 'confusion'];
+  const RAZONES_REPASO_INTELIGENTE = ['olvido', 'incompleto', 'confusion', 'mezcla', 'terminologia', 'contexto'];
 
   function tarjetaTieneRazonRepaso(t) {
     try {
@@ -15549,9 +15542,8 @@ const ZONAS_SYNC_GIST = [
     elChkRIOlvido.checked = true;
     elChkRIUrgentes.checked = true;
     candidatosRepasoInteligente = calcularCandidatosRepasoInteligente();
-    const hayRazonesRI = candidatosRepasoInteligente.some((c) => c.razones);
-    elChkRIRazones.checked = hayRazonesRI;
-    elChkRIRazones.disabled = !hayRazonesRI;
+    elChkRIRazones.checked = true;
+    elChkRIRazones.disabled = false;
     renderListaModalRepasoInteligente();
     elModalRepasoInteligente.classList.add('abierto');
   }
@@ -15561,11 +15553,40 @@ const ZONAS_SYNC_GIST = [
   }
 
   function comenzarSesionRepasoInteligente() {
-    const subtsElegidos = new Set(
-      candidatosRepasoInteligente.filter((c) => c.seleccionado).map((c) => c.nombre)
+    const elegidos = candidatosRepasoInteligente.filter((c) => c.seleccionado);
+    if (elegidos.length === 0) return;
+    const activas = categoriasActivasRI();
+
+    const subtsCompletos = new Set();
+    const subtsPorTarjeta = new Set();
+    elegidos.forEach((c) => {
+      const porSubT = (activas.sobreconfianza && c.sobreconfianza) ||
+        (activas.olvido && c.olvido) ||
+        (activas.urgentes && c.urgentes);
+      if (porSubT) subtsCompletos.add(c.nombre);
+      else subtsPorTarjeta.add(c.nombre);
+    });
+
+    const cumpleTarjeta = (t) =>
+      (activas.dificiles && esDificil(t)) || (activas.razones && tarjetaTieneRazonRepaso(t));
+
+    let paraRepasar = tarjetasCompletas.filter((t) => {
+      const sub = nombreTema(t);
+      if (subtsCompletos.has(sub)) return true;
+      return subtsPorTarjeta.has(sub) && cumpleTarjeta(t);
+    });
+
+    const nombresConTarjetas = new Set(paraRepasar.map((t) => nombreTema(t)));
+    const manualesSinTarjetas = new Set(
+      elegidos.filter((c) => c.manualmenteMarcado && !nombresConTarjetas.has(c.nombre)).map((c) => c.nombre)
     );
-    if (subtsElegidos.size === 0) return;
-    const paraRepasar = tarjetasCompletas.filter((t) => subtsElegidos.has(nombreTema(t)));
+    if (manualesSinTarjetas.size > 0) {
+      paraRepasar = tarjetasCompletas.filter((t) => {
+        const sub = nombreTema(t);
+        return nombresConTarjetas.has(sub) || manualesSinTarjetas.has(sub);
+      });
+    }
+
     if (paraRepasar.length === 0) return;
     cerrarModalRepasoInteligente();
     abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar, null, true);
@@ -16427,8 +16448,6 @@ const ZONAS_SYNC_GIST = [
     document.getElementById('btn-vaciar-notaseval').style.display = (!bloqueado && notasEvaluador.length > 0) ? 'inline-block' : 'none';
   }
 
-  // Durante el Pomodoro: si la hoja de pretest / skimming / braindump está vacía, pregunta si de verdad
-  // se quiere seguir sin escribir nada. Devuelve true si se puede continuar.
   let _confirmandoHojaVacia = false;
   async function confirmarHojaPomodoroVacia(modoEsperado) {
     if (!pomodoroActivo) return true;
@@ -20389,13 +20408,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return v;
   }
 
-  // Tolerancia a errores de escritura: hasta MAX_ERRORES_POR_PALABRA ediciones por palabra y,
-  // como máximo, MAX_PALABRAS_CON_TYPO palabras con errores por respuesta sin penalización.
   const MAX_ERRORES_POR_PALABRA = 2;
   const MAX_PALABRAS_CON_TYPO = 4;
 
-  // Distancia de edición (Levenshtein + transposición de letras contiguas): mínimo de
-  // sustituciones, inserciones, eliminaciones y transposiciones para convertir a en b.
   function distanciaEdicion(a, b) {
     if (a === b) return 0;
     const la = a.length, lb = b.length;
@@ -20420,14 +20435,12 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return prev[lb];
   }
 
-  // Palabras de >= 5 letras y diferencia de largo <= MAX_ERRORES_POR_PALABRA (evita calcular la distancia de más).
   function dentroDeToleranciaEdicion(x, y) {
     return x.length >= 5 && y.length >= 5 &&
       Math.abs(x.length - y.length) <= MAX_ERRORES_POR_PALABRA &&
       distanciaEdicion(x, y) <= MAX_ERRORES_POR_PALABRA;
   }
 
-  // Degrada un nivel el resultado si hubo más de MAX_PALABRAS_CON_TYPO palabras con errores.
   function degradarPorTypos(nivel, cantidad) {
     if (cantidad <= MAX_PALABRAS_CON_TYPO) return nivel;
     if (nivel === 'bien') return 'casi';
@@ -20507,8 +20520,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return false;
   }
 
-  // alEmparejarConTolerancia(i, j): se llama solo cuando A[i] y B[j] emparejaron por tolerancia de errores
-  // (falló la coincidencia por raíz).
   function emparejar(A, B, alEmparejarConTolerancia) {
     const usadosB = new Set();
     const pares = new Map();
@@ -23267,9 +23278,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return true;
   }
 
-  // ===================================================================================
-  // Persistencia y recuperación de la sesión Pomodoro (capa paralela a la de evaluación)
-  // ===================================================================================
   const PREFIJO_SESION_POMODORO = 'sesion_pomodoro_';
   const CLAVE_SESION_POMODORO = PREFIJO_SESION_POMODORO + ESPACIO_HASH;
   const VERSION_SESION_POMODORO = 1;
@@ -23292,7 +23300,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     } catch (e) { return null; }
   }
 
-  // Hoja compartida abierta (pretest / skimming / braindump final) con el texto actual, guardado o no.
   function hojaPomodoroActual() {
     if (!elModalNotasEvaluador.classList.contains('abierto')) return null;
     let notaId = null;
@@ -23307,13 +23314,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function sesionPomodoroActivaParaGuardar() {
-    // "Repaso pasivo" no activa pomodoroActivo, así que nunca se persiste.
     return pomodoroActivo && FASES_POMODORO_VALIDAS.indexOf(pomodoroFase) !== -1;
   }
 
   function construirSesionPomodoroPendiente() {
     const ahora = Date.now();
-    // La pausa manual en curso todavía no está en pomodoroPausaAcumMs: se suma aquí (tiempo no válido).
     const pausaEnCurso = (pomodoroPausado && pomodoroPausaInicio > 0) ? Math.max(0, ahora - pomodoroPausaInicio) : 0;
     return {
       version: VERSION_SESION_POMODORO,
@@ -23355,7 +23360,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       return false;
     }
   }
-  // Mismos eventos que la sesión de evaluación (beforeunload + pagehide + visibilitychange oculta). Sin intervalo periódico.
   _guardadosPendientes.push({ flush: guardarSesionPomodoroPendiente });
   window.addEventListener('beforeunload', guardarSesionPomodoroPendiente);
 
@@ -23401,8 +23405,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return notasEvaluador.find((n) => n.id === s.pomodoroBraindumpNotaId && n.categoria === 'braindump') || null;
   }
 
-  // Al descartar (o expirar) una sesión con braindump final: si tiene contenido (incluido el texto aún sin guardar
-  // de la hoja) se conserva como nota braindump normal; si quedó vacía se elimina, como hace finalizarBraindumpPomodoro.
   function resolverBraindumpDeSesionPomodoro(s) {
     const nota = buscarNotaBraindumpPomodoro(s);
     if (!nota) return;
@@ -23419,9 +23421,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     guardarNotasEvaluador();
   }
 
-  // Braindump cuya nota ya no existe: se descarta el braindump y el Pomodoro vuelve a la fase previa
-  // (pomodoroFase no cambia al entrar al braindump). El tiempo pasado en braindump no cuenta, igual que
-  // el total "congelado" que usa finalizarBraindumpPomodoro.
   function volverAFaseAnteriorAlBraindumpPomodoro(s) {
     if (pomEsNum(s.pomodoroTotalSegCongelado)) {
       const entradaMs = s.pomodoroHoraInicio + s.pomodoroPausaAcumMs + s.pomodoroTotalSegCongelado * 1000;
@@ -23465,12 +23464,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     let sesion = null;
     try { sesion = JSON.parse(crudo); } catch (e) { sesion = null; }
     if (!validarContenidoSesionPomodoro(sesion)) { descartarSesionPomodoroPendiente(sesion); return null; }
-    // Pretest / skimming abierto en la hoja y borrado externamente: la sesión ya no es coherente.
     if (sesion.hoja && sesion.hoja.modo !== 'braindump' && !buscarNotaHojaPomodoro(sesion.hoja)) {
       descartarSesionPomodoroPendiente(sesion);
       return null;
     }
-    // Nota del braindump borrada: se sigue sin braindump, en la fase previa.
     if (sesion.pomodoroEnBraindumpFinal && !buscarNotaBraindumpPomodoro(sesion)) {
       volverAFaseAnteriorAlBraindumpPomodoro(sesion);
     }
@@ -23568,7 +23565,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function restaurarSesionPomodoroPendiente(x) {
-    // Todas las comprobaciones antes de tocar estado.
     if (pomodoroActivo) throw new Error('ya hay un Pomodoro activo');
     if (tarjetasCompletas.length === 0) throw new Error('el evaluador no tiene tarjetas');
     const enBraindump = !!x.pomodoroEnBraindumpFinal;
@@ -23576,7 +23572,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (x.hoja && x.hoja.modo !== 'braindump' && !buscarNotaHojaPomodoro(x.hoja)) throw new Error('la nota de la hoja ya no existe');
 
     const ahora = Date.now();
-    // Tiempo fuera de línea: no se cuenta (se suma a la pausa acumulada) y no se avanzan fases.
     const fuera = Math.max(0, ahora - x.timestampUltimaActividad);
     const pausado = !!x.pomodoroPausado && !enBraindump && FASES_POMODORO_PAUSABLES.indexOf(x.pomodoroFase) !== -1;
 
@@ -23621,7 +23616,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
 
     if (enBraindump) {
-      // braindump final: sin cronómetro (como al entrar la primera vez)
     } else if (pausado) {
       elTituloPausa.textContent = '⏸ En pausa';
       elTextoPausa.textContent = 'Pomodoro en pausa · Quedan ' + formatoMMSS(pomodoroSegundosRestantes) + ' de la fase actual';
@@ -23637,7 +23631,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const _sesionPendienteAlCargar = cargarSesionPendiente();
   if (_sesionPendienteAlCargar) mostrarModalRecuperacion(_sesionPendienteAlCargar);   // antes de mostrar "temas"
 
-  // No coexisten: si hay evaluación pendiente tiene prioridad (solo su modal) y la de Pomodoro se descarta.
   if (_sesionPendienteAlCargar) {
     descartarSesionPomodoroPendiente();
   } else {

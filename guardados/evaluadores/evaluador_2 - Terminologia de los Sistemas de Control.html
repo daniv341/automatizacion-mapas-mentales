@@ -4221,7 +4221,7 @@
       <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-sobreconfianza" checked> ⚠️ Sobreconfianza</label>
       <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-olvido" checked> 😵‍ Olvido</label>
       <label class="ri-filtro-item"><input type="checkbox" id="chk-ri-urgentes" checked> 🔴 Urgentes</label>
-      <label class="ri-filtro-item" title="SubT con tarjetas marcadas por olvido, incompleto, mezcla de conceptos o confusión"><input type="checkbox" id="chk-ri-razones" checked> 🏷 Por razones</label>
+      <label class="ri-filtro-item" title="Tarjetas marcadas con alguna razón (olvido, incompleto, confusión, mezcla, terminología o contexto)"><input type="checkbox" id="chk-ri-razones" checked> 🏷 Por razones</label>
     </div>
     <div class="ri-lista-subt" id="ri-lista-subt" style="display:none;"></div>
     <p class="galeria-vacia" id="ri-estado-vacio" style="display:none;">Ningún subT cumple con las características seleccionadas</p>
@@ -15390,7 +15390,7 @@ const ZONAS_SYNC_GIST = [
   const elChkRIOlvido = document.getElementById('chk-ri-olvido');
   const elChkRIUrgentes = document.getElementById('chk-ri-urgentes');
   const elChkRIRazones = document.getElementById('chk-ri-razones');
-  const RAZONES_REPASO_INTELIGENTE = ['olvido', 'incompleto', 'mezcla', 'confusion'];
+  const RAZONES_REPASO_INTELIGENTE = ['olvido', 'incompleto', 'confusion', 'mezcla', 'terminologia', 'contexto'];
 
   function tarjetaTieneRazonRepaso(t) {
     try {
@@ -15542,9 +15542,8 @@ const ZONAS_SYNC_GIST = [
     elChkRIOlvido.checked = true;
     elChkRIUrgentes.checked = true;
     candidatosRepasoInteligente = calcularCandidatosRepasoInteligente();
-    const hayRazonesRI = candidatosRepasoInteligente.some((c) => c.razones);
-    elChkRIRazones.checked = hayRazonesRI;
-    elChkRIRazones.disabled = !hayRazonesRI;
+    elChkRIRazones.checked = true;
+    elChkRIRazones.disabled = false;
     renderListaModalRepasoInteligente();
     elModalRepasoInteligente.classList.add('abierto');
   }
@@ -15554,11 +15553,40 @@ const ZONAS_SYNC_GIST = [
   }
 
   function comenzarSesionRepasoInteligente() {
-    const subtsElegidos = new Set(
-      candidatosRepasoInteligente.filter((c) => c.seleccionado).map((c) => c.nombre)
+    const elegidos = candidatosRepasoInteligente.filter((c) => c.seleccionado);
+    if (elegidos.length === 0) return;
+    const activas = categoriasActivasRI();
+
+    const subtsCompletos = new Set();
+    const subtsPorTarjeta = new Set();
+    elegidos.forEach((c) => {
+      const porSubT = (activas.sobreconfianza && c.sobreconfianza) ||
+        (activas.olvido && c.olvido) ||
+        (activas.urgentes && c.urgentes);
+      if (porSubT) subtsCompletos.add(c.nombre);
+      else subtsPorTarjeta.add(c.nombre);
+    });
+
+    const cumpleTarjeta = (t) =>
+      (activas.dificiles && esDificil(t)) || (activas.razones && tarjetaTieneRazonRepaso(t));
+
+    let paraRepasar = tarjetasCompletas.filter((t) => {
+      const sub = nombreTema(t);
+      if (subtsCompletos.has(sub)) return true;
+      return subtsPorTarjeta.has(sub) && cumpleTarjeta(t);
+    });
+
+    const nombresConTarjetas = new Set(paraRepasar.map((t) => nombreTema(t)));
+    const manualesSinTarjetas = new Set(
+      elegidos.filter((c) => c.manualmenteMarcado && !nombresConTarjetas.has(c.nombre)).map((c) => c.nombre)
     );
-    if (subtsElegidos.size === 0) return;
-    const paraRepasar = tarjetasCompletas.filter((t) => subtsElegidos.has(nombreTema(t)));
+    if (manualesSinTarjetas.size > 0) {
+      paraRepasar = tarjetasCompletas.filter((t) => {
+        const sub = nombreTema(t);
+        return nombresConTarjetas.has(sub) || manualesSinTarjetas.has(sub);
+      });
+    }
+
     if (paraRepasar.length === 0) return;
     cerrarModalRepasoInteligente();
     abrirModalSeleccionModo(modoAleatorio ? mezclar(paraRepasar) : paraRepasar, null, true);

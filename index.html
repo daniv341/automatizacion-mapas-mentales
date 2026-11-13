@@ -1411,7 +1411,7 @@
     <div class="encabezado">
       <h1>Estructuras JSON</h1>
     </div>
-    <p class="subtitulo">Datos guardados en este navegador, agrupados por estructura. El nombre de cada clave corresponde a un evaluador.</p>
+    <p class="subtitulo">Datos guardados en este navegador, agrupados por espacio.</p>
     <div id="storage-contenido">
       <p class="cargando">Cargando estructuras...</p>
     </div>
@@ -2362,81 +2362,93 @@
     renderizarHeatmapLazy(porDia, contHm, panelHm);
   }
 
+  const ESPACIO_SIN_IDENTIFICAR_STORAGE = 'Sin identificar';
+
   const ESTRUCTURAS_STORAGE = [
-    { nombre: 'Difíciles', patron: 'dificiles' },
-    { nombre: 'Notas', patron: 'notas' },
-    { nombre: 'Razones', patron: 'razones' },
-    { nombre: 'Pomodoro', patron: 'pomodoro' },
-    { nombre: 'Para revisar', patron: 'para revisar' },
-    { nombre: 'Análisis de sesión', patron: 'analisis de sesion' },
-    { nombre: 'Gamificación', patron: 'gamificacion' },
-    { nombre: 'Listas', patron: 'listas' },
-    { nombre: 'Notas de evaluador', patron: 'notas de evaluador' },
-    { nombre: 'Imágenes', patron: 'imagenes' }
+    { clave: 'gamificacion_v1', singular: 'sesión', plural: 'sesiones' },
+    { clave: 'dificiles_tarjetas_v1', singular: 'tarjeta difícil', plural: 'tarjetas difíciles' },
+    { clave: 'para_revisar_v1', singular: 'tarjeta por revisar', plural: 'tarjetas por revisar' },
+    { clave: 'notas_tarjetas_v1', singular: 'nota', plural: 'notas' },
+    { clave: 'notas_evaluador_v1', singular: 'nota de evaluador', plural: 'notas de evaluador' },
+    { clave: 'analisis_sesion_guardados_v1', singular: 'análisis', plural: 'análisis' },
+    { clave: 'retencion_rutas_v1', singular: 'sesión', plural: 'sesiones' },
+    { clave: 'razones_tarjetas_v1', singular: 'razón', plural: 'razones' },
+    { clave: 'datos_imagenes_v1', singular: 'imagen', plural: 'imágenes' },
+    { clave: 'listas_guardadas_v1', singular: 'lista', plural: 'listas' }
   ];
 
-  function normalizarClaveStorage(txt) {
-    return String(txt || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/_/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+  function extraerEspacioDeClaveStorage(clave) {
+    const m = /^(.+)[_|:]+h[0-9a-z]+$/i.exec(String(clave));
+    return m && m[1].trim() ? m[1].trim() : ESPACIO_SIN_IDENTIFICAR_STORAGE;
   }
 
-  function asignarEstructuraStorage(claveNormalizada) {
-    let mejorIdx = -1;
-    ESTRUCTURAS_STORAGE.forEach((estructura, idx) => {
-      if (
-        claveNormalizada.includes(estructura.patron) &&
-        (mejorIdx === -1 || estructura.patron.length > ESTRUCTURAS_STORAGE[mejorIdx].patron.length)
-      ) {
-        mejorIdx = idx;
-      }
-    });
-    return mejorIdx;
+  function contarValorStorage(valor) {
+    if (Array.isArray(valor)) return valor.length;
+    if (valor && typeof valor === 'object') return Object.keys(valor).length;
+    if (typeof valor === 'string') return valor.trim() ? 1 : 0;
+    return valor === null || valor === undefined ? 0 : 1;
   }
 
-  function contarItemsStorage(dato) {
-    if (Array.isArray(dato)) return dato.length;
-    if (dato && typeof dato === 'object') return Object.keys(dato).length;
-    return null;
+  function contarPorEspacioStorage(estructura, dato) {
+    const conteos = new Map();
+    const sumar = (espacio, n) => {
+      if (n <= 0) return;
+      conteos.set(espacio, (conteos.get(espacio) || 0) + n);
+    };
+
+    let base = dato;
+    if (estructura.clave === 'gamificacion_v1') {
+      base = dato && Array.isArray(dato.historial) ? dato.historial : [];
+    } else if (estructura.clave === 'retencion_rutas_v1' && dato && Array.isArray(dato.retencionRutas)) {
+      base = dato.retencionRutas;
+    }
+
+    if (Array.isArray(base)) {
+      base.forEach((el) => {
+        const espacio = el && typeof el.espacio === 'string' && el.espacio.trim()
+          ? el.espacio.trim()
+          : ESPACIO_SIN_IDENTIFICAR_STORAGE;
+        sumar(espacio, 1);
+      });
+    } else if (base && typeof base === 'object') {
+      Object.keys(base).forEach((k) => {
+        sumar(extraerEspacioDeClaveStorage(k), contarValorStorage(base[k]));
+      });
+    }
+
+    return conteos;
   }
 
   function construirDatosStorage() {
-    const grupos = ESTRUCTURAS_STORAGE.map((estructura) => ({
-      estructura: estructura,
-      items: []
-    }));
+    const porEspacio = new Map();
 
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const clave = localStorage.key(i);
-        if (!clave) continue;
-
-        const idxEstructura = asignarEstructuraStorage(normalizarClaveStorage(clave));
-        if (idxEstructura === -1) continue;
-
-        let dato;
-        try {
-          dato = JSON.parse(localStorage.getItem(clave));
-        } catch (e) {
-          continue;
-        }
-
-        const cantidad = contarItemsStorage(dato);
-        if (cantidad === null) continue;
-
-        grupos[idxEstructura].items.push({ clave: clave, cantidad: cantidad });
+    ESTRUCTURAS_STORAGE.forEach((estructura) => {
+      let dato;
+      try {
+        const crudo = localStorage.getItem(estructura.clave);
+        if (crudo === null) return;
+        dato = JSON.parse(crudo);
+      } catch (e) {
+        return;
       }
-    } catch (e) {}
 
-    grupos.forEach((grupo) => {
-      grupo.items.sort((a, b) => a.clave.localeCompare(b.clave));
+      contarPorEspacioStorage(estructura, dato).forEach((cantidad, espacio) => {
+        if (!porEspacio.has(espacio)) porEspacio.set(espacio, []);
+        porEspacio.get(espacio).push({
+          clave: estructura.clave,
+          cantidad: cantidad,
+          unidad: cantidad === 1 ? estructura.singular : estructura.plural
+        });
+      });
     });
 
-    return grupos;
+    return Array.from(porEspacio.entries())
+      .map(([espacio, items]) => ({ espacio: espacio, items: items }))
+      .sort((a, b) => {
+        if (a.espacio === ESPACIO_SIN_IDENTIFICAR_STORAGE) return 1;
+        if (b.espacio === ESPACIO_SIN_IDENTIFICAR_STORAGE) return -1;
+        return a.espacio.localeCompare(b.espacio, undefined, { numeric: true });
+      });
   }
 
   function crearFilaStorage(item) {
@@ -2451,12 +2463,12 @@
     nombre.textContent = item.clave;
     info.appendChild(nombre);
 
-    fila.appendChild(info);
+    const detalle = document.createElement('div');
+    detalle.className = 'fila-srs-detalle';
+    detalle.textContent = item.cantidad + ' ' + item.unidad;
+    info.appendChild(detalle);
 
-    const contador = document.createElement('span');
-    contador.className = 'fila-srs-nivel';
-    contador.textContent = item.cantidad + ' item' + (item.cantidad === 1 ? '' : 's');
-    fila.appendChild(contador);
+    fila.appendChild(info);
 
     return fila;
   }
@@ -2477,7 +2489,7 @@
 
     const nombre = document.createElement('span');
     nombre.className = 'grupo-storage-nombre';
-    nombre.textContent = '📂 ' + grupo.estructura.nombre;
+    nombre.textContent = '📂 ' + grupo.espacio;
     toggle.appendChild(nombre);
 
     const contador = document.createElement('span');
@@ -2489,16 +2501,9 @@
     cuerpo.className = 'grupo-storage-cuerpo';
     cuerpo.hidden = true;
 
-    if (grupo.items.length === 0) {
-      const vacio = document.createElement('p');
-      vacio.className = 'storage-vacio-grupo';
-      vacio.textContent = 'Sin datos.';
-      cuerpo.appendChild(vacio);
-    } else {
-      grupo.items.forEach((item) => {
-        cuerpo.appendChild(crearFilaStorage(item));
-      });
-    }
+    grupo.items.forEach((item) => {
+      cuerpo.appendChild(crearFilaStorage(item));
+    });
 
     toggle.addEventListener('click', () => {
       const abierto = !cuerpo.hidden;

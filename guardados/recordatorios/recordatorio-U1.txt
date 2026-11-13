@@ -53,7 +53,7 @@ subT tipos sistemas control segun su senal
 Que es una señal en control? + funcion, t & 45
 Que es una señal analogica? + continuum & 46
 Que es una señal digital? + discretos & 48
-Que es el overclocking? + aumentar, reducir, frecuencia & 50. 51
+Que es el overclocking? + aumentar, reducir, frecuencia & 50, 51
 
 subT otras definiciones
 Cual es el objetivo de la ingenieria de control? + analisis, diseño & 52
