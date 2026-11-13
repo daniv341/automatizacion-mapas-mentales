@@ -502,6 +502,22 @@
     display: none;
   }
 
+  .btn-borrar-storage {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--color-borde-medio);
+    border-radius: 8px;
+    padding: 6px 9px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .btn-borrar-storage:hover {
+    background: rgba(192, 57, 43, 0.15);
+    border-color: #c0392b;
+  }
+
   .storage-vacio-grupo {
     text-align: center;
     padding: 14px 0;
@@ -2389,6 +2405,22 @@
     return valor === null || valor === undefined ? 0 : 1;
   }
 
+  function espacioDeElementoStorage(el) {
+    return el && typeof el.espacio === 'string' && el.espacio.trim()
+      ? el.espacio.trim()
+      : ESPACIO_SIN_IDENTIFICAR_STORAGE;
+  }
+
+  function baseDeEstructuraStorage(estructura, dato) {
+    if (estructura.clave === 'gamificacion_v1') {
+      return dato && Array.isArray(dato.historial) ? dato.historial : [];
+    }
+    if (estructura.clave === 'retencion_rutas_v1' && dato && Array.isArray(dato.retencionRutas)) {
+      return dato.retencionRutas;
+    }
+    return dato;
+  }
+
   function contarPorEspacioStorage(estructura, dato) {
     const conteos = new Map();
     const sumar = (espacio, n) => {
@@ -2396,19 +2428,11 @@
       conteos.set(espacio, (conteos.get(espacio) || 0) + n);
     };
 
-    let base = dato;
-    if (estructura.clave === 'gamificacion_v1') {
-      base = dato && Array.isArray(dato.historial) ? dato.historial : [];
-    } else if (estructura.clave === 'retencion_rutas_v1' && dato && Array.isArray(dato.retencionRutas)) {
-      base = dato.retencionRutas;
-    }
+    const base = baseDeEstructuraStorage(estructura, dato);
 
     if (Array.isArray(base)) {
       base.forEach((el) => {
-        const espacio = el && typeof el.espacio === 'string' && el.espacio.trim()
-          ? el.espacio.trim()
-          : ESPACIO_SIN_IDENTIFICAR_STORAGE;
-        sumar(espacio, 1);
+        sumar(espacioDeElementoStorage(el), 1);
       });
     } else if (base && typeof base === 'object') {
       Object.keys(base).forEach((k) => {
@@ -2417,6 +2441,57 @@
     }
 
     return conteos;
+  }
+
+  function eliminarEspacioDeEstructuraStorage(clave, espacio) {
+    const estructura = ESTRUCTURAS_STORAGE.find((e) => e.clave === clave);
+    if (!estructura) return false;
+
+    let dato;
+    try {
+      const crudo = localStorage.getItem(clave);
+      if (crudo === null) return false;
+      dato = JSON.parse(crudo);
+    } catch (e) {
+      return false;
+    }
+
+    let resultado = dato;
+
+    if (clave === 'gamificacion_v1') {
+      if (!dato || !Array.isArray(dato.historial)) return false;
+      const borrado = (dato.historialBorrado && typeof dato.historialBorrado === 'object' && !Array.isArray(dato.historialBorrado))
+        ? dato.historialBorrado
+        : {};
+      const ahora = Date.now();
+      const conservados = [];
+      dato.historial.forEach((el) => {
+        if (espacioDeElementoStorage(el) === espacio) {
+          if (el && el.fecha) borrado[el.fecha] = ahora;
+        } else {
+          conservados.push(el);
+        }
+      });
+      dato.historial = conservados;
+      dato.historialBorrado = borrado;
+    } else if (Array.isArray(dato)) {
+      resultado = dato.filter((el) => espacioDeElementoStorage(el) !== espacio);
+    } else if (clave === 'retencion_rutas_v1' && dato && Array.isArray(dato.retencionRutas)) {
+      dato.retencionRutas = dato.retencionRutas.filter((el) => espacioDeElementoStorage(el) !== espacio);
+    } else if (dato && typeof dato === 'object') {
+      Object.keys(dato).forEach((k) => {
+        if (extraerEspacioDeClaveStorage(k) === espacio) delete dato[k];
+      });
+    } else {
+      return false;
+    }
+
+    try {
+      localStorage.setItem(clave, JSON.stringify(resultado));
+    } catch (e) {
+      return false;
+    }
+    return true;
   }
 
   function construirDatosStorage() {
@@ -2436,6 +2511,7 @@
         if (!porEspacio.has(espacio)) porEspacio.set(espacio, []);
         porEspacio.get(espacio).push({
           clave: estructura.clave,
+          espacio: espacio,
           cantidad: cantidad,
           unidad: cantidad === 1 ? estructura.singular : estructura.plural
         });
@@ -2469,6 +2545,24 @@
     info.appendChild(detalle);
 
     fila.appendChild(info);
+
+    const botonBorrar = document.createElement('button');
+    botonBorrar.type = 'button';
+    botonBorrar.className = 'btn-borrar-storage';
+    botonBorrar.textContent = '🗑';
+    botonBorrar.title = 'Borrar';
+    botonBorrar.setAttribute('aria-label', 'Borrar ' + item.clave + ' de ' + item.espacio);
+    botonBorrar.addEventListener('click', () => {
+      abrirModalConfirmacion(
+        '¿Borrar ' + item.cantidad + ' ' + item.unidad + ' de ' + item.clave + ' en "' + item.espacio + '"? Esta acción no se puede deshacer.',
+        () => {
+          eliminarEspacioDeEstructuraStorage(item.clave, item.espacio);
+          renderIndicadorStorage();
+          inicializarVistaStorage();
+        }
+      );
+    });
+    fila.appendChild(botonBorrar);
 
     return fila;
   }

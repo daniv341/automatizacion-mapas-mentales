@@ -4086,12 +4086,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="lista-temas zona-dificiles" id="zona-revisar">
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">🚩 Para revisar guardadas</span>
-        <span class="fila-dificiles-botones">
-          <button class="boton-mini" id="btn-vaciar-revisar" style="display:none;">Vaciar todas</button>
-        </span>
       </div>
       <div id="lista-revisar-guardadas"></div>
       <p class="nota-dificiles" id="nota-revisar"></p>
+      <button class="boton-mini" id="btn-vaciar-revisar" style="display:none;">Vaciar todas</button>
     </div>
 
     <div class="lista-temas zona-dificiles" id="zona-razones">
@@ -16442,7 +16440,7 @@ const ZONAS_SYNC_GIST = [
     const elegidos = candidatosRepasoInteligente.filter((c) => c.seleccionado);
     if (elegidos.length === 0) return;
     const activas = categoriasActivasRI();
-
+    
     const subtsCompletos = new Set();
     const subtsPorTarjeta = new Set();
     elegidos.forEach((c) => {
@@ -16588,37 +16586,25 @@ const ZONAS_SYNC_GIST = [
   }
 
   function filaDificil(h, p, s, activa) {
-    const label = document.createElement('label');
-    label.className = 'item-tema-check';
+    const div = document.createElement('div');
+    div.className = 'item-nota-otra';
 
-    const check = document.createElement('input');
-    check.type = 'checkbox';
-    check.checked = !!activa;
-    check.addEventListener('change', () => {
-      if (dificiles[h]) {
-        dificiles[h].activa = check.checked;
-      } else {
-        dificiles[h] = { p: p, s: s, activa: check.checked };
-      }
-      dificiles[h].t = Date.now();
-      dificiles[h].rev = siguienteRev();
+    const titulo = document.createElement('div');
+    titulo.textContent = (p || '(sin texto)') + (s ? ' — ' + s : '');
+    div.appendChild(titulo);
+
+    const acc = document.createElement('div');
+    acc.className = 'acciones-nota-dif';
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar esta tarjeta de las difíciles guardadas? No se puede deshacer.'))) return;
+      delete dificiles[h];
+      siguienteRev();
       guardarDificiles();
       actualizarFilaDificilIndividual(h);
-    });
-
-    const texto = document.createElement('span');
-    texto.textContent = p || '(sin texto)';
-
-    label.appendChild(check);
-    label.appendChild(texto);
-
-    if (s) {
-      const extra = document.createElement('span');
-      extra.className = 'extra-dificil';
-      extra.textContent = '— ' + s;
-      label.appendChild(extra);
-    }
-    return label;
+      div.remove();
+    }));
+    div.appendChild(acc);
+    return div;
   }
 
   function renderDificilesPreview() {
@@ -16871,7 +16857,7 @@ const ZONAS_SYNC_GIST = [
         actualizarFilaNotaIndividual(hashTarjeta(t));
       }));
     }
-    acc.appendChild(botonMini('Usar la del txt', async () => {
+    acc.appendChild(botonMini('Usar la del txt (Borrar)', async () => {
       if (!(await confirmarAccion('Se descarta tu versión y se usa la del txt. ¿Continuar?'))) return;
       descartarNotaLocal(t);
       actualizarFilaNotaIndividual(hashTarjeta(t));
@@ -20557,7 +20543,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     div.appendChild(titulo);
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Quitar', () => {
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Quitar esta tarjeta de las marcadas para revisar? No se puede deshacer.'))) return;
       delete revisarEnMemoria[hash];
       guardarRevisarLocal('revisar_tarjetas_v1', revisarEnMemoria);
       borrarPrimeroEditado(hash);
