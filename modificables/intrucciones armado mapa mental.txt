@@ -13,6 +13,8 @@ accion12: armas recordario.txt con primera(trata de que sea una pregunta) y segu
 accion13: ejecutas "generadorRespuestas", seleccionas el drawio con el mapa y recordatorio para que haga la asociacion de rutas de forma automatica, de paso asiganara la etiqueta de ruta a cada ruta de forma numerada y sencuencial
 accion14: ejecutas "evaluadorTemas" seleccionas el drawio recordatorio.txt respuestas.txt para que genere el evaluador correspondiente con todas las rutas asociadas, primera y segunda para poder evaluarte en lo estudiado
 
+alternativa: si quieres que la ia te genere el recordatorio.txt de un archivo de respuestas.txt usa el segundo prompt
+
 nota: no usar '<', '>', '“', '”', '"', '&' y tambien fjarte en las letras VOCALES MAYUSCULAS CON ACENTO en el texto, provoca error en el codigo
 
 palabras reservadas:
@@ -291,5 +293,51 @@ señal actuante
 # 5. INSTRUCCIÓN DE ENTREGA
 
 Devuelve **únicamente** el contenido completo del archivo `.txt` procesado dentro de un bloque de código de texto plano, sin introducciones, sin resúmenes y sin omitir ninguna línea del texto original. A continuación te paso el texto a etiquetar:
+
+}
+
+{
+
+Actúa como un extractor y generador estricto de tarjetas de estudio (Active Recall). Tu tarea es procesar el archivo `.txt` adjunto con bloques `RUTA N` y generar únicamente el contenido para un archivo `recordatorio.txt` siguiendo exactamente estas reglas:
+
+### 1. Formato y Estructura de Salida
+- Devuelve **únicamente** el resultado en texto plano dentro de un bloque de código (` ```txt `), sin saludos, introducciones ni explicaciones.
+- Agrupa las preguntas bajo su subtítulo correspondiente con el formato: `subT NOMBRE DEL SUBTITULO EN MAYUSCULAS` (sin tildes).
+- Separa cada bloque `subT` con exactamente **una línea en blanco**.
+- Si un `subT` no tiene ninguna pregunta válida tras aplicar los descartes, **omite por completo** ese encabezado `subT`.
+- Mantén estrictamente el **orden secuencial** de aparición de los `subT` y de los números de `RUTA` del archivo original.
+
+### 2. Reglas de Descarte y Agrupación de Rutas
+- **Ignora imágenes:** Omite cualquier cadena `IMG:data:image/...`.
+- **Descarta rutas huérfanas o incompletas:** Si una ruta es solo un título aislado, un conector sin definición propia, o si al ignorar su imagen queda incompleta (ej. termina en "es decir", "como", "puede escribirse como", etc.), descártala. No fuerces preguntas.
+- **Agrupación consecutiva y acotada:**
+  - Puedes agrupar **como máximo 3 rutas** en una sola pregunta (ej. `& 15, 16` o `& 49, 50, 51`). Nunca agrupes 4 o más.
+  - Los números de ruta agrupados deben ser **estrictamente consecutivos** y responder juntos a un mismo concepto. Nunca agrupes rutas con saltos numéricos (prohibido `& 1, 3`).
+  - **Control de carga cognitiva:** Agrupa rutas solo cuando la suma de su información sea breve, concisa y fácil de recordar de un vistazo. Si unir 2 o 3 rutas genera una respuesta densa o extensa que pueda saturar al usuario al repasar, divídelas en preguntas individuales o descarta lo accesorio.
+
+### 3. Reglas para cada Línea de Pregunta
+Cada línea debe seguir estrictamente esta sintaxis:
+`pregunta? + palabra1, palabra2, palabra3 & N`
+
+- **Pregunta:**
+  - En **minúsculas** (excepto siglas técnicas como `PID`, `FT`, `A/D`, `D/A`, `P`, `I`, `D`, `K`).
+  - **Sin tildes** (ni en la pregunta ni en las palabras clave) y **sin signo de apertura `¿`**, terminando siempre en `?`.
+  - **Descriptiva y autocontenida:** Debe hacer referencia explícita al concepto o tema del `subT` para no confundirse con otras unidades o temas.
+  - **Longitud estricta:** Máximo **60 caracteres** (incluyendo espacios y el signo `?`).
+- **Palabras clave (después de ` + `):**
+  - Máximo **4 palabras clave** separados por coma y espacio (`, `).
+  - Deben ser los términos más distintivos, literales e identificables del texto de la ruta para que el usuario reconozca de inmediato la respuesta exacta.
+  - Sin tildes.
+- **Trazabilidad (después de ` & `):**
+  - El número de ruta origen (ej. `& 12`) o hasta 3 números consecutivos separados por coma y espacio (ej. `& 32, 33`).
+
+### Ejemplo de salida esperada:
+```txt
+subT ACCION DERIVATIVA
+cuando se manifiesta la accion derivativa? + cambio, absoluto & 42
+cual es funcion accion derivativa respecto al error? + mantener, velocidad & 44
+
+subT LIMITACIONES DE UN CONTROL PID
+que afecta a la parte derivativa del PID? + ruido, pequenas & 63
 
 }

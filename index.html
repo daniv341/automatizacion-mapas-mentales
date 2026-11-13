@@ -260,6 +260,12 @@
       font-size: 14px;
       color: var(--texto-suave, #888888);
       margin: 24px 0 10px;
+      background: none;
+      border: none;
+      padding: 0;
+      width: 100%;
+      font-family: inherit;
+      cursor: pointer;
   }
   .indicador-storage-dot {
       width: 9px;
@@ -451,6 +457,52 @@
   }
 
   .srs-cargando-mas {
+    text-align: center;
+    padding: 14px 0;
+    font-size: 12px;
+    color: var(--texto-tenue);
+  }
+
+  .grupo-storage-toggle {
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--color-borde-medio);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--texto-cabecera);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 0 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .grupo-storage-flecha {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--texto-tenue);
+    transition: transform 0.15s;
+  }
+
+  .grupo-storage-toggle.abierto .grupo-storage-flecha {
+    transform: rotate(90deg);
+  }
+
+  .grupo-storage-nombre {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .grupo-storage-cuerpo[hidden] {
+    display: none;
+  }
+
+  .storage-vacio-grupo {
     text-align: center;
     padding: 14px 0;
     font-size: 12px;
@@ -1200,10 +1252,10 @@
   <div id="vista-principal">
 
     <!-- INDICADOR DE ALMACENAMIENTO -->
-    <div class="indicador-storage" id="indicador-storage">
+    <button type="button" class="indicador-storage" id="indicador-storage" title="Ver estructuras JSON guardadas">
         <span class="indicador-storage-dot" id="indicador-storage-dot"></span>
         <span id="indicador-storage-texto">Calculando...</span>
-    </div>
+    </button>
 
     <p class="subtitulo">Listado automático desde el repositorio</p>
 
@@ -1352,6 +1404,17 @@
     </form>
 
     <div id="tareas-lista"></div>
+  </div>
+
+  <div id="vista-storage" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-storage-volver">&larr; Volver (Esc)</button>
+    <div class="encabezado">
+      <h1>Estructuras JSON</h1>
+    </div>
+    <p class="subtitulo">Datos guardados en este navegador, agrupados por estructura. El nombre de cada clave corresponde a un evaluador.</p>
+    <div id="storage-contenido">
+      <p class="cargando">Cargando estructuras...</p>
+    </div>
   </div>
 
   <div class="modal-reutilizable-overlay" id="modal-confirmacion-reutilizable" hidden>
@@ -1678,6 +1741,7 @@
   const elVistaTienda = document.getElementById('vista-tienda');
   const elVistaOrion = document.getElementById('vista-orion');
   const elVistaTareas = document.getElementById('vista-tareas');
+  const elVistaStorage = document.getElementById('vista-storage');
 
   let vistaActual = 'principal';
 
@@ -1688,6 +1752,7 @@
     elVistaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';
     elVistaOrion.style.display = nombre === 'orion' ? 'block' : 'none';
     elVistaTareas.style.display = nombre === 'tareas' ? 'block' : 'none';
+    elVistaStorage.style.display = nombre === 'storage' ? 'block' : 'none';
     window.scrollTo(0, 0);
 
     if (nombre === 'srs') {
@@ -1701,6 +1766,9 @@
     }
     if (nombre === 'tareas') {
       inicializarVistaTareas();
+    }
+    if (nombre === 'storage') {
+      inicializarVistaStorage();
     }
   }
 
@@ -1720,6 +1788,10 @@
     .addEventListener('click', () => mostrarVista('principal'));
   document.getElementById('btn-tareas-volver')
     .addEventListener('click', () => mostrarVista('orion'));
+  document.getElementById('indicador-storage')
+    .addEventListener('click', () => mostrarVista('storage'));
+  document.getElementById('btn-storage-volver')
+    .addEventListener('click', () => mostrarVista('principal'));
 
   document.addEventListener('keydown', (evento) => {
     const esEscape = evento.key === 'Escape' || evento.key === 'Esc';
@@ -1743,7 +1815,7 @@
     if (vistaActual === 'tareas') {
       evento.preventDefault();
       mostrarVista('orion');
-    } else if (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion') {
+    } else if (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion' || vistaActual === 'storage') {
       evento.preventDefault();
       mostrarVista('principal');
     }
@@ -2288,6 +2360,165 @@
     bloqueHm.style.display = '';
     const porDia = construirMapaHeatmap(grupos);
     renderizarHeatmapLazy(porDia, contHm, panelHm);
+  }
+
+  const ESTRUCTURAS_STORAGE = [
+    { nombre: 'Difíciles', patron: 'dificiles' },
+    { nombre: 'Notas', patron: 'notas' },
+    { nombre: 'Razones', patron: 'razones' },
+    { nombre: 'Pomodoro', patron: 'pomodoro' },
+    { nombre: 'Para revisar', patron: 'para revisar' },
+    { nombre: 'Análisis de sesión', patron: 'analisis de sesion' },
+    { nombre: 'Gamificación', patron: 'gamificacion' },
+    { nombre: 'Listas', patron: 'listas' },
+    { nombre: 'Notas de evaluador', patron: 'notas de evaluador' },
+    { nombre: 'Imágenes', patron: 'imagenes' }
+  ];
+
+  function normalizarClaveStorage(txt) {
+    return String(txt || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/_/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function asignarEstructuraStorage(claveNormalizada) {
+    let mejorIdx = -1;
+    ESTRUCTURAS_STORAGE.forEach((estructura, idx) => {
+      if (
+        claveNormalizada.includes(estructura.patron) &&
+        (mejorIdx === -1 || estructura.patron.length > ESTRUCTURAS_STORAGE[mejorIdx].patron.length)
+      ) {
+        mejorIdx = idx;
+      }
+    });
+    return mejorIdx;
+  }
+
+  function contarItemsStorage(dato) {
+    if (Array.isArray(dato)) return dato.length;
+    if (dato && typeof dato === 'object') return Object.keys(dato).length;
+    return null;
+  }
+
+  function construirDatosStorage() {
+    const grupos = ESTRUCTURAS_STORAGE.map((estructura) => ({
+      estructura: estructura,
+      items: []
+    }));
+
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const clave = localStorage.key(i);
+        if (!clave) continue;
+
+        const idxEstructura = asignarEstructuraStorage(normalizarClaveStorage(clave));
+        if (idxEstructura === -1) continue;
+
+        let dato;
+        try {
+          dato = JSON.parse(localStorage.getItem(clave));
+        } catch (e) {
+          continue;
+        }
+
+        const cantidad = contarItemsStorage(dato);
+        if (cantidad === null) continue;
+
+        grupos[idxEstructura].items.push({ clave: clave, cantidad: cantidad });
+      }
+    } catch (e) {}
+
+    grupos.forEach((grupo) => {
+      grupo.items.sort((a, b) => a.clave.localeCompare(b.clave));
+    });
+
+    return grupos;
+  }
+
+  function crearFilaStorage(item) {
+    const fila = document.createElement('div');
+    fila.className = 'fila-srs';
+
+    const info = document.createElement('div');
+    info.className = 'fila-srs-info';
+
+    const nombre = document.createElement('div');
+    nombre.className = 'fila-srs-nombre';
+    nombre.textContent = item.clave;
+    info.appendChild(nombre);
+
+    fila.appendChild(info);
+
+    const contador = document.createElement('span');
+    contador.className = 'fila-srs-nivel';
+    contador.textContent = item.cantidad + ' item' + (item.cantidad === 1 ? '' : 's');
+    fila.appendChild(contador);
+
+    return fila;
+  }
+
+  function crearGrupoStorage(grupo) {
+    const bloque = document.createElement('div');
+    bloque.className = 'grupo-evaluador';
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'grupo-storage-toggle';
+    toggle.setAttribute('aria-expanded', 'false');
+
+    const flecha = document.createElement('span');
+    flecha.className = 'grupo-storage-flecha';
+    flecha.textContent = '▶';
+    toggle.appendChild(flecha);
+
+    const nombre = document.createElement('span');
+    nombre.className = 'grupo-storage-nombre';
+    nombre.textContent = '📂 ' + grupo.estructura.nombre;
+    toggle.appendChild(nombre);
+
+    const contador = document.createElement('span');
+    contador.className = 'grupo-evaluador-contador';
+    contador.textContent = String(grupo.items.length);
+    toggle.appendChild(contador);
+
+    const cuerpo = document.createElement('div');
+    cuerpo.className = 'grupo-storage-cuerpo';
+    cuerpo.hidden = true;
+
+    if (grupo.items.length === 0) {
+      const vacio = document.createElement('p');
+      vacio.className = 'storage-vacio-grupo';
+      vacio.textContent = 'Sin datos.';
+      cuerpo.appendChild(vacio);
+    } else {
+      grupo.items.forEach((item) => {
+        cuerpo.appendChild(crearFilaStorage(item));
+      });
+    }
+
+    toggle.addEventListener('click', () => {
+      const abierto = !cuerpo.hidden;
+      cuerpo.hidden = abierto;
+      toggle.classList.toggle('abierto', !abierto);
+      toggle.setAttribute('aria-expanded', abierto ? 'false' : 'true');
+    });
+
+    bloque.appendChild(toggle);
+    bloque.appendChild(cuerpo);
+
+    return bloque;
+  }
+
+  function inicializarVistaStorage() {
+    const contenedor = document.getElementById('storage-contenido');
+    contenedor.innerHTML = '';
+    construirDatosStorage().forEach((grupo) => {
+      contenedor.appendChild(crearGrupoStorage(grupo));
+    });
   }
 
   const CLAVE_GAMIFICACION_IDX = 'gamificacion_v1';
