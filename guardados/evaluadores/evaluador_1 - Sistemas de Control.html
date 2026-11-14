@@ -282,6 +282,52 @@
   .enfoque-titulo { font-size: 20px; font-weight: 800; letter-spacing: 0.3px; }
   .enfoque-instruccion { margin-top: 6px; font-size: 15px; color: #b9c0d4; }
   .overlay-enfoque .enfoque-mute { position: absolute; top: 12px; right: 14px; font-size: 26px; padding: 6px 8px; z-index: 2; }
+  .overlay-minijuego {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 2147483000;
+    background: #04070e;
+    flex-direction: column;
+    overscroll-behavior: contain;
+  }
+  .overlay-minijuego.abierto { display: flex; }
+  .minijuego-barra {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #10162a;
+  }
+  .minijuego-saltar {
+    background: #2b3556;
+    color: #f2f4fa;
+    border: 1px solid #4a5680;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .minijuego-sonido { font-size: 22px; line-height: 1; color: #f2f4fa; }
+  .minijuego-marco { flex: 1 1 auto; width: 100%; border: 0; background: #ffffff; }
+  .minijuego-aviso {
+    display: none;
+    position: absolute;
+    top: 52px; left: 0; right: 0; bottom: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: #04070e;
+    color: #f2f4fa;
+    font-size: 17px;
+    text-align: center;
+    padding: 20px;
+  }
   .boton-mute {
     background: none;
     border: none;
@@ -2396,7 +2442,7 @@
   }
   .fila-retencion-ruta:last-child { border-bottom: none; }
   .retencion-movil .fila-retencion-ruta { cursor: pointer; }
-  .fila-retencion-ruta.enfocada { background: color-mix(in srgb, var(--color-boton) 10%, transparent); border-radius: 8px; }
+  .fila-retencion-ruta.enfocada { border-radius: 8px; }
   .retencion-recorte { flex: 0 0 100%; display: flex; justify-content: center; cursor: default; }
   .retencion-recorte canvas {
     max-width: 100%;
@@ -3782,6 +3828,18 @@
   <button class="boton-mute enfoque-mute" id="btn-mute-enfoque" data-mute-sync title="Silenciar/activar sonidos">🔊</button>
 </div>
 
+<div class="overlay-minijuego" id="overlay-minijuego" role="dialog" aria-modal="true">
+  <div class="minijuego-barra">
+    <button type="button" class="minijuego-saltar" id="btn-minijuego-saltar">⏭ Saltar minijuego</button>
+    <span class="minijuego-sonido" id="minijuego-sonido">🔊</span>
+  </div>
+  <iframe class="minijuego-marco" id="minijuego-marco" title="Minijuego previo"></iframe>
+  <div class="minijuego-aviso" id="minijuego-aviso">
+    <div>No se pudo cargar el minijuego</div>
+    <button type="button" class="boton-principal" id="btn-minijuego-continuar">Continuar</button>
+  </div>
+</div>
+
 <div class="overlay-pausa" id="overlay-pausa">
   <div class="titulo-pausa" id="titulo-pausa">⏸ En pausa</div>
   <div class="texto-pausa" id="texto-pausa">El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.</div>
@@ -3795,6 +3853,7 @@
     <button class="boton-secundario" id="btn-pomodoro-repaso-pasivo" style="width:100%; display:none;">👁 Repaso pasivo</button>
     <div class="pomodoro-banner-repaso" id="pomodoro-aviso-repaso"></div>
     <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
+    <label class="enfoque-opcion" title="Ronda de 60–90 s para activar la atención antes de empezar"><input type="checkbox" class="chk-minijuego"> 🎮 Minijuego previo</label>
     <label class="enfoque-opcion" title="Al tocar una ruta en Retención se despliega el recorte del mapa"><input type="checkbox" class="chk-movil"> 📱 Pomodoro móvil</label>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-normal">Normal</button>
     <button class="boton-secundario" id="btn-pomodoro-iniciar-dificil">Difícil</button>
@@ -4458,6 +4517,7 @@
       </button>
     </div>
     <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
+    <label class="enfoque-opcion" title="Ronda de 60–90 s para activar la atención antes de empezar"><input type="checkbox" class="chk-minijuego"> 🎮 Minijuego previo</label>
     <button class="boton-principal" id="btn-modo-confirmar">Comenzar</button>
     <button class="modal-cancelar" id="btn-modo-cancelar">Cancelar</button>
   </div>
@@ -8718,6 +8778,34 @@
     elOpcionModoExamen.style.display = '';
   }
 
+  function arrancarSesionDesdeModal(lista, especial, inteligentePendiente, demoPendiente, modo) {
+    modoEspecial = especial;
+    repasoInteligenteActivo = !especial && inteligentePendiente;
+    modoDemostracionesCloze = (especial === 'cloze') ? demoPendiente : false;
+    configurarModoJuego(modo);
+    if (modoEspecial === 'cloze') {
+      iniciarSesionCloze(lista);
+    } else if (modoEspecial === 'matching') {
+      iniciarSesionMatching(lista);
+    } else if (modoEspecial === 'quiz') {
+      iniciarSesionQuiz(lista);
+    } else if (modoEspecial === 'detective') {
+      iniciarSesionDetective(lista);
+    } else if (modoEspecial === 'ordenar') {
+      iniciarSesionOrdenar(lista);
+    } else if (modoEspecial === 'verdadero_falso') {
+      iniciarSesionMapa(lista);
+    } else {
+      iniciarSesion(lista);
+    }
+  }
+
+  function reabrirModalModoDesdeMinijuego(lista, especial, inteligentePendiente, demoPendiente, modo) {
+    abrirModalSeleccionModo(lista, especial, inteligentePendiente);
+    modoDemostracionesPendiente = demoPendiente;
+    seleccionarModoEnModal(modo);
+  }
+
   function confirmarModoYComenzar() {
     const lista = listaPendienteInicio;
     const especial = modoEspecialPendiente;
@@ -8742,25 +8830,16 @@
     modoEspecialPendiente = null;
     repasoInteligentePendiente = false;
     modoDemostracionesPendiente = false;
-    modoEspecial = especial;
-    repasoInteligenteActivo = !especial && inteligentePendiente;
-    modoDemostracionesCloze = (especial === 'cloze') ? demoPendiente : false;
-    configurarModoJuego(modoElegidoEnModal);
-    if (modoEspecial === 'cloze') {
-      iniciarSesionCloze(lista);
-    } else if (modoEspecial === 'matching') {
-      iniciarSesionMatching(lista);
-    } else if (modoEspecial === 'quiz') {
-      iniciarSesionQuiz(lista);
-    } else if (modoEspecial === 'detective') {
-      iniciarSesionDetective(lista);
-    } else if (modoEspecial === 'ordenar') {
-      iniciarSesionOrdenar(lista);
-    } else if (modoEspecial === 'verdadero_falso') {
-      iniciarSesionMapa(lista);
-    } else {
-      iniciarSesion(lista);
+    const modoElegido = modoElegidoEnModal;
+    if (minijuegoHabilitado) {
+      minijuegoAbrir(
+        () => arrancarSesionDesdeModal(lista, especial, inteligentePendiente, demoPendiente, modoElegido),
+        () => reabrirModalModoDesdeMinijuego(lista, especial, inteligentePendiente, demoPendiente, modoElegido),
+        false
+      );
+      return;
     }
+    arrancarSesionDesdeModal(lista, especial, inteligentePendiente, demoPendiente, modoElegido);
   }
 
   const REGEX_PALABRAS_CLOZE = /[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñΑ-Ωα-ω]+/g;
@@ -9567,7 +9646,7 @@
     _imgMapaRecorte.addEventListener('load', () => alCargar(_imgMapaRecorte), { once: true });
   }
 
-  function crearRecorteMapa(coords, anchoMax) {
+  function crearRecorteMapa(coords, anchoMax, sinResaltado) {
     const canvas = document.createElement('canvas');
     cargarImagenMapaRecorte((img) => {
       const iw = img.naturalWidth;
@@ -9592,9 +9671,11 @@
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = 'rgba(224, 87, 76, 0.85)';
-      ctx.lineWidth = 2 * dpr;
-      ctx.strokeRect((rx - sx) * escala, (ry - sy) * escala, rw * escala, rh * escala);
+      if (!sinResaltado) {
+        ctx.strokeStyle = 'rgba(224, 87, 76, 0.85)';
+        ctx.lineWidth = 2 * dpr;
+        ctx.strokeRect((rx - sx) * escala, (ry - sy) * escala, rw * escala, rh * escala);
+      }
     });
     return canvas;
   }
@@ -11541,9 +11622,20 @@
     listaPendienteInicio = null;
     repasoInteligentePendiente = false;
     if (!lista) return;
-    repasoInteligenteActivo = inteligentePendiente;
-    configurarModoJuego('examen');
-    iniciarSesion(lista);
+    const arrancarExamen = () => {
+      repasoInteligenteActivo = inteligentePendiente;
+      configurarModoJuego('examen');
+      iniciarSesion(lista);
+    };
+    if (minijuegoHabilitado) {
+      minijuegoAbrir(
+        arrancarExamen,
+        () => reabrirModalModoDesdeMinijuego(lista, null, inteligentePendiente, false, 'examen'),
+        false
+      );
+      return;
+    }
+    arrancarExamen();
   });
 
   function dispararGameOver() {
@@ -18274,7 +18366,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     cerrarEnfoqueRetencionMapa();
     const panel = document.createElement('div');
     panel.className = 'retencion-recorte';
-    panel.appendChild(crearRecorteMapa(coords, 900));
+    panel.appendChild(crearRecorteMapa(coords, 900, true));
     fila.appendChild(panel);
     fila.classList.add('enfocada');
     retencionRutaEnfocada = id;
@@ -23216,6 +23308,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const elTextoPausa = document.getElementById('texto-pausa');
 
   let pomodoroActivo = false;
+  let pomodoroMinijuegoDescansos = false;
   let pomodoroModo = 'normal';
   let pomodoroFase = null;
   let pomodoroCiclo = 1;
@@ -23368,6 +23461,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function avanzarFasePomodoro() {
+    if (minijuegoAbierto && minijuegoEnDescanso) minijuegoCerrar();
     if (pomodoroFase === 'pretest') {
       autoguardarYCerrarPretestPomodoro();
       if (pomodoroModo === 'dificil') {
@@ -23400,6 +23494,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       reproducirSonido('pomodoro_nuevo_ciclo');
     }
     actualizarBadgePomodoro();
+    if (pomodoroMinijuegoDescansos && (pomodoroFase === 'descanso' || pomodoroFase === 'descanso_largo')) {
+      minijuegoAbrir(null, null, true);
+    }
   }
 
   function iniciarIntervaloPomodoro() {
@@ -23447,7 +23544,17 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (pomodoroRetencionPresionada) { abrirModalRetencionRutas(); }
   });
 
-  function iniciarPomodoro(modo) {
+  function iniciarPomodoro(modo, desdeMinijuego) {
+    if (minijuegoHabilitado && !desdeMinijuego) {
+      cerrarModalPomodoroIniciar();
+      minijuegoAbrir(
+        () => iniciarPomodoro(modo, true),
+        () => abrirModalPomodoroIniciar(),
+        false
+      );
+      return;
+    }
+    pomodoroMinijuegoDescansos = minijuegoHabilitado;
     cerrarModalPomodoroIniciar();
     pomodoroModo = modo === 'dificil' ? 'dificil' : 'normal';
     pomodoroActivo = true;
@@ -24909,6 +25016,149 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   document.querySelectorAll('[data-mute-sync]').forEach((b) => {
     b.textContent = sonidosActivos ? '🔊' : '🔇';
     if (b.id !== 'btn-mute') b.addEventListener('click', () => toggleMute());
+  });
+  const MINIJUEGO_CLAVE = 'minijuego_previo_v1';
+  const MINIJUEGO_IDS = ['stop', 'cambio', 'mozo', 'luciernagas', 'vigia'];
+  const MINIJUEGO_TIMEOUT_MS = 7000;
+  let minijuegoHabilitado = (function () {
+    try { return localStorage.getItem(MINIJUEGO_CLAVE) === '1'; } catch (e) { return false; }
+  })();
+
+  let minijuegoUltimo = null;
+  let minijuegoAbierto = false;
+  let minijuegoListo = false;
+  let minijuegoEnDescanso = false;
+  let minijuegoAlTerminar = null;
+  let minijuegoAlCancelar = null;
+  let minijuegoTimer = 0;
+  let minijuegoOverflowPrevio = '';
+  const elOverlayMinijuego = document.getElementById('overlay-minijuego');
+  const elMarcoMinijuego = document.getElementById('minijuego-marco');
+  const elAvisoMinijuego = document.getElementById('minijuego-aviso');
+  const elSonidoMinijuego = document.getElementById('minijuego-sonido');
+
+  function minijuegoSincronizarChecks() {
+    document.querySelectorAll('.chk-minijuego').forEach((chk) => { chk.checked = minijuegoHabilitado; });
+  }
+  document.querySelectorAll('.chk-minijuego').forEach((chk) => {
+    chk.addEventListener('change', () => {
+      minijuegoHabilitado = chk.checked;
+      try { escribirLocalSeguro(MINIJUEGO_CLAVE, minijuegoHabilitado ? '1' : '0'); } catch (e) { }
+      minijuegoSincronizarChecks();
+    });
+  });
+  minijuegoSincronizarChecks();
+
+  function minijuegoRutaIndex() {
+    const ruta = location.pathname.toLowerCase();
+    return ruta.indexOf('/guardados/antiguos/evaluadores/') !== -1 ? '../../../index.html' : '../../index.html';
+  }
+
+  function minijuegoElegir() {
+    const candidatos = MINIJUEGO_IDS.filter((id) => id !== minijuegoUltimo);
+    const elegido = candidatos[Math.floor(Math.random() * candidatos.length)];
+    minijuegoUltimo = elegido;
+    return elegido;
+  }
+
+  function minijuegoActualizarSonido() {
+    elSonidoMinijuego.textContent = sonidosActivos ? '🔊' : '🔇';
+  }
+
+  function minijuegoFallo() {
+    if (!minijuegoAbierto || minijuegoListo) return;
+    elAvisoMinijuego.style.display = 'flex';
+  }
+
+  function minijuegoAbrir(alTerminar, alCancelar, enDescanso) {
+    if (minijuegoAbierto) return;
+    minijuegoAlTerminar = alTerminar || null;
+    minijuegoAlCancelar = alCancelar || null;
+    minijuegoEnDescanso = !!enDescanso;
+    minijuegoAbierto = true;
+    minijuegoListo = false;
+    elAvisoMinijuego.style.display = 'none';
+    minijuegoActualizarSonido();
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    minijuegoOverflowPrevio = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    elOverlayMinijuego.classList.add('abierto');
+    clearTimeout(minijuegoTimer);
+    minijuegoTimer = setTimeout(minijuegoFallo, MINIJUEGO_TIMEOUT_MS);
+    try {
+      const url = new URL(minijuegoRutaIndex(), location.href);
+      url.searchParams.set('minijuego', '1');
+      url.searchParams.set('juego', minijuegoElegir());
+      url.searchParams.set('muted', sonidosActivos ? '0' : '1');
+      elMarcoMinijuego.src = url.href;
+    } catch (e) {
+      minijuegoFallo();
+    }
+  }
+
+  function minijuegoCerrar() {
+    clearTimeout(minijuegoTimer);
+    minijuegoAbierto = false;
+    minijuegoListo = false;
+    minijuegoEnDescanso = false;
+    elOverlayMinijuego.classList.remove('abierto');
+    elAvisoMinijuego.style.display = 'none';
+    elMarcoMinijuego.src = 'about:blank';
+    document.body.style.overflow = minijuegoOverflowPrevio;
+  }
+
+  function minijuegoContinuar() {
+    if (!minijuegoAbierto) return;
+    const callback = minijuegoAlTerminar;
+    minijuegoAlTerminar = null;
+    minijuegoAlCancelar = null;
+    minijuegoCerrar();
+    if (callback) callback();
+  }
+
+  function minijuegoCancelar() {
+    if (!minijuegoAbierto) return;
+    const callback = minijuegoAlCancelar;
+    minijuegoAlTerminar = null;
+    minijuegoAlCancelar = null;
+    minijuegoCerrar();
+    if (callback) callback();
+  }
+
+  document.getElementById('btn-minijuego-saltar').addEventListener('click', () => minijuegoContinuar());
+  document.getElementById('btn-minijuego-continuar').addEventListener('click', () => minijuegoContinuar());
+
+  window.addEventListener('message', (e) => {
+    if (!minijuegoAbierto || e.source !== elMarcoMinijuego.contentWindow) return;
+    if (location.protocol !== 'file:' && e.origin !== location.origin) return;
+    const d = e.data;
+    if (!d || d.fuente !== 'minijuego') return;
+
+    if (d.tipo === 'listo') {
+      minijuegoListo = true;
+      clearTimeout(minijuegoTimer);
+      elAvisoMinijuego.style.display = 'none';
+      try { elMarcoMinijuego.focus(); elMarcoMinijuego.contentWindow.focus(); } catch (err) { }
+    } else if (d.tipo === 'continuar') {
+      minijuegoContinuar();
+    } else if (d.tipo === 'esc') {
+      minijuegoCancelar();
+    } else if (d.tipo === 'mute') {
+      if (typeof d.activo === 'boolean' && d.activo !== sonidosActivos) toggleMute();
+      minijuegoActualizarSonido();
+    }
+  });
+
+  ['keydown', 'keyup', 'keypress'].forEach((nombre) => {
+    window.addEventListener(nombre, (e) => {
+      if (!minijuegoAbierto) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (nombre === 'keydown' && e.key === 'Escape' && !e.repeat) minijuegoCancelar();
+    }, true);
+  });
+  ['wheel', 'touchmove'].forEach((nombre) => {
+    elOverlayMinijuego.addEventListener(nombre, (e) => { e.preventDefault(); }, { passive: false });
   });
 
   (function calentarAudioEnfoque() {
