@@ -2398,9 +2398,17 @@
     return m && m[1].trim() ? m[1].trim() : ESPACIO_SIN_IDENTIFICAR_STORAGE;
   }
 
+  function espacioDeEntradaPorClaveStorage(clave, valor) {
+    if (valor && typeof valor === 'object' && !Array.isArray(valor) &&
+        typeof valor.espacio === 'string' && valor.espacio.trim()) {
+      return valor.espacio.trim();
+    }
+    return extraerEspacioDeClaveStorage(clave);
+  }
+
   function contarValorStorage(valor) {
     if (Array.isArray(valor)) return valor.length;
-    if (valor && typeof valor === 'object') return Object.keys(valor).length;
+    if (valor && typeof valor === 'object') return Object.keys(valor).length > 0 ? 1 : 0;
     if (typeof valor === 'string') return valor.trim() ? 1 : 0;
     return valor === null || valor === undefined ? 0 : 1;
   }
@@ -2436,7 +2444,7 @@
       });
     } else if (base && typeof base === 'object') {
       Object.keys(base).forEach((k) => {
-        sumar(extraerEspacioDeClaveStorage(k), contarValorStorage(base[k]));
+        sumar(espacioDeEntradaPorClaveStorage(k, base[k]), contarValorStorage(base[k]));
       });
     }
 
@@ -2480,7 +2488,7 @@
       dato.retencionRutas = dato.retencionRutas.filter((el) => espacioDeElementoStorage(el) !== espacio);
     } else if (dato && typeof dato === 'object') {
       Object.keys(dato).forEach((k) => {
-        if (extraerEspacioDeClaveStorage(k) === espacio) delete dato[k];
+        if (espacioDeEntradaPorClaveStorage(k, dato[k]) === espacio) delete dato[k];
       });
     } else {
       return false;

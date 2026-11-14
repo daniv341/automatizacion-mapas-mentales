@@ -1144,6 +1144,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .stat-gamificacion { white-space: nowrap; }
 
+  .enfoque-opcion { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 10px 0; cursor: pointer; color: var(--texto-cabecera); }
+  .enfoque-opcion input { width: 18px; height: 18px; cursor: pointer; }
+  .overlay-enfoque {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 100000;
+    background: rgba(4, 7, 14, 0.97);
+    touch-action: none;
+    overscroll-behavior: contain;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: crosshair;
+  }
+  .overlay-enfoque.abierto { display: block; }
+  .overlay-enfoque canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
+  .enfoque-cabecera {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: 18px 64px 0 16px;
+    text-align: center; color: #f2f4fa; pointer-events: none;
+  }
+  .enfoque-titulo { font-size: 20px; font-weight: 800; letter-spacing: 0.3px; }
+  .enfoque-instruccion { margin-top: 6px; font-size: 15px; color: #b9c0d4; }
+  .overlay-enfoque .enfoque-mute { position: absolute; top: 12px; right: 14px; font-size: 26px; padding: 6px 8px; z-index: 2; }
   .boton-mute {
     background: none;
     border: none;
@@ -4054,15 +4078,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">☆ Difíciles guardadas</span>
       </div>
-      <div id="lista-dificiles"></div>
+      <details id="det-dificiles-aqui" style="display:none">
+        <summary id="suma-dificiles-aqui">De este evaluador</summary>
+        <div id="lista-dificiles"></div>
+      </details>
       <details id="det-dificiles-otros" style="display:none">
         <summary id="suma-dificiles-otros">De otros evaluadores</summary>
         <div id="lista-dificiles-otros"></div>
-      </details>
-      <details id="det-dificiles-desm" style="display:none">
-        <summary id="suma-dificiles-desm">Desmarcadas (0)</summary>
-        <div id="lista-dificiles-desm"></div>
-        <button class="boton-mini" id="btn-vaciar-desm" style="margin: 6px 0 8px 16px;">Vaciar desmarcadas</button>
       </details>
       <p class="nota-dificiles" id="nota-dificiles"></p>
     </div>
@@ -4087,7 +4109,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <div class="cabecera-dificiles">
         <span class="titulo-dificiles">🚩 Para revisar guardadas</span>
       </div>
-      <div id="lista-revisar-guardadas"></div>
+      <details id="det-revisar-aqui" style="display:none">
+        <summary id="suma-revisar-aqui">De este evaluador</summary>
+        <div id="lista-revisar-guardadas"></div>
+      </details>
+      <details id="det-revisar-otras" style="display:none">
+        <summary id="suma-revisar-otras">De otros evaluadores</summary>
+        <div id="lista-revisar-otras"></div>
+      </details>
       <p class="nota-dificiles" id="nota-revisar"></p>
       <button class="boton-mini" id="btn-vaciar-revisar" style="display:none;">Vaciar todas</button>
     </div>
@@ -4130,6 +4159,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <button class="boton-mini" id="btn-pomodoro-skimming" style="display:none;">⏭ Saltar a skimming</button>
           <button class="boton-mini" id="btn-pomodoro-retencion">🧠 Retención</button>
           <button class="boton-mini" id="btn-pomodoro-braindump" style="display:none;">🧠 Braindump</button>
+          <button class="boton-mute" id="btn-mute-pomodoro" data-mute-sync title="Silenciar/activar sonidos">🔊</button>
         </span>
       </div>
     </div>
@@ -4344,11 +4374,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="stat-gamificacion" id="stat-vidas"></span>
         <span class="stat-gamificacion" id="stat-escudo" title="Escudos de racha"></span>
         <span class="stat-gamificacion" id="stat-segunda" title="Segundas oportunidades"></span>
-        <button class="boton-mute" id="btn-mute" title="Silenciar/activar sonidos">🔊</button>
+        <button class="boton-mute" id="btn-mute" data-mute-sync title="Silenciar/activar sonidos">🔊</button>
       </div>
       <div class="fila-navegacion-superior">
         <div class="progreso-texto" id="progreso-texto"></div>
         <div class="grupo-cronometro">
+          <button class="boton-mute" id="btn-mute-examen" data-mute-sync style="display:none;" title="Silenciar/activar sonidos">🔊</button>
           <div class="cronometro" id="cronometro">⏱ 00:00</div>
           <div class="cronometro" id="countdown-examen" style="display:none;"></div>
           <div class="cronometro global-examen" id="countdown-global-examen" style="display:none;"></div>
@@ -4522,6 +4553,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
+<div class="overlay-enfoque" id="overlay-enfoque" role="dialog" aria-modal="true">
+  <canvas id="enfoque-canvas"></canvas>
+  <div class="enfoque-cabecera">
+    <div class="enfoque-titulo" id="enfoque-titulo"></div>
+    <div class="enfoque-instruccion">Seguí el punto sin soltarlo</div>
+  </div>
+  <button class="boton-mute enfoque-mute" id="btn-mute-enfoque" data-mute-sync title="Silenciar/activar sonidos">🔊</button>
+</div>
+
 <div class="overlay-pausa" id="overlay-pausa">
   <div class="titulo-pausa" id="titulo-pausa">⏸ En pausa</div>
   <div class="texto-pausa" id="texto-pausa">El cronómetro está detenido. Tus respuestas y tarjetas siguen como estaban.</div>
@@ -4534,6 +4574,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <button class="boton-secundario" id="btn-pomodoro-tutorial" style="width:100%;">📖 Método de estudio</button>
     <button class="boton-secundario" id="btn-pomodoro-repaso-pasivo" style="width:100%; display:none;">👁 Repaso pasivo</button>
     <div class="pomodoro-banner-repaso" id="pomodoro-aviso-repaso"></div>
+    <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-normal">Normal</button>
     <button class="boton-secundario" id="btn-pomodoro-iniciar-dificil">Difícil</button>
     <button class="boton-mini" id="btn-pomodoro-iniciar-historial">🧠 Ver historial de retención</button>
@@ -4719,8 +4760,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="fila-backup-zona">
       <span class="zona-nombre">🚩 Para revisar</span>
       <span class="zona-botones">
-        <button class="boton-mini" id="btn-exportar-pararevisar" title="Descarga los primeros editados como JSON">Exportar</button>
-        <button class="boton-mini" id="btn-importar-pararevisar" title="Fusiona los primeros editados de un JSON (gana el más reciente)">Importar</button>
+        <button class="boton-mini" id="btn-exportar-pararevisar" title="Descarga las tarjetas para revisar como JSON">Exportar</button>
+        <button class="boton-mini" id="btn-importar-pararevisar" title="Fusiona las tarjetas para revisar de un JSON (gana el más reciente)">Importar</button>
         <button class="boton-mini" id="btn-gist-exportar-pararevisar" title="Subir este archivo al Gist">☁️ Subir</button>
         <button class="boton-mini" id="btn-gist-importar-pararevisar" title="Bajar este archivo del Gist">☁️ Bajar</button>
         <input type="file" id="input-importar-pararevisar" accept=".json,application/json" style="display:none">
@@ -4822,7 +4863,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-mini boton-mini-peligro" id="btn-listas-vaciar">Vaciar todas</button>
     </div>
     <button class="boton-secundario boton-lista-fila" id="btn-lista-ninguna">Ninguna (selección manual)</button>
-    <div id="lista-listas-guardadas"></div>
+    <details id="det-listas-aqui" style="display:none">
+      <summary id="suma-listas-aqui">De este evaluador</summary>
+      <div id="lista-listas-guardadas"></div>
+    </details>
     <p class="galeria-vacia" id="listas-vacio" style="display:none;">Todavía no guardaste ninguna lista.</p>
     <details id="det-listas-otras" style="display:none">
       <summary id="suma-listas-otras">De otros evaluadores</summary>
@@ -4971,9 +5015,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-notaseval-editor" data-dictado-target="notaseval-editor-compartido" title="Dictado por voz">🎙</button>
       </div>
 
-      <div id="lista-notas-evaluador"></div>
+      <details id="det-notaseval-aqui" style="display:none">
+        <summary id="suma-notaseval-aqui">De este evaluador</summary>
+        <div id="lista-notas-evaluador"></div>
+        <div class="historial-paginacion" id="notaseval-paginacion" style="display:none;"></div>
+      </details>
       <p class="nota-dificiles" id="notaseval-vacio" style="display:none;">Todavía no agregaste notas del evaluador.</p>
-      <div class="historial-paginacion" id="notaseval-paginacion" style="display:none;"></div>
 
       <details id="det-notaseval-otras" style="display:none">
         <summary id="suma-notaseval-otras">De otros evaluadores</summary>
@@ -5020,9 +5067,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <h3>🧠 Retención de rutas</h3>
 
     <div class="sync-seccion-titulo">Registro histórico</div>
-    <div id="retencion-historial-lista"></div>
+    <details id="det-retencion-aqui" style="display:none">
+      <summary id="suma-retencion-aqui">De este evaluador</summary>
+      <div id="retencion-historial-lista"></div>
+      <div class="historial-paginacion" id="retencion-historial-paginacion" style="display:none;"></div>
+    </details>
     <p class="nota-dificiles" id="retencion-historial-vacio" style="display:none;">Todavía no hay sesiones de retención guardadas.</p>
-    <div class="historial-paginacion" id="retencion-historial-paginacion" style="display:none;"></div>
 
     <details id="det-retencion-otras" style="display:none">
       <summary id="suma-retencion-otras">De otros evaluadores</summary>
@@ -5085,7 +5135,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <div id="subt-velocidad-contenedor"></div>
       <div id="curva-olvido-contenedor"></div>
       <div class="sync-seccion-titulo">Análisis de Sesión</div>
-      <div id="analisis-guardados-lista"></div>
+      <details id="det-analisis-aqui" style="display:none">
+        <summary id="suma-analisis-aqui">De este evaluador</summary>
+        <div id="analisis-guardados-lista"></div>
+      </details>
       <p class="nota-dificiles" id="analisis-guardados-vacio" style="display:none;">Todavía no guardaste ningún análisis de sesión.</p>
       <details id="det-analisis-otros" style="display:none">
         <summary id="suma-analisis-otros">De otros evaluadores</summary>
@@ -5178,6 +5231,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="opcion-modo-detalle">Tiempo por tarjeta, sin ayudas</span>
       </button>
     </div>
+    <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
     <button class="boton-principal" id="btn-modo-confirmar">Comenzar</button>
     <button class="modal-cancelar" id="btn-modo-cancelar">Cancelar</button>
   </div>
@@ -5396,10 +5450,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function guardarRevisarLocal(clave, obj) {
     try { escribirLocalSeguro(clave, JSON.stringify(obj)); } catch (e) {}
   }
-  let revisarEnMemoria = cargarRevisarLocal('revisar_tarjetas_v1');
   const movidasVinculo = cargarRevisarLocal('vinculo_movidas_v1');   // claves de hash ya movidas por «Vincular»: no se reimportan
 
-  function esRevisar(t) { return !!revisarEnMemoria[hashTarjeta(t)]; }
+  function esRevisar(t) {
+    const e = paraRevisar[hashTarjeta(t)];
+    return !!(e && e.m !== false);
+  }
 
   const elModalPrimeroEditado = document.getElementById('modal-primero-editado');
   let _resolverPrimeroEditado = null;
@@ -5431,17 +5487,34 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (tarjetasSesion.length === 0) return;
     const t = tarjetasSesion[indiceActual];
     const h = hashTarjeta(t);
-    if (revisarEnMemoria[h]) {
+    const previo = paraRevisar[h];
+    if (previo && previo.m !== false) {
+      let conservar = false;
       if (primeroEditadoDe(t)) {
         const decision = await pedirDecisionPrimeroEditado();
         if (decision === 'cancelar') return;
-        if (decision === 'revertir') borrarPrimeroEditado(h);
+        conservar = decision === 'conservar';
       }
-      delete revisarEnMemoria[h];
+      if (conservar) {
+        previo.m = false;
+        previo.t = Date.now();
+        previo.rev = siguienteRev();
+      } else {
+        delete paraRevisar[h];
+        siguienteRev();
+      }
     } else {
-      revisarEnMemoria[h] = { p: t.primero || '', s: t.segundo || '', t: Date.now() };
+      const base = previo || {};
+      paraRevisar[h] = {
+        p: typeof base.p === 'string' ? base.p : '',
+        po: t.primero || '',
+        s: t.segundo || '',
+        espacio: ESPACIO_HASH,
+        t: Date.now(),
+        rev: siguienteRev(),
+      };
     }
-    guardarRevisarLocal('revisar_tarjetas_v1', revisarEnMemoria);
+    guardarParaRevisar();
     renderTarjeta();
   }
   let porComprension = [];     // NUEVO: tarjetas marcadas Entendida por comprensión
@@ -5947,7 +6020,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function textoConteoEliminacionZona(zona, n) {
     if (zona === 'dificiles') return 'Se ' + (n === 1 ? 'eliminaría 1 difícil' : 'eliminarían ' + n + ' difíciles') + ' localmente';
     if (zona === 'notas') return 'Se ' + (n === 1 ? 'eliminaría 1 nota' : 'eliminarían ' + n + ' notas') + ' localmente';
-    if (zona === 'pararevisar') return 'Se ' + (n === 1 ? 'eliminaría 1 primero editado' : 'eliminarían ' + n + ' primeros editados') + ' localmente';
+    if (zona === 'pararevisar') return 'Se ' + (n === 1 ? 'eliminaría 1 tarjeta para revisar' : 'eliminarían ' + n + ' tarjetas para revisar') + ' localmente';
     if (zona === 'notaseval') return 'Se ' + (n === 1 ? 'eliminaría 1 nota del evaluador' : 'eliminarían ' + n + ' notas del evaluador') + ' localmente';
     if (zona === 'analisis') return 'Se ' + (n === 1 ? 'eliminaría 1 análisis' : 'eliminarían ' + n + ' análisis') + ' localmente';
     if (zona === 'retencion') return 'Se ' + (n === 1 ? 'eliminaría 1 registro de retención' : 'eliminarían ' + n + ' registros de retención') + ' localmente';
@@ -6245,6 +6318,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let paraRevisar = cargarRevisarLocal(CLAVE_PARA_REVISAR);
   const guardarParaRevisar = crearGuardadoDebounced(() => guardarRevisarLocal(CLAVE_PARA_REVISAR, paraRevisar), 250);
 
+  (function migrarRevisarLegado() {
+    let crudo = null;
+    try { crudo = localStorage.getItem('revisar_tarjetas_v1'); } catch (e) { return; }
+    if (crudo === null) return;
+    const viejo = cargarRevisarLocal('revisar_tarjetas_v1');
+    Object.keys(paraRevisar).forEach((h) => {
+      if (!viejo[h] && paraRevisar[h].m !== false) paraRevisar[h].m = false;
+    });
+    Object.keys(viejo).forEach((h) => {
+      const v = viejo[h];
+      if (!v || typeof v !== 'object') return;
+      const actual = paraRevisar[h];
+      if (actual) {
+        if (actual.po === undefined) actual.po = typeof v.p === 'string' ? v.p : '';
+        if (actual.s === undefined) actual.s = typeof v.s === 'string' ? v.s : '';
+        if (actual.m === false) delete actual.m;
+      } else {
+        paraRevisar[h] = {
+          p: '',
+          po: typeof v.p === 'string' ? v.p : '',
+          s: typeof v.s === 'string' ? v.s : '',
+          espacio: '',
+          t: Number(v.t) || 0,
+        };
+      }
+    });
+    guardarRevisarLocal(CLAVE_PARA_REVISAR, paraRevisar);
+    try { localStorage.removeItem('revisar_tarjetas_v1'); } catch (e) { }
+  })();
+
   function primeroEditadoDe(t) {
     const e = paraRevisar[hashTarjeta(t)];
     return (e && typeof e.p === 'string') ? e.p : '';
@@ -6254,9 +6357,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (tarjetasSesion.length > 0 && elAreaTarjeta.style.display !== 'none') renderTarjeta();
   }
   function borrarPrimeroEditado(h) {
-    if (!paraRevisar[h]) return;
-    delete paraRevisar[h];
-    siguienteRev();
+    const e = paraRevisar[h];
+    if (!e || !e.p) return;
+    if (e.m === false) {
+      delete paraRevisar[h];
+      siguienteRev();
+    } else {
+      e.p = '';
+      e.t = Date.now();
+      e.rev = siguienteRev();
+    }
     guardarParaRevisar();
   }
 
@@ -6327,7 +6437,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (claveTextoPrimero(t.primero) === clave) {
       borrarPrimeroEditado(h);
     } else {
-      paraRevisar[h] = { p: texto, espacio: ESPACIO_HASH, t: Date.now(), rev: siguienteRev() };
+      const previo = paraRevisar[h] || {};
+      paraRevisar[h] = {
+        p: texto,
+        po: typeof previo.po === 'string' ? previo.po : (t.primero || ''),
+        s: typeof previo.s === 'string' ? previo.s : (t.segundo || ''),
+        espacio: previo.espacio || ESPACIO_HASH,
+        t: Date.now(),
+        rev: siguienteRev(),
+      };
+      if (previo.m === false) paraRevisar[h].m = false;
       guardarParaRevisar();
     }
     cerrarEditorPrimero();
@@ -6345,36 +6464,46 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
 
   function construirExportParaRevisar() {
-    const lista = Object.keys(paraRevisar).map((h) => ({
-      h: h,
-      p: paraRevisar[h].p || '',
-      espacio: paraRevisar[h].espacio || ESPACIO_HASH,
-      t: paraRevisar[h].t || 0,
-      rev: typeof paraRevisar[h].rev === 'number' ? paraRevisar[h].rev : undefined,
-    }));
+    const lista = Object.keys(paraRevisar).map((h) => {
+      const e = paraRevisar[h];
+      const item = {
+        h: h,
+        p: e.p || '',
+        po: e.po || '',
+        s: e.s || '',
+        espacio: e.espacio || ESPACIO_HASH,
+        t: e.t || 0,
+        rev: typeof e.rev === 'number' ? e.rev : undefined,
+      };
+      if (e.m === false) item.m = false;
+      return item;
+    });
     return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), paraRevisar: lista };
   }
 
   function fusionarParaRevisarLista(lista) {
     let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
     lista.forEach((item) => {
-      if (!item || typeof item.h !== 'string' || !item.h || typeof item.p !== 'string' || item.p.trim() === '') {
+      if (!item || typeof item.h !== 'string' || !item.h) {
         invalidas++;
         return;
       }
       if (movidasVinculo[item.h]) { iguales++; return; }
       const local = paraRevisar[item.h];
       const entrada = {
-        p: item.p,
+        p: typeof item.p === 'string' ? item.p : '',
+        po: typeof item.po === 'string' ? item.po : ((local && local.po) || ''),
+        s: typeof item.s === 'string' ? item.s : ((local && local.s) || ''),
         espacio: (typeof item.espacio === 'string' && item.espacio) ? item.espacio : ((local && local.espacio) ? local.espacio : ESPACIO_HASH),
         t: typeof item.t === 'number' ? item.t : 0,
         rev: typeof item.rev === 'number' ? item.rev : undefined,
       };
+      if (item.m === false) entrada.m = false;
       registrarRevVista(entrada.rev);
       if (!local) {
         paraRevisar[item.h] = entrada;
         nuevas++;
-      } else if ((local.p || '') === entrada.p) {
+      } else if ((local.p || '') === entrada.p && (local.m === false) === (entrada.m === false)) {
         iguales++;
       } else if (entranteEsMasReciente(entrada.rev, entrada.t, local.rev, local.t)) {
         paraRevisar[item.h] = entrada;
@@ -6943,7 +7072,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       requestAnimationFrame(() => {
         renderSiCambioDatos('dificiles', '', renderDificilesPreview);
         renderSiCambioDatos('notas', '', renderNotasPreview);
-        renderSiCambioDatos('revisar', JSON.stringify(revisarEnMemoria), renderRevisarGuardadoPreview);
+        renderSiCambioDatos('revisar', '', renderRevisarGuardadoPreview);
         renderSiCambioDatos('razones', '', renderRazonesPreview);
         actualizarMarcasTemas();   // NUEVO: refresca ★/💡/🏷 sin resetear las casillas marcadas
         actualizarAvisos();
@@ -8906,7 +9035,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function toggleMute() {
     sonidosActivos = !sonidosActivos;
-    elBtnMute.textContent = sonidosActivos ? '🔊' : '🔇';
+    document.querySelectorAll('[data-mute-sync]').forEach((b) => { b.textContent = sonidosActivos ? '🔊' : '🔇'; });
+    if (!sonidosActivos) enfoqueDetenerAlarma();
   }
   elBtnMute.addEventListener('click', () => toggleMute());
 
@@ -9232,6 +9362,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (modoObservador) return;
 
     elFilaGamificacion.style.display = modoJuego === 'examen' ? 'none' : 'flex';
+    document.getElementById('btn-mute-examen').style.display = modoJuego === 'examen' ? 'inline-block' : 'none';
     if (modoJuego === 'examen') return;
 
     elStatPuntos.style.display = modoJuego === 'light' ? 'none' : 'inline';
@@ -12338,6 +12469,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const listasDeOtros = listas.filter((l) => l.espacio && l.espacio !== ESPACIO_HASH);
     const ordenadas = listasPropias.slice().sort((a, b) => b.creada - a.creada);   // más reciente primero
 
+    document.getElementById('det-listas-aqui').style.display = ordenadas.length > 0 ? 'block' : 'none';
+    document.getElementById('suma-listas-aqui').textContent = 'De este evaluador (' + ordenadas.length + ')';
+
     if (ordenadas.length === 0) {
       limpiarReconciliado(elListaListasGuardadas);
       elListasVacio.style.display = 'block';
@@ -13015,6 +13149,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const elLista = document.getElementById('analisis-guardados-lista');
     elLista.innerHTML = '';
     propios.forEach((e) => elLista.appendChild(filaAnalisisGuardado(e)));
+    document.getElementById('det-analisis-aqui').style.display = propios.length > 0 ? 'block' : 'none';
+    document.getElementById('suma-analisis-aqui').textContent = 'De este evaluador (' + propios.length + ')';
     document.getElementById('analisis-guardados-vacio').style.display = propios.length === 0 ? 'block' : 'none';
     document.getElementById('btn-vaciar-analisis').style.display = analisisGuardados.length > 0 ? 'inline-block' : 'none';
     renderAnalisisOtros();
@@ -13221,7 +13357,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       notasEvaluador: construirExportNotasEvaluador(),
       retencionRutas: construirExportRetencion(),
       analisisSesion: construirExportAnalisis(),
-      revisar: { tarjetas: revisarEnMemoria },
     };
   }
 
@@ -13359,20 +13494,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
 
     if (datos.revisar && typeof datos.revisar === 'object') {
-      const unirRevisar = (destino, entrante, clave) => {
-        if (!entrante || typeof entrante !== 'object') return false;
-        let cambio = false;
-        Object.keys(entrante).forEach((k) => {
-          const e = entrante[k];
-          if (!e || typeof e !== 'object') return;
-          const previo = destino[k];
-          if (!previo || (Number(e.t) || 0) > (Number(previo.t) || 0)) { destino[k] = e; cambio = true; }
+      const entranteLegado = datos.revisar.tarjetas;
+      let cambioLegado = false;
+      if (entranteLegado && typeof entranteLegado === 'object') {
+        Object.keys(entranteLegado).forEach((k) => {
+          const e = entranteLegado[k];
+          if (!e || typeof e !== 'object' || movidasVinculo[k]) return;
+          const previo = paraRevisar[k];
+          if (!previo) {
+            paraRevisar[k] = { p: '', po: typeof e.p === 'string' ? e.p : '', s: typeof e.s === 'string' ? e.s : '', espacio: '', t: Number(e.t) || 0 };
+            cambioLegado = true;
+          } else if (previo.po === undefined) {
+            previo.po = typeof e.p === 'string' ? e.p : '';
+            previo.s = typeof e.s === 'string' ? e.s : '';
+            cambioLegado = true;
+          }
         });
-        if (cambio) guardarRevisarLocal(clave, destino);
-        return cambio;
-      };
-      const cTar = unirRevisar(revisarEnMemoria, datos.revisar.tarjetas, 'revisar_tarjetas_v1');
-      contar(cTar);
+      }
+      if (cambioLegado) guardarParaRevisar();
+      contar(cambioLegado);
     }
 
     marcarUltimoBackup();
@@ -13633,7 +13773,7 @@ const ZONAS_SYNC_GIST = [
       procesarImportacionZonaIndividual('dificiles', d) },
     { zona: 'notas', archivo: 'notas_tarjetas.json', exportar: construirExportNotas, importar: (d) =>
       procesarImportacionZonaIndividual('notas', d) },
-    { zona: 'pararevisar', archivo: 'primeros_editados.json', exportar: construirExportParaRevisar, importar: (d) =>
+    { zona: 'pararevisar', archivo: 'para_revisar_v1.json', exportar: construirExportParaRevisar, importar: (d) =>
       procesarImportacionZonaIndividual('pararevisar', d) },
     { zona: 'notaseval', archivo: 'notas_evaluador.json', exportar: construirExportNotasEvaluador, importar: (d) =>
       procesarImportacionZonaIndividual('notaseval', d) },
@@ -14491,7 +14631,7 @@ const ZONAS_SYNC_GIST = [
       repintar: () => renderDificilesPreview(), explicitas: ['activa'],
     },
     pararevisar: {
-      plural: 'primeros editados', titulo: 'primeros editados',
+      plural: 'tarjetas para revisar', titulo: 'tarjetas para revisar',
       almacen: () => paraRevisar, guardar: () => guardarParaRevisar(),
       repintar: () => repintarTarjetaSiActiva(), explicitas: ['p'],
     },
@@ -14986,7 +15126,7 @@ const ZONAS_SYNC_GIST = [
       if (hashesTarjetas.has(h) || notasLocales[h].espacio === espacio) delete notasLocales[h];
     });
     Object.keys(paraRevisar).forEach((h) => {
-      if (paraRevisar[h].espacio === espacio) delete paraRevisar[h];
+      if (hashesTarjetas.has(h) || paraRevisar[h].espacio === espacio) delete paraRevisar[h];
     });
     guardarParaRevisar();
     Object.keys(razonesGuardadas).forEach((h) => {
@@ -16440,7 +16580,6 @@ const ZONAS_SYNC_GIST = [
     const elegidos = candidatosRepasoInteligente.filter((c) => c.seleccionado);
     if (elegidos.length === 0) return;
     const activas = categoriasActivasRI();
-    
     const subtsCompletos = new Set();
     const subtsPorTarjeta = new Set();
     elegidos.forEach((c) => {
@@ -16491,55 +16630,37 @@ const ZONAS_SYNC_GIST = [
     abrirModalRepasoInteligente();
   });
 
-  const nodosDificiles = new Map();   // hash -> { fila, grupo: 'propia'|'otros'|'desm' }
+  const nodosDificiles = new Map();
 
   const elListaDificiles = document.getElementById('lista-dificiles');
   const elListaDificilesOtros = document.getElementById('lista-dificiles-otros');
   const elDetDificilesOtros = document.getElementById('det-dificiles-otros');
   const elSumaDificilesOtros = document.getElementById('suma-dificiles-otros');
-  const elListaDificilesDesm = document.getElementById('lista-dificiles-desm');
-  const elDetDificilesDesm = document.getElementById('det-dificiles-desm');
-  const elSumaDificilesDesm = document.getElementById('suma-dificiles-desm');
+  const elDetDificilesAqui = document.getElementById('det-dificiles-aqui');
+  const elSumaDificilesAqui = document.getElementById('suma-dificiles-aqui');
   const elNotaDificiles = document.getElementById('nota-dificiles');
-
-  function construirGrupoDificilesLazy() {
-    Object.keys(dificiles).forEach((h) => {
-      if (grupoActualDificil(h) !== 'desm') return;
-      const cache = nodosDificiles.get(h);
-      if (cache && cache.grupo === 'desm') return;
-      const v = dificiles[h] || {};
-      let p = v.p || '', s = v.s || '';
-      const enEste = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
-      if (enEste) { p = enEste.primero || ''; s = enEste.segundo || ''; }
-      const fila = filaDificil(h, p, s, false);
-      elListaDificilesDesm.appendChild(fila);
-      nodosDificiles.set(h, { fila: fila, grupo: 'desm' });
-    });
-  }
-
-  const lazyDificilesDesm = prepararDetallesLazy(elDetDificilesDesm, construirGrupoDificilesLazy);
 
   function grupoActualDificil(h) {
     const v = dificiles[h];
     if (!v) return null;
-    if (!v.activa) return 'desm';
+    if (!v.activa) return null;
     return tarjetasCompletas.some((t) => hashTarjeta(t) === h) ? 'propia' : 'otros';
   }
 
-  function contenedorDeGrupoDificil(grupo) {
-    if (grupo === 'propia') return document.getElementById('lista-dificiles');
-    return document.getElementById('lista-dificiles-desm');
+  function contenedorDeGrupoDificil() {
+    return elListaDificiles;
   }
 
   function actualizarContadoresDificiles() {
-    let nAqui = 0, nDesm = 0;
+    let nAqui = 0;
     const otrosItems = [];
     Object.keys(dificiles).forEach((h) => {
       const g = grupoActualDificil(h);
       if (g === 'propia') nAqui++;
       else if (g === 'otros') otrosItems.push(dificiles[h]);
-      else if (g === 'desm') nDesm++;
     });
+    elDetDificilesAqui.style.display = nAqui > 0 ? 'block' : 'none';
+    elSumaDificilesAqui.textContent = 'De este evaluador (' + nAqui + ')';
     renderGruposOtrosEvaluadores(
       elDetDificilesOtros,
       elSumaDificilesOtros,
@@ -16551,13 +16672,11 @@ const ZONAS_SYNC_GIST = [
       null,
       'De otros evaluadores'
     );
-    elDetDificilesDesm.style.display = nDesm > 0 ? 'block' : 'none';
-    elSumaDificilesDesm.textContent = 'Desmarcadas (' + nDesm + ')';
     actualizarBotonRepasoInteligente();
-    const total = Object.keys(dificiles).length;
-    elNotaDificiles.textContent = total === 0
+    const totalActivas = Object.keys(dificiles).filter((h) => dificiles[h].activa).length;
+    elNotaDificiles.textContent = totalActivas === 0
       ? 'Todavía no marcaste ninguna tarjeta como difícil (botón ☆ Difícil durante el estudio).'
-      : 'Guardadas: ' + (total - nDesm) + ' activa(s)' + (nDesm > 0 ? ', ' + nDesm + ' desmarcada(s)' : '');
+      : 'Guardadas: ' + totalActivas + ' activa(s)';
   }
 
   function actualizarFilaDificilIndividual(h) {
@@ -16570,7 +16689,7 @@ const ZONAS_SYNC_GIST = [
     }
     if (cache && cache.grupo === nuevoGrupo) {
       const check = cache.fila.querySelector('input[type="checkbox"]');
-      if (check) check.checked = nuevoGrupo !== 'desm';
+      if (check) check.checked = true;
       actualizarContadoresDificiles();
       return;
     }
@@ -16579,8 +16698,8 @@ const ZONAS_SYNC_GIST = [
     const enTarjetas = tarjetasCompletas.find((t) => hashTarjeta(t) === h);
     const p = enTarjetas ? (enTarjetas.primero || '') : (v.p || '');
     const s = enTarjetas ? (enTarjetas.segundo || '') : (v.s || '');
-    const fila = filaDificil(h, p, s, nuevoGrupo !== 'desm');
-    contenedorDeGrupoDificil(nuevoGrupo).appendChild(fila);
+    const fila = filaDificil(h, p, s, true);
+    contenedorDeGrupoDificil().appendChild(fila);
     nodosDificiles.set(h, { fila: fila, grupo: nuevoGrupo });
     actualizarContadoresDificiles();
   }
@@ -16612,7 +16731,6 @@ const ZONAS_SYNC_GIST = [
     Array.from(nodosDificiles.entries()).forEach(([h, info]) => {
       if (info.grupo !== 'propia') nodosDificiles.delete(h);
     });
-    elListaDificilesDesm.innerHTML = '';
 
     tarjetasCompletas.forEach((t) => {
       const h = hashTarjeta(t);
@@ -16624,7 +16742,6 @@ const ZONAS_SYNC_GIST = [
     });
 
     actualizarContadoresDificiles();
-    lazyDificilesDesm.refrescar();
   }
 
   function construirExportDificiles() {
@@ -16703,15 +16820,6 @@ const ZONAS_SYNC_GIST = [
     renderDificilesPreview();
     return { nuevas: nuevas, repetidas: repetidas, invalidas: invalidas };
   }
-
-  document.getElementById('btn-vaciar-desm').addEventListener('click', async () => {
-    const hashes = Object.keys(dificiles).filter((h) => !dificiles[h].activa);
-    if (hashes.length === 0) return;
-    if (!(await confirmarAccion('¿Borrar ' + hashes.length + ' desmarcada(s)? Esta acción no se puede deshacer.'))) return;
-    hashes.forEach((h) => delete dificiles[h]);
-    guardarDificiles();
-    renderDificilesPreview();
-  });
 
   function bloqueVersion(etiqueta, texto, esTxt, vacio) {
     const div = document.createElement('div');
@@ -16857,8 +16965,13 @@ const ZONAS_SYNC_GIST = [
         actualizarFilaNotaIndividual(hashTarjeta(t));
       }));
     }
-    acc.appendChild(botonMini('Usar la del txt (Borrar)', async () => {
+    acc.appendChild(botonMini('Usar la del txt', async () => {
       if (!(await confirmarAccion('Se descarta tu versión y se usa la del txt. ¿Continuar?'))) return;
+      descartarNotaLocal(t);
+      actualizarFilaNotaIndividual(hashTarjeta(t));
+    }));
+    acc.appendChild(botonMini('🗑 Borrar', async () => {
+      if (!(await confirmarAccion('¿Borrar esta nota editada? Se vuelve a usar la versión del txt. No se puede deshacer.'))) return;
       descartarNotaLocal(t);
       actualizarFilaNotaIndividual(hashTarjeta(t));
     }));
@@ -16938,7 +17051,7 @@ const ZONAS_SYNC_GIST = [
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'primeros_editados.json';
+    a.download = 'para_revisar_v1.json';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -17730,6 +17843,9 @@ const ZONAS_SYNC_GIST = [
     elEditorWrap.style.display = 'none';
     document.getElementById('btn-dictado-notaseval-editor').style.display = 'none';
 
+    document.getElementById('det-notaseval-aqui').style.display = propias.length > 0 ? 'block' : 'none';
+    document.getElementById('suma-notaseval-aqui').textContent = 'De este evaluador (' + propias.length + ')';
+
     if (propias.length === 0) {
       limpiarReconciliado(elLista);
       elVacio.style.display = 'block';
@@ -18351,7 +18467,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
 
     const l2 = document.createElement('div');
     l2.className = 'retencion-entrada-linea';
-    l2.textContent = '📖 Lectura: ' + formatoMMSS(entrada.tiempoLecturaSeg) + ' · 🧠 Retención: ' + formatoMMSS(entrada.tiempoRetencionSeg) + ' · ⏱ Total: ' + formatoMMSS(entrada.tiempoTotalSeg);
+    l2.textContent = '📖 Fase Previa: ' + formatoMMSS(entrada.tiempoLecturaSeg) + ' · 🧠 Retención: ' + formatoMMSS(entrada.tiempoRetencionSeg) + ' · ⏱ Total: ' + formatoMMSS(entrada.tiempoTotalSeg);
     contenedor.appendChild(l2);
 
     const l3 = document.createElement('div');
@@ -18496,6 +18612,8 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     const elVacio = document.getElementById('retencion-historial-vacio');
     elLista.innerHTML = '';
     document.getElementById('retencion-historial-paginacion').style.display = 'none';
+    document.getElementById('det-retencion-aqui').style.display = propias.length > 0 ? 'block' : 'none';
+    document.getElementById('suma-retencion-aqui').textContent = 'De este evaluador (' + propias.length + ')';
 
     if (propias.length === 0) {
       elVacio.style.display = 'block';
@@ -20539,15 +20657,16 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const div = document.createElement('div');
     div.className = 'item-nota-otra';
     const titulo = document.createElement('div');
-    titulo.textContent = (entrada.p || '(sin texto)') + (entrada.s ? ' — ' + entrada.s : '');
+    const textoPrimero = entrada.p || entrada.po || '';
+    titulo.textContent = (textoPrimero || '(sin texto)') + (entrada.s ? ' — ' + entrada.s : '');
     div.appendChild(titulo);
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
     acc.appendChild(botonMini('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Quitar esta tarjeta de las marcadas para revisar? No se puede deshacer.'))) return;
-      delete revisarEnMemoria[hash];
-      guardarRevisarLocal('revisar_tarjetas_v1', revisarEnMemoria);
-      borrarPrimeroEditado(hash);
+      delete paraRevisar[hash];
+      siguienteRev();
+      guardarParaRevisar();
       renderRevisarGuardadoPreview();
     }));
     div.appendChild(acc);
@@ -20556,11 +20675,37 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function renderRevisarGuardadoPreview() {
     const el = document.getElementById('lista-revisar-guardadas');
+    const elDetAqui = document.getElementById('det-revisar-aqui');
+    const elSumaAqui = document.getElementById('suma-revisar-aqui');
     const elInfo = document.getElementById('nota-revisar');
     const elVaciar = document.getElementById('btn-vaciar-revisar');
-    el.innerHTML = '';
-    const hashes = Object.keys(revisarEnMemoria);
-    hashes.forEach((h) => el.appendChild(filaRevisarGuardada(h, revisarEnMemoria[h])));
+    const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
+    const hashes = Object.keys(paraRevisar).filter((h) => paraRevisar[h].m !== false);
+    const otrasItems = [];
+    let nAqui = 0;
+    const frag = document.createDocumentFragment();
+    hashes.forEach((h) => {
+      if (hashesAqui.has(h)) {
+        frag.appendChild(filaRevisarGuardada(h, paraRevisar[h]));
+        nAqui++;
+      } else {
+        otrasItems.push(paraRevisar[h]);
+      }
+    });
+    reemplazarHijos(el, frag);
+    elDetAqui.style.display = nAqui > 0 ? 'block' : 'none';
+    elSumaAqui.textContent = 'De este evaluador (' + nAqui + ')';
+    renderGruposOtrosEvaluadores(
+      document.getElementById('det-revisar-otras'),
+      document.getElementById('suma-revisar-otras'),
+      document.getElementById('lista-revisar-otras'),
+      otrasItems,
+      (e) => e.espacio || '',
+      'tarjeta(s)',
+      'pararevisar',
+      null,
+      'De otros evaluadores'
+    );
     elInfo.textContent = hashes.length === 0
       ? 'No tenés tarjetas marcadas para revisar (botón 🚩 durante el estudio).'
       : 'Marcadas (se guardan en este navegador y en el backup completo): ' + hashes.length;
@@ -20568,16 +20713,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   document.getElementById('btn-vaciar-revisar').addEventListener('click', async () => {
-    if (Object.keys(revisarEnMemoria).length === 0) return;
+    if (Object.keys(paraRevisar).length === 0) return;
     if (!(await confirmarAccion('¿Vaciar todas las tarjetas para revisar? No se puede deshacer.'))) return;
-    revisarEnMemoria = {};
-    guardarRevisarLocal('revisar_tarjetas_v1', revisarEnMemoria);
-    if (Object.keys(paraRevisar).length > 0) {
-      paraRevisar = {};
-      siguienteRev();
-      guardarParaRevisar();
-    }
+    paraRevisar = {};
+    siguienteRev();
+    guardarParaRevisar();
     renderRevisarGuardadoPreview();
+    repintarTarjetaSiActiva();
   });
 
   const nodosRazones = new Map();   // hash -> { fila, grupo: 'aqui'|'otras' }
@@ -23433,6 +23575,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroPausaInicio = 0;
     pomodoroPausaAcumMs = 0;
     pomodoroHoraInicio = Date.now();
+    enfoqueReiniciarContador();
     pomodoroAcumulado = { pretest: 0, retencion: 0 };
     pomodoroRetencionPresionada = false;
     pomodoroEnBraindumpFinal = false;
@@ -23675,6 +23818,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function registrarInicioSesionNueva() {
     tiempoInicioSesion = Date.now();
+    enfoqueReiniciarContador();
     descartarSesionPendiente();   // sesión nueva: sobrescribe/borra la pendiente anterior
     descartarSesionPomodoroPendiente();   // una evaluación nueva anula cualquier Pomodoro pendiente
   }
@@ -24371,7 +24515,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       '🔁 Ciclo: ' + (esFaseCiclo ? sesion.pomodoroCiclo : 'todavía en la fase de lectura'),
     ];
     if (!enBraindump) filas.push('⏳ Quedan ' + formatoMMSS(sesion.pomodoroSegundosRestantes) + ' de la fase');
-    filas.push('📖 Lectura acumulada (pretest + skimming): ' + formatoMMSS(sesion.pomodoroAcumulado.pretest));
+    filas.push('📖 Fase previa acumulada (pretest + skimming): ' + formatoMMSS(sesion.pomodoroAcumulado.pretest));
     filas.push('🧠 Retención activa acumulada: ' + formatoMMSS(sesion.pomodoroAcumulado.retencion));
     if (sesion.hoja && sesion.hoja.texto.trim() !== '') filas.push('✍️ Se recuperará el texto que tenías escrito en la hoja');
     filas.push('🕐 Última actividad: ' + new Date(sesion.timestampUltimaActividad).toLocaleString());
@@ -24499,6 +24643,394 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
     return true;
   }
+
+
+  const ENFOQUE_CLAVE = 'vigilar_enfoque_v1';
+  const ENFOQUE_MIN_FUGA_MS = 3000;
+  const ENFOQUE_RESET_MS = 20 * 60 * 1000;
+  const ENFOQUE_RETO_SEG = [10, 15, 20, 25];
+  const ENFOQUE_ALARMA_SEG = [2, 4, 6, 8];
+  const ENFOQUE_TIPOS = ['lemniscata', 'espiral', 'zigzag'];
+  const ENFOQUE_TIPOS_REDUCIDO = ['lemniscata', 'zigzag'];
+
+  let enfoqueHabilitado = (function () {
+    try { return localStorage.getItem(ENFOQUE_CLAVE) !== '0'; } catch (e) { return true; }
+  })();
+  let enfoqueContador = 0;
+  let enfoqueIdSesion = null;
+  let enfoqueUltimaFugaFin = 0;
+  let enfoqueSalidaMs = 0;
+  let enfoqueSalidaVigilada = false;
+  let enfoqueAlarma = null;
+  let enfoqueUltimoTipo = null;
+  let enfoqueReto = null;
+  let enfoqueRaf = 0;
+  let enfoqueFocoPrevio = null;
+
+  const elOverlayEnfoque = document.getElementById('overlay-enfoque');
+  const elCanvasEnfoque = document.getElementById('enfoque-canvas');
+  const elTituloEnfoque = document.getElementById('enfoque-titulo');
+  const ctxEnfoque = elCanvasEnfoque.getContext('2d');
+
+  function enfoqueReiniciarContador() {
+    enfoqueContador = 0;
+    enfoqueUltimaFugaFin = 0;
+    enfoqueIdSesion = null;
+  }
+
+  function enfoqueIdVigilado() {
+    if (!enfoqueHabilitado) return null;
+    if (pomodoroActivo) {
+      if (pomodoroPausado || pomodoroEnBraindumpFinal) return null;
+      if (pomodoroFase === 'pretest' || pomodoroFase === 'skimming' || pomodoroFase === 'retencion') return 'p' + pomodoroHoraInicio;
+      return null;
+    }
+    if (modoObservador || pausaManual) return null;
+    if (elAreaTarjeta.style.display === 'none' || tarjetasSesion.length === 0) return null;
+    return tarjetasSesion;
+  }
+
+  function enfoqueSincronizarSesion(id) {
+    if (id !== enfoqueIdSesion) {
+      enfoqueIdSesion = id;
+      enfoqueContador = 0;
+      enfoqueUltimaFugaFin = 0;
+    }
+  }
+
+  function enfoqueAplicarResetTiempoLimpio(ahora) {
+    if (enfoqueUltimaFugaFin > 0 && ahora - enfoqueUltimaFugaFin >= ENFOQUE_RESET_MS) {
+      enfoqueContador = 0;
+      enfoqueUltimaFugaFin = 0;
+    }
+  }
+
+  function enfoqueDetenerAlarma() {
+    const a = enfoqueAlarma;
+    if (!a) return;
+    enfoqueAlarma = null;
+    try {
+      a.master.gain.cancelScheduledValues(0);
+      a.master.gain.setValueAtTime(0, a.ctx.currentTime);
+      a.oscs.forEach((o) => { try { o.stop(); } catch (e) { } });
+      a.master.disconnect();
+    } catch (e) { }
+  }
+
+  function enfoqueIniciarAlarma(segundos) {
+    if (!sonidosActivos) return;
+    enfoqueDetenerAlarma();
+    const ctx = obtenerContextoAudio();
+    if (!ctx) return;
+    try {
+      const master = ctx.createGain();
+      master.gain.value = 1;
+      master.connect(ctx.destination);
+      const oscs = [];
+      const t0 = ctx.currentTime + 0.02;
+      const paso = 0.7;
+      for (let t = 0; t < segundos - 0.05; t += paso) {
+        const dur = Math.min(paso, segundos - t);
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1320, t0 + t);
+        osc.frequency.exponentialRampToValueAtTime(300, t0 + t + dur * 0.92);
+        g.gain.setValueAtTime(0.0001, t0 + t);
+        g.gain.linearRampToValueAtTime(0.2, t0 + t + 0.02);
+        g.gain.setValueAtTime(0.2, t0 + t + dur * 0.7);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + t + dur);
+        osc.connect(g);
+        g.connect(master);
+        osc.start(t0 + t);
+        osc.stop(t0 + t + dur + 0.02);
+        oscs.push(osc);
+      }
+      enfoqueAlarma = { ctx: ctx, master: master, oscs: oscs };
+      setTimeout(() => { if (enfoqueAlarma && enfoqueAlarma.master === master) enfoqueAlarma = null; }, segundos * 1000 + 500);
+    } catch (e) { }
+  }
+
+  function enfoqueAlSalir() {
+    if (enfoqueSalidaMs > 0) return;
+    const ahora = Date.now();
+    enfoqueSalidaMs = ahora;
+    const id = enfoqueIdVigilado();
+    enfoqueSalidaVigilada = id !== null;
+    if (!enfoqueSalidaVigilada) return;
+    enfoqueSincronizarSesion(id);
+    enfoqueAplicarResetTiempoLimpio(ahora);
+    const nivel = Math.min(enfoqueContador + 1, 4);
+    enfoqueIniciarAlarma(ENFOQUE_ALARMA_SEG[nivel - 1]);
+  }
+
+  function enfoqueAlVolver() {
+    enfoqueDetenerAlarma();
+    if (enfoqueSalidaMs === 0) return;
+    const ahora = Date.now();
+    const duracionMs = ahora - enfoqueSalidaMs;
+    const vigiladaAlSalir = enfoqueSalidaVigilada;
+    enfoqueSalidaMs = 0;
+    enfoqueSalidaVigilada = false;
+    if (!vigiladaAlSalir || duracionMs < ENFOQUE_MIN_FUGA_MS) return;
+    const id = enfoqueIdVigilado();
+    if (id === null) {
+      if (enfoqueReto) enfoqueCerrarReto();
+      if (enfoqueIdSesion !== null) { enfoqueContador++; enfoqueUltimaFugaFin = ahora; }
+      return;
+    }
+    enfoqueSincronizarSesion(id);
+    enfoqueContador++;
+    enfoqueUltimaFugaFin = ahora;
+    enfoqueAbrirReto(enfoqueContador, duracionMs);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') enfoqueAlSalir();
+    else enfoqueAlVolver();
+  });
+
+  function enfoqueConstruirCamino(tipo, W, H, margen) {
+    const x0 = Math.max(margen, W * 0.08);
+    const x1 = Math.min(W - margen, W * 0.92);
+    const y0 = Math.max(margen + 90, H * 0.22);
+    const y1 = Math.min(H - margen, H * 0.92);
+    const cx = (x0 + x1) / 2;
+    const cy = (y0 + y1) / 2;
+    const ax = (x1 - x0) / 2;
+    const ay = (y1 - y0) / 2;
+    const pts = [];
+    if (tipo === 'lemniscata') {
+      const N = 1200;
+      for (let i = 0; i < N; i++) {
+        const t = (i / N) * Math.PI * 2;
+        const den = 1 + Math.sin(t) * Math.sin(t);
+        pts.push([cx + ax * Math.cos(t) / den, cy + ay * (Math.sin(t) * Math.cos(t) / den) / 0.35355]);
+      }
+    } else if (tipo === 'espiral') {
+      const N = 900;
+      const rMax = Math.min(ax, ay);
+      const vueltas = 3;
+      const ida = [];
+      for (let i = 0; i <= N; i++) {
+        const u = i / N;
+        const ang = u * vueltas * Math.PI * 2;
+        const r = rMax * (0.05 + 0.95 * u);
+        ida.push([cx + r * Math.cos(ang), cy + r * Math.sin(ang)]);
+      }
+      for (let i = 0; i < ida.length; i++) pts.push(ida[i]);
+      for (let i = ida.length - 2; i > 0; i--) pts.push(ida[i]);
+    } else {
+      const K = 8;
+      const ida = [];
+      for (let i = 0; i <= K; i++) ida.push([x0 + (x1 - x0) * i / K, (i % 2 === 0) ? y0 : y1]);
+      const densos = [];
+      for (let i = 0; i < ida.length - 1; i++) {
+        for (let k = 0; k < 40; k++) {
+          const f = k / 40;
+          densos.push([ida[i][0] + (ida[i + 1][0] - ida[i][0]) * f, ida[i][1] + (ida[i + 1][1] - ida[i][1]) * f]);
+        }
+      }
+      densos.push(ida[ida.length - 1]);
+      for (let i = 0; i < densos.length; i++) pts.push(densos[i]);
+      for (let i = densos.length - 2; i > 0; i--) pts.push(densos[i]);
+    }
+    const cum = new Float64Array(pts.length + 1);
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i];
+      const b = pts[(i + 1) % pts.length];
+      cum[i + 1] = cum[i] + Math.hypot(b[0] - a[0], b[1] - a[1]);
+    }
+    return { pts: pts, cum: cum, total: cum[pts.length] };
+  }
+
+  function enfoquePosicion(camino, dist) {
+    const d = ((dist % camino.total) + camino.total) % camino.total;
+    let lo = 0, hi = camino.pts.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (camino.cum[mid] <= d) lo = mid; else hi = mid - 1;
+    }
+    const a = camino.pts[lo];
+    const b = camino.pts[(lo + 1) % camino.pts.length];
+    const seg = camino.cum[lo + 1] - camino.cum[lo];
+    const f = seg > 0 ? (d - camino.cum[lo]) / seg : 0;
+    return { x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f };
+  }
+
+  function enfoqueAjustarCanvas() {
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    elCanvasEnfoque.width = Math.round(W * dpr);
+    elCanvasEnfoque.height = Math.round(H * dpr);
+    ctxEnfoque.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { W: W, H: H };
+  }
+
+  function enfoqueReconstruirCamino() {
+    if (!enfoqueReto) return;
+    const r = enfoqueReto;
+    const fr = r.camino ? (((r.dist % r.camino.total) + r.camino.total) % r.camino.total) / r.camino.total : Math.random();
+    const dim = enfoqueAjustarCanvas();
+    r.W = dim.W;
+    r.H = dim.H;
+    r.camino = enfoqueConstruirCamino(r.tipo, r.W, r.H, r.radio + 14);
+    r.dist = fr * r.camino.total;
+  }
+
+  function enfoqueDibujar(pos, dentro) {
+    const r = enfoqueReto;
+    const c = ctxEnfoque;
+    c.clearRect(0, 0, r.W, r.H);
+    if (!r.reducido) {
+      for (let i = 0; i < r.estela.length; i++) {
+        const f = (i + 1) / r.estela.length;
+        c.beginPath();
+        c.arc(r.estela[i].x, r.estela[i].y, r.radio * (0.35 + 0.5 * f), 0, Math.PI * 2);
+        c.fillStyle = 'rgba(120, 200, 255, ' + (0.16 * f).toFixed(3) + ')';
+        c.fill();
+      }
+    }
+    const rAnillo = r.radio + 9;
+    c.lineWidth = 4;
+    c.beginPath();
+    c.arc(pos.x, pos.y, rAnillo, 0, Math.PI * 2);
+    c.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    c.stroke();
+    if (r.prog > 0) {
+      c.beginPath();
+      c.arc(pos.x, pos.y, rAnillo, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, r.prog / r.dur));
+      c.strokeStyle = '#5dffb0';
+      c.lineCap = 'round';
+      c.stroke();
+    }
+    c.save();
+    c.shadowColor = dentro ? 'rgba(93, 255, 176, 0.95)' : 'rgba(255, 196, 94, 0.95)';
+    c.shadowBlur = 22;
+    c.beginPath();
+    c.arc(pos.x, pos.y, r.radio, 0, Math.PI * 2);
+    c.fillStyle = dentro ? '#d8fff0' : '#ffe3a8';
+    c.fill();
+    c.restore();
+  }
+
+  function enfoqueFrame(ts) {
+    enfoqueRaf = requestAnimationFrame(enfoqueFrame);
+    const r = enfoqueReto;
+    if (!r) return;
+    if (enfoqueIdVigilado() === null) { enfoqueCerrarReto(); return; }
+    const dt = r.ultimoTs === 0 ? 0 : Math.min(0.1, (ts - r.ultimoTs) / 1000);
+    r.ultimoTs = ts;
+    r.dist += r.velocidad * dt;
+    const pos = enfoquePosicion(r.camino, r.dist);
+    let dentro = false;
+    if (r.ptr) dentro = Math.hypot(r.ptr.x - pos.x, r.ptr.y - pos.y) <= r.radio;
+    if (dentro) r.prog += dt; else r.prog = 0;
+    if (!r.reducido) {
+      r.estela.push({ x: pos.x, y: pos.y });
+      if (r.estela.length > 22) r.estela.shift();
+    }
+    if (r.prog >= r.dur) { enfoqueCerrarReto(); return; }
+    enfoqueDibujar(pos, dentro);
+  }
+
+  function enfoqueAbrirReto(numero, duracionMs) {
+    const nivel = Math.min(numero, 4);
+    const reducido = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const tactil = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    const tipos = reducido ? ENFOQUE_TIPOS_REDUCIDO : ENFOQUE_TIPOS;
+    const candidatos = tipos.filter((t) => t !== enfoqueUltimoTipo);
+    const tipo = candidatos[Math.floor(Math.random() * candidatos.length)];
+    enfoqueUltimoTipo = tipo;
+    const yaAbierto = !!enfoqueReto;
+    cancelAnimationFrame(enfoqueRaf);
+    if (!yaAbierto) {
+      enfoqueFocoPrevio = document.activeElement;
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    }
+    const radio = tactil ? 45 : 33;
+    enfoqueReto = {
+      tipo: tipo, dur: ENFOQUE_RETO_SEG[nivel - 1], prog: 0, dist: 0, ultimoTs: 0, ptr: null,
+      radio: radio, reducido: reducido, estela: [], camino: null, W: 0, H: 0, velocidad: 0,
+    };
+    const dim = enfoqueAjustarCanvas();
+    enfoqueReto.W = dim.W;
+    enfoqueReto.H = dim.H;
+    enfoqueReto.camino = enfoqueConstruirCamino(tipo, dim.W, dim.H, radio + 14);
+    enfoqueReto.dist = Math.random() * enfoqueReto.camino.total;
+    const base = Math.min(Math.max(Math.min(dim.W, dim.H) * 0.15, 70), 160);
+    enfoqueReto.velocidad = reducido ? base * 0.5 : base;
+    elTituloEnfoque.textContent = 'Fuga #' + numero + ' · ' + formatoMMSS(Math.round(duracionMs / 1000)) + ' fuera';
+    elOverlayEnfoque.classList.add('abierto');
+    enfoqueRaf = requestAnimationFrame(enfoqueFrame);
+  }
+
+  function enfoqueCerrarReto() {
+    cancelAnimationFrame(enfoqueRaf);
+    enfoqueRaf = 0;
+    if (!enfoqueReto) return;
+    enfoqueReto = null;
+    elOverlayEnfoque.classList.remove('abierto');
+    ctxEnfoque.clearRect(0, 0, elCanvasEnfoque.width, elCanvasEnfoque.height);
+    const foco = enfoqueFocoPrevio;
+    enfoqueFocoPrevio = null;
+    if (foco && foco.focus && document.contains(foco)) { try { foco.focus({ preventScroll: true }); } catch (e) { } }
+  }
+
+  function enfoqueRegistrarPuntero(e) {
+    if (!enfoqueReto) return;
+    enfoqueReto.ptr = { x: e.clientX, y: e.clientY, tipo: e.pointerType === 'mouse' ? 'mouse' : 'toque' };
+  }
+  elOverlayEnfoque.addEventListener('pointerdown', enfoqueRegistrarPuntero);
+  elOverlayEnfoque.addEventListener('pointermove', enfoqueRegistrarPuntero);
+  const enfoqueSoltarPuntero = (e) => {
+    if (!enfoqueReto) return;
+    if (e.pointerType !== 'mouse' || e.type === 'pointerleave') enfoqueReto.ptr = null;
+  };
+  elOverlayEnfoque.addEventListener('pointerup', enfoqueSoltarPuntero);
+  elOverlayEnfoque.addEventListener('pointercancel', enfoqueSoltarPuntero);
+  elOverlayEnfoque.addEventListener('pointerleave', enfoqueSoltarPuntero);
+  ['wheel', 'touchmove', 'contextmenu'].forEach((nombre) => {
+    elOverlayEnfoque.addEventListener(nombre, (e) => { e.preventDefault(); }, { passive: false });
+  });
+  ['keydown', 'keyup', 'keypress'].forEach((nombre) => {
+    window.addEventListener(nombre, (e) => {
+      if (!enfoqueReto) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }, true);
+  });
+  window.addEventListener('resize', () => { if (enfoqueReto) enfoqueReconstruirCamino(); });
+
+  function enfoqueSincronizarChecks() {
+    document.querySelectorAll('.chk-enfoque').forEach((chk) => { chk.checked = enfoqueHabilitado; });
+  }
+  document.querySelectorAll('.chk-enfoque').forEach((chk) => {
+    chk.addEventListener('change', () => {
+      enfoqueHabilitado = chk.checked;
+      try { escribirLocalSeguro(ENFOQUE_CLAVE, enfoqueHabilitado ? '1' : '0'); } catch (e) { }
+      enfoqueSincronizarChecks();
+      if (!enfoqueHabilitado) {
+        enfoqueDetenerAlarma();
+        enfoqueCerrarReto();
+      }
+    });
+  });
+  enfoqueSincronizarChecks();
+
+  document.querySelectorAll('[data-mute-sync]').forEach((b) => {
+    b.textContent = sonidosActivos ? '🔊' : '🔇';
+    if (b.id !== 'btn-mute') b.addEventListener('click', () => toggleMute());
+  });
+
+  (function calentarAudioEnfoque() {
+    const calentar = () => {
+      if (enfoqueHabilitado) obtenerContextoAudio();
+      ['pointerdown', 'keydown', 'touchstart'].forEach((n) => document.removeEventListener(n, calentar, true));
+    };
+    ['pointerdown', 'keydown', 'touchstart'].forEach((n) => document.addEventListener(n, calentar, true));
+  })();
 
   limpiarSesionesAntiguas();
   const _sesionPendienteAlCargar = cargarSesionPendiente();
