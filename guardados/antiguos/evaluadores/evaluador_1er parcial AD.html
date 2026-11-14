@@ -2381,12 +2381,24 @@
 
   .fila-retencion-ruta {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     padding: 8px 4px;
     border-bottom: 1px solid var(--color-borde-suave);
   }
   .fila-retencion-ruta:last-child { border-bottom: none; }
+  .retencion-movil .fila-retencion-ruta { cursor: pointer; }
+  .fila-retencion-ruta.enfocada { background: color-mix(in srgb, var(--color-boton) 10%, transparent); border-radius: 8px; }
+  .retencion-recorte { flex: 0 0 100%; display: flex; justify-content: center; cursor: default; }
+  .retencion-recorte canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    border: 2px solid var(--color-boton);
+    background: var(--bg-superficie);
+  }
   .retencion-tarjeta-grupo { margin-bottom: 14px; }
   .retencion-tarjeta-pregunta {
     font-weight: 700;
@@ -2720,6 +2732,93 @@
     font-weight: 800;
     color: var(--texto-secundario);
     flex-shrink: 0;
+  }
+
+  .opcion-modo:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .mapa-vf-ayuda {
+    font-size: 13px;
+    color: var(--texto-secundario);
+  }
+
+  .mapa-vf-recortes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .mapa-vf-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 10px;
+    border: 2px solid var(--color-borde-medio);
+    background: var(--bg-superficie);
+  }
+
+  .mapa-vf-item canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+  }
+
+  .mapa-vf-item.correcta {
+    border-color: #3aa76d;
+    background: rgba(58, 167, 109, 0.14);
+  }
+
+  .mapa-vf-item.incorrecta {
+    border-color: #e0574c;
+    background: rgba(224, 87, 76, 0.14);
+  }
+
+  .mapa-vf-etiqueta {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--texto-secundario);
+  }
+
+  .mapa-vf-botones {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .mapa-vf-btn {
+    flex: 1 1 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 2px solid var(--color-borde-medio);
+    background: var(--bg-superficie);
+    color: var(--texto-principal);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .mapa-vf-btn:hover:not(:disabled) {
+    background: var(--bg-superficie-hover);
+    border-color: var(--color-boton);
+  }
+
+  .mapa-vf-btn:disabled { cursor: default; }
+
+  .mapa-vf-btn.correcta {
+    border-color: #3aa76d;
+    background: rgba(58, 167, 109, 0.14);
+    color: #2e7d32;
+  }
+
+  .mapa-vf-btn.incorrecta {
+    border-color: #e0574c;
+    background: rgba(224, 87, 76, 0.14);
+    color: #c0392b;
   }
 
   .detective-ayuda {
@@ -3689,6 +3788,7 @@
     <button class="boton-secundario" id="btn-pomodoro-repaso-pasivo" style="width:100%; display:none;">👁 Repaso pasivo</button>
     <div class="pomodoro-banner-repaso" id="pomodoro-aviso-repaso"></div>
     <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
+    <label class="enfoque-opcion" title="Al tocar una ruta en Retención se despliega el recorte del mapa"><input type="checkbox" class="chk-movil"> 📱 Pomodoro móvil</label>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-normal">Normal</button>
     <button class="boton-secundario" id="btn-pomodoro-iniciar-dificil">Difícil</button>
     <button class="boton-mini" id="btn-pomodoro-iniciar-historial">🧠 Ver historial de retención</button>
@@ -4310,6 +4410,11 @@
         <span class="opcion-modo-nombre">Ordenar Rutas</span>
         <span class="opcion-modo-detalle">Arrastrá los renglones para reconstruir las rutas en orden</span>
       </button>
+      <button type="button" class="opcion-modo" id="opcion-otro-verdadero-falso" data-otro-modo="verdadero_falso">
+        <span class="opcion-modo-icono">🗺️</span>
+        <span class="opcion-modo-nombre">Verdadero/Falso</span>
+        <span class="opcion-modo-detalle">Decidí si el recorte del mapa corresponde a la tarjeta</span>
+      </button>
     </div>
     <label class="opcion-demostraciones-wrap" id="wrap-modo-demostraciones" for="chk-modo-demostraciones">
       <input type="checkbox" id="chk-modo-demostraciones">
@@ -4475,6 +4580,7 @@
 <script>
   const datos = {"tarjetas": [{"tema": "IDEA CENTRAL", "primero": "cual es el objetivo?", "segundo": "objetivo, estimar", "rutas": [1], "claves": ["objetivo", "estimar"], "nota": ""}, {"tema": "IDEA CENTRAL", "primero": "cual es el modelo final?", "segundo": "regresion lineal, representar,transformadas", "rutas": [2], "claves": ["regresion", "lineal", "representar", "transformadas"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es log1p?", "segundo": "aprende, subestimar, convertir", "rutas": [4, 5], "claves": ["aprende", "subestimar", "convertir"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es correcion de duan?", "segundo": "factor ajuste, mejora", "rutas": [6], "claves": ["factor", "ajuste", "mejora"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es multicolinealidad?", "segundo": "misma historia, inestables, separar, interpretacion", "rutas": [10, 13], "claves": ["misma", "historia", "inestables", "separar", "interpretacion"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es VIF?", "segundo": "incertidumbre, señal, estabilidad", "rutas": [14, 15], "claves": ["incertidumbre", "senal", "estabilidad"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es one hot encoding?", "segundo": "transforma, separados, pocas, interpreta", "rutas": [18, 19], "claves": ["transforma", "separados", "pocas", "interpreta"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es target encoding?", "segundo": "resume, relacionada,representacion, util", "rutas": [21], "claves": ["resume", "relacionada", "representacion", "util"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es data leakage?", "segundo": "fuga, pista, artificial", "rutas": [23, 24], "claves": ["fuga", "pista", "artificial"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es splines?", "segundo": "efecto, obligar, sola", "rutas": [28], "claves": ["efecto", "obligar", "sola"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "en que ayuda PCA?", "segundo": "transforma, nuevas, concentran, casualidad", "rutas": [30, 31], "claves": ["transforma", "nuevas", "concentran", "casualidad"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es un estudio de ablacion?", "segundo": "variantes, manteniendo, mejora", "rutas": [32, 33], "claves": ["variantes", "manteniendo", "mejora"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es jarque bera?", "segundo": "normal, asimetria, colas", "rutas": [35], "claves": ["normal", "asimetria", "colas"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es durbin watson?", "segundo": "error, tiende, autocorrelacion", "rutas": [38], "claves": ["error", "tiende", "autocorrelacion"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es curva de aprendizaje?", "segundo": "cambia, entrenamiento, estabilidad, comportara", "rutas": [41], "claves": ["cambia", "entrenamiento", "estabilidad", "comportara"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es curva de aprendizaje fuera de tiempo?", "segundo": "entreno, prediciones, temporal, posteriores", "rutas": [44], "claves": ["entreno", "prediciones", "temporal", "posteriores"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es K FOLD?", "segundo": "particiones, anteriores, posteriores", "rutas": [46], "claves": ["particiones", "anteriores", "posteriores"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es KRUSTAL WALLIS?", "segundo": "diferencia, grupos, normal", "rutas": [48], "claves": ["diferencia", "grupos", "normal"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es V de CRAMER?", "segundo": "intensidad, categoricas, redundancias", "rutas": [49, 50], "claves": ["intensidad", "categoricas", "redundancias"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es OLS?", "segundo": "minimizar, penalizan, influencia, equilibrio", "rutas": [51, 52, 53], "claves": ["minimizar", "penalizan", "influencia", "equilibrio"], "nota": ""}, {"tema": "CONCEPTOS y PREGUNTAS", "primero": "que es CETERIS PARIBUS?", "segundo": "constantes, prediccion, transformada", "rutas": [54], "claves": ["constantes", "prediccion", "transformada"], "nota": ""}, {"tema": "GRAFICOS EDA", "primero": "analisis categorico", "segundo": "compara distribuciones, reconocer", "rutas": [58, 59], "claves": ["compara", "distribuciones", "reconocer"], "nota": ""}, {"tema": "GRAFICOS EDA", "primero": "relaciones bivariadas clave", "segundo": "evidencia, abanico", "rutas": [61], "claves": ["evidencia", "abanico"], "nota": ""}, {"tema": "GRAFICOS DIAGNOSTICO", "primero": "histograma residuos", "segundo": "centrado, 0", "rutas": [66], "claves": ["centrado"], "nota": ""}, {"tema": "GRAFICOS DIAGNOSTICO", "primero": "qq plot", "segundo": "residuos, normal", "rutas": [68], "claves": ["residuos", "normal"], "nota": ""}, {"tema": "GRAFICOS DIAGNOSTICO", "primero": "scale location", "segundo": "cambio, errores, predicciones", "rutas": [71], "claves": ["cambio", "errores", "predicciones"], "nota": ""}, {"tema": "GRAFICOS DIAGNOSTICO", "primero": "residuos vs ajustados", "segundo": "busca, centrada", "rutas": [74, 75], "claves": ["busca", "centrada"], "nota": ""}, {"tema": "GRAFICOS DIAGNOSTICO", "primero": "real vs predicho", "segundo": "constrasta, observado, cercanas", "rutas": [77, 78], "claves": ["constrasta", "observado", "cercanas"], "nota": ""}], "rutas": {"1": {"tema": "IDEA CENTRAL", "lineas": ["el objetivo", "fue estimar alquiler mensual 1", "departamento en rublos a", "partir información", "como superficie,", "distrito,", "ubicación,", "antigüedad,", "tipo edificio,", "estado renovación y", "fecha del anuncio"]}, "2": {"tema": "IDEA CENTRAL", "lineas": ["el modelo final", "es una regresión lineal,", "pero antes se transformaron algunas", "variables", "para que pudiera", "representar relaciones más realistas"]}, "3": {"tema": "IDEA CENTRAL", "lineas": ["Por eso,", "'lineal' describe", "cómo modelo", "combina variables transformadas;", "no significa", "que precio tenga", "que cambiar en línea recta", "con cada variable original"]}, "4": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["LOG1P", "el modelo aprende en escala logarítmica,", "pero propietario", "necesita una estimación en rublos"]}, "5": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Al volver una escala logarítmica", "a moneda original,", "simplemente deshacer transformación", "puede subestimar alquiler promedio,", "porque convertir de vuelta", "no compensa automáticamente", "variabilidad errores"]}, "6": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["CORRECCION de DUAN", "calcula 1 factor ajuste", "a partir residuos del entrenamiento"]}, "7": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["En informe,", "factor Duan", "es aproximadamente 1,003500"]}, "8": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Es una corrección pequeña,", "cual tiene sentido", "porque factor", "está muy cerca uno"]}, "9": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Por tanto,", "corrección mejora ligeramente resultado,", "pero no", "produce 1 cambio enorme"]}, "10": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["MULTICOLINEALIDAD", "la multicolinealidad aparece", "cuando varias variables", "cuentan casi misma historia"]}, "11": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Por ejemplo,", "distancia al centro y", "distancia al metro", "pueden estar relacionadas;", "también superficie y", "cantidad habitaciones"]}, "12": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Eso puede volver inestables coeficientes:", "al modelo le cuesta", "separar qué parte del efecto", "corresponde a cada variable"]}, "13": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["No significa necesariamente", "que predicción vaya a", "ser mala,", "pero", "sí complica interpretación y", "puede volver frágiles coeficientes"]}, "14": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["VIF", "mide cuánto se infla incertidumbre", "1 predictor", "por su relación con otros"]}, "15": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["NUMERO DE CONDICION", "es una señal global estabilidad", "numérica del conjunto variables"]}, "16": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Ningún VIF final", "llega a 10;", "53 57 predictores", "tienen VIF menor", "que 5 y cuatro quedan", "en franja moderada"]}, "17": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["el máximo", "es 8,01,", "así", "que sería incorrecto decir", "que toda colinealidad desapareció"]}, "18": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["ONEHOT ENCODING", "transforma una variable categórica en", "indicadores separados,", "normalmente", "con valores", "que identifican", "si 1 anuncio", "pertenece o no", "a una categoría"]}, "19": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Es útil", "para variables", "con pocas categorías y", "sin orden numérico natural,", "como tipo edificio o", "estado renovación"]}, "20": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Así,", "modelo no interpreta", "por error", "que una categoría", "vale 'más'", "que otra solo", "porque tenga 1 número asignado"]}, "21": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["TARGET ENCODING", "resume una categoría", "mediante una estadística relacionada", "con alquiler objetivo", "Es útil", "cuando hay muchas categorías"]}, "22": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["En vez crear una columna", "por cada distrito,", "genera una representación numérica del", "efecto asociado a ese distrito"]}, "23": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["DATA LEAKAGE", "o fuga información,", "ocurre", "cuando modelo", "recibe durante entrenamiento una pista", "que no tendría disponible forma", "legítima al predecir 1 caso", "nuevo"]}, "24": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Entonces parece muy preciso,", "pero esa precisión", "es artificial"]}, "25": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["la elección", "depende principalmente cuántas categorías", "existen,", "cuántos casos", "hay en cada una y", "cuánto se", "necesita interpretar cada efecto"]}, "26": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Con pocas categorías", "por ejemplo,", "seis tipos edificio o", "cuatro estados renovación One Hot", "resulta simple y", "transparente"]}, "27": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Con 129 distritos,", "crear una columna", "por categoría", "puede volver representación demasiado dispersa y hacer que distritos raros se estimen", "con pocos datos;", "Target Encoding", "resume esa señal en menos columnas,", "aunque exige controles estrictos contra fuga"]}, "28": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["SPLINES", "permiten", "que efecto una variable cambie forma", "gradual", "según tramo su rango,", "en vez obligar al modelo", "a usar una sola pendiente", "para todos casos"]}, "29": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Son útiles", "cuando 1 metro cuadrado adicional", "no tiene mismo efecto en", "departamentos pequeños y grandes,", "o", "cuando alejarse del centro", "encarece o abarata", "alquiler forma distinta", "según distancia"]}, "30": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["PCA transforma varias columnas correlacionadas", "en nuevas combinaciones", "que concentran información esas columnas y quedan menos correlacionadas", "entre sí"]}, "31": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["No es una técnica", "que 'descubra causalidad',", "ni hace que modelo", "sea automáticamente mejor"]}, "32": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["ESTUDIO ABLACION", "consiste en armar variantes 1 modelo y", "agregar o quitar", "1 bloque características cada vez,", "manteniendo comparable evaluación"]}, "33": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["la pregunta es:", "'¿Qué mejora realmente", "cuando incorporo esta pieza?'.", "Si error baja forma", "consistente en datos no usados", "para ajustar esa variante,", "hay evidencia", "que bloque", "aporta valor predictivo"]}, "34": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Si error no baja o", "empeora,", "complejidad adicional quizá no se", "justifique"]}, "35": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["JARQUE BERA", "es una prueba formal", "que analiza", "si distribución residuos se parece", "a una normal,", "prestando atención a su asimetría y", "a qué tan", "pesadas o ligeras", "son sus colas"]}, "36": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["la hipótesis nula es", "que residuos", "siguen una distribución normal"]}, "37": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Si valor p", "es menor", "que umbral elegido en informe,", "0,05 se rechaza esa hipótesis;", "si es mayor,", "no hay evidencia suficiente", "para rechazarla"]}, "38": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["DURBIN WATSON", "ayuda a detectar", "autocorrelación primer orden:", "si 1 error", "tiende a parecerse al error", "inmediatamente anterior en una secuencia", "ordenada"]}, "39": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["En 1 análisis temporal importa", "porque errores meses cercanos podrían", "compartir una tendencia no capturada"]}, "40": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Un valor alrededor 2 suele", "indicar poca evidencia autocorrelación primer orden;", "por debajo 2", "puede sugerir autocorrelación positiva,", "aunque interpretación completa", "depende del contexto y", "supuestos prueba"]}, "41": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["CURVA APRENDIZAJE", "muestra cómo cambia error", "cuando modelo", "recibe más filas entrenamiento"]}, "42": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["En versión K Fold mezclada,", "datos se reparten en pliegues", "sin respetar estrictamente orden cronológico"]}, "43": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Sirve para observar estabilidad", "dentro de una muestra tratada", "como si sus registros fueran intercambiables,", "pero es menos adecuada", "para demostrar", "cómo se comportará modelo", "con meses futuros", "cuando existe una tendencia del", "mercado"]}, "44": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["CURVA APRENDIZAJE FUERA DE TIEMPO", "responde una pregunta más cercana", "al uso real:", "si entreno", "con cada vez más datos históricos,", "¿mejoran predicciones", "sobre períodos posteriores", "que modelo no vio?", "entrenamiento", "mantiene orden temporal y", "valid/test", "pertenecen a períodos posteriores"]}, "45": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Así se", "mide desempeño", "ante 1 mercado", "que evoluciona,", "en lugar", "asumir", "que anuncios antiguos y", "futuros son intercambiables"]}, "46": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["K FOLD", "mezcla datos", "para evaluar modelo en distintas particiones,", "mientras que partición temporal respeta orden cronológico:", "se entrena", "con períodos anteriores y", "se evalúa", "con períodos posteriores"]}, "47": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Esto permite", "comprobar", "si modelo", "puede predecir alquileres futuros sin", "aprovechar información del futuro"]}, "48": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["KRUSTAL WALLIS", "permite evaluar", "si alquileres presentan diferencias", "entre grupos,", "como distintos barrios,", "sin exigir", "que datos sigan una distribución", "normal"]}, "49": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["V CRAMER", "mide intensidad asociación", "entre dos variables categóricas y"]}, "50": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["ayuda a", "detectar posibles redundancias", "entre características"]}, "51": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["OLS", "estima coeficientes", "buscando minimizar errores cuadrados"]}, "52": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Ridge y", "Lasso penalizan coeficientes", "para controlar complejidad y", "multicolinealidad,", "mientras que Huber", "reduce influencia ciertos errores extremos"]}, "53": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["OLS puede ganar", "si ofrece 1 mejor equilibrio", "entre precisión,", "estabilidad e", "interpretación en datos evaluados"]}, "54": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["CETERIS PARIBUS", "significa", "'manteniendo constantes demás variables'. 1", "coeficiente representa", "cómo cambia predicción del modelo", "cuando cambia una característica del", "departamento y", "demás permanecen iguales"]}, "55": {"tema": "CONCEPTOS y PREGUNTAS", "lineas": ["Si variable", "está transformada o codificada,", "interpretación debe", "considerar esa transformación"]}, "56": {"tema": "GRAFICOS EDA", "lineas": ["1", "distribución del alquiler:", "muestra asimetría variable objetivo y", "ayuda a justificar log1p"]}, "57": {"tema": "GRAFICOS EDA", "lineas": ["2", "distribuciones predictores numéricos:", "permite", "detectar asimetrías, rangos extraños y variables", "con valores extremos,", "sin eliminarlos automáticamente"]}, "58": {"tema": "GRAFICOS EDA", "lineas": ["3", "análisis categórico:", "compara distribuciones del alquiler", "entre tipos edificio,", "renovaciones,", "distritos y", "otras categorías;"]}, "59": {"tema": "GRAFICOS EDA", "lineas": ["ayuda a reconocer", "asociaciones y categorías", "con pocos casos"]}, "60": {"tema": "GRAFICOS EDA", "lineas": ["4", "correlaciones:", "identifica relaciones", "entre predictores,", "por ejemplo superficie", "con habitaciones y", "distancia al centro", "con distancia al metro;", "orienta análisis multicolinealidad"]}, "61": {"tema": "GRAFICOS EDA", "lineas": ["5", "relaciones bivariadas clave:", "evidencia apertura en abanico del", "alquiler original y curvatura relación", "con distancia al centro;", "justifica transformación logarítmica y", "splines"]}, "62": {"tema": "GRAFICOS EDA", "lineas": ["6", "leakage y metro:", "muestra", "por qué rent_per_sqm filtraría respuesta y", "documenta dudas", "sobre validez variables estación y", "línea metro"]}, "63": {"tema": "GRAFICOS EDA", "lineas": ["7", "tendencias temporales:", "muestra una evolución alcista nominal y", "una estacionalidad mensual poco marcada;", "ayuda a justificar tratamiento temporal y", "partición cronológica"]}, "64": {"tema": "GRAFICOS EDA", "lineas": ["8", "distribución espacial:", "muestra concentración alquileres altos en zona", "central y", "agrupamientos periféricos;", "justifica representar ubicación", "con más una variable"]}, "65": {"tema": "GRAFICOS EDA", "lineas": ["Después vienen gráficos diagnóstico residuos,", "que verifican", "si esas decisiones dejaron patrones", "sistemáticos en errores"]}, "66": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["1", "Histograma residuos:", "debería verse aproximadamente centrado en", "cero y", "sin una asimetría extrema"]}, "67": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["En informe,", "asimetría residual", "es cercana a cero y", "dispersión es parecida", "entre train,", "valid y", "test"]}, "68": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["2", "QQ plot:", "compara distribución residuos", "con una normal teórica"]}, "69": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["Tus puntos", "se aproximan mucho a diagonal;", "en extremos se curvan ligeramente", "hacia adentro,", "compatible", "con colas más ligeras", "que una normal"]}, "70": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["Visualmente es una buena aproximación,", "pero Jarque Bera", "sí rechaza normalidad en test"]}, "71": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["3", "Scale Location:", "busca cambios en magnitud errores", "a largo predicciones"]}, "72": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["la curva", "se mantiene prácticamente horizontal en", "torno al nivel esperado;", "no se", "observa embudo marcado"]}, "73": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["Breusch Pagan tampoco rechaza homocedasticidad en", "valid ni", "test"]}, "74": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["4", "Residuos vs. valores ajustados:", "busca curvas,", "embudos o", "agrupamientos"]}, "75": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["la nube", "está centrada alrededor cero,", "sin forma U", "ni abanico,", "y línea media es horizontal"]}, "76": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["Eso apoya", "que no queda una no", "linealidad o una variación dispersión evidente en rango observado,", "aunque ningún gráfico prueba", "que modelo capture absolutamente toda estructura"]}, "77": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["5", "Real vs. predicho:", "contrasta directamente predicción", "con valor observado"]}, "78": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["Cuanto más cerca quedan puntos diagonal ideal,", "más cercanas", "son predicciones;", "se complementa"]}, "79": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["con RMSE, MAE y R²,", "porque una impresión visual no", "cuantifica error", "por sí sola"]}, "80": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["6", "Residuos a largo", "del tiempo:", "busca deriva temporal"]}, "81": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["el informe", "describe una dispersión relativamente estable,", "pero también 1 sesgo medio", "positivo en períodos posteriores,", "relacionado", "con evolución nominal alquileres"]}, "82": {"tema": "GRAFICOS DIAGNOSTICO", "lineas": ["Esto recuerda", "que errores estables no descartan", "que mercado cambie nivel"]}}, "descripciones_rutas": {}};
   const MAPA_RUTAS_COORDS = {"1": {"x": 0.0, "y": 23.97, "w": 5.16, "h": 35.62, "subT": "IDEA CENTRAL"}, "2": {"x": 5.27, "y": 23.29, "w": 0.64, "h": 44.86, "subT": "IDEA CENTRAL"}, "3": {"x": 6.01, "y": 22.95, "w": 1.02, "h": 61.3, "subT": "IDEA CENTRAL"}, "4": {"x": 7.14, "y": 23.97, "w": 1.11, "h": 28.42, "subT": "CONCEPTOS y PREGUNTAS"}, "5": {"x": 7.88, "y": 30.82, "w": 1.02, "h": 53.42, "subT": "CONCEPTOS y PREGUNTAS"}, "6": {"x": 9.01, "y": 23.97, "w": 2.01, "h": 20.55, "subT": "CONCEPTOS y PREGUNTAS"}, "7": {"x": 9.75, "y": 30.82, "w": 0.74, "h": 21.92, "subT": "CONCEPTOS y PREGUNTAS"}, "8": {"x": 10.6, "y": 30.82, "w": 1.02, "h": 29.79, "subT": "CONCEPTOS y PREGUNTAS"}, "9": {"x": 11.55, "y": 30.82, "w": 1.02, "h": 29.79, "subT": "CONCEPTOS y PREGUNTAS"}, "10": {"x": 12.68, "y": 23.97, "w": 1.98, "h": 28.42, "subT": "CONCEPTOS y PREGUNTAS"}, "11": {"x": 13.05, "y": 31.64, "w": 1.4, "h": 36.03, "subT": "CONCEPTOS y PREGUNTAS"}, "12": {"x": 14.18, "y": 30.82, "w": 1.02, "h": 29.79, "subT": "CONCEPTOS y PREGUNTAS"}, "13": {"x": 15.31, "y": 30.82, "w": 0.74, "h": 45.55, "subT": "CONCEPTOS y PREGUNTAS"}, "14": {"x": 16.16, "y": 23.97, "w": 1.79, "h": 28.42, "subT": "CONCEPTOS y PREGUNTAS"}, "15": {"x": 16.9, "y": 31.85, "w": 0.65, "h": 20.55, "subT": "CONCEPTOS y PREGUNTAS"}, "16": {"x": 17.65, "y": 31.58, "w": 0.68, "h": 44.04, "subT": "CONCEPTOS y PREGUNTAS"}, "17": {"x": 18.44, "y": 31.58, "w": 0.68, "h": 36.16, "subT": "CONCEPTOS y PREGUNTAS"}, "18": {"x": 18.86, "y": 23.97, "w": 2.24, "h": 67.81, "subT": "CONCEPTOS y PREGUNTAS"}, "19": {"x": 19.97, "y": 30.82, "w": 1.59, "h": 37.67, "subT": "CONCEPTOS y PREGUNTAS"}, "20": {"x": 21.49, "y": 30.82, "w": 1.02, "h": 53.42, "subT": "CONCEPTOS y PREGUNTAS"}, "21": {"x": 22.44, "y": 23.97, "w": 2.61, "h": 28.42, "subT": "CONCEPTOS y PREGUNTAS"}, "22": {"x": 23.18, "y": 30.82, "w": 1.02, "h": 29.79, "subT": "CONCEPTOS y PREGUNTAS"}, "23": {"x": 25.16, "y": 23.97, "w": 2.91, "h": 59.93, "subT": "CONCEPTOS y PREGUNTAS"}, "24": {"x": 25.9, "y": 30.82, "w": 1.02, "h": 21.92, "subT": "CONCEPTOS y PREGUNTAS"}, "25": {"x": 26.86, "y": 30.82, "w": 1.02, "h": 53.42, "subT": "CONCEPTOS y PREGUNTAS"}, "26": {"x": 27.81, "y": 31.64, "w": 1.4, "h": 36.03, "subT": "CONCEPTOS y PREGUNTAS"}, "27": {"x": 29.31, "y": 31.64, "w": 1.4, "h": 59.66, "subT": "CONCEPTOS y PREGUNTAS"}, "28": {"x": 30.82, "y": 23.97, "w": 2.89, "h": 59.93, "subT": "CONCEPTOS y PREGUNTAS"}, "29": {"x": 31.56, "y": 30.82, "w": 2.01, "h": 69.18, "subT": "CONCEPTOS y PREGUNTAS"}, "30": {"x": 33.59, "y": 31.85, "w": 1.57, "h": 27.74, "subT": "CONCEPTOS y PREGUNTAS"}, "31": {"x": 35.26, "y": 30.82, "w": 0.74, "h": 29.79, "subT": "CONCEPTOS y PREGUNTAS"}, "32": {"x": 36.11, "y": 23.97, "w": 2.06, "h": 36.3, "subT": "CONCEPTOS y PREGUNTAS"}, "33": {"x": 37.59, "y": 31.51, "w": 0.7, "h": 67.81, "subT": "CONCEPTOS y PREGUNTAS"}, "34": {"x": 38.39, "y": 30.82, "w": 1.02, "h": 29.79, "subT": "CONCEPTOS y PREGUNTAS"}, "35": {"x": 39.15, "y": 23.97, "w": 1.85, "h": 67.81, "subT": "CONCEPTOS y PREGUNTAS"}, "36": {"x": 40.27, "y": 31.16, "w": 0.64, "h": 21.23, "subT": "CONCEPTOS y PREGUNTAS"}, "37": {"x": 41.01, "y": 30.82, "w": 1.02, "h": 53.42, "subT": "CONCEPTOS y PREGUNTAS"}, "38": {"x": 42.14, "y": 23.97, "w": 1.67, "h": 52.05, "subT": "CONCEPTOS y PREGUNTAS"}, "39": {"x": 42.88, "y": 30.82, "w": 1.02, "h": 21.92, "subT": "CONCEPTOS y PREGUNTAS"}, "40": {"x": 43.54, "y": 30.82, "w": 1.8, "h": 45.55, "subT": "CONCEPTOS y PREGUNTAS"}, "41": {"x": 45.15, "y": 23.97, "w": 1.63, "h": 28.42, "subT": "CONCEPTOS y PREGUNTAS"}, "42": {"x": 45.89, "y": 30.82, "w": 1.02, "h": 21.92, "subT": "CONCEPTOS y PREGUNTAS"}, "43": {"x": 47.02, "y": 30.82, "w": 0.85, "h": 69.18, "subT": "CONCEPTOS y PREGUNTAS"}, "44": {"x": 47.92, "y": 23.97, "w": 1.67, "h": 75.68, "subT": "CONCEPTOS y PREGUNTAS"}, "45": {"x": 49.41, "y": 30.82, "w": 1.02, "h": 61.3, "subT": "CONCEPTOS y PREGUNTAS"}, "46": {"x": 50.45, "y": 23.97, "w": 1.19, "h": 59.93, "subT": "CONCEPTOS y PREGUNTAS"}, "47": {"x": 51.28, "y": 30.82, "w": 1.02, "h": 37.67, "subT": "CONCEPTOS y PREGUNTAS"}, "48": {"x": 52.41, "y": 23.97, "w": 0.65, "h": 59.93, "subT": "CONCEPTOS y PREGUNTAS"}, "49": {"x": 53.15, "y": 23.97, "w": 1.01, "h": 20.55, "subT": "CONCEPTOS y PREGUNTAS"}, "50": {"x": 53.9, "y": 39.04, "w": 0.64, "h": 21.23, "subT": "CONCEPTOS y PREGUNTAS"}, "51": {"x": 54.64, "y": 23.97, "w": 2.25, "h": 20.55, "subT": "CONCEPTOS y PREGUNTAS"}, "52": {"x": 55.38, "y": 31.58, "w": 1.47, "h": 28.29, "subT": "CONCEPTOS y PREGUNTAS"}, "53": {"x": 56.96, "y": 30.82, "w": 2.58, "h": 21.92, "subT": "CONCEPTOS y PREGUNTAS"}, "54": {"x": 59.27, "y": 23.97, "w": 1.72, "h": 52.05, "subT": "CONCEPTOS y PREGUNTAS"}, "55": {"x": 60.39, "y": 30.82, "w": 1.8, "h": 29.79, "subT": "CONCEPTOS y PREGUNTAS"}, "56": {"x": 62.29, "y": 24.47, "w": 0.68, "h": 27.52, "subT": "GRAFICOS EDA"}, "57": {"x": 63.08, "y": 24.47, "w": 2.26, "h": 43.27, "subT": "GRAFICOS EDA"}, "58": {"x": 65.45, "y": 24.47, "w": 3.05, "h": 27.52, "subT": "GRAFICOS EDA"}, "59": {"x": 68.61, "y": 39.45, "w": 1.47, "h": 20.41, "subT": "GRAFICOS EDA"}, "60": {"x": 69.01, "y": 24.47, "w": 3.05, "h": 43.27, "subT": "GRAFICOS EDA"}, "61": {"x": 72.17, "y": 24.47, "w": 1.87, "h": 43.27, "subT": "GRAFICOS EDA"}, "62": {"x": 74.14, "y": 24.47, "w": 0.68, "h": 51.15, "subT": "GRAFICOS EDA"}, "63": {"x": 74.93, "y": 24.47, "w": 3.05, "h": 19.64, "subT": "GRAFICOS EDA"}, "64": {"x": 78.09, "y": 24.47, "w": 0.68, "h": 51.15, "subT": "GRAFICOS EDA"}, "65": {"x": 78.88, "y": 23.97, "w": 0.64, "h": 27.74, "subT": "GRAFICOS EDA"}, "66": {"x": 79.63, "y": 24.47, "w": 1.47, "h": 27.52, "subT": "GRAFICOS DIAGNOSTICO"}, "67": {"x": 80.82, "y": 31.58, "w": 1.47, "h": 44.04, "subT": "GRAFICOS DIAGNOSTICO"}, "68": {"x": 82.0, "y": 24.47, "w": 1.26, "h": 27.52, "subT": "GRAFICOS DIAGNOSTICO"}, "69": {"x": 82.79, "y": 31.58, "w": 0.68, "h": 51.92, "subT": "GRAFICOS DIAGNOSTICO"}, "70": {"x": 83.58, "y": 30.82, "w": 0.74, "h": 21.92, "subT": "GRAFICOS DIAGNOSTICO"}, "71": {"x": 84.42, "y": 24.47, "w": 1.44, "h": 27.52, "subT": "GRAFICOS DIAGNOSTICO"}, "72": {"x": 85.21, "y": 31.58, "w": 0.68, "h": 36.16, "subT": "GRAFICOS DIAGNOSTICO"}, "73": {"x": 86.01, "y": 31.58, "w": 1.47, "h": 12.53, "subT": "GRAFICOS DIAGNOSTICO"}, "74": {"x": 87.59, "y": 24.47, "w": 2.9, "h": 19.64, "subT": "GRAFICOS DIAGNOSTICO"}, "75": {"x": 89.17, "y": 39.45, "w": 2.26, "h": 20.41, "subT": "GRAFICOS DIAGNOSTICO"}, "76": {"x": 91.36, "y": 38.7, "w": 1.98, "h": 37.67, "subT": "GRAFICOS DIAGNOSTICO"}, "77": {"x": 93.44, "y": 24.47, "w": 1.43, "h": 27.52, "subT": "GRAFICOS DIAGNOSTICO"}, "78": {"x": 94.23, "y": 31.58, "w": 1.87, "h": 28.29, "subT": "GRAFICOS DIAGNOSTICO"}, "79": {"x": 95.02, "y": 47.33, "w": 0.68, "h": 20.41, "subT": "GRAFICOS DIAGNOSTICO"}, "80": {"x": 97.39, "y": 24.47, "w": 1.32, "h": 27.52, "subT": "GRAFICOS DIAGNOSTICO"}, "81": {"x": 98.18, "y": 31.58, "w": 0.68, "h": 44.04, "subT": "GRAFICOS DIAGNOSTICO"}, "82": {"x": 98.98, "y": 30.82, "w": 1.02, "h": 21.92, "subT": "GRAFICOS DIAGNOSTICO"}};
+  const HAY_MAPA = (1 === 1);
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
   const modoAleatorio = true;
@@ -7863,6 +7969,7 @@
       }
       sincronizarGeometriaSvgMapa();
       renderBordesSvgMapa();
+      reaplicarEnfoqueRetencionMapa();
     };
     img.addEventListener('load', alCargarImg);
     resetearZoomMapa();
@@ -7928,6 +8035,8 @@
   let zoomMapa = 1;
   let panMapa = { x: 0, y: 0 };
   let arrastreMapa = { activo: false, x: 0, y: 0 };    // x/y: offset inicial del drag (mouse o 1 dedo)
+  let mapaArrastreBloqueado = false;
+  let retencionRutaEnfocada = null;
   let pinchMapa = null;                                // { distancia, zoomInicial } mientras hay 2 dedos
 
   const ES_DISPOSITIVO_TACTIL = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -7939,7 +8048,7 @@
     if (!elMapaImg) return;
     const transformStr = 'translate(' + panMapa.x + 'px, ' + panMapa.y + 'px) scale(' + zoomMapa + ')';
     elMapaImg.style.transform = transformStr;
-    elMapaImg.classList.toggle('mapa-img-pan', zoomMapa > 1);
+    elMapaImg.classList.toggle('mapa-img-pan', zoomMapa > 1 && !mapaArrastreBloqueado);
     if (elMapaSvgOverlay) {
       elMapaSvgOverlay.style.transform = transformStr;
     }
@@ -7973,7 +8082,7 @@
   }, { passive: false });
 
   elMapaImagenWrap.addEventListener('mousedown', (e) => {
-    if (!elMapaImg || zoomMapa <= 1) return;
+    if (!elMapaImg || zoomMapa <= 1 || mapaArrastreBloqueado) return;
     arrastreMapa = { activo: true, x: e.clientX - panMapa.x, y: e.clientY - panMapa.y };
     elMapaImg.classList.add('mapa-img-arrastrando');   // §7: cursor 'grabbing'
   });
@@ -7994,7 +8103,7 @@
     if (e.touches.length === 2) {
       pinchMapa = { distancia: distanciaEntreToquesMapa(e.touches), zoomInicial: zoomMapa };
       arrastreMapa.activo = false;
-    } else if (e.touches.length === 1 && zoomMapa > 1) {
+    } else if (e.touches.length === 1 && zoomMapa > 1 && !mapaArrastreBloqueado) {
       arrastreMapa = { activo: true, x: e.touches[0].clientX - panMapa.x, y: e.touches[0].clientY - panMapa.y };
       elMapaImg.classList.add('mapa-img-arrastrando');
     }
@@ -8158,6 +8267,7 @@
     opciones = opciones || {};
     if (resultado === 'saltar') return opciones.comodinUsado ? 0 : -5;
     if (modoEspecial === 'quiz') return resultado === 'si' ? 8 : 0;
+    if (modoEspecial === 'verdadero_falso') return resultado === 'si' ? 5 : 0;
     if (modoEspecial === 'detective') return resultado === 'si' ? 15 : (resultado === 'casi' ? 8 : 0);
     if (resultado === 'si') {
       if (opciones.pistaGratisUsada) return 15;
@@ -8291,6 +8401,7 @@
   let datosQuizSesion = [];
   let datosDetectiveSesion = [];
   let datosOrdenarSesion = [];
+  let datosVerdaderoFalsoSesion = [];
   let rondasMatching = [];
   let primeroSeleccionadoMatching = null;
   let asociacionesTempMatching = new Set();
@@ -8314,13 +8425,14 @@
     if (modoEspecial === 'quiz') return 'quiz_' + modoJuego;
     if (modoEspecial === 'detective') return 'detective_' + modoJuego;
     if (modoEspecial === 'ordenar') return 'ordenar_' + modoJuego;
+    if (modoEspecial === 'verdadero_falso') return 'verdadero_falso_' + modoJuego;
     if (repasoInteligenteActivo) return 'inteligente';
     return modoJuego;
   }
 
   function esModoEspecialHistorial(modo) {
     const m = String(modo || '');
-    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0 || m.indexOf('ordenar_') === 0;
+    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0 || m.indexOf('ordenar_') === 0 || m.indexOf('verdadero_falso_') === 0;
   }
 
   function nombreModoJuego(modo) {
@@ -8339,6 +8451,9 @@
     if (modo === 'ordenar_light') return '🧩 Ordenar Rutas Light';
     if (modo === 'ordenar_normal') return '🧩 Ordenar Rutas Normal';
     if (modo === 'ordenar_tryhard') return '🧩 Ordenar Rutas Tryhard';
+    if (modo === 'verdadero_falso_light') return '🗺️ Verdadero/Falso Light';
+    if (modo === 'verdadero_falso_normal') return '🗺️ Verdadero/Falso Normal';
+    if (modo === 'verdadero_falso_tryhard') return '🗺️ Verdadero/Falso Tryhard';
     if (modo === 'inteligente') return '🧠 Repaso inteligente';
     if (modo === 'srs') return '🧠 SRS';
     if (modo === 'examen') return '📝 Examen';
@@ -8461,6 +8576,23 @@
       modoEspecialPendiente = 'ordenar';
       modoDemostracionesPendiente = false;
       abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'ordenar');
+    } else if (otroModoElegidoEnModal === 'verdadero_falso') {
+      if (!HAY_MAPA) {
+        cerrarModalOtrosModos();
+        await avisar('No hay mapa disponible en este evaluador.');
+        return;
+      }
+      const elegibles = base.filter((t) => generarMapaTarjeta(t) !== null);
+      if (elegibles.length === 0) {
+        cerrarModalOtrosModos();
+        await avisar('No hay tarjetas con rutas ubicadas en el mapa (y otras rutas para usar como falsas) en los temas seleccionados para iniciar el modo Verdadero/Falso.');
+        return;
+      }
+      elModalOtrosModos.classList.remove('abierto');
+      resetearCheckboxDemostracionesModal();
+      modoEspecialPendiente = 'verdadero_falso';
+      modoDemostracionesPendiente = false;
+      abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'verdadero_falso');
     }
   }
 
@@ -8470,6 +8602,15 @@
   document.getElementById('opcion-otro-quiz').addEventListener('click', () => seleccionarOtroModoEnModal('quiz'));
   document.getElementById('opcion-otro-detective').addEventListener('click', () => seleccionarOtroModoEnModal('detective'));
   document.getElementById('opcion-otro-ordenar').addEventListener('click', () => seleccionarOtroModoEnModal('ordenar'));
+  (function () {
+    const btnMapa = document.getElementById('opcion-otro-verdadero-falso');
+    if (!HAY_MAPA) {
+      btnMapa.disabled = true;
+      btnMapa.title = 'Sin mapa disponible';
+      btnMapa.querySelector('.opcion-modo-detalle').textContent = 'Sin mapa disponible';
+    }
+    btnMapa.addEventListener('click', () => { if (HAY_MAPA) seleccionarOtroModoEnModal('verdadero_falso'); });
+  })();
   document.getElementById('btn-otros-modos-comenzar').addEventListener('click', () => confirmarOtrosModos());
   document.getElementById('btn-otros-modos-cancelar').addEventListener('click', () => cerrarModalOtrosModos());
   function actualizarBarraGamificacion() {
@@ -8549,6 +8690,9 @@
     } else if (modoEspecialPendiente === 'ordenar') {
       elTituloModalModo.textContent = 'Elegí el modo de juego — 🧩 Ordenar Rutas';
       elOpcionModoExamen.style.display = 'none';
+    } else if (modoEspecialPendiente === 'verdadero_falso') {
+      elTituloModalModo.textContent = 'Elegí el modo de juego — 🗺️ Verdadero/Falso';
+      elOpcionModoExamen.style.display = 'none';
     } else {
       elTituloModalModo.textContent = 'Elegí el modo de juego';
       elOpcionModoExamen.style.display = '';
@@ -8605,6 +8749,8 @@
       iniciarSesionDetective(lista);
     } else if (modoEspecial === 'ordenar') {
       iniciarSesionOrdenar(lista);
+    } else if (modoEspecial === 'verdadero_falso') {
+      iniciarSesionMapa(lista);
     } else {
       iniciarSesion(lista);
     }
@@ -9175,7 +9321,7 @@
   }
 
   function ocultarContenedoresEspeciales() {
-    ['cloze-contenedor-activo', 'matching-contenedor-activo', 'quiz-contenedor-activo'].forEach((id) => {
+    ['cloze-contenedor-activo', 'matching-contenedor-activo', 'quiz-contenedor-activo', 'verdadero-falso-contenedor-activo'].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -9340,6 +9486,308 @@
     }
     actualizarCronometro();
     renderTarjeta();
+  }
+
+  function coordsRutaMapa(id) {
+    const c = MAPA_RUTAS_COORDS[String(id)];
+    if (!c || !Number.isFinite(c.x) || !Number.isFinite(c.y) || !(c.w > 0) || !(c.h > 0)) return null;
+    return c;
+  }
+
+  const _rutasMapaPorTarjeta = new Map();
+
+  function rutasConCoordsDe(t) {
+    let lista = _rutasMapaPorTarjeta.get(t);
+    if (!lista) {
+      const vistos = new Set();
+      lista = [];
+      rutasValidasDe(t).forEach((id) => {
+        const k = String(id);
+        if (vistos.has(k) || !coordsRutaMapa(k)) return;
+        vistos.add(k);
+        lista.push(k);
+      });
+      _rutasMapaPorTarjeta.set(t, lista);
+    }
+    return lista;
+  }
+
+  let _todasRutasMapa = null;
+
+  function todasRutasConCoords() {
+    if (!_todasRutasMapa) {
+      const set = new Set();
+      tarjetasCompletas.forEach((o) => rutasConCoordsDe(o).forEach((k) => set.add(k)));
+      _todasRutasMapa = Array.from(set);
+    }
+    return _todasRutasMapa;
+  }
+
+  function generarMapaTarjeta(t) {
+    if (!HAY_MAPA) return null;
+    const propias = rutasConCoordsDe(t);
+    if (propias.length === 0) return null;
+    const propiasSet = new Set(propias);
+    const pool = todasRutasConCoords().filter((k) => !propiasSet.has(k));
+    if (pool.length === 0) return null;
+    const cantidad = propias.length;
+    const verdadero = Math.random() < 0.5;
+    let rutas;
+    if (verdadero) {
+      rutas = propias.map((id) => ({ id: id, correcta: true }));
+    } else {
+      const minCorrectas = Math.max(0, cantidad - pool.length);
+      const correctas = minCorrectas + Math.floor(Math.random() * (cantidad - minCorrectas));
+      rutas = mezclar(propias).slice(0, correctas).map((id) => ({ id: id, correcta: true }))
+        .concat(mezclar(pool).slice(0, cantidad - correctas).map((id) => ({ id: id, correcta: false })));
+    }
+    return { rutas: mezclar(rutas), verdadero: verdadero, respuesta: null, evaluada: false };
+  }
+
+  let _imgMapaRecorte = null;
+
+  function cargarImagenMapaRecorte(alCargar) {
+    if (!_imgMapaRecorte) {
+      const src = obtenerMapaSrc();
+      if (!src) return;
+      _imgMapaRecorte = new Image();
+      _imgMapaRecorte.src = src;
+    }
+    if (_imgMapaRecorte.complete && _imgMapaRecorte.naturalWidth > 0) {
+      alCargar(_imgMapaRecorte);
+      return;
+    }
+    _imgMapaRecorte.addEventListener('load', () => alCargar(_imgMapaRecorte), { once: true });
+  }
+
+  function crearRecorteMapa(coords, anchoMax) {
+    const canvas = document.createElement('canvas');
+    cargarImagenMapaRecorte((img) => {
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      const rx = (coords.x / 100) * iw;
+      const ry = (coords.y / 100) * ih;
+      const rw = Math.max(1, (coords.w / 100) * iw);
+      const rh = Math.max(1, (coords.h / 100) * ih);
+      const margenX = rw * 0.03 + 6;
+      const margenY = rh * 0.03 + 6;
+      const sx = Math.max(0, rx - margenX);
+      const sy = Math.max(0, ry - margenY);
+      const sw = Math.max(1, Math.min(iw, rx + rw + margenX) - sx);
+      const sh = Math.max(1, Math.min(ih, ry + rh + margenY) - sy);
+      const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+      const escalaCss = Math.min(anchoMax / sw, 900 / sh, 12);
+      const escala = escalaCss * dpr;
+      canvas.width = Math.max(1, Math.round(sw * escala));
+      canvas.height = Math.max(1, Math.round(sh * escala));
+      canvas.style.width = Math.round(sw * escalaCss) + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'rgba(224, 87, 76, 0.85)';
+      ctx.lineWidth = 2 * dpr;
+      ctx.strokeRect((rx - sx) * escala, (ry - sy) * escala, rw * escala, rh * escala);
+    });
+    return canvas;
+  }
+
+  function iniciarSesionMapa(lista) {
+    const validas = [];
+    const datos = [];
+    lista.forEach((t) => {
+      const d = generarMapaTarjeta(t);
+      if (d) {
+        validas.push(t);
+        datos.push(d);
+      }
+    });
+    if (validas.length === 0) {
+      avisar('Ninguna de estas tarjetas tiene rutas ubicadas en el mapa para el modo Verdadero/Falso.');
+      return;
+    }
+    iniciarSesionEspecialBase(validas, () => { datosVerdaderoFalsoSesion = datos; });
+  }
+
+  function renderTarjetaMapa() {
+    const t = tarjetasSesion[indiceActual];
+    const d = datosVerdaderoFalsoSesion[indiceActual];
+    const r = resultados[indiceActual];
+    const yaEvaluada = d.evaluada || r !== null;
+
+    ocultarContenedoresEspeciales();
+    elTemaTexto.textContent = nombreTema(t);
+    elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
+    const contestadas = resultados.filter((x) => x !== null).length;
+    elBarraRelleno.style.width = ((contestadas / tarjetasSesion.length) * 100) + '%';
+
+    elBadgeRutas.style.display = 'none';
+    elBtnRevisar.style.display = 'inline-block';
+    elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
+    elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
+
+    elPrimero.style.display = 'block';
+    elPrimero.textContent = t.primero;
+    elBtnPista.style.display = 'none';
+    elBtnRespuesta.style.display = 'none';
+    elSeparador.style.display = 'none';
+    elSegundo.style.display = 'none';
+    elSegundo.textContent = '';
+
+    renderPanelNota(t);
+    renderRazonesUI(t);
+
+    elRutasContenedor.innerHTML = '';
+    elRutasContenedor.style.display = 'none';
+    if (elZonaEval.nextElementSibling !== elRutasContenedor) {
+      elRutasContenedor.parentNode.insertBefore(elZonaEval, elRutasContenedor);
+    }
+
+    elTextoEval.parentElement.style.display = 'none';
+    elBtnDictadoTextoEval.style.display = 'none';
+    elRespuestaUsuarioResaltada.style.display = 'none';
+    elZonaEval.style.display = 'block';
+
+    let cont = document.getElementById('verdadero-falso-contenedor-activo');
+    if (!cont) {
+      cont = document.createElement('div');
+      cont.id = 'verdadero-falso-contenedor-activo';
+      cont.className = 'quiz-contenedor';
+      elZonaEval.insertBefore(cont, elFilaEval);
+    }
+    cont.style.display = 'flex';
+    cont.innerHTML = '';
+
+    const varias = d.rutas.length > 1;
+    const titulo = document.createElement('div');
+    titulo.className = 'quiz-titulo';
+    titulo.textContent = varias ? '¿Estas rutas corresponden a la tarjeta?' : '¿Esta ruta corresponde a la tarjeta?';
+    cont.appendChild(titulo);
+
+    if (varias) {
+      const ayuda = document.createElement('div');
+      ayuda.className = 'mapa-vf-ayuda';
+      ayuda.textContent = 'Verdadero: todas corresponden. Falso: alguna no corresponde.';
+      cont.appendChild(ayuda);
+    }
+
+    const recortes = document.createElement('div');
+    recortes.className = 'mapa-vf-recortes';
+    d.rutas.forEach((ruta) => {
+      const item = document.createElement('div');
+      item.className = 'mapa-vf-item' + (d.evaluada ? (ruta.correcta ? ' correcta' : ' incorrecta') : '');
+      item.appendChild(crearRecorteMapa(coordsRutaMapa(ruta.id), 900));
+      if (d.evaluada) {
+        const etiqueta = document.createElement('div');
+        etiqueta.className = 'mapa-vf-etiqueta';
+        etiqueta.textContent = 'Ruta #' + ruta.id + (ruta.correcta ? ' · ✓ corresponde a esta tarjeta' : ' · ✗ no corresponde a esta tarjeta');
+        item.appendChild(etiqueta);
+      }
+      recortes.appendChild(item);
+    });
+    cont.appendChild(recortes);
+
+    const botones = document.createElement('div');
+    botones.className = 'mapa-vf-botones';
+    [[true, '✓ Verdadero'], [false, '✗ Falso']].forEach((par) => {
+      const valor = par[0];
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mapa-vf-btn';
+      btn.textContent = par[1];
+      if (yaEvaluada) {
+        btn.disabled = true;
+        if (d.evaluada) {
+          if (valor === d.verdadero) btn.classList.add('correcta');
+          else if (valor === d.respuesta) btn.classList.add('incorrecta');
+        }
+      } else {
+        btn.addEventListener('click', () => responderMapa(valor));
+      }
+      botones.appendChild(btn);
+    });
+    cont.appendChild(botones);
+
+    elFilaEval.style.display = 'none';
+
+    const ev = evaluaciones[indiceActual];
+    if (d.evaluada && ev) {
+      elResultadoEval.style.display = 'block';
+      elResultadoEval.className = 'resultado-eval ' + (ev.resultado === 'si' ? 'bien' : 'mal');
+      elResultadoEval.textContent = ev.textoDetalle;
+    } else {
+      elResultadoEval.style.display = 'none';
+      elResultadoEval.textContent = '';
+    }
+
+    elEstadoMarca.className = 'estado-marca' + (r ? ' ' + r : '');
+    if (r === 'si') elEstadoMarca.textContent = '✓ Marcada como entendida';
+    else if (r === 'no') elEstadoMarca.textContent = '✗ Marcada como no entendida';
+    else if (r === 'saltar') elEstadoMarca.textContent = '— Pasada sin marcar';
+    else elEstadoMarca.textContent = '';
+
+    const yaMarcada = r !== null;
+    document.querySelector('.botonera').style.display = 'flex';
+    elBtnSi.classList.remove('comprension');
+    elBtnSi.textContent = '✓';
+    elBtnSi.title = 'Entendido';
+    elBtnSi.style.display = 'none';
+    elBtnNo.style.display = 'none';
+    elBtnSaltar.style.display = 'inline-block';
+    elBtnDificil.style.display = 'inline-block';
+    elBtnRazones.style.display = 'inline-block';
+    elBtnSi.disabled = yaMarcada;
+    elBtnNo.disabled = yaMarcada;
+    elBtnSaltar.disabled = yaMarcada;
+
+    elBtnDificil.classList.toggle('activa', esDificil(t));
+    elBtnDificil.textContent = esDificil(t) ? '★ Difícil' : '☆ Difícil';
+
+    elBtnPausa.style.display = cronometroActivo ? 'inline-block' : 'none';
+    elBtnAnterior.disabled = indiceActual === 0;
+    elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+    actualizarBadgeNotaActual();
+  }
+
+  function responderMapa(valor) {
+    if (pausaManual) return;
+    const d = datosVerdaderoFalsoSesion[indiceActual];
+    if (!d || d.evaluada || resultados[indiceActual] !== null) return;
+
+    acumularTiempoActual();
+    indiceCongelado = indiceActual;
+
+    const acierto = valor === d.verdadero;
+    const res = acierto ? 'si' : 'no';
+    d.respuesta = valor;
+    d.evaluada = true;
+    revelado[indiceActual] = true;
+
+    let detalle = '✓ Correcto';
+    if (!acierto) {
+      detalle = d.verdadero
+        ? '✗ Incorrecto — las rutas mostradas sí correspondían a esta tarjeta.'
+        : (d.rutas.length > 1
+          ? '✗ Incorrecto — alguna de las rutas mostradas no correspondía a esta tarjeta.'
+          : '✗ Incorrecto — la ruta mostrada no correspondía a esta tarjeta.');
+    }
+    evaluaciones[indiceActual] = { resultado: res, textoDetalle: detalle };
+    escritos[indiceActual] = valor ? 'Verdadero' : 'Falso';
+    resultados[indiceActual] = res;
+
+    procesarResultadoGamificacion(indiceActual, res, { conPista: false, pistaGratisUsada: false });
+    if (resultados.every((x) => x !== null)) {
+      cronometroActivo = false;
+    }
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function resetearDatosMapaSaltado(d) {
+    if (!d) return;
+    d.respuesta = null;
+    d.evaluada = false;
   }
 
   function segmentarLineaDetective(linea) {
@@ -10726,6 +11174,8 @@
     if (matchCont) matchCont.style.display = 'none';
     const quizCont = document.getElementById('quiz-contenedor-activo');
     if (quizCont) quizCont.style.display = 'none';
+    const mapaCont = document.getElementById('verdadero-falso-contenedor-activo');
+    if (mapaCont) mapaCont.style.display = 'none';
     if (elZonaEval.nextElementSibling !== elRutasContenedor) {
       elRutasContenedor.parentNode.insertBefore(elZonaEval, elRutasContenedor);
     }
@@ -10758,6 +11208,10 @@
       renderTarjetaOrdenar();
       return true;
     }
+    if (modoEspecial === 'verdadero_falso') {
+      renderTarjetaMapa();
+      return true;
+    }
     limpiarContenedoresModoEspecial();
     return false;
   }
@@ -10783,6 +11237,9 @@
       evaluarOrdenarActual();
       return true;
     }
+    if (modoEspecial === 'verdadero_falso') {
+      return true;
+    }
     return false;
   }
 
@@ -10803,9 +11260,10 @@
       } else {
         indiceCongelado = -1;
       }
-    } else if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    } else if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       const datos = modoEspecial === 'quiz' ? datosQuizSesion[indiceActual]
-        : (modoEspecial === 'ordenar' ? datosOrdenarSesion[indiceActual] : datosDetectiveSesion[indiceActual]);
+        : (modoEspecial === 'ordenar' ? datosOrdenarSesion[indiceActual]
+          : (modoEspecial === 'verdadero_falso' ? datosVerdaderoFalsoSesion[indiceActual] : datosDetectiveSesion[indiceActual]));
       if ((datos && datos.evaluada) || resultados[indiceActual] !== null) {
         indiceCongelado = indiceActual;
       } else {
@@ -10842,7 +11300,7 @@
           ronda.completada = true;
         }
       });
-    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       resultados.forEach((r, i) => {
         if (r === null) resultados[i] = 'saltar';
       });
@@ -10958,12 +11416,13 @@
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
-    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       let lista = tarjetasSesion.filter((_, i) => predicado(i));
       if (lista.length === 0) { avisar('No hay tarjetas para repasar con ese criterio.'); return true; }
       if (modoAleatorio) lista = mezclar(lista);
       if (modoEspecial === 'quiz') iniciarSesionQuiz(lista);
       else if (modoEspecial === 'ordenar') iniciarSesionOrdenar(lista);
+      else if (modoEspecial === 'verdadero_falso') iniciarSesionMapa(lista);
       else iniciarSesionDetective(lista);
       return true;
     }
@@ -10982,10 +11441,11 @@
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
-    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       const base = modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion];
       if (modoEspecial === 'quiz') iniciarSesionQuiz(base);
       else if (modoEspecial === 'ordenar') iniciarSesionOrdenar(base);
+      else if (modoEspecial === 'verdadero_falso') iniciarSesionMapa(base);
       else iniciarSesionDetective(base);
       return true;
     }
@@ -11003,6 +11463,7 @@
     datosQuizSesion = [];
     datosDetectiveSesion = [];
     datosOrdenarSesion = [];
+    datosVerdaderoFalsoSesion = [];
     rondasMatching = [];
     primeroSeleccionadoMatching = null;
     asociacionesTempMatching.clear();
@@ -17546,6 +18007,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     elVacio.style.display = 'none';
     reconciliarHijos(el, gruposRetencionPorTarjeta(ids), (g) => g.clave, firmaGrupoRetencion, grupoRetencionTarjeta);
     el.querySelectorAll('.fila-retencion-ruta').forEach((fila) => pintarFilaRetencionSesion(fila, fila._rutaId));
+    if (retencionRutaEnfocada !== null && !el.querySelector('.fila-retencion-ruta.enfocada')) cerrarEnfoqueRetencionMapa();
   }
 
   function refrescarFilaRetencionSesion(id) {
@@ -17555,9 +18017,78 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     else renderRetencionSesionLista({ soloLista: true });
   }
 
+  const MOVIL_CLAVE = 'pomodoro_movil_v1';
+  let retencionMovilActivo = (function () {
+    try { return localStorage.getItem(MOVIL_CLAVE) === '1'; } catch (e) { return false; }
+  })();
+
+  function sincronizarChecksMovil() {
+    document.querySelectorAll('.chk-movil').forEach((chk) => {
+      chk.checked = HAY_MAPA && retencionMovilActivo;
+      chk.disabled = !HAY_MAPA;
+    });
+    const lista = document.getElementById('retencion-sesion-lista');
+    if (lista) lista.classList.toggle('retencion-movil', HAY_MAPA && retencionMovilActivo);
+  }
+
+  function cerrarEnfoqueRetencionMapa() {
+    retencionRutaEnfocada = null;
+    mapaArrastreBloqueado = false;
+    const lista = document.getElementById('retencion-sesion-lista');
+    if (lista) {
+      lista.querySelectorAll('.retencion-recorte').forEach((p) => p.remove());
+      lista.querySelectorAll('.fila-retencion-ruta.enfocada').forEach((f) => f.classList.remove('enfocada'));
+    }
+    if (elMapaImg) resetearZoomMapa();
+  }
+
+  function reaplicarEnfoqueRetencionMapa() {
+    if (retencionRutaEnfocada === null) return;
+    const coords = coordsRutaMapa(retencionRutaEnfocada);
+    if (!coords) return;
+    ubicarEnMapa(coords);
+    mapaArrastreBloqueado = true;
+  }
+
+  function alternarEnfoqueRetencionRuta(fila) {
+    if (!HAY_MAPA) return;
+    const id = String(fila._rutaId);
+    const coords = coordsRutaMapa(id);
+    if (!coords) return;
+    if (retencionRutaEnfocada === id && fila.classList.contains('enfocada')) {
+      cerrarEnfoqueRetencionMapa();
+      return;
+    }
+    cerrarEnfoqueRetencionMapa();
+    const panel = document.createElement('div');
+    panel.className = 'retencion-recorte';
+    panel.appendChild(crearRecorteMapa(coords, 900));
+    fila.appendChild(panel);
+    fila.classList.add('enfocada');
+    retencionRutaEnfocada = id;
+    mapaArrastreBloqueado = true;
+    if (elMapaImg) ubicarEnMapa(coords);
+  }
+
+  document.querySelectorAll('.chk-movil').forEach((chk) => {
+    chk.addEventListener('change', () => {
+      retencionMovilActivo = chk.checked;
+      try { escribirLocalSeguro(MOVIL_CLAVE, retencionMovilActivo ? '1' : '0'); } catch (e) { }
+      if (!retencionMovilActivo) cerrarEnfoqueRetencionMapa();
+      sincronizarChecksMovil();
+    });
+  });
+  sincronizarChecksMovil();
+
   document.getElementById('retencion-sesion-lista').addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-accion]');
-    if (!btn) return;
+    if (!btn) {
+      if (!HAY_MAPA || !retencionMovilActivo) return;
+      if (e.target.closest('.retencion-recorte')) return;
+      const filaTocada = e.target.closest('.fila-retencion-ruta');
+      if (filaTocada) alternarEnfoqueRetencionRuta(filaTocada);
+      return;
+    }
     const fila = btn.closest('.fila-retencion-ruta');
     if (!fila) return;
     const id = fila._rutaId;
@@ -21077,7 +21608,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
-    if (resultado === 'saltar' && modoEspecial !== 'quiz' && modoEspecial !== 'detective' && modoEspecial !== 'ordenar') reveladasAlSaltar.add(indiceActual);   // al saltar se ve la respuesta
+    if (resultado === 'saltar' && modoEspecial !== 'quiz' && modoEspecial !== 'detective' && modoEspecial !== 'ordenar' && modoEspecial !== 'verdadero_falso') reveladasAlSaltar.add(indiceActual);   // al saltar se ve la respuesta
 
     if (!modoObservador) {
       procesarResultadoGamificacion(indiceActual, resultado, {
@@ -22022,6 +22553,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         else if (modoEspecial === 'quiz') resetearDatosQuizSaltado(datosQuizSesion[i]);
         else if (modoEspecial === 'detective') resetearDatosDetectiveSaltado(datosDetectiveSesion[i]);
         else if (modoEspecial === 'ordenar') resetearDatosOrdenarSaltado(datosOrdenarSesion[i]);
+        else if (modoEspecial === 'verdadero_falso') resetearDatosMapaSaltado(datosVerdaderoFalsoSesion[i]);
       }
     });
     if (modoEspecial === 'matching') {
@@ -22599,6 +23131,19 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
   }
 
+  function alEntrarDescansoPomodoro() {
+    cerrarEnfoqueRetencionMapa();
+    cerrarModalRetencionRutas();
+    if (elPantallaMapa.style.display !== 'none') {
+      cerrarPantallaMapa();
+    } else if (modoObservador) {
+      salirObservador();
+    } else if (elPantallaObservador.style.display !== 'block') {
+      entrarObservador();
+    }
+    reubicarBadgePomodoro('observador');
+  }
+
   function avanzarFasePomodoro() {
     if (pomodoroFase === 'pretest') {
       autoguardarYCerrarPretestPomodoro();
@@ -22624,6 +23169,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       pomodoroFase = 'descanso';
       pomodoroSegundosRestantes = DURACION_DESCANSO_SEG;
       reproducirSonido('pomodoro_retencion_a_descanso');
+      alEntrarDescansoPomodoro();
     } else if (pomodoroFase === 'descanso') {
       pomodoroCiclo++;
       pomodoroFase = 'retencion';
@@ -22900,6 +23446,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroBraindumpNotaId = null;
     retencionSesionToggles = {};
     retencionSubtemasActivos = {};
+    cerrarEnfoqueRetencionMapa();
     cerrarModalRetencionRutas();
     elPomodoroBadge.style.display = 'none';
     elBtnObservadorSalir.disabled = false;
@@ -23083,6 +23630,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       datosQuizSesion: datosQuizSesion.slice(),
       datosDetectiveSesion: datosDetectiveSesion.map(serializarDatosDetective),
       datosOrdenarSesion: datosOrdenarSesion.slice(),
+      datosVerdaderoFalsoSesion: datosVerdaderoFalsoSesion.slice(),
       rondasMatching: esMatching ? rondasMatching.map(serializarRondaMatching) : [],
       primeroSeleccionadoMatching: primeroSeleccionadoMatching,
       asociacionesTempMatching: copiarSetComoArray(asociacionesTempMatching),
@@ -23271,6 +23819,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (x.modoEspecial === 'cloze' && datosCloze.length !== n) throw new Error('datos Cloze inconsistentes');
     if (x.modoEspecial === 'detective' && datosDetective.length !== n) throw new Error('datos Detective inconsistentes');
     if (x.modoEspecial === 'ordenar' && (x.datosOrdenarSesion || []).length !== n) throw new Error('datos Ordenar inconsistentes');
+    if (x.modoEspecial === 'verdadero_falso' && (x.datosVerdaderoFalsoSesion || []).length !== n) throw new Error('datos Verdadero/Falso inconsistentes');
 
     let srsNuevo = null;
     if (x.srsSesionActiva) {
@@ -23322,6 +23871,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     datosQuizSesion = modoEspecial === 'quiz' ? (x.datosQuizSesion || []) : [];
     datosDetectiveSesion = modoEspecial === 'detective' ? datosDetective : [];
     datosOrdenarSesion = modoEspecial === 'ordenar' ? (x.datosOrdenarSesion || []) : [];
+    datosVerdaderoFalsoSesion = modoEspecial === 'verdadero_falso' ? (x.datosVerdaderoFalsoSesion || []) : [];
     rondasMatching = rondasNuevas;
     primeroSeleccionadoMatching = (x.primeroSeleccionadoMatching === undefined) ? null : x.primeroSeleccionadoMatching;
     asociacionesTempMatching = new Set(x.asociacionesTempMatching || []);

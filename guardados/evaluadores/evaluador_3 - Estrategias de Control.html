@@ -2381,12 +2381,24 @@
 
   .fila-retencion-ruta {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     padding: 8px 4px;
     border-bottom: 1px solid var(--color-borde-suave);
   }
   .fila-retencion-ruta:last-child { border-bottom: none; }
+  .retencion-movil .fila-retencion-ruta { cursor: pointer; }
+  .fila-retencion-ruta.enfocada { background: color-mix(in srgb, var(--color-boton) 10%, transparent); border-radius: 8px; }
+  .retencion-recorte { flex: 0 0 100%; display: flex; justify-content: center; cursor: default; }
+  .retencion-recorte canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    border: 2px solid var(--color-boton);
+    background: var(--bg-superficie);
+  }
   .retencion-tarjeta-grupo { margin-bottom: 14px; }
   .retencion-tarjeta-pregunta {
     font-weight: 700;
@@ -2720,6 +2732,93 @@
     font-weight: 800;
     color: var(--texto-secundario);
     flex-shrink: 0;
+  }
+
+  .opcion-modo:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .mapa-vf-ayuda {
+    font-size: 13px;
+    color: var(--texto-secundario);
+  }
+
+  .mapa-vf-recortes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .mapa-vf-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 10px;
+    border: 2px solid var(--color-borde-medio);
+    background: var(--bg-superficie);
+  }
+
+  .mapa-vf-item canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+  }
+
+  .mapa-vf-item.correcta {
+    border-color: #3aa76d;
+    background: rgba(58, 167, 109, 0.14);
+  }
+
+  .mapa-vf-item.incorrecta {
+    border-color: #e0574c;
+    background: rgba(224, 87, 76, 0.14);
+  }
+
+  .mapa-vf-etiqueta {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--texto-secundario);
+  }
+
+  .mapa-vf-botones {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .mapa-vf-btn {
+    flex: 1 1 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 2px solid var(--color-borde-medio);
+    background: var(--bg-superficie);
+    color: var(--texto-principal);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .mapa-vf-btn:hover:not(:disabled) {
+    background: var(--bg-superficie-hover);
+    border-color: var(--color-boton);
+  }
+
+  .mapa-vf-btn:disabled { cursor: default; }
+
+  .mapa-vf-btn.correcta {
+    border-color: #3aa76d;
+    background: rgba(58, 167, 109, 0.14);
+    color: #2e7d32;
+  }
+
+  .mapa-vf-btn.incorrecta {
+    border-color: #e0574c;
+    background: rgba(224, 87, 76, 0.14);
+    color: #c0392b;
   }
 
   .detective-ayuda {
@@ -3689,6 +3788,7 @@
     <button class="boton-secundario" id="btn-pomodoro-repaso-pasivo" style="width:100%; display:none;">👁 Repaso pasivo</button>
     <div class="pomodoro-banner-repaso" id="pomodoro-aviso-repaso"></div>
     <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
+    <label class="enfoque-opcion" title="Al tocar una ruta en Retención se despliega el recorte del mapa"><input type="checkbox" class="chk-movil"> 📱 Pomodoro móvil</label>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-normal">Normal</button>
     <button class="boton-secundario" id="btn-pomodoro-iniciar-dificil">Difícil</button>
     <button class="boton-mini" id="btn-pomodoro-iniciar-historial">🧠 Ver historial de retención</button>
@@ -4310,6 +4410,11 @@
         <span class="opcion-modo-nombre">Ordenar Rutas</span>
         <span class="opcion-modo-detalle">Arrastrá los renglones para reconstruir las rutas en orden</span>
       </button>
+      <button type="button" class="opcion-modo" id="opcion-otro-verdadero-falso" data-otro-modo="verdadero_falso">
+        <span class="opcion-modo-icono">🗺️</span>
+        <span class="opcion-modo-nombre">Verdadero/Falso</span>
+        <span class="opcion-modo-detalle">Decidí si el recorte del mapa corresponde a la tarjeta</span>
+      </button>
     </div>
     <label class="opcion-demostraciones-wrap" id="wrap-modo-demostraciones" for="chk-modo-demostraciones">
       <input type="checkbox" id="chk-modo-demostraciones">
@@ -4475,6 +4580,7 @@
 <script>
   const datos = {"tarjetas": [{"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que es un PID?", "segundo": "control, desviacion, correctiva, error", "rutas": [1], "claves": ["control", "desviacion", "correctiva", "error"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "banda proporcional", "segundo": "reaccion", "rutas": [2], "claves": ["reaccion"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "tiempo integral", "segundo": "correcion, suficiente", "rutas": [3], "claves": ["correcion", "suficiente"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "tiempo derivativo", "segundo": "velocidad, produce", "rutas": [4], "claves": ["velocidad", "produce"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que hacen en conjunto?", "segundo": "suma, ajustar", "rutas": [5], "claves": ["suma", "ajustar"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que logro al ajustar estos parametros?", "segundo": "proveer, eficiente, requiera", "rutas": [6], "claves": ["proveer", "eficiente", "requiera"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "como puedo describir respuesta controlador?", "segundo": "grado, velocidad, oscilacion", "rutas": [9], "claves": ["grado", "velocidad", "oscilacion"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "que no garantiza?", "segundo": "control, estabilidad", "rutas": [10], "claves": ["control", "estabilidad"], "nota": ""}, {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "primero": "controladores PI", "segundo": "sensible, deseado", "rutas": [11], "claves": ["sensible", "deseado"], "nota": ""}, {"tema": "FUNCIONAMIENTO PID", "primero": "que se necesita para correcto funcionamiento?", "segundo": "sensor, controlador, actuador", "rutas": [12], "claves": ["sensor", "controlador", "actuador"], "nota": ""}, {"tema": "PASOS PID", "primero": "1 paso", "segundo": "lee", "rutas": [15], "claves": ["lee"], "nota": ""}, {"tema": "PASOS PID", "primero": "2 paso", "segundo": "naturaleza", "rutas": [16], "claves": ["naturaleza"], "nota": ""}, {"tema": "PASOS PID", "primero": "3 paso", "segundo": "resta, deseado", "rutas": [17], "claves": ["resta", "deseado"], "nota": ""}, {"tema": "PASOS PID", "primero": "4 paso", "segundo": "señal error", "rutas": [18], "claves": ["senal", "error"], "nota": ""}, {"tema": "PASOS PID", "primero": "5 paso", "segundo": "tres sumadas, gobernar", "rutas": [19], "claves": ["tres", "sumadas", "gobernar"], "nota": ""}, {"tema": "PASOS PID", "primero": "6 paso", "segundo": "variable manipulada, transformada", "rutas": [20], "claves": ["variable", "manipulada", "transformada"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "en que consiste la accion prporcional?", "segundo": "producto, estacionario", "rutas": [21], "claves": ["producto", "estacionario"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "existe un limite para la accion proporcional?", "segundo": "algunos, a deseados, sobreoscilacion", "rutas": [22], "claves": ["algunos", "deseados", "sobreoscilacion"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "considera el tiempo?", "segundo": "estacionario, variacion, incluyendo", "rutas": [23], "claves": ["estacionario", "variacion", "incluyendo"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "que pasa si la ganancia aumenta?", "segundo": "pequeña, rapido, inestibilidad", "rutas": [25], "claves": ["pequena", "rapido", "inestibilidad"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "que pasa si K tiende a infinito?", "segundo": "on off", "rutas": [26], "claves": ["on", "off"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "que inconveniente tiene la accion proporcional?", "segundo": "desviacion permanente, consigna", "rutas": [27], "claves": ["desviacion", "permanente", "consigna"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "como podemosreducir el offset?", "segundo": "banda, inestabilidad", "rutas": [28], "claves": ["banda", "inestabilidad"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "que relacion hay entre ganancia y banda proporcional?", "segundo": "aumento, disminuyo", "rutas": [29], "claves": ["aumento", "disminuyo"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "que es la banda proporcional?", "segundo": "porcentaje, carrera completa", "rutas": [30], "claves": ["porcentaje", "carrera", "completa"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "que es el criterio de sintonia?", "segundo": "valor, caracteristicas", "rutas": [32], "claves": ["valor", "caracteristicas"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "cuando usar solo proporcional?", "segundo": "aceptable, ninguna", "rutas": [33], "claves": ["aceptable", "ninguna"], "nota": ""}, {"tema": "ACCION PROPORCIONAL", "primero": "cual es la funcion de la banda integral y derivativa?", "segundo": "acompañan, reducir, brusca", "rutas": [34], "claves": ["acompanan", "reducir", "brusca"], "nota": ""}, {"tema": "ACCION INTEGRAL", "primero": "cual es proposito accion integral?", "segundo": "disminuir, estado estacionario", "rutas": [35], "claves": ["disminuir", "estado", "estacionario"], "nota": ""}, {"tema": "ACCION INTEGRAL", "primero": "cuando actua esta banda integral?", "segundo": "persiste, desviacion, promediarlo", "rutas": [36], "claves": ["persiste", "desviacion", "promediarlo"], "nota": ""}, {"tema": "ACCION INTEGRAL", "primero": "una vez obtenida la integral del error, que hago?", "segundo": "I, adicionada, estable", "rutas": [38], "claves": ["i", "adicionada", "estable"], "nota": ""}, {"tema": "ACCION INTEGRAL", "primero": "por que se caracteriza?", "segundo": "repeticiones, reciproca", "rutas": [39], "claves": ["repeticiones", "reciproca"], "nota": ""}, {"tema": "ACCION INTEGRAL", "primero": "funciona bien ante perturbaciones pequeñas?", "segundo": "pequeñas, desestabiliza", "rutas": [41], "claves": ["pequenas", "desestabiliza"], "nota": ""}, {"tema": "ACCION INTEGRAL", "primero": "cuando utilizar banda integral?", "segundo": "mantener, determinado", "rutas": [40], "claves": ["mantener", "determinado"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "cuando se manifiesta?", "segundo": "cambio, absoluto", "rutas": [42], "claves": ["cambio", "absoluto"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "que es un error?", "segundo": "desviacion existente", "rutas": [43], "claves": ["desviacion", "existente"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "cual es su funcion respecto al error?", "segundo": "mantener, velocidad", "rutas": [44], "claves": ["mantener", "velocidad"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "como es el proceso de este controlador?", "segundo": "deriva, multiplica, suma", "rutas": [45], "claves": ["deriva", "multiplica", "suma"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "por que debo adaptar respuesta?", "segundo": "derivativa, rapido", "rutas": [46], "claves": ["derivativa", "rapido"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "por que se caracteriza el controlador derivativo?", "segundo": "derivada, inestabilidad, oscila", "rutas": [56], "claves": ["derivada", "inestabilidad", "oscila"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "cuando es adecuada accion derivativa?", "segundo": "retraso, repercusion", "rutas": [49], "claves": ["retraso", "repercusion"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "por que no se la usa mucho?", "segundo": "sensibilidad, complicaciones", "rutas": [52], "claves": ["sensibilidad", "complicaciones"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "que problema tiene esta accion derivativa?", "segundo": "reacciona, velocidad", "rutas": [50], "claves": ["reacciona", "velocidad"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "en que nos ayuda a disminuir?", "segundo": "Sobrepico, arranque, retardo, recuperacion", "rutas": [51], "claves": ["sobrepico", "arranque", "retardo", "recuperacion"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "cuando es optimo tiempo derivativo?", "segundo": "retoma, minima", "rutas": [56], "claves": ["retoma", "minima"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "que pasa si tiempo derivativo es grande?", "segundo": "reaccion, rapidez", "rutas": [57], "claves": ["reaccion", "rapidez"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "que pasa si tiempo derivativo es pequeño?", "segundo": "frenar, alrededor", "rutas": [58], "claves": ["frenar", "alrededor"], "nota": ""}, {"tema": "ACCION DERIVATIVA", "primero": "que pasa si sistema es sensible?", "segundo": "pequeño, turbulencias, inofensivas", "rutas": [53, 54], "claves": ["pequeno", "turbulencias", "inofensivas"], "nota": ""}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "siempre es eficiente?", "segundo": "ineficiente", "rutas": [59], "claves": ["ineficiente"], "nota": ""}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "como mejorarlo?", "segundo": "combinando, lazo abierto", "rutas": [60], "claves": ["combinando", "lazo", "abierto"], "nota": ""}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "cuando puede dar desempeño inadecuado", "segundo": "reducida, no dispare", "rutas": [61], "claves": ["reducida", "no", "dispare"], "nota": ""}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "en donde se desempeña mejor?", "segundo": "lineales, variable", "rutas": [62], "claves": ["lineales", "variable"], "nota": ""}, {"tema": "LIMITACION DE UN CONTROL PID", "primero": "que afecta a la parte derivativa?", "segundo": "ruido, pequeñas", "rutas": [63], "claves": ["ruido", "pequenas"], "nota": ""}, {"tema": "APLICACIONES PID", "primero": "para que fueron inventados?", "segundo": "simplificar, mejor", "rutas": [64], "claves": ["simplificar", "mejor"], "nota": ""}, {"tema": "APLICACIONES PID", "primero": "donde se lo utiliza mucho?", "segundo": "presion, fuerza, quimica", "rutas": [65], "claves": ["presion", "fuerza", "quimica"], "nota": ""}, {"tema": "CONCEPTOS PREVIOS", "primero": "que es el rango?", "segundo": "dentro limite, instrumento", "rutas": [70], "claves": ["dentro", "limite", "instrumento"], "nota": ""}, {"tema": "CONCEPTOS PREVIOS", "primero": "que es el span?", "segundo": "aritmetica, lectura", "rutas": [71], "claves": ["aritmetica", "lectura"], "nota": ""}, {"tema": "CONCEPTOS PREVIOS", "primero": "que es la banda muerta?", "segundo": "variar, respuestas, retroalimentacion, corrija", "rutas": [72], "claves": ["variar", "respuestas", "retroalimentacion", "corrija"], "nota": ""}, {"tema": "CONCEPTOS PREVIOS", "primero": "es necesario siempre el error 0?", "segundo": "practico, aceptable, estable", "rutas": [74], "claves": ["practico", "aceptable", "estable"], "nota": ""}, {"tema": "CONCEPTOS PREVIOS", "primero": "que es un sistema robusto y uno sensible?", "segundo": "integral, bruscas, conviene", "rutas": [75], "claves": ["integral", "bruscas", "conviene"], "nota": ""}, {"tema": "ELEMENTOS DE RETROALIMENTACION", "primero": "de que se encargan los elementos primarios?", "segundo": "medir, transmitirla,", "rutas": [76], "claves": ["medir", "transmitirla"], "nota": ""}, {"tema": "ELEMENTOS DE RETROALIMENTACION", "primero": "que y que hace el elemento secundario de retroalimentacion?", "segundo": "transductor,convierte, electrica", "rutas": [77], "claves": ["transductor", "convierte", "electrica"], "nota": ""}, {"tema": "SEÑALES DE PID", "primero": "que hace la señal P?", "segundo": "mueve, multiplicados", "rutas": [80], "claves": ["mueve", "multiplicados"], "nota": ""}, {"tema": "SEÑALES DE PID", "primero": "a que conduce una mayor ganancia?", "segundo": "accion, control", "rutas": [81], "claves": ["accion", "control"], "nota": ""}, {"tema": "SEÑALES DE PID", "primero": "que hace la señal I?", "segundo": "sumando, repitiendo", "rutas": [82], "claves": ["sumando", "repitiendo"], "nota": ""}, {"tema": "SEÑALES DE PID", "primero": "que implica una disminucion de I?", "segundo": "mayor, control", "rutas": [83], "claves": ["mayor", "control"], "nota": ""}, {"tema": "SEÑALES DE PID", "primero": "que hace la señal D?", "segundo": "pendiente, anticipa, aumento", "rutas": [84], "claves": ["pendiente", "anticipa", "aumento"], "nota": ""}, {"tema": "SEÑALES DE PID", "primero": "la señal D es proporcional al error?", "segundo": "proyeccion, consecuencia, pendiente", "rutas": [85], "claves": ["proyeccion", "consecuencia", "pendiente"], "nota": ""}], "rutas": {"1": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Un Controlador PID", "(Proporcional Integral Derivativo)", "es 1 Mecanismo Control", "por Realimentación", "que calcula", "desviación o error", "entre", "1 valor medido y valor que se quiere obtener", "de manera poder aplicar", "una acción correctiva", "(Acción Control)", "que ajuste Proceso", "a fin", "minimizar o anular", "error"]}, "2": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["algoritmo cálculo del control PID", "se da", "en tres parámetros distintos:", "Banda Proporcional", "(Acción Proporcional),", "valor Banda Proporcional", "determina reacción", "conforme", "al error actual", "IMG:data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcAAAAC5CAYAAAC/f+/OAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAADaQSURBVHhe7Z0HfFNVG8ZfaKG0pYNC2WUXZCMbAdnIUJQlKDIVBUVAhjjgUxQFUQFRRMQFgixBZSplyBbZe++9aelefnlO7qVpmrZJms48f37315yTdHCTe5/zzpPrPwNCCCGEOBm5ta+EEEKIU0EBJIQQ4pRQAAkhhDglFEBCCCFOCQWQEEKIU0IBJIQQ4pRQAAkhhDglFEBCCCFOCQWQEEKIU0IBJIQQ4pRQAAkhhDgl7AVKsizBwcESHh6ujUh6kStXLilatKg2IsR5oACSLIuXl5dERIaLq6uLNkPSg6jIGFm4cKH06NFDmyHEOaAAkiwLLJO112eLXxEfbYakB8OfnCQDug6R/v37azOEOAeMARJCZNCgQeLh4SHPPPOMNkNIzocCSAiR6OhoiYiIkKtXr2ozhOR8KICEEEKcEgogIYQQp4QCSAghxCmhAJJsS91czyY6Gro9L50Dh8rUEXMl+M4D7VU5m7jYODmx/7w2SsqD+2ESci9UGxFCTKEAkmxN1foV5J1ZL8uYGS/Ky+91k8CapeWXaatkQONxEhqcuUX0d28Ey6q5mx4eZ49c0p4RuXH5zsP588evaLO2ERkRLT9/tkIKFy+gzSQlv7eHLP0mSOLi4rUZQogOBZBkGDdv3pTIyEht5BgCKhSVLi+3lu6vPiED3ukik38dKcM+fUEunLgqf3y/QXtV5uDl6yE+hbzko1e+lYDAolKsjL/2jKji/jXzt0qhYgWkSEAhbdZ6UL771Vvz1f+9QGFjneSJfefkyL+n1WOdXLlzSYM2NWTNvM3aDCFEhwJIMoyQkBCpXLmy7NixQ5tJH5o/U199vXAyc1P687jlkZioWCnzSAmp0aiSuHvm054RWfbtOpm6YowSJ3dPN23Weg5sOyGFS/iJt19+bUZk+Y9/y8VT17RRApXrlJPdG49oI0KIDgWQZBgVKlSQkiVLStOmTaV69eoyatQoOXDggPas43DLl0d9jYmOVV8zk5MHLkjFWmW0kUhYSLhBqDbK0wNaSJ68rtqs7fxmENAn+zbXRkZO7j+f6HfpoKPOg3th2ogQokMBJBlK9+7dJS4uTg4fPiyff/651KpVSx1TpkyR69eva69KGzvXH1JfK9ZMKgYZzd6/j0idZlWUy/KvBdtk66p90r5XUylcsqD2Csvg9TuDDkrQ4h1y6J9T2qyRiyeviYuri2oRF3w3VMURV87ZZBDb83Js91mLlm9EWJTExzMOSIgp7AVK7OLu3buyfft2bWQ9+/fvl3HjxmmjxLi6ukqbNm2UhdixY0epWbNmir1AkfnZvHN9GfPViwZrL0bCgiNkt0FwZo5dqFyDCw9+Jvl9PLRXZzxRkdHSokB/+Xn3JNm+Zp989+FS+fXYVPEv7qe9wjIxUTEy9oUvpe+bT0uVeuXlm/cWy8BxXZXogVmGcbUGgdK4w6MSGxMn926FyN5NR+Wvhdvk7ZkDxbuAp7i551Wv1XmlxXiZsfZdcc2T1OpEL9Ctq/aqx4GBgWoxkpXBLQtt21q1aqXNEGIfFEBiF0uXLlU3ymrVqmkz1nHt2jVZsWKFNkoKbmwQPvSkHDNmTKoCaIl6LavJuO8GSfGyhbWZzGGPQYwhLshSbdvjMenX8F3ljvxh+4cWhUjn2/FLlLAN/rCHnDl8SVb9vFmGTX5Be1bk5WbvybSVb4mHl7s2I/LN/xaJX2EfeXZIO20mMf0bjZUfd0zQRokxFUB/f3/p3LmzepxVwTZZWEgdP35cmyHEPiiAxC6mTZumMjrfeustbcY65s+fLy+8kHAzBy4uLtKiRQvp06ePdOnSRTw9PdV8artBQABrN6sivUc+pcbuXvmkdGAx8S+RsoWVUUDIrp6/Je//+Koar/hxo4wfMFMmLnpD2jzbSM2BaIPFh6zQiPAo8TSI2tPlhyghK16msBLxwBqlJHfuhGhFr9pjZP7eT7SRkYEGUUQpSIVqpbSZBCCmg1qOl++2fKDNJMZUAOvVqyf//vuvepxVOXXqlAwYMEC2bNmizRBiH4wBkgxl9erV2iORKlWqyMSJE+X8+fMSFBQkvXv3fih+1oJMyKZP1VFH3eZVs4z4gT1/H5X6BmtUp23PxlK6YjFZPONPbcbI5uW7Zf3Sf2TX+kNycMdJCbkXJl1faSMtOteXSrXKSC7DPxS8A7hVPb0TLD+AQver525K+aoBcuvKXeUSNeXE/nNS6dHMj4cSktWgAJIMIyYmRlauXClNmjRR8cMjR44oCxKZoTkRJKWYZmUiLjfyi/6yb/Mxlbyig3KJWk0qS2hwhMoSLVqqkOR2Sbg0NyzbqYQRxMf9J/k8Esf3dvx5QEqWL6os5h1rD4hvQS/tGSMHt5+UOs2qaiNCiA4FkGQYsPR+//132bx5szRqlOACzEnEx8WrmN3McYtU6QEyOe9rbdlQo4dSBYNOybSRc+XymRtq/pJhHhbesd1npOZjlaTHkPby+3fr1TwyR13zusqjTSur10L84uMTRy3KVwswiGseJXQFCnmr4ndT9m05JnVaUAAJMYcCSDIMZBgi1gdLJaeiOq+0ri7dBreVNVdmKbenl6/RrQt3bcc+zWT15Vny6kfPSeGSRndtPg83gxXoKqO/HKASW555qaU06VBbQkMipEWX+tKsU131OoBzp/88nQrVS8m47wZLgcLeyhVsyp+/bFWF+D4mBfOEECMUQJJtGTmtn3To/bg2yhpAoNDezL94wuGiuTMhdKbzed3yqGbVpSsWl4JFfNVrdJD8gg4ueI05pQKLyu1r97SREfw8tIUzZdeGw0oA+415WpshhJhCASTZlueGdZDH2tXSRtkTWHP1WtlWStLj9fayZl7KGZBXz99ULlXzcglCSAIUQEKyGaj3Q/lHVES0NpOUy6dvSO/RnbQRIcQSFEBCsiHYBsq824sp9VtXz9GxVkIcAQWQEEKIU0IBJIQQ4pRQAAkhhDglFEBCCCFOCZthE7uwtxm2LSCJY/LSkSrrkaQfk179Tk4fuqgesxk2cSYogMQuMkIAsS/g1atX5c6dO2oLHJL+UACJM0EXKMmy4AZ35swZdbMjhBBHQwEkhBDilNAFSuwiI1ygOnv37k1xF3niOPTd+LMydIESR0EBJHaRkQJIiCkUQOIo6AIlhBDilFAACSGEOCUUQEJIlmf79u1y//59bZSYiIgIWbdunTYixHoogISQLE/u3LklICBAnnvuOZk9e7Zcu3ZNxo4dK507d5aSJUuqelFCbIVJMMQumARDMppKlSrJyZMntVEC+fPnV4KIr4TYAi1AQkiWID4+Xu7duyfJrcnbtm2rPUrMY489RvEjdkEBJIRkCdD1x8/PT0JCQrSZxDzxxBPao8QkJ4yEpAYFkBCSLWjXrp0ULlxYGxlxc3OTXr16aSNCbIMCSAjJNG7duiVHjx5Vx+nTp9Xc8ePH1RhfTXF1dVVJMKZMnjxZihYtqo0IsQ0KICEk0/j666+latWq6ujQoYOaa9iwoRrjqzl9+vTRHhmTYoYOHaqNCLEdCiAhJNN49913VR0fjkOHDqm569evqzG+mlO7dm2pVq2aemwqhoTYAwWQEJJpwK2ZL18+dSCeB/QxDkv07NlTbZb8wgsvaDOE2AcFkBCSrWjQoIFKhilVqpQ2Q4h9ZAsBRJFrSty4cUN7RAjJrkDUZs2aJe7u7tqMZerXry+vvPKKREdHazOE2EeW7wSzadMmFQ9ACnRyzJgxQ/r16yeenp7aTMZw6dIl2bBhg5w4cUIuX76sxmFhYcp1U6hQIRWkDwwMVHGLWrVqad+VeaBzy5IlS5TrCC4kSyxcuFC5mFKDnWBIRoBra+PGjbJv3z75999/1VZIuMZ0cM3DEnz00UeldevWai/DAgUKaM+S7MaqVatUy7saNWpoM4k5f/68fPfdd6oNXnIuclvI0gL466+/ysWLF2XEiBHajMiRI0dUhpgpN2/elB9//FHGjBmjzaQfcXFxSkQgutu2bVNdK/x88krpkh5SsqiHeLq7SFR0vNy6GyXHTofInfvGVWq5cuXUHmZDhgwRHx8fNZeR7N69W7744gt1oNgYxMTESJ48edRjnaCgINV3sVWrVtqMZTJCAMePHy9bt27VRiS9wI0EN5UiRYpoM5nPn3/+KR9//LF6/3GNBRRzl6b1/KVyBS/x93MTt7wuEhYeq66vi1fDZfue23LszAMVR0SpBJJrKlSooP209AMC/fvvv2sj5wMdeF599dVkF9S2gPMI69+04UFwcHCS+yXO+fLly2X06NHajP1kWQHEDuBwhyxbtkzy5s2r5mAJzpw5M5Eg6vTt21fmzJmjjdIHbMCJN/vw4cPSoJaf9O1SRjq2KCalintor0gMTu3VG5Gy69Bdmf/HRfk96Ip4eHjJBx98oNK3HfGhsQZ8iEaNGqWaCOv88ssvcuzYMfnwww+1GSP4mwcOHKhuiCmREQIIV5d/jcpSv11rbYakB+937yO7du2SunXrajOZB5paw725cuVKqfmIjwztFyhtmhQxCKDla8yUMxdDZc7S8/L1vDMSHBovnTp1kjfffFPFDNMLLNLmz58vTZo00WacCxgeyN7VM3PtBYbO9OnT5bPPPtNmjHz11VfKaDDn5ZdfVvqQ1ntopgggXBi3b9+W0qVLqzGE7c6dO2oFqlskTz31lLK0dDM3NjZWnQj0/Xv22WeVKMJS0enWrZvMmzfPIWaxOQcPHlQrytWrV0udar7y6ds1pFl9f+1Z6zl/OUzen35E5i69II0M/48JEyZIixYttGfTD6yUevfuncitAJdx9+7dpWPHjtpMApjHRa0vPCyRUQLYoFdXafVcd20m+/Lg7j2JiY4Wv6JZx8rS6VykvNpVwd/fX7p27ZpprcXgfYB7Pk+uB/L5uzXl2Q4l7brBhYbFykdfH5Mv556WiMh4teDE9ZseQAAR+pg6dao241x4e3tLlSpVxMvLSy2q4emyByy633//fSlRooQ2YzQ4EGJ67733tJkE4O2DRw1hprSQKUkw+ECarsq+//57KVu2rHLJgX/++UedVFMxg8n7119/qRjAt99+q6waUzw8PJLMOQL8zsaNG8u6oNUyaXQ12bG0pV3iB8qU9JSfJteXdfOaydlTe6Vly5Yq3gZxTyt///23chnjXJomBeGcoKuGLn44tzh/uNnAAkRcxRxfX191URPHcWDzNoe8z+nFb7/9pj4XixYt0mbSzvDhw9UKPjWwz99rr72mFmOPVsolB1a3lR4dA+xe3ef3dJWJo6vL9X+ekleeK6viRRB2hC+I48H9ZefOnXLu3DltJjGw1Hr06KEW/GDt2rXKTQ0dwHuPEBbuU7r4wThCgwR49fAzYRniNaYgznvlyhVtZD+ZIoAwX8uUKaONRAYNGqRWnxAxsGPHjiRdILp06aIuCLjy4D40D3TDqkwte8xW0JQX1qb8Fyk7l7WW0S9XEpfcaXdbtmxUWBZMMy4AcMPRPxj28vPPP6vVEqxgHPjw6CCJyPRcVqxYUerUqaNiJTinllZQsKzDw8O1EXEEbobPZl6tzs1ZQGsza25SuBHiM+vv5yrLvmksBX2T9zzYAoTw6w9qS/OG/iqUktbrjNgHXNpIYtLb2DVt2lQlLv3vf/9Ti23cuxo1aqSeA0ggRKgJCYSDBw9W93vzHrCOWkxmigAik8dUAC9cuPDQHQrgUzZPdIF1CFdpcgkk2EbF0VuivPjiixIR/kAWf9lQajzi2MSV5g0Ly7+/tZJyAZ4q2L9+/XrtGdvACgmJLVgYABQWu7i4qMcAFh5ciTp6t31kpsJdYel8Qvzg2iCOo2z1KuKagkvZWcFO70goQyLZoukNxSNfwmfXUcz5tL6UKOIuEydOVB4QkvHUrFlTWYoAWb0jR45UjwHE0VLWJ3QBnkFLwGJ0xD0qUwQQJ8I0aIrMTrg8dbAtSvny5bWREawmsSIAEDtTEMaEdWgaE0wriHHBpTh7Yl1p36yYNutY6tXwkz9/amq46I0Wrt4M2BY++eQTdV7gqoU1CXcDVlw6cE2YJwHAKmzevLk2Sgrcn+YrLpI2ChUvJif37JOvR74ry2f9oM3mLFCXB3eVfmChi+xjfYzryZQHDx4oq6ByeXc5taG9NKlbSHvGsSBJbcXsxoYbRYyKdSKmTzIWJAkhax5GDN530/vL/v37VRmLKRA4uEeTuw/hXpmcONpCpgmgqeDBBDYdw4IxtWIA4lX6a+BDNgUf6OTqRuwBFy6C5n27lFaZnulJYBkvmf1xHWWVwU9ua5wC2XtwF6D+Cd+PDFnTdHb8XLgZTEG8UBdA8xwo/H64FxztTnZ2zh46Isf+2S1NOz8pHl5e2mzOAl4aJK7pBxpYYEcHfYyVvylIerh+7bIsmNZQ/JJxe8bGxUtEZJxVR1xc8vl8j1YtIB+Pqq76iyLbFcJMMg4IIEpa/vjjD3WvMgX3KL00Swc5H4888oh6jMW9Kdg4+e7du1KwYEFtxn4yRQD1GzLidgi+b968WX0wcSKAJVcmYoRYPZw8eTJJvdLixYsd2hgXF6a7W6zKREuOm3cipcmzG606PvjSaPonR/cOAaqcYu/evcodZAtYIZmfDwicjnmdH25SWD3BxQzxhPVtCixGJP1kB47v2iM9SldJclw8flJ7Rdbh0NYd4pLHVao3aSStn8/+Wa2WQFE6FrP6gbgOsjr1selnG9c74n5vDAiUyhWSd2UtWX1ZPKouU8ejTwVJmz6bLR7+df+QRatSTtwa2reCVA30VtfA66+/rs2SjACNQFC/h9wNveerjp77YQruUSiIBxA7U5BY9fjjj2ujtJEpAojaM8SecLN98sknZcqUKarTi271Qez0jFAdBE6RKYZyCVP3HcxprDTNTWh7wc9COu+olypKQd/kkxYKF8wnNSv7yLY9t8XTw0V+++YxCZr7eKJj7Zymci84Wk6cfaB9V/J8PKqaIL0G8UAIvbUgHRi1OLCqsRD48ssvE8VTzbvj4ByXL19eid/Zs2eT1O+g/AElEtmBEhXKy6jZX0rl+nUlOjJKajVvqsaFShTXXpF1wN9nK7evXJW9GzZpo6Ts37RVgm/f0UaJOfbvHjmyfac2ynog49QlV4yMGphyGnvPJ0vJNxPqSN48uaWAdx7Z+Esz2bq4RZLjqVapv+eurrnl3dcqq8eIBZp7kkj6gfsOyhYs7epvyeBB6RYEcO7cuYlKxZDz8NFHH6myCUeQKQKIRA10GkEZACwUWBwY6zdrPIY4moNkDtNsIYAbviNrfCB+LrnjZNDziWOQlvj8nZoGEfSVtVtuyMiPDoh7PpdEh4e7q0wYYV2BaI1HfKXlY4VVCYMtqehYDCABBq7Lp59+Wq1sTX3jsA5NFxOIk6LJANwHcJmagt8N92flysabRFbHq4Cv1GvbyiB4xhhtkdIBauzh5dhkKEvcv3Vbju3crY6zh4wWPtzJEB7MmVuh8Ta6tiPDwmTT0uVSu2UzbSYpNZo+JhsWJo6r6Ty4d082L1uhjTIHXN9ItrIEanbh+ShUIOXMWFRCvPJcOZn0ZnX5Z/9defezw9oziXm6TQnx8Urs7bBEt/YllRUIIMKZzaRJk2TYsGHqePvtt5VHTA+DIAkvpVi9NaDAHEkmmQE8fChbA4jzmW9mrFOvXr2Hr9OBKMIYgGfPdMNj5GasW7fOYY3QM0UAUwM3chRApga6RuCGDosmJcytyZSA+7B+zYLi6516xl4+NxdluYGff78g+44kTs4BT7cpLmOHWCco6HgBbF2ZQsyqV6+exLUAYOGZ1+cge8rSOYMliRIVkjpxsXGy7+8t8vXIdyTKxGJf8MlU+e2rbyXCcPGnhQ2LlkmjjklXy6bgsx8WYtm7EBsdI2WrZe5CBvFoNFUwB14c3PBaNLS+nnZYv0ApXcJDpnx/Uq5cT+oh6fmkMYyQGnkMVuCYV4yxJdxIMxvExOC5QfgDi2/UvqXWhckWcC/5/PPPtVHGAuMEZVfwaEEAk+uHjIUSSt9SA2IOMcS9zlFkSQGEJYiiSPNVgSm4iJBVhpVTaiCmh7TbAwcOaDPJgzeqbnXrm+m2e7yosvJQHzhq4sEkgfjchvnK5a1L161b3RgIdmT/S7SDsuZCxwWIzCvUCKYXuBCQsINVLlzX2ZmCxYqIr38hadqlk1Subzxnp/cflB6jhso7P38rlepY75I3T0TC+MKxE1K8fOpZbugu8+DefW1kBN+PpJuMFEAsHFHKY019lm6RIDHFWnAdTX6rhsTF/2e4zlK/jlMCi1J4aPB5R3KdOfg/4OaNNPyMAAl8iJEi7oXOSggJWTqPeF9x3Zh/XnRgOZrHy5IDGbu2hFrsAdY/arzXrFmTYswO9xxk/qcEjBh4DVKL3eIcTp48WcUbrSFLCiCA+W8ayzIHMUScDGuyFRHTQqsirECwgoBZDVFANpEpcLtiV4cGNRNnJKUELkzEFca9Xlk27LipWjDZC/qLIg6IMgT0QnQEyKSCZWjeScEUrEIhgOZ9QR0N3iu4Z1HygUQoxHXRnxQ3ouwIYmzVHmugPke7gzYaBNFfqjZKqLlMjZuXrsjS6TNlv8GSDJqX4PY+vmuvlKtuzHiOCA2T7979QL4YMkref7av+jp96GgJvW88Z/kM5/T6+Yvq8dmDR2Tl7J9k2/LVsm/jZilfs7r8Z/jblkz9Sn3feO37f5k0Rb3ekeDagucGLbE6dOigdhVBqzxLYJGJmB4aW9vCsx0ClDt04cpLMnvhWW3Wdrzz5zEsSo2/GyVB5iBEAyFBnSx2mMCNNyMaQyAchHsT8hDMr1dcJwhnwKNTvHhxVc6Bmz2A1QhDAM/Bs4MDYQ6IABb/yKKEJYbXgTZt2igDA3Owpix1g3IEaKmH3s243lNqkQZPBoQypaYJyCaGRyG1Wm80QMc9HPc9LCzQZEGvP7RElhVAkFIvSnxIrW2VhDo5vYYQcS50TsGHAAILv7t+gnTRqVjW9jT1sa9VUR0nPph+VDbtvKXN2kZ+D1cpVsTY/g3uSEeBxQS6KyQH+q6+9NJL6pymN3oKNEQDli5crliUIB6JrVCssSCyAhCWU/sOSPFyZeXzl4dKkVIlxb+k9ck3/xksGQhZ+/4vSLGypSU6KiFJZu/6v6VmM2Nz5XOHj0rf996SYV99Jg3atVZfh07/VPL7GhsYhAaHiF/RwhIZHiFzPpgkHQb0lnptWoqv4f12NdxQt69YI62f7yEvThgnLXp2Vd///FtJm8mnFSxoIHwQPaz4Ee/B+4pkBWR5m1otSL5CbZ6ri+23n6lja0n1Sj4y7MP9cuiE/QuncgHGG6l5FrQOPo/4jMKqRR9dXXRQZ5ueCzbUyiFTEomApsBNiAx4WKVoHgCLEQ0wAOqiIZqwwuEmxCIT8TN0eYIAIvEE36tvFvDpp5+qLFy8Fu8Tkkoym2LFiiXqA2oOhNraPs+43wE0VEEfUWS844D3Ce7m0NBQ9TxwWDNsfbWHE54VQWIJ6vuSA1mkMLOx08P5zR2kdAnb9xa8eiNCaj0ZZFjJ5Zb9K9uobVtspXr7tXL4ZLBaSZt3Rs9K4GLD+cJCwhbwcUN7o+Q+dljlIusLK2+kOzfp1zPVZthfDR8j6xf8Kk+90l8GfDBWm01ftv2xymBJTZVBn34oF46ekNtXr0m/99/WnjWCLE49I3XRZ9PV/7nnaKPLHsL243sfS7fhr0rBYkWVu1Nf0E0Z/Ia88fWURAu8K6fPyp51G6XTIOPFrfPF66Nl2JefytbfV8rlU2fUzz+waauc3n9Iug4brL1KZPOy5VK6ciV1mINm2DpYrdvrCYCVgiQFS+CmjM8KkthgkZw49KfsXW7bZ0cH24zVfWadVCidXw6ssq9x94tv7ZYflpxTnzUIgjl4r9B431L+ADwZWMih7SDCKrBc7G2GjfNx69YtlQUPEYMXCuUisKZxI4drENcaxBj9e/E8xAt1cvhe1FcizIFyE9W20QCEbty4cUrgEE/E98OK1YF1i62HYCHifodwkr0dcky7seC9zwo7iuC9w/ua3GIa71/79u3V59FhAqh/ULLq3lgwhfFmWwI3XXx4UBqAD8Ll7U+q1kn28Mms4/L94nOyc1krKeBje+ur2k8Fyb6jxpgOslvN6/iyCrDe8LfZutUMPm54L5L72OmuUXw4cUNt9mKvLCeA+NuHt+ggTZ7uKN3fGCJhISEyvHlH+WpbkLi5G1epkWHhyqrz9jPGuSwJIESp7/+Mu2lcO3teipUzNl34cuib8vr0yeqxznvdeitBQ+anTozh53839kMZ/OkEWf39XClQpLA0erKd/DR+ojTs0FZcXFwlsLaxlhXnaPBnH4uLa9JWY6YCCEvHtCmFLcB1n1rsBZ4IJG25u9yQfSvsE8Co6Dhp2HWDDOldQV581r5uIP3f3CU/LT2vLC3zvsM6sGSTu4licYLYFepwYb2kRQARi0PjcBSDY6xbf6YCCEsabkC4SOHihDsQXi1LAoi5N954Q7kCzQVwz5496nUQgGbNmqnXwDhwhADib0/J05QaEHZLdYL2kNJ7B/D+4fxlynZImUHJkiUT+ZhhTuODA/cGVl9w/6HOEMW5x4PaSaVytrtBUe/Xvv8WWfNjU7u+HwS2XCOnLxhNdASqs6oAIn0b5xAXri3ACjdvYYRzj3gBLm6sfHVXh7XbIWW0AF48cUqGPd5OPl6xSNUggm9Gj5UKj9aQ1s8bb0J3r98wiNwxqdPamMZuLoB4vHDyNKlUt7bhQo2RIqUCHlpn3779vrw8McGTcu3cBRnV9mmZtWvTQ9cngHvT08dbaj7eWFmg6+Yvlgo1q8uRf3YplyzcqHCv4ndNfvE1GfNDQpN0U0wFELVa2FHEHhBOwOfCHKS5473Fe4ybDj4zy5d+J+c2J92KKzVwt3rxrV1qcYkyJHt5ZtA2+SPoqqpDRrzMHCSbIM/A/PaIWBZiaTgQQknrdkgQDYiIebcToAsg8hUgLIjVIW4H8H24p6UmgHgvYTkiJgvgWcH/Se89jN8LN6EjBBB/Z2obaacELGokAaXVioRLGIss8/cOtYhY7OD3YHcQ1Blm6Rigo8BN11T8YLUg+wsrH1wAeuxLb8B9847tRctg5McHZNDz5ewWP6D/bpjpWVX80oJ5CyrEKTCH+B/iLtb6+TMTuCJB0TIJSVplq1eVDQYR1hOrrhosOr0+0RJYgT435g2p3aqZ1H+idSLXpHkdI0Rs3om9icQPnNy7X4kfQK9RiGvdti0NVuUYadevl/o+gN/15nepb0uUVsw9LFjNL126VN24sZcnbt74W2BlXr1pOUEmNbbsuiVrNl2XSaPTlgqPcAVILqkCsUHTGyisYni3kJmOXQxSStBzNEgSwc1bT4xByUBKGfKmQMRRLqaDsWmCDfY4zWnAyjV973B/R8MQbLMEzxUWYHqXGacQQAQ+kRGEmBr6hiKIbLobhQ5cb+DiVdtruBavviQ3bkfKkL7GZBt7uB8SLSGhRlcyuqfnRHBDRKYW4oAoh0CgOjv9X08fOCSe3l4y+LMJsnedseVcTFS0urE3f7aznNl/SM2VqFBOChS2b9/IcgYxvXImce1mLsNN0BTEBC3F85LD/PsdDRILkJiBmzX6PqLIHPWniCmag2svOibeYj1fSjwIi5VhH+5TnWEQZ7cX3BzPXzZmdcKKsgRcaLhxYo9CfGaRuQrvBP5/GQ1+JxaHsM4Re4SVpLeTTA1Y33gfkKCEGz8sVuRrIEaGxJrMKpJPT1AehwUDSi/0chZ4JiydM6dwgVraXSI5cHN+opHIjPGWO1iYg9M3e9E5mTzruGxa2MLu2CFYtfGaPPmSsQYQxavw82dV7HGBItaBCw7JBdaQmgsUcbQZb7ytygnQ+cSnUEFlCY389guD9ZO+Tcxt5dcvZkpsdPRDF2hKoGvMhoVLpXUvo0vLHLQ/Qxu0Zl2f1mbShiNcoGhcgV6+cLGllqqOWA+swHlT6svznazr6IH6vy6DtstjdQo+LGQ359K1cAkolrSvpDlYrPZ43ejyQ0Y43IemIHaEcwDXIuJ7KZFWFyg8UxA4S78HyTHIrcC50rOm8RXXD56DQCN/AecT51w/71iMILFFt1Jh+SB+iO4pOOAihBWJUAReg3FKGZgpkdVcoCgNgXsXixXTDjLJ4RQWoLXiB5AyvHLDNcMHzbp1ARpdv/3pIVk4vWGy4tftte0SFZ245tASKzYYXRVoBGC6pVFOAW5da8XPGrz8CshjnTrIM68NlN5j31QZkhhn1d0W0LrNGnIbVq+NnmqfJIahg/IGR4mfo4A1AeskNfEDuDHhJgchspZ3PzskBXzyyJsvWxa/y9fDVWJLaoSGx8rQ8fvVY1jt+LvNgbDg+ktN/BwBhCe534NkGIgfgEjCokFrNJSH4fsgfgDn0/S847GpixbxQ1jlevswuKZhEaLlIRpR2yt+WREYMHjvrBE/4BQCaAmcJEudHnr16iUXr4arOENqLDFcwKs2XpdT69s/7OJiDrZp+XPzjWRvZjrBD2Jk4QrjDQEibN7EmiQF1l6X119JcsASzCqgL+jUV0dI8K3b0jCV1mamwM2KG7QlkPiS3UFSzCrDQvPMxYSaLEuEhsVK75E75Ycl5+XJlsUNi9OrsmJ90mPWAusK45GhjVAFQEKELjDEOXFaAUSMAm4Ec2ChoCZwwoxjKYrWvqP3pO/oXbLr4F0pWOcPyVV+icUD27iEGVadqTH9p1NKBAEyU0nOAO3IGrRvo0oYUO9HjKA7k4+vn4z/IuWtwoZP2C/zfr8ot+5GSfchO6TTy9ssHhO+OmZYMGjflAwPQmNUqEKnf//+2iPirDitAKYE/Pr/7Lsjc5Yl3wvQ1yuvLJreUJZ/29iqA62fkuP85TCZpF2YSBNHZxaSM8iHvrYVysmlE6dUWzNiBG66d955xyBuF1QLweT4+oPaEn6ki1XHqu+NSWzJMXbK4YfZp3D7wQolzo3TCCDanX3yyScPD4COCfo4yqQVFQQIvuT3ph1JNhZYNsBT7UFm7YGeockx6ZvjEh5h3AIFFyUymEjO4dblK+Li6iqxFrqKODPIBHb38JAxnxzUZpKChaP5NmPJHSktMhHW+GqusXcmgPXniIJrkr1xGgFEuj0sO/0A6DSij00FEKClGy6ayd9a11XcXuBCnbPM2KINabqO2uiRZB3y5M2rdm0wr+NzdpAUha5Auw/dk+6v7ZC796O1ZxxLbGy8DB63V/S1LJJB0HyZEKcRQNTRoKO7fgCkFetj03RegGQYrFDf+eyQCpw7mvj//pOlf16WDgO2SGRUvEp4QKNdPbOL5Bwq1nlUKtaulWxSizODbcp69uwpvxquhfYDNsude/Y1oUgO1BsiVr/672tqjOxTFOznpMxHYj9OI4D2gGbMnTt3kYHv7JYug7fLGa1FWVoJj4yT3iP+lW6GVe/te8ZVL/p+6q2MSM7CPb+nOohl0KcSDakPnYyUxs9uTNMuD6YcOHZf2vXbIr8sN24XpW8ThEbzhACn6QVqDi4GtDZKbXdhnB64JVEYi33EsAP8oOfLi4uLfav5TTtvyqv/2ydHT4doMyJvvvnmw7hkdsHeXqC2gM48B48dzVJlDTkRJOjopKUXaFrBnpQoYL5186qMGlhJRr1USXy9bW8HeOxMiIyeeFA1lgCwvLFXHrq7ONryQ/gEPxfnzRkxrVfOKr1AbcFpBdBWsA0JhAp7mwWWyS8jDRdnj44BVl2giEEEbbsh0348JWu33NBmRTVshfDp+1dlJzJCANFZBF0s5s+fr/ovkvQnMwUQoIMJGk2jN6yPVx7p362MtGlSRG0WXdA3+aSVsIhYCdp6Q+YsPS/L118VrSWrAollaHKfHrW1a9euVS0WkWOAjizODAUwh4NThd5y2GsLN+d8brmlSZ1CUquKr9o/sGRRd/H0cFVdX27eiVT7lh08ESz7jtxXdUw6SAHHDR27OKe06W9WJiMEUAfJStg4l6Q/8HagRjazQf9eNDDW9/BEEnXVij5SpYK3FPJzE3fDtYeuLnfuRatkNWwhhnifDhrJo/sJ2gmi4X16g9pd0z33nBG0ILPUWcdaKIDZBGwoic0fsdcWNrG0FrQkQvo1LkprW/VkVTJSAMPCwtR2Lfyopj9wFWaVzyZ6ci5YsEDtWIA97ayxsNDZBUk12NoMWxdlFOgHCmswLs5YzuRsYMGB3eVxT7AXCmA2A/v1TZw4Ua2YTbccMQf99rAdP0orckqLs4wUQELQBBqucHgDsJuLqdCgd2fjxo1VPArZ3pmxYwNJOxTAbAw2n0TH9ZMnT6pCdogDmtxiuxU0ps1pvT0pgCSzwHY+kydPfrhbA/a4S4vlQbIGmSGAXCo5CAgdtoLZtm3bwx2jsQM2NtJkY2tCUgcbtcKKw27sKQGx++GHH9RO56ibpfgRe6EAOpAbN27IwoULVa0RIcQ2goODVTgB+0amxO7du9VOLsuWLdNmCLEPCmAyHDt2TPUPNT30jLTk+OWXX1SsYsmSJdoMIcTRoIcvQGkSankJsRcKYDLUrl1bqlatmuhIbZuiuXPnqq+wAO/fv68eE0KSBzuyt2nTRh3YIgl0795djbHBrjlIPENmKED6AuoWYTkSYg8UwGRAMTAEzfQYO3as9mxSUAi7f79xp2kE6RctWqQeE0KSB6UKiJ3jwF6cADufY4zdz81ZuXKlKpbXuXfvHq81YjfMAnUQ6AYxevRobSTSpUsXWbp0qTbKeTALlDiaU6dOScWKFVUsvXDhwtpsYtAQAaUQpnTu3JnxwBwAs0CzMSiCNQWFu3DXEEIcA9bqyPw0B9ea+XZmhFgDBdABIBi/YcMGbWQE3WLgriGEWAfaAiLWjsJ2S0DoLCWiwQ26fPlybUSI9VAA0whWnmgBZKkFkp4UQwhJHTSMwF59fn5+2kxi9OzPsmXLir+/v1SqVEm1PsNuD/pzhNgCBTCNYOV57tw5tbs12jGhKwWC+NjpAdukoJyCEJI2sGk1eumi09LZs2dVluiMGTPkypUrcvHiRdXD1DQ5hhBroACmETTo/eOPP1TgHjvMlypVStUBYox0bRT2ojaQEGI/6KeLRLPAwEBtJgF0YUJSFhadhNgCBTCNvP7666onofku0+gHikzQqVOnsjkvIYRkQXhnJoQQ4pRQAAkhhDglFEBCCCFOCTvBOJgaNWrIunXrku1kkVNI704wmzZtUp11mECU/iDBBNnMvr6+2kzWp1evXqoPaKtWrbQZkt3hhrg5AAqgY5g5c6Z8NGao/NEzQJsh6UFwVLy0mntBlRdYyrDMqlAAcx4UwBwABdAxQAB/mDBCdg0sp82Q9CA4Mk58Pzkh7du3V5nM/fv3l3bt2mnPZl0ogDkP9gIlhGQKaNqwePHiJD1tCcnJUAAJIYQ4JRRAQrIBB29Eyt/nw7RR8qw9Eyqx8UmjGuvPpv69hDgbFEBCsgHebrllyo672sgyCw4HS1V/N3HNnUt+OZR4l/TY//6TU3e4PRchplAACckGRMb+JxX88mijpFwPjZW74XFSwjuPRMXGy4ZziS2+xgEe8ufpUG1ECAEUQJItmbD5lgz787o6Rv51Xd5ef1Mmbb0tvx1/oDIbcwKh0fEya889WXXygQw3/D8fL+2p5pceDZF1Z8Nk0ZEEK2/O/vvSs5q3XH0QKx9tuS15XXLJkVsJm8Tmz5tbbobHaiNCCKAAkmzJ3APBMmv3PVlpEIffTzwwjO/L+E23pMuiS1Ls85MyZt0NiYrLvAqf5Ya/acmRkIdHvEm10f7rkQ/nLwXHaLNJeXfDTWlfIb/UL+ku6w0W3eOlPWTT+TD592qEFPRwMVh6CT/zpsH6K+jhKsW9XJULdHhDP+UO1QkziGkewzwhJAEKIMm2VC/iJmeGBqrjyoiKEvrOI/LPi2WlnUE0Jm+7I10NYhhnISEkIyjrm0c+NFipKwwCHVgwr+TOlSA+N8NiZebuu+JpsMoKuLtos0k5fTdaSvnkkc0XwuWFGr7imSeX4eeFSrvy+eURw8/sUzOhc4uptJ0yfF9gQTflCtU5bLAGqxZOEERCCAWQ5CBcDCLTwGAtLesRoKylVadCJSiTsh+rF8kntw1WWY+q3lKraD5tViTGIMgbzoXLuj6lpUNgfuWaTI6SXsaY364rEdK7ho/suhqpXv+IwbJzz5NbZYbqwOozJdIgfni9zh6D1Vi/uLs2IoQACiDJMHbt2iWrVq2S2Nj0j0V93raIsop+2n/fOJHBICnlmuGoaSJ+iNvN3nNPRj9WMJFFmBy1irmpZBZYirAa4cJ8vrq3bDgbKtsvhYuJgSceButQp5zB+vz7fLg0NCwGdPD3lDRYk4SQBCiAJMNAm7iXXnpJ7eD9/PPPy5w5cyQ0NH0yE+sarB1Yg3BBwhrKaDZfCJMKBfJKSe88yg0LIUZ87tV6fip+Zw2D6/pJy7KeMu5xf+lZzUf9fyoWdJNeNXzlsQAPqV0sQVxNXanjWxRWsUPdKtx7LUKalfFM5CYlhFAASQbi5uam+v3duHFDFixYIP369ZOiRYtK7969JSgoyOE7P1QqmFfCY/6THZcjtJmMAxZYszIecis8VjotuCQ3DBZYFZOkFEfTsIS7ihmac/RWlFwJiZVWBiElhCSGAkjs5vr163L06FGbjiJFimjfbSQsLEzmzZsnbdu2lVKlSqktkBYtWqTm00o+V+PHGyKY0Wy6EK6K1+H27FgxvypniLOh7zzie1svhlt9IOP1xJ2oJPPIOIV1iMf7DJYgISQB7gbhYJxlN4hff/1V7diQO7dtayhYf4cOHdJGScHPg0iWL19eIs/uTnY3iIpfnhaffLlT3C2i/fwLEnQmTK6NqiT+VrodHcGhm1FSc+YZCepdWlqV85QH0fFScspJmdelhDxV0Ut7VQJw0S46EiJ9TbI6UbSOuJ8jKZDPRZ6qlPj367tB6FSpUiVDu/Hby5YtW2TatGnSqVMnbYZkd7gdUg7AWQTQXqZOnSojRozQRglUrVpV+vTpo7a5KVGiRKrbIaUmgLfDY6XU1FMqbraxbxltNmPo8etlOWCwvI4PqaDNiAxdc12VJ6zpVUqbMYJi96sPYmTn5QjpbSKA1nDtQazsvBJusDC97K7xMxfArl27yqBBg7RR1iUqKkqaNGkiPj4+2gzJ7lAAcwAUwJRBEsz333+vjUTc3d3liy++kIEDB2ozRtIqgB9tuSVjN9ySGR2KqsSTjAKuSM+Pjkm3Kt6ysFtJbVZUNmfbny/IlZEVpYinqzZrzFKt4JdXJayYZm1aA8Sry+LLsr5PaTU+eSdaKhbMqx5bi7kAvvHGGzJlyhRtREjGwf0ASY4G5Q/Yb87b21s6dOighO/ChQtJxC8toOPKvIPBMnHLbVUO0Kt6xloIyLhEA5oaRRIyNEHjAHfxcsstr6y4lqg4PyQKFmCszcIFfPK5SAmvBDFFezhCiPVQAEmGsWfPHrWT/LVr11Q94NChQ8Xf31971nYuh8TKW+tuyMi112XI6mvK9Vh22mnp/dsVKW+wqoIMlhFEIqP4YucdmbrjjrQu56kSUlCCoTNj1z2pV9xdwmLiZeif1x/2K4XwwQlzXxtbQ7RBYWFRYosj/D8v3I+R348/UEIK1yshxDoogCTDaNCggar/8/Dw0GbsJ8DHVRV/Lzkaom7+G8+Hy7l70ar0YHG3krL35XJSroDtVlVaGNagoCzuHqCSX+Y8kzjhZUSjgrLWMI/nZnQo9lCY0batRzUfq/9WBCxG/HVd6pVwV8XwzUt7SGmDpYtz0aemT6LCe0JIylAASbZkfZ8yD/uA4jjyann5d2A5mdu5hHSv6i0udiaFZHU2XQhTxfVeeXPLpZAYleQDUHfYvAxr/QixBQogIdkIuDvR5Qa7vofHxMt5wxhcNohhgEEYD9+kC5QQa6EAEpKNeKJCfoPoRasYYGV/N7kXYYwdouH22rOhKqOUEGIdFEBCshFF87vKS7ULSNvy+eXdpv7SKMAYT0WM8QnDnN79hhCSOrxaCCGEOCUUQEIIIU4JBZAQQohTwlZoDoat0BwDdojANknF8id0OiGOJyo2Xu5GJmxDxVZoJLNgL9AcAAXQcQQHB6s9Av38Mq6Xp7NDASSZBXuBEmICOv0XKFBA8uZlan9G4epKi5s4D7QAHQwtQMdz5swZuX//vjYi6UnFihXFyyvpnoWEpDd0geYAKICEEGI7dIESQgghGQQFkBBCiFNCASSEEOKUUAAJIYQ4JRRAQgghTgkFkBBCiFNCASSEEOKUUAAJIYQ4JRRAQgghTgkFkBBCiFNCASSEEOKUUAAJIYQ4JRRAQgghTgkFkBBCiFNCASSEEOKUUAAJIYQ4JRRAQgghTgkFkBBCiFNCASSEEOKUUAAJIYQ4JRRAQgghTgkFkBBCiFNCASSEEOKUUAAJIYQ4JRRAQgghTgkFkBBCiFNCASSEEOKU5PrPgPaYOIBKlSrJI488Im5ubtoMIYSQ1Ni7d6/Mnj1bWrRooc2kPxRABzNv3jw5fPiwNiKEEGItw4cPl6JFi2qj9IcCSAghxClhDJAQQohTQgEkhBDilFAACSGEOCUUQEIIIU4JBZAQQohTQgEkhBDilFAACSGEOCUUQEIIIU4JBZAQQogTIvJ/Uy+tmqA2xlcAAAAASUVORK5CYII=", "IMG:data:image/png;base64,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"]}, "3": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Tiempo Integral", "(Acción Integral)", "Tiempo Integral", "genera una corrección proporcional", "a la integral del error,", "esto nos asegura", "que aplicando", "1 esfuerzo control suficiente,", "error seguimiento", "se reduce a cero"]}, "4": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Tiempo Derivativo", "(Acción Derivativa)", "Tiempo Derivativo", "determina reacción", "en función del tiempo o velocidad", "en que se produce error"]}, "5": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["suma estas tres acciones,", "es usada", "para ajustar al proceso", "vía", "1 elemento control"]}, "6": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["Ajustando estas tres variables", "en algoritmo control del PID,", "controlador puede proveer", "una respuesta eficiente", "conforme", "a que se requiera realizar", "en proceso"]}, "7": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["respuesta del controlador", "puede ser descrita", "en términos de:", "a", "grado o magnitud", "Acción Control", "ante 1 desvío", "con respecto al Set Point"]}, "8": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["b", "velocidad al cual", "controlador", "llega al Set Point,"]}, "9": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["c", "grado oscilación", "del sistema"]}, "10": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["uso del PID", "para Control,", "no garantiza", "Control Óptimo del Sistema o", "Estabilidad del mismo"]}, "11": {"tema": "CONCEPTO Y DEFINICION CONTROL PID", "lineas": ["controladores PI", "son particularmente comunes,", "ya que acción derivativa", "es muy sensible al ruido,", "y ausencia acción integral", "puede evitar", "que se alcance al valor deseado", "debido a acción control"]}, "12": {"tema": "FUNCIONAMIENTO PID", "lineas": ["Para correcto funcionamiento", "1 controlador PID", "que regule", "1 proceso o sistema", "se necesita al menos:", "a", "un sensor o un transmisor,", "que determine", "estado del sistema"]}, "13": {"tema": "FUNCIONAMIENTO PID", "lineas": ["b", "un controlador,", "que genere señal", "que gobierna al actuador"]}, "14": {"tema": "FUNCIONAMIENTO PID", "lineas": ["c", "un actuador o elemento final control,", "que modifique al sistema", "manera controlada"]}, "15": {"tema": "PASOS PID", "lineas": ["1", "controlador", "lee una señal externa", "que representa valor", "que se desea alcanzar"]}, "16": {"tema": "PASOS PID", "lineas": ["2", "Esta señal", "recibe nombre", "punto consigna", "el cual es misma naturaleza y", "tiene mismo rango valores", "que señal", "que proporciona sensor"]}, "17": {"tema": "PASOS PID", "lineas": ["3", "controlador", "resta señal actual", "a señal punto", "consigna,", "obteniendo así", "señal error,", "que determina en cada instante", "diferencia que hay", "entre", "valor deseado y", "valor medido"]}, "18": {"tema": "PASOS PID", "lineas": ["4", "señal error", "es utilizada", "por cada uno", "tres componentes", "del controlador PID"]}, "19": {"tema": "PASOS PID", "lineas": ["5", "tres señales", "sumadas,", "componen señal salida", "que controlador", "va a utilizar", "para gobernar al actuador"]}, "20": {"tema": "PASOS PID", "lineas": ["6", "señal resultante", "suma estas tres", "se llama variable manipulada y", "no se aplica directamente", "sobre actuador,", "sino que", "debe ser transformada", "para ser compatible", "con actuador utilizado"]}, "21": {"tema": "ACCION PROPORCIONAL", "lineas": ["consiste en producto", "entre", "Constante Proporcionalidad", "(recíproca K o G, Ganancia) señal error y", "como para que produzca", "que error", "en estado estacionario", "sea casi nulo"]}, "22": {"tema": "ACCION PROPORCIONAL", "lineas": ["Sin embargo,", "existe también", "1 valor límite", "en Constante Proporcionalidad", "a partir del cual,", "en algunos casos,", "sistema alcanza", "valores superiores a deseados", "Este fenómeno se llama", "sobreoscilación"]}, "23": {"tema": "ACCION PROPORCIONAL", "lineas": ["Acción Proporcional", "no considera tiempo,", "por tanto,", "es la mejor manera", "solucionar el error permanente", "en estado estacionario", "(error Offset)", "y de hacer", "que sistema contenga", "alguna componente", "que contemple variación", "respecto al tiempo,", "es incluyendo y", "configurando acciones", "integral y", "derivativa"]}, "24": {"tema": "ACCION PROPORCIONAL", "lineas": ["la ganancia mide", "cuánto amplifica controlador", "respuesta del sistema", "ante 1 cambio en señal entrada"]}, "25": {"tema": "ACCION PROPORCIONAL", "lineas": ["Cuanto mayor sea ganancia,", "mayor será respuesta del sistema", "ante una pequeña variación en entrada,", "que puede resultar", "en 1 control más rápido,", "pero también más susceptible a", "oscilaciones o", "inestabilidad"]}, "26": {"tema": "ACCION PROPORCIONAL", "lineas": ["Si k> infinito", "estrategia control", "tiende a 1 control onoff"]}, "27": {"tema": "ACCION PROPORCIONAL", "lineas": ["la acción proporcional", "tiene 1 inconveniente,", "que es desviación permanente variable", "una vez establecida", "con relación al punto consigna,", "denominada offset"]}, "28": {"tema": "ACCION PROPORCIONAL", "lineas": ["el offset", "puede reducirse", "disminuyendo banda proporcional,", "con salvedad", "que esta disminución", "no debe producir inestabilidad en proceso"]}, "29": {"tema": "ACCION PROPORCIONAL", "lineas": ["la ganancia (G)", "es recíproca o inversa", "banda proporcional (BP)", "A medida que aumento ganancia,", "disminuyo banda proporcional"]}, "30": {"tema": "ACCION PROPORCIONAL", "lineas": ["Definición Banda Proporcional:", "Es porcentaje del rango control", "necesario para que", "elemento final control (válvula)", "haga una carrera completa", "(0% cerrada a 100% abierta,", "o viceversa)"]}, "31": {"tema": "ACCION PROPORCIONAL", "lineas": ["Ganancia baja", "(Banda proporcional grande)", "la respuesta es más lenta,", "pero sistema se vuelve estable y", "se preservan elementos finales control", "para que no conmuten todo tiempo"]}, "32": {"tema": "ACCION PROPORCIONAL", "lineas": ["Criterio Sintonía:", "ayuda a determinar vaor ganancia", "Depende", "características físicas del sistema y", "qué tan crítica sea su sintonía"]}, "33": {"tema": "ACCION PROPORCIONAL", "lineas": ["Cuando usar solo Proporcional:", "Si para mí sistema error offset", "es aceptable,", "no se añade ninguna otra banda;", "acción control", "es puramente proporcional al error y", "no se busca", "1 ajuste más fino"]}, "34": {"tema": "ACCION PROPORCIONAL", "lineas": ["Función bandas Integral y Derivativa:", "No actúan solas", "Siempre acompañan a banda proporcional", "para realizar 1 ajuste fino y", "reducir error offset", "cuando hay una entrada brusca"]}, "35": {"tema": "ACCION INTEGRAL", "lineas": ["tiene como propósito", "disminuir y eliminar", "error en estado estacionario", "(error Offset),", "generado al aplicar", "Acción Proporcional"]}, "36": {"tema": "ACCION INTEGRAL", "lineas": ["Control Integral", "actúa cuando persiste", "una desviación entre", "variable y punto consigna,", "integrando esta desviación", "en tiempo y", "sumándola", "a acción proporcional"]}, "37": {"tema": "ACCION INTEGRAL", "lineas": ["error es integrado,", "el cual tiene función", "promediarlo o sumarlo", "por 1 período determinado"]}, "38": {"tema": "ACCION INTEGRAL", "lineas": ["Luego es multiplicado", "por una constante I", "Posteriormente,", "respuesta integral", "es adicionada", "al modo Proporcional", "para formar", "control PI", "con propósito obtener", "una respuesta estable del sistema,", "sin error Offset", "en estado estacionario"]}, "39": {"tema": "ACCION INTEGRAL", "lineas": ["Control Integral", "se caracteriza", "por tiempo entre", "repeticiones de Banda Proporcional", "en minutos entre repeticiones", "o su recíproca,", "repeticiones por minuto"]}, "40": {"tema": "ACCION INTEGRAL", "lineas": ["se utiliza solo", "cuando es preciso", "mantener 1 valor variable", "que iguale siempre al punto consigna", "Es decir,", "se ejecuta acción control proporcional", "luego ejecución dicha acción", "entra banda integral,", "que ejecuta acción control", "en 1 tiempo determinado"]}, "41": {"tema": "ACCION INTEGRAL", "lineas": ["la integral no funciona bien", "porque frente a perturbaciones pequeñas", "sistema se desestabiliza"]}, "42": {"tema": "ACCION DERIVATIVA", "lineas": ["se manifiesta", "cuando hay 1 cambio", "en valor absoluto", "del error;", "(si error es constante,", "solamente actúan", "modos", "proporcional e", "integral)"]}, "43": {"tema": "ACCION DERIVATIVA", "lineas": ["error,", "es desviación existente", "entre", "punto medida y", "valor consigna,"]}, "44": {"tema": "ACCION DERIVATIVA", "lineas": ["Su funcion", "es mantener error al mínimo", "corrigiéndolo proporcionalmente", "a velocidad que este se produce;", "consiguiéndose esta manera", "evitar que error", "se incremente"]}, "45": {"tema": "ACCION DERIVATIVA", "lineas": ["se", "deriva", "con respecto al tiempo y", "se multiplica", "por una constante D y", "luego se suma", "a señales anteriores (PI)"]}, "46": {"tema": "ACCION DERIVATIVA", "lineas": ["Es importante", "adaptar respuesta control", "a cambios en sistema", "ya que una mayor  accion derivativa", "corresponde", "a 1 cambio más rápido y", "controlador puede responder", "acordemente"]}, "47": {"tema": "ACCION DERIVATIVA", "lineas": ["Control Derivativo", "se caracteriza", "por tiempo acción derivada", "en minutos anticipo"]}, "48": {"tema": "ACCION DERIVATIVA", "lineas": ["el control derivativo", "actúa cuando ve una rampa", "(o parabola, etc.)", "Actua siempre que variable esté cambiando,", "no actúa cuando ve una entrada escalón", "porque si bien", "hay variación", "el que actúa", "es acción proporcional y", "en siguientes instantes no hay variación", "(pendiente cero)"]}, "49": {"tema": "ACCION DERIVATIVA", "lineas": ["acción derivada", "es adecuada", "cuando hay retraso", "entre", "movimiento válvula control y", "su repercusión", "a variable controlada"]}, "50": {"tema": "ACCION DERIVATIVA", "lineas": ["el problema acción derivativa", "es que reacciona", "a velocidad del cambio"]}, "51": {"tema": "ACCION DERIVATIVA", "lineas": ["puede ayudar a", "disminuir Sobrepico variable", "durante arranque del proceso y", "puede emplearse en sistemas", "con tiempos retardo considerables", "porque permite una recuperación rápida variable", "después presentarse una perturbación en proceso"]}, "52": {"tema": "ACCION DERIVATIVA", "lineas": ["Suele ser poco utilizada", "debido a sensibilidad", "al ruido que manifiesta y", "a complicaciones", "que ello conlleva"]}, "53": {"tema": "ACCION DERIVATIVA", "lineas": ["Si sistema físico", "es muy sensible,", "1 pequeño ajuste", "(como abrir válvula apenas 1", "1% o 2% más)", "genera", "pequeñas turbulencias o", "variaciones rápidas"]}, "54": {"tema": "ACCION DERIVATIVA", "lineas": ["la acción derivativa interpreta", "esas variaciones inofensivas", "como 'ruido' o", "perturbaciones graves"]}, "55": {"tema": "ACCION DERIVATIVA", "lineas": ["Tiempo acción derivada:", "Es intervalo durante el cual,", "variación señal salida del controlador,", "debida a acción proporcional,", "iguala a parte variación señal", "debido a acción derivativa", "cuando se", "aplica una señal en rampa", "al instrumento"]}, "56": {"tema": "ACCION DERIVATIVA", "lineas": ["Tiempo de accion derivada", "tiempo óptimo", "acción derivativa", "es el que retorna a la variable", "al punto consigna", "con mínimas oscilaciones"]}, "57": {"tema": "ACCION DERIVATIVA", "lineas": ["Si es muy grande:", "variable reacciona", "con demasiada", "violencia y", "rapidez"]}, "58": {"tema": "ACCION DERIVATIVA", "lineas": ["Si es muy pequeño:", "empujón es tan débil", "que no logra frenar inercia,", "permitiendo que variable", "quede oscilando demasiado tiempo alrededor consigna", "antes estabilizarse"]}, "59": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["pueden ser ineficientes", "en otras aplicaciones"]}, "60": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["desempeño del Sistema Control", "puede ser mejorado", "combinando", "lazo cerrado con 1 control PID", "con 1 lazo abierto"]}, "61": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["a", "pueden dar 1 desempeño inadecuado", "si ganancia del lazo del PID", "debe ser reducida", "para que respuesta de este", "no se dispare u oscile", "sobre valor del Set Point"]}, "62": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["b", "Principal desempeño", "controladores PID", "sistemas lineales", "en Sistemas No Lineales", "es variable"]}, "63": {"tema": "LIMITACIONES UN CONTROL PID", "lineas": ["c", "en parte derivativa,", "ruido", "puede afectar al sistema,", "haciendo que esas", "pequeñas variaciones,", "hagan que cambio en salida", "sea muy grande"]}, "64": {"tema": "APLICACIONES", "lineas": ["fueron inventados", "para simplificar", "labores de operadores y", "ejercer un mejor control", "sobre operaciones"]}, "65": {"tema": "APLICACIONES", "lineas": ["se utiliza", "en aplicaciones más críticas", "tales como", "Control", "Presión,", "Flujo,", "Fuerza,", "Velocidad,", "en muchas aplicaciones química"]}, "66": {"tema": "APLICACIONES", "lineas": ["a", "Lazos de Temperatura", "(Aire acondicionado,", "Calentadores,", "Refrigeradores, etc.)"]}, "67": {"tema": "APLICACIONES", "lineas": ["b", "Lazos de Nivel", "(Nivel en tanques de líquidos", "como agua,", "lácteos,", "mezclas,", "crudo, etc.)"]}, "68": {"tema": "APLICACIONES", "lineas": ["c", "Lazos de Presión", "(para mantener una presión predeterminada", "en tanques,", "tubos,", "recipientes, etc.)"]}, "69": {"tema": "APLICACIONES", "lineas": ["d", "Lazos de Flujo", "(mantienen la cantidad de flujo dentro de", "una línea", "o tubo)"]}, "70": {"tema": "CONCEPTOS PREVIOS", "lineas": ["Rango:", "Es conjunto valores variable medida", "que están comprendidos", "dentro de límites", "superior e inferior", "de la", "capacidad", "medida, recepción o transmisión", "del instrumento"]}, "71": {"tema": "CONCEPTOS PREVIOS", "lineas": ["el span", "está referido en instrumentos,", "es diferencia aritmética", "entre", "límite superior y límite inferior", "capacidad lectura del instrumento,"]}, "72": {"tema": "CONCEPTOS PREVIOS", "lineas": ["la banda muerta", "es campo valores variable", "que no hace variar", "indicación o", "señal salida", "del instrumento,", "es decir", "que no produce respuestas", "Viene dada en tanto", "por ciento del alcance medida", "Donde fórmula sería:", "bandaMuerta = setPoint ± porcentajeDeBanda (alcance y 100)"]}, "73": {"tema": "CONCEPTOS PREVIOS", "lineas": ["la banda muerta", "es margen", "donde elemento retroalimentación", "no manda señal corrección", "osea no manda señal real", "al controlador", "para que corrija"]}, "74": {"tema": "CONCEPTOS PREVIOS", "lineas": ["Desde punto vista", "práctico y diseño,", "no siempre", "se necesita error cero:", "1 margen error ±1% o ±2%", "es perfectamente aceptable,", "desde punto vista diseño sistema", "es estable"]}, "75": {"tema": "CONCEPTOS PREVIOS", "lineas": ["Sistemas robustos vs muy sensibles", "Sistemas robustos:", "Admiten", "una banda integral o integral derivada", "ante entradas bruscas", "Sistemas muy sensibles:", "Conviene usar únicamente banda proporcional"]}, "76": {"tema": "ELEMENTOS DE RETROALIMENTACION", "lineas": ["los elementos primarios", "son encargados", "medir variable física,", "pero no transmitirla al controlador", "porque estos", "leen una variable", "física o", "química"]}, "77": {"tema": "ELEMENTOS DE RETROALIMENTACION", "lineas": ["el transductor", "es elemento secundario control", "que convierte señal física en", "una señal eléctrica y", "se mandan al controlador"]}, "78": {"tema": "ELEMENTOS DE RETROALIMENTACION", "lineas": ["Por eso se llama", "elementos primarios,", "porque leen en variable física,", "que se encargan transmitirla", "son elementos secundarios,", "quien retroalimenta"]}, "79": {"tema": "ELEMENTOS DE RETROALIMENTACION", "lineas": ["Entonces quien retroalimenta", "es elemento secundario,", "que es transductor en definitiva"]}, "80": {"tema": "SEÑALES DE PID", "lineas": ["la señal 'P' (Proporcional) mueve válvula", "siguiendo fielmente", "cambios temperatura", "multiplicados por ganancia"]}, "81": {"tema": "SEÑALES DE PID", "lineas": ["Un aumento ganancia conduce a", "una mayor acción proporcional y", "1 control más rápido"]}, "82": {"tema": "SEÑALES DE PID", "lineas": ["la señal 'I '(integral)", "va sumando áreas diferencia", "entre variable y punto consigna,", "repitiendo señal proporcional", "según su i"]}, "83": {"tema": "SEÑALES DE PID", "lineas": ["Una disminución del tiempo acción integral", "(mayor cantidad repeticiones por minuto)", "proporciona", "una mayor acción integral y", "1 control más rápido"]}, "84": {"tema": "SEÑALES DE PID", "lineas": ["la señal 'D' (derivada),", "como se dijo,", "es pendiente (tangente) descrita por variable,", "con que anticipa posición válvula en tiempo", "debido a acción proporcional", "según valor d", "(minutos anticipo).", "1 aumento del tiempo acción derivada (td)", "incrementa acción derivada y", "proporciona 1 control más rápido"]}, "85": {"tema": "SEÑALES DE PID", "lineas": ["no es proporcional al error,", "sino a una proyección este,", "como consecuencia", "anticipar valor variable controlada", "en función evolución esta", "y por ende", "su pendiente"]}}, "descripciones_rutas": {"2": ["", ""]}};
   const MAPA_RUTAS_COORDS = {"1": {"x": 0.0, "y": 18.98, "w": 2.01, "h": 74.07, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "2": {"x": 2.16, "y": 18.98, "w": 4.48, "h": 48.15, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "3": {"x": 2.89, "y": 37.04, "w": 0.57, "h": 50.46, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "4": {"x": 3.61, "y": 37.04, "w": 1.29, "h": 30.09, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "5": {"x": 6.79, "y": 18.98, "w": 0.57, "h": 23.15, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "6": {"x": 7.51, "y": 18.98, "w": 0.65, "h": 43.06, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "7": {"x": 8.32, "y": 18.98, "w": 1.81, "h": 44.24, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "8": {"x": 9.74, "y": 37.04, "w": 0.56, "h": 20.16, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "9": {"x": 10.46, "y": 37.04, "w": 0.56, "h": 14.14, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "10": {"x": 10.97, "y": 18.98, "w": 1.29, "h": 18.06, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "11": {"x": 12.42, "y": 18.98, "w": 0.65, "h": 49.54, "subT": "CONCEPTO Y DEFINICION CONTROL PID"}, "12": {"x": 13.22, "y": 18.98, "w": 2.81, "h": 48.59, "subT": "FUNCIONAMIENTO PID"}, "13": {"x": 14.73, "y": 49.07, "w": 0.6, "h": 18.5, "subT": "FUNCIONAMIENTO PID"}, "14": {"x": 15.49, "y": 49.07, "w": 1.36, "h": 18.5, "subT": "FUNCIONAMIENTO PID"}, "15": {"x": 16.4, "y": 25.93, "w": 0.68, "h": 22.48, "subT": "PASOS PID"}, "16": {"x": 17.23, "y": 25.93, "w": 0.68, "h": 37.76, "subT": "PASOS PID"}, "17": {"x": 17.65, "y": 25.93, "w": 1.51, "h": 47.94, "subT": "PASOS PID"}, "18": {"x": 18.89, "y": 25.93, "w": 0.68, "h": 27.57, "subT": "PASOS PID"}, "19": {"x": 19.72, "y": 25.93, "w": 0.68, "h": 27.57, "subT": "PASOS PID"}, "20": {"x": 20.55, "y": 25.93, "w": 0.68, "h": 47.94, "subT": "PASOS PID"}, "21": {"x": 21.38, "y": 25.93, "w": 1.29, "h": 33.33, "subT": "ACCION PROPORCIONAL"}, "22": {"x": 22.83, "y": 25.93, "w": 1.46, "h": 49.54, "subT": "ACCION PROPORCIONAL"}, "23": {"x": 24.08, "y": 25.93, "w": 1.29, "h": 74.07, "subT": "ACCION PROPORCIONAL"}, "24": {"x": 25.16, "y": 25.93, "w": 0.57, "h": 18.06, "subT": "ACCION PROPORCIONAL"}, "25": {"x": 25.5, "y": 25.93, "w": 1.36, "h": 35.93, "subT": "ACCION PROPORCIONAL"}, "26": {"x": 26.63, "y": 25.93, "w": 0.65, "h": 17.13, "subT": "ACCION PROPORCIONAL"}, "27": {"x": 27.44, "y": 25.93, "w": 0.65, "h": 36.11, "subT": "ACCION PROPORCIONAL"}, "28": {"x": 28.24, "y": 25.93, "w": 0.6, "h": 30.46, "subT": "ACCION PROPORCIONAL"}, "29": {"x": 29.0, "y": 25.93, "w": 1.46, "h": 25.93, "subT": "ACCION PROPORCIONAL"}, "30": {"x": 30.25, "y": 25.93, "w": 1.27, "h": 32.87, "subT": "ACCION PROPORCIONAL"}, "31": {"x": 31.68, "y": 25.93, "w": 0.6, "h": 29.72, "subT": "ACCION PROPORCIONAL"}, "32": {"x": 32.43, "y": 25.93, "w": 0.91, "h": 27.31, "subT": "ACCION PROPORCIONAL"}, "33": {"x": 33.12, "y": 25.93, "w": 1.65, "h": 41.67, "subT": "ACCION PROPORCIONAL"}, "34": {"x": 34.92, "y": 25.93, "w": 0.6, "h": 30.09, "subT": "ACCION PROPORCIONAL"}, "35": {"x": 35.67, "y": 25.93, "w": 1.29, "h": 28.24, "subT": "ACCION INTEGRAL"}, "36": {"x": 36.76, "y": 25.93, "w": 1.7, "h": 45.83, "subT": "ACCION INTEGRAL"}, "37": {"x": 38.18, "y": 31.94, "w": 1.46, "h": 23.61, "subT": "ACCION INTEGRAL"}, "38": {"x": 39.79, "y": 25.93, "w": 0.56, "h": 69.91, "subT": "ACCION INTEGRAL"}, "39": {"x": 40.51, "y": 25.93, "w": 1.29, "h": 28.24, "subT": "ACCION INTEGRAL"}, "40": {"x": 42.63, "y": 25.93, "w": 0.91, "h": 56.94, "subT": "ACCION INTEGRAL"}, "41": {"x": 41.73, "y": 25.93, "w": 0.91, "h": 17.13, "subT": "ACCION INTEGRAL"}, "42": {"x": 43.68, "y": 25.93, "w": 1.71, "h": 38.43, "subT": "ACCION DERIVATIVA"}, "43": {"x": 45.12, "y": 46.3, "w": 1.46, "h": 23.61, "subT": "ACCION DERIVATIVA"}, "44": {"x": 46.33, "y": 25.93, "w": 0.57, "h": 33.33, "subT": "ACCION DERIVATIVA"}, "45": {"x": 47.05, "y": 25.93, "w": 1.99, "h": 15.74, "subT": "ACCION DERIVATIVA"}, "46": {"x": 49.19, "y": 25.93, "w": 0.57, "h": 38.43, "subT": "ACCION DERIVATIVA"}, "47": {"x": 49.91, "y": 25.93, "w": 0.94, "h": 18.06, "subT": "ACCION DERIVATIVA"}, "48": {"x": 50.48, "y": 31.02, "w": 0.91, "h": 62.78, "subT": "ACCION DERIVATIVA"}, "49": {"x": 51.39, "y": 25.93, "w": 1.92, "h": 28.24, "subT": "ACCION DERIVATIVA"}, "50": {"x": 52.83, "y": 31.02, "w": 0.65, "h": 17.13, "subT": "ACCION DERIVATIVA"}, "51": {"x": 53.58, "y": 31.02, "w": 0.75, "h": 43.06, "subT": "ACCION DERIVATIVA"}, "52": {"x": 54.44, "y": 25.93, "w": 1.46, "h": 17.13, "subT": "ACCION DERIVATIVA"}, "53": {"x": 59.75, "y": 25.93, "w": 1.91, "h": 43.06, "subT": "ACCION DERIVATIVA"}, "54": {"x": 61.17, "y": 32.41, "w": 1.65, "h": 17.13, "subT": "ACCION DERIVATIVA"}, "55": {"x": 56.05, "y": 25.93, "w": 1.44, "h": 50.93, "subT": "ACCION DERIVATIVA"}, "56": {"x": 56.76, "y": 31.02, "w": 1.59, "h": 29.72, "subT": "ACCION DERIVATIVA"}, "57": {"x": 57.48, "y": 37.59, "w": 1.36, "h": 19.17, "subT": "ACCION DERIVATIVA"}, "58": {"x": 58.99, "y": 37.59, "w": 0.6, "h": 30.09, "subT": "ACCION DERIVATIVA"}, "59": {"x": 62.28, "y": 18.98, "w": 0.65, "h": 10.65, "subT": "LIMITACION DE UN CONTROL PID"}, "60": {"x": 63.09, "y": 18.98, "w": 0.65, "h": 30.09, "subT": "LIMITACION DE UN CONTROL PID"}, "61": {"x": 63.89, "y": 18.98, "w": 1.36, "h": 34.89, "subT": "LIMITACION DE UN CONTROL PID"}, "62": {"x": 65.4, "y": 18.98, "w": 0.6, "h": 29.42, "subT": "LIMITACION DE UN CONTROL PID"}, "63": {"x": 66.16, "y": 18.98, "w": 0.6, "h": 40.35, "subT": "LIMITACION DE UN CONTROL PID"}, "64": {"x": 66.91, "y": 18.98, "w": 1.46, "h": 17.13, "subT": "APLICACIONES PID"}, "65": {"x": 68.52, "y": 18.98, "w": 4.18, "h": 18.06, "subT": "APLICACIONES PID"}, "66": {"x": 72.47, "y": 18.98, "w": 2.01, "h": 12.94, "subT": "APLICACIONES"}, "67": {"x": 74.42, "y": 18.98, "w": 2.73, "h": 18.31, "subT": "APLICACIONES"}, "68": {"x": 77.3, "y": 18.98, "w": 2.01, "h": 18.31, "subT": "APLICACIONES"}, "69": {"x": 79.46, "y": 18.98, "w": 1.29, "h": 18.31, "subT": "APLICACIONES"}, "70": {"x": 79.84, "y": 18.98, "w": 1.99, "h": 50.93, "subT": "CONCEPTOS PREVIOS"}, "71": {"x": 81.98, "y": 18.98, "w": 1.27, "h": 31.94, "subT": "CONCEPTOS PREVIOS"}, "72": {"x": 83.4, "y": 18.98, "w": 2.19, "h": 40.28, "subT": "CONCEPTOS PREVIOS"}, "73": {"x": 85.75, "y": 18.98, "w": 0.56, "h": 39.81, "subT": "CONCEPTOS PREVIOS"}, "74": {"x": 86.46, "y": 18.98, "w": 1.49, "h": 49.54, "subT": "CONCEPTOS PREVIOS"}, "75": {"x": 87.72, "y": 18.98, "w": 2.04, "h": 25.74, "subT": "CONCEPTOS PREVIOS"}, "76": {"x": 89.53, "y": 18.52, "w": 1.33, "h": 37.5, "subT": "ELEMENTOS DE RETROALIMENTACION"}, "77": {"x": 90.64, "y": 18.52, "w": 0.57, "h": 23.15, "subT": "ELEMENTOS DE RETROALIMENTACION"}, "78": {"x": 91.37, "y": 18.52, "w": 0.56, "h": 33.8, "subT": "ELEMENTOS DE RETROALIMENTACION"}, "79": {"x": 92.08, "y": 18.52, "w": 0.91, "h": 17.13, "subT": "ELEMENTOS DE RETROALIMENTACION"}, "80": {"x": 93.14, "y": 18.98, "w": 0.57, "h": 18.06, "subT": "SEÑALES DE PID"}, "81": {"x": 93.86, "y": 18.98, "w": 1.36, "h": 8.61, "subT": "SEÑALES DE PID"}, "82": {"x": 95.37, "y": 18.98, "w": 1.29, "h": 23.15, "subT": "SEÑALES DE PID"}, "83": {"x": 96.55, "y": 18.98, "w": 1.36, "h": 19.54, "subT": "SEÑALES DE PID"}, "84": {"x": 97.74, "y": 18.98, "w": 1.36, "h": 44.26, "subT": "SEÑALES DE PID"}, "85": {"x": 99.09, "y": 18.98, "w": 0.91, "h": 43.06, "subT": "SEÑALES DE PID"}};
+  const HAY_MAPA = (1 === 1);
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
   const modoAleatorio = true;
@@ -7863,6 +7969,7 @@
       }
       sincronizarGeometriaSvgMapa();
       renderBordesSvgMapa();
+      reaplicarEnfoqueRetencionMapa();
     };
     img.addEventListener('load', alCargarImg);
     resetearZoomMapa();
@@ -7928,6 +8035,8 @@
   let zoomMapa = 1;
   let panMapa = { x: 0, y: 0 };
   let arrastreMapa = { activo: false, x: 0, y: 0 };    // x/y: offset inicial del drag (mouse o 1 dedo)
+  let mapaArrastreBloqueado = false;
+  let retencionRutaEnfocada = null;
   let pinchMapa = null;                                // { distancia, zoomInicial } mientras hay 2 dedos
 
   const ES_DISPOSITIVO_TACTIL = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -7939,7 +8048,7 @@
     if (!elMapaImg) return;
     const transformStr = 'translate(' + panMapa.x + 'px, ' + panMapa.y + 'px) scale(' + zoomMapa + ')';
     elMapaImg.style.transform = transformStr;
-    elMapaImg.classList.toggle('mapa-img-pan', zoomMapa > 1);
+    elMapaImg.classList.toggle('mapa-img-pan', zoomMapa > 1 && !mapaArrastreBloqueado);
     if (elMapaSvgOverlay) {
       elMapaSvgOverlay.style.transform = transformStr;
     }
@@ -7973,7 +8082,7 @@
   }, { passive: false });
 
   elMapaImagenWrap.addEventListener('mousedown', (e) => {
-    if (!elMapaImg || zoomMapa <= 1) return;
+    if (!elMapaImg || zoomMapa <= 1 || mapaArrastreBloqueado) return;
     arrastreMapa = { activo: true, x: e.clientX - panMapa.x, y: e.clientY - panMapa.y };
     elMapaImg.classList.add('mapa-img-arrastrando');   // §7: cursor 'grabbing'
   });
@@ -7994,7 +8103,7 @@
     if (e.touches.length === 2) {
       pinchMapa = { distancia: distanciaEntreToquesMapa(e.touches), zoomInicial: zoomMapa };
       arrastreMapa.activo = false;
-    } else if (e.touches.length === 1 && zoomMapa > 1) {
+    } else if (e.touches.length === 1 && zoomMapa > 1 && !mapaArrastreBloqueado) {
       arrastreMapa = { activo: true, x: e.touches[0].clientX - panMapa.x, y: e.touches[0].clientY - panMapa.y };
       elMapaImg.classList.add('mapa-img-arrastrando');
     }
@@ -8158,6 +8267,7 @@
     opciones = opciones || {};
     if (resultado === 'saltar') return opciones.comodinUsado ? 0 : -5;
     if (modoEspecial === 'quiz') return resultado === 'si' ? 8 : 0;
+    if (modoEspecial === 'verdadero_falso') return resultado === 'si' ? 5 : 0;
     if (modoEspecial === 'detective') return resultado === 'si' ? 15 : (resultado === 'casi' ? 8 : 0);
     if (resultado === 'si') {
       if (opciones.pistaGratisUsada) return 15;
@@ -8291,6 +8401,7 @@
   let datosQuizSesion = [];
   let datosDetectiveSesion = [];
   let datosOrdenarSesion = [];
+  let datosVerdaderoFalsoSesion = [];
   let rondasMatching = [];
   let primeroSeleccionadoMatching = null;
   let asociacionesTempMatching = new Set();
@@ -8314,13 +8425,14 @@
     if (modoEspecial === 'quiz') return 'quiz_' + modoJuego;
     if (modoEspecial === 'detective') return 'detective_' + modoJuego;
     if (modoEspecial === 'ordenar') return 'ordenar_' + modoJuego;
+    if (modoEspecial === 'verdadero_falso') return 'verdadero_falso_' + modoJuego;
     if (repasoInteligenteActivo) return 'inteligente';
     return modoJuego;
   }
 
   function esModoEspecialHistorial(modo) {
     const m = String(modo || '');
-    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0 || m.indexOf('ordenar_') === 0;
+    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0 || m.indexOf('ordenar_') === 0 || m.indexOf('verdadero_falso_') === 0;
   }
 
   function nombreModoJuego(modo) {
@@ -8339,6 +8451,9 @@
     if (modo === 'ordenar_light') return '🧩 Ordenar Rutas Light';
     if (modo === 'ordenar_normal') return '🧩 Ordenar Rutas Normal';
     if (modo === 'ordenar_tryhard') return '🧩 Ordenar Rutas Tryhard';
+    if (modo === 'verdadero_falso_light') return '🗺️ Verdadero/Falso Light';
+    if (modo === 'verdadero_falso_normal') return '🗺️ Verdadero/Falso Normal';
+    if (modo === 'verdadero_falso_tryhard') return '🗺️ Verdadero/Falso Tryhard';
     if (modo === 'inteligente') return '🧠 Repaso inteligente';
     if (modo === 'srs') return '🧠 SRS';
     if (modo === 'examen') return '📝 Examen';
@@ -8461,6 +8576,23 @@
       modoEspecialPendiente = 'ordenar';
       modoDemostracionesPendiente = false;
       abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'ordenar');
+    } else if (otroModoElegidoEnModal === 'verdadero_falso') {
+      if (!HAY_MAPA) {
+        cerrarModalOtrosModos();
+        await avisar('No hay mapa disponible en este evaluador.');
+        return;
+      }
+      const elegibles = base.filter((t) => generarMapaTarjeta(t) !== null);
+      if (elegibles.length === 0) {
+        cerrarModalOtrosModos();
+        await avisar('No hay tarjetas con rutas ubicadas en el mapa (y otras rutas para usar como falsas) en los temas seleccionados para iniciar el modo Verdadero/Falso.');
+        return;
+      }
+      elModalOtrosModos.classList.remove('abierto');
+      resetearCheckboxDemostracionesModal();
+      modoEspecialPendiente = 'verdadero_falso';
+      modoDemostracionesPendiente = false;
+      abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'verdadero_falso');
     }
   }
 
@@ -8470,6 +8602,15 @@
   document.getElementById('opcion-otro-quiz').addEventListener('click', () => seleccionarOtroModoEnModal('quiz'));
   document.getElementById('opcion-otro-detective').addEventListener('click', () => seleccionarOtroModoEnModal('detective'));
   document.getElementById('opcion-otro-ordenar').addEventListener('click', () => seleccionarOtroModoEnModal('ordenar'));
+  (function () {
+    const btnMapa = document.getElementById('opcion-otro-verdadero-falso');
+    if (!HAY_MAPA) {
+      btnMapa.disabled = true;
+      btnMapa.title = 'Sin mapa disponible';
+      btnMapa.querySelector('.opcion-modo-detalle').textContent = 'Sin mapa disponible';
+    }
+    btnMapa.addEventListener('click', () => { if (HAY_MAPA) seleccionarOtroModoEnModal('verdadero_falso'); });
+  })();
   document.getElementById('btn-otros-modos-comenzar').addEventListener('click', () => confirmarOtrosModos());
   document.getElementById('btn-otros-modos-cancelar').addEventListener('click', () => cerrarModalOtrosModos());
   function actualizarBarraGamificacion() {
@@ -8549,6 +8690,9 @@
     } else if (modoEspecialPendiente === 'ordenar') {
       elTituloModalModo.textContent = 'Elegí el modo de juego — 🧩 Ordenar Rutas';
       elOpcionModoExamen.style.display = 'none';
+    } else if (modoEspecialPendiente === 'verdadero_falso') {
+      elTituloModalModo.textContent = 'Elegí el modo de juego — 🗺️ Verdadero/Falso';
+      elOpcionModoExamen.style.display = 'none';
     } else {
       elTituloModalModo.textContent = 'Elegí el modo de juego';
       elOpcionModoExamen.style.display = '';
@@ -8605,6 +8749,8 @@
       iniciarSesionDetective(lista);
     } else if (modoEspecial === 'ordenar') {
       iniciarSesionOrdenar(lista);
+    } else if (modoEspecial === 'verdadero_falso') {
+      iniciarSesionMapa(lista);
     } else {
       iniciarSesion(lista);
     }
@@ -9175,7 +9321,7 @@
   }
 
   function ocultarContenedoresEspeciales() {
-    ['cloze-contenedor-activo', 'matching-contenedor-activo', 'quiz-contenedor-activo'].forEach((id) => {
+    ['cloze-contenedor-activo', 'matching-contenedor-activo', 'quiz-contenedor-activo', 'verdadero-falso-contenedor-activo'].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -9340,6 +9486,308 @@
     }
     actualizarCronometro();
     renderTarjeta();
+  }
+
+  function coordsRutaMapa(id) {
+    const c = MAPA_RUTAS_COORDS[String(id)];
+    if (!c || !Number.isFinite(c.x) || !Number.isFinite(c.y) || !(c.w > 0) || !(c.h > 0)) return null;
+    return c;
+  }
+
+  const _rutasMapaPorTarjeta = new Map();
+
+  function rutasConCoordsDe(t) {
+    let lista = _rutasMapaPorTarjeta.get(t);
+    if (!lista) {
+      const vistos = new Set();
+      lista = [];
+      rutasValidasDe(t).forEach((id) => {
+        const k = String(id);
+        if (vistos.has(k) || !coordsRutaMapa(k)) return;
+        vistos.add(k);
+        lista.push(k);
+      });
+      _rutasMapaPorTarjeta.set(t, lista);
+    }
+    return lista;
+  }
+
+  let _todasRutasMapa = null;
+
+  function todasRutasConCoords() {
+    if (!_todasRutasMapa) {
+      const set = new Set();
+      tarjetasCompletas.forEach((o) => rutasConCoordsDe(o).forEach((k) => set.add(k)));
+      _todasRutasMapa = Array.from(set);
+    }
+    return _todasRutasMapa;
+  }
+
+  function generarMapaTarjeta(t) {
+    if (!HAY_MAPA) return null;
+    const propias = rutasConCoordsDe(t);
+    if (propias.length === 0) return null;
+    const propiasSet = new Set(propias);
+    const pool = todasRutasConCoords().filter((k) => !propiasSet.has(k));
+    if (pool.length === 0) return null;
+    const cantidad = propias.length;
+    const verdadero = Math.random() < 0.5;
+    let rutas;
+    if (verdadero) {
+      rutas = propias.map((id) => ({ id: id, correcta: true }));
+    } else {
+      const minCorrectas = Math.max(0, cantidad - pool.length);
+      const correctas = minCorrectas + Math.floor(Math.random() * (cantidad - minCorrectas));
+      rutas = mezclar(propias).slice(0, correctas).map((id) => ({ id: id, correcta: true }))
+        .concat(mezclar(pool).slice(0, cantidad - correctas).map((id) => ({ id: id, correcta: false })));
+    }
+    return { rutas: mezclar(rutas), verdadero: verdadero, respuesta: null, evaluada: false };
+  }
+
+  let _imgMapaRecorte = null;
+
+  function cargarImagenMapaRecorte(alCargar) {
+    if (!_imgMapaRecorte) {
+      const src = obtenerMapaSrc();
+      if (!src) return;
+      _imgMapaRecorte = new Image();
+      _imgMapaRecorte.src = src;
+    }
+    if (_imgMapaRecorte.complete && _imgMapaRecorte.naturalWidth > 0) {
+      alCargar(_imgMapaRecorte);
+      return;
+    }
+    _imgMapaRecorte.addEventListener('load', () => alCargar(_imgMapaRecorte), { once: true });
+  }
+
+  function crearRecorteMapa(coords, anchoMax) {
+    const canvas = document.createElement('canvas');
+    cargarImagenMapaRecorte((img) => {
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      const rx = (coords.x / 100) * iw;
+      const ry = (coords.y / 100) * ih;
+      const rw = Math.max(1, (coords.w / 100) * iw);
+      const rh = Math.max(1, (coords.h / 100) * ih);
+      const margenX = rw * 0.03 + 6;
+      const margenY = rh * 0.03 + 6;
+      const sx = Math.max(0, rx - margenX);
+      const sy = Math.max(0, ry - margenY);
+      const sw = Math.max(1, Math.min(iw, rx + rw + margenX) - sx);
+      const sh = Math.max(1, Math.min(ih, ry + rh + margenY) - sy);
+      const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+      const escalaCss = Math.min(anchoMax / sw, 900 / sh, 12);
+      const escala = escalaCss * dpr;
+      canvas.width = Math.max(1, Math.round(sw * escala));
+      canvas.height = Math.max(1, Math.round(sh * escala));
+      canvas.style.width = Math.round(sw * escalaCss) + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'rgba(224, 87, 76, 0.85)';
+      ctx.lineWidth = 2 * dpr;
+      ctx.strokeRect((rx - sx) * escala, (ry - sy) * escala, rw * escala, rh * escala);
+    });
+    return canvas;
+  }
+
+  function iniciarSesionMapa(lista) {
+    const validas = [];
+    const datos = [];
+    lista.forEach((t) => {
+      const d = generarMapaTarjeta(t);
+      if (d) {
+        validas.push(t);
+        datos.push(d);
+      }
+    });
+    if (validas.length === 0) {
+      avisar('Ninguna de estas tarjetas tiene rutas ubicadas en el mapa para el modo Verdadero/Falso.');
+      return;
+    }
+    iniciarSesionEspecialBase(validas, () => { datosVerdaderoFalsoSesion = datos; });
+  }
+
+  function renderTarjetaMapa() {
+    const t = tarjetasSesion[indiceActual];
+    const d = datosVerdaderoFalsoSesion[indiceActual];
+    const r = resultados[indiceActual];
+    const yaEvaluada = d.evaluada || r !== null;
+
+    ocultarContenedoresEspeciales();
+    elTemaTexto.textContent = nombreTema(t);
+    elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
+    const contestadas = resultados.filter((x) => x !== null).length;
+    elBarraRelleno.style.width = ((contestadas / tarjetasSesion.length) * 100) + '%';
+
+    elBadgeRutas.style.display = 'none';
+    elBtnRevisar.style.display = 'inline-block';
+    elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
+    elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
+
+    elPrimero.style.display = 'block';
+    elPrimero.textContent = t.primero;
+    elBtnPista.style.display = 'none';
+    elBtnRespuesta.style.display = 'none';
+    elSeparador.style.display = 'none';
+    elSegundo.style.display = 'none';
+    elSegundo.textContent = '';
+
+    renderPanelNota(t);
+    renderRazonesUI(t);
+
+    elRutasContenedor.innerHTML = '';
+    elRutasContenedor.style.display = 'none';
+    if (elZonaEval.nextElementSibling !== elRutasContenedor) {
+      elRutasContenedor.parentNode.insertBefore(elZonaEval, elRutasContenedor);
+    }
+
+    elTextoEval.parentElement.style.display = 'none';
+    elBtnDictadoTextoEval.style.display = 'none';
+    elRespuestaUsuarioResaltada.style.display = 'none';
+    elZonaEval.style.display = 'block';
+
+    let cont = document.getElementById('verdadero-falso-contenedor-activo');
+    if (!cont) {
+      cont = document.createElement('div');
+      cont.id = 'verdadero-falso-contenedor-activo';
+      cont.className = 'quiz-contenedor';
+      elZonaEval.insertBefore(cont, elFilaEval);
+    }
+    cont.style.display = 'flex';
+    cont.innerHTML = '';
+
+    const varias = d.rutas.length > 1;
+    const titulo = document.createElement('div');
+    titulo.className = 'quiz-titulo';
+    titulo.textContent = varias ? '¿Estas rutas corresponden a la tarjeta?' : '¿Esta ruta corresponde a la tarjeta?';
+    cont.appendChild(titulo);
+
+    if (varias) {
+      const ayuda = document.createElement('div');
+      ayuda.className = 'mapa-vf-ayuda';
+      ayuda.textContent = 'Verdadero: todas corresponden. Falso: alguna no corresponde.';
+      cont.appendChild(ayuda);
+    }
+
+    const recortes = document.createElement('div');
+    recortes.className = 'mapa-vf-recortes';
+    d.rutas.forEach((ruta) => {
+      const item = document.createElement('div');
+      item.className = 'mapa-vf-item' + (d.evaluada ? (ruta.correcta ? ' correcta' : ' incorrecta') : '');
+      item.appendChild(crearRecorteMapa(coordsRutaMapa(ruta.id), 900));
+      if (d.evaluada) {
+        const etiqueta = document.createElement('div');
+        etiqueta.className = 'mapa-vf-etiqueta';
+        etiqueta.textContent = 'Ruta #' + ruta.id + (ruta.correcta ? ' · ✓ corresponde a esta tarjeta' : ' · ✗ no corresponde a esta tarjeta');
+        item.appendChild(etiqueta);
+      }
+      recortes.appendChild(item);
+    });
+    cont.appendChild(recortes);
+
+    const botones = document.createElement('div');
+    botones.className = 'mapa-vf-botones';
+    [[true, '✓ Verdadero'], [false, '✗ Falso']].forEach((par) => {
+      const valor = par[0];
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mapa-vf-btn';
+      btn.textContent = par[1];
+      if (yaEvaluada) {
+        btn.disabled = true;
+        if (d.evaluada) {
+          if (valor === d.verdadero) btn.classList.add('correcta');
+          else if (valor === d.respuesta) btn.classList.add('incorrecta');
+        }
+      } else {
+        btn.addEventListener('click', () => responderMapa(valor));
+      }
+      botones.appendChild(btn);
+    });
+    cont.appendChild(botones);
+
+    elFilaEval.style.display = 'none';
+
+    const ev = evaluaciones[indiceActual];
+    if (d.evaluada && ev) {
+      elResultadoEval.style.display = 'block';
+      elResultadoEval.className = 'resultado-eval ' + (ev.resultado === 'si' ? 'bien' : 'mal');
+      elResultadoEval.textContent = ev.textoDetalle;
+    } else {
+      elResultadoEval.style.display = 'none';
+      elResultadoEval.textContent = '';
+    }
+
+    elEstadoMarca.className = 'estado-marca' + (r ? ' ' + r : '');
+    if (r === 'si') elEstadoMarca.textContent = '✓ Marcada como entendida';
+    else if (r === 'no') elEstadoMarca.textContent = '✗ Marcada como no entendida';
+    else if (r === 'saltar') elEstadoMarca.textContent = '— Pasada sin marcar';
+    else elEstadoMarca.textContent = '';
+
+    const yaMarcada = r !== null;
+    document.querySelector('.botonera').style.display = 'flex';
+    elBtnSi.classList.remove('comprension');
+    elBtnSi.textContent = '✓';
+    elBtnSi.title = 'Entendido';
+    elBtnSi.style.display = 'none';
+    elBtnNo.style.display = 'none';
+    elBtnSaltar.style.display = 'inline-block';
+    elBtnDificil.style.display = 'inline-block';
+    elBtnRazones.style.display = 'inline-block';
+    elBtnSi.disabled = yaMarcada;
+    elBtnNo.disabled = yaMarcada;
+    elBtnSaltar.disabled = yaMarcada;
+
+    elBtnDificil.classList.toggle('activa', esDificil(t));
+    elBtnDificil.textContent = esDificil(t) ? '★ Difícil' : '☆ Difícil';
+
+    elBtnPausa.style.display = cronometroActivo ? 'inline-block' : 'none';
+    elBtnAnterior.disabled = indiceActual === 0;
+    elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+    actualizarBadgeNotaActual();
+  }
+
+  function responderMapa(valor) {
+    if (pausaManual) return;
+    const d = datosVerdaderoFalsoSesion[indiceActual];
+    if (!d || d.evaluada || resultados[indiceActual] !== null) return;
+
+    acumularTiempoActual();
+    indiceCongelado = indiceActual;
+
+    const acierto = valor === d.verdadero;
+    const res = acierto ? 'si' : 'no';
+    d.respuesta = valor;
+    d.evaluada = true;
+    revelado[indiceActual] = true;
+
+    let detalle = '✓ Correcto';
+    if (!acierto) {
+      detalle = d.verdadero
+        ? '✗ Incorrecto — las rutas mostradas sí correspondían a esta tarjeta.'
+        : (d.rutas.length > 1
+          ? '✗ Incorrecto — alguna de las rutas mostradas no correspondía a esta tarjeta.'
+          : '✗ Incorrecto — la ruta mostrada no correspondía a esta tarjeta.');
+    }
+    evaluaciones[indiceActual] = { resultado: res, textoDetalle: detalle };
+    escritos[indiceActual] = valor ? 'Verdadero' : 'Falso';
+    resultados[indiceActual] = res;
+
+    procesarResultadoGamificacion(indiceActual, res, { conPista: false, pistaGratisUsada: false });
+    if (resultados.every((x) => x !== null)) {
+      cronometroActivo = false;
+    }
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function resetearDatosMapaSaltado(d) {
+    if (!d) return;
+    d.respuesta = null;
+    d.evaluada = false;
   }
 
   function segmentarLineaDetective(linea) {
@@ -10726,6 +11174,8 @@
     if (matchCont) matchCont.style.display = 'none';
     const quizCont = document.getElementById('quiz-contenedor-activo');
     if (quizCont) quizCont.style.display = 'none';
+    const mapaCont = document.getElementById('verdadero-falso-contenedor-activo');
+    if (mapaCont) mapaCont.style.display = 'none';
     if (elZonaEval.nextElementSibling !== elRutasContenedor) {
       elRutasContenedor.parentNode.insertBefore(elZonaEval, elRutasContenedor);
     }
@@ -10758,6 +11208,10 @@
       renderTarjetaOrdenar();
       return true;
     }
+    if (modoEspecial === 'verdadero_falso') {
+      renderTarjetaMapa();
+      return true;
+    }
     limpiarContenedoresModoEspecial();
     return false;
   }
@@ -10783,6 +11237,9 @@
       evaluarOrdenarActual();
       return true;
     }
+    if (modoEspecial === 'verdadero_falso') {
+      return true;
+    }
     return false;
   }
 
@@ -10803,9 +11260,10 @@
       } else {
         indiceCongelado = -1;
       }
-    } else if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    } else if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       const datos = modoEspecial === 'quiz' ? datosQuizSesion[indiceActual]
-        : (modoEspecial === 'ordenar' ? datosOrdenarSesion[indiceActual] : datosDetectiveSesion[indiceActual]);
+        : (modoEspecial === 'ordenar' ? datosOrdenarSesion[indiceActual]
+          : (modoEspecial === 'verdadero_falso' ? datosVerdaderoFalsoSesion[indiceActual] : datosDetectiveSesion[indiceActual]));
       if ((datos && datos.evaluada) || resultados[indiceActual] !== null) {
         indiceCongelado = indiceActual;
       } else {
@@ -10842,7 +11300,7 @@
           ronda.completada = true;
         }
       });
-    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       resultados.forEach((r, i) => {
         if (r === null) resultados[i] = 'saltar';
       });
@@ -10958,12 +11416,13 @@
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
-    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       let lista = tarjetasSesion.filter((_, i) => predicado(i));
       if (lista.length === 0) { avisar('No hay tarjetas para repasar con ese criterio.'); return true; }
       if (modoAleatorio) lista = mezclar(lista);
       if (modoEspecial === 'quiz') iniciarSesionQuiz(lista);
       else if (modoEspecial === 'ordenar') iniciarSesionOrdenar(lista);
+      else if (modoEspecial === 'verdadero_falso') iniciarSesionMapa(lista);
       else iniciarSesionDetective(lista);
       return true;
     }
@@ -10982,10 +11441,11 @@
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
-    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       const base = modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion];
       if (modoEspecial === 'quiz') iniciarSesionQuiz(base);
       else if (modoEspecial === 'ordenar') iniciarSesionOrdenar(base);
+      else if (modoEspecial === 'verdadero_falso') iniciarSesionMapa(base);
       else iniciarSesionDetective(base);
       return true;
     }
@@ -11003,6 +11463,7 @@
     datosQuizSesion = [];
     datosDetectiveSesion = [];
     datosOrdenarSesion = [];
+    datosVerdaderoFalsoSesion = [];
     rondasMatching = [];
     primeroSeleccionadoMatching = null;
     asociacionesTempMatching.clear();
@@ -17546,6 +18007,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     elVacio.style.display = 'none';
     reconciliarHijos(el, gruposRetencionPorTarjeta(ids), (g) => g.clave, firmaGrupoRetencion, grupoRetencionTarjeta);
     el.querySelectorAll('.fila-retencion-ruta').forEach((fila) => pintarFilaRetencionSesion(fila, fila._rutaId));
+    if (retencionRutaEnfocada !== null && !el.querySelector('.fila-retencion-ruta.enfocada')) cerrarEnfoqueRetencionMapa();
   }
 
   function refrescarFilaRetencionSesion(id) {
@@ -17555,9 +18017,78 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     else renderRetencionSesionLista({ soloLista: true });
   }
 
+  const MOVIL_CLAVE = 'pomodoro_movil_v1';
+  let retencionMovilActivo = (function () {
+    try { return localStorage.getItem(MOVIL_CLAVE) === '1'; } catch (e) { return false; }
+  })();
+
+  function sincronizarChecksMovil() {
+    document.querySelectorAll('.chk-movil').forEach((chk) => {
+      chk.checked = HAY_MAPA && retencionMovilActivo;
+      chk.disabled = !HAY_MAPA;
+    });
+    const lista = document.getElementById('retencion-sesion-lista');
+    if (lista) lista.classList.toggle('retencion-movil', HAY_MAPA && retencionMovilActivo);
+  }
+
+  function cerrarEnfoqueRetencionMapa() {
+    retencionRutaEnfocada = null;
+    mapaArrastreBloqueado = false;
+    const lista = document.getElementById('retencion-sesion-lista');
+    if (lista) {
+      lista.querySelectorAll('.retencion-recorte').forEach((p) => p.remove());
+      lista.querySelectorAll('.fila-retencion-ruta.enfocada').forEach((f) => f.classList.remove('enfocada'));
+    }
+    if (elMapaImg) resetearZoomMapa();
+  }
+
+  function reaplicarEnfoqueRetencionMapa() {
+    if (retencionRutaEnfocada === null) return;
+    const coords = coordsRutaMapa(retencionRutaEnfocada);
+    if (!coords) return;
+    ubicarEnMapa(coords);
+    mapaArrastreBloqueado = true;
+  }
+
+  function alternarEnfoqueRetencionRuta(fila) {
+    if (!HAY_MAPA) return;
+    const id = String(fila._rutaId);
+    const coords = coordsRutaMapa(id);
+    if (!coords) return;
+    if (retencionRutaEnfocada === id && fila.classList.contains('enfocada')) {
+      cerrarEnfoqueRetencionMapa();
+      return;
+    }
+    cerrarEnfoqueRetencionMapa();
+    const panel = document.createElement('div');
+    panel.className = 'retencion-recorte';
+    panel.appendChild(crearRecorteMapa(coords, 900));
+    fila.appendChild(panel);
+    fila.classList.add('enfocada');
+    retencionRutaEnfocada = id;
+    mapaArrastreBloqueado = true;
+    if (elMapaImg) ubicarEnMapa(coords);
+  }
+
+  document.querySelectorAll('.chk-movil').forEach((chk) => {
+    chk.addEventListener('change', () => {
+      retencionMovilActivo = chk.checked;
+      try { escribirLocalSeguro(MOVIL_CLAVE, retencionMovilActivo ? '1' : '0'); } catch (e) { }
+      if (!retencionMovilActivo) cerrarEnfoqueRetencionMapa();
+      sincronizarChecksMovil();
+    });
+  });
+  sincronizarChecksMovil();
+
   document.getElementById('retencion-sesion-lista').addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-accion]');
-    if (!btn) return;
+    if (!btn) {
+      if (!HAY_MAPA || !retencionMovilActivo) return;
+      if (e.target.closest('.retencion-recorte')) return;
+      const filaTocada = e.target.closest('.fila-retencion-ruta');
+      if (filaTocada) alternarEnfoqueRetencionRuta(filaTocada);
+      return;
+    }
     const fila = btn.closest('.fila-retencion-ruta');
     if (!fila) return;
     const id = fila._rutaId;
@@ -21077,7 +21608,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
-    if (resultado === 'saltar' && modoEspecial !== 'quiz' && modoEspecial !== 'detective' && modoEspecial !== 'ordenar') reveladasAlSaltar.add(indiceActual);   // al saltar se ve la respuesta
+    if (resultado === 'saltar' && modoEspecial !== 'quiz' && modoEspecial !== 'detective' && modoEspecial !== 'ordenar' && modoEspecial !== 'verdadero_falso') reveladasAlSaltar.add(indiceActual);   // al saltar se ve la respuesta
 
     if (!modoObservador) {
       procesarResultadoGamificacion(indiceActual, resultado, {
@@ -22022,6 +22553,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         else if (modoEspecial === 'quiz') resetearDatosQuizSaltado(datosQuizSesion[i]);
         else if (modoEspecial === 'detective') resetearDatosDetectiveSaltado(datosDetectiveSesion[i]);
         else if (modoEspecial === 'ordenar') resetearDatosOrdenarSaltado(datosOrdenarSesion[i]);
+        else if (modoEspecial === 'verdadero_falso') resetearDatosMapaSaltado(datosVerdaderoFalsoSesion[i]);
       }
     });
     if (modoEspecial === 'matching') {
@@ -22599,6 +23131,19 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
   }
 
+  function alEntrarDescansoPomodoro() {
+    cerrarEnfoqueRetencionMapa();
+    cerrarModalRetencionRutas();
+    if (elPantallaMapa.style.display !== 'none') {
+      cerrarPantallaMapa();
+    } else if (modoObservador) {
+      salirObservador();
+    } else if (elPantallaObservador.style.display !== 'block') {
+      entrarObservador();
+    }
+    reubicarBadgePomodoro('observador');
+  }
+
   function avanzarFasePomodoro() {
     if (pomodoroFase === 'pretest') {
       autoguardarYCerrarPretestPomodoro();
@@ -22624,6 +23169,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       pomodoroFase = 'descanso';
       pomodoroSegundosRestantes = DURACION_DESCANSO_SEG;
       reproducirSonido('pomodoro_retencion_a_descanso');
+      alEntrarDescansoPomodoro();
     } else if (pomodoroFase === 'descanso') {
       pomodoroCiclo++;
       pomodoroFase = 'retencion';
@@ -22900,6 +23446,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroBraindumpNotaId = null;
     retencionSesionToggles = {};
     retencionSubtemasActivos = {};
+    cerrarEnfoqueRetencionMapa();
     cerrarModalRetencionRutas();
     elPomodoroBadge.style.display = 'none';
     elBtnObservadorSalir.disabled = false;
@@ -23083,6 +23630,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       datosQuizSesion: datosQuizSesion.slice(),
       datosDetectiveSesion: datosDetectiveSesion.map(serializarDatosDetective),
       datosOrdenarSesion: datosOrdenarSesion.slice(),
+      datosVerdaderoFalsoSesion: datosVerdaderoFalsoSesion.slice(),
       rondasMatching: esMatching ? rondasMatching.map(serializarRondaMatching) : [],
       primeroSeleccionadoMatching: primeroSeleccionadoMatching,
       asociacionesTempMatching: copiarSetComoArray(asociacionesTempMatching),
@@ -23271,6 +23819,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (x.modoEspecial === 'cloze' && datosCloze.length !== n) throw new Error('datos Cloze inconsistentes');
     if (x.modoEspecial === 'detective' && datosDetective.length !== n) throw new Error('datos Detective inconsistentes');
     if (x.modoEspecial === 'ordenar' && (x.datosOrdenarSesion || []).length !== n) throw new Error('datos Ordenar inconsistentes');
+    if (x.modoEspecial === 'verdadero_falso' && (x.datosVerdaderoFalsoSesion || []).length !== n) throw new Error('datos Verdadero/Falso inconsistentes');
 
     let srsNuevo = null;
     if (x.srsSesionActiva) {
@@ -23322,6 +23871,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     datosQuizSesion = modoEspecial === 'quiz' ? (x.datosQuizSesion || []) : [];
     datosDetectiveSesion = modoEspecial === 'detective' ? datosDetective : [];
     datosOrdenarSesion = modoEspecial === 'ordenar' ? (x.datosOrdenarSesion || []) : [];
+    datosVerdaderoFalsoSesion = modoEspecial === 'verdadero_falso' ? (x.datosVerdaderoFalsoSesion || []) : [];
     rondasMatching = rondasNuevas;
     primeroSeleccionadoMatching = (x.primeroSeleccionadoMatching === undefined) ? null : x.primeroSeleccionadoMatching;
     asociacionesTempMatching = new Set(x.asociacionesTempMatching || []);

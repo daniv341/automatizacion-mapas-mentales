@@ -3267,12 +3267,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .fila-retencion-ruta {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     padding: 8px 4px;
     border-bottom: 1px solid var(--color-borde-suave);
   }
   .fila-retencion-ruta:last-child { border-bottom: none; }
+  .retencion-movil .fila-retencion-ruta { cursor: pointer; }
+  .fila-retencion-ruta.enfocada { background: color-mix(in srgb, var(--color-boton) 10%, transparent); border-radius: 8px; }
+  .retencion-recorte { flex: 0 0 100%; display: flex; justify-content: center; cursor: default; }
+  .retencion-recorte canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    border: 2px solid var(--color-boton);
+    background: var(--bg-superficie);
+  }
   .retencion-tarjeta-grupo { margin-bottom: 14px; }
   .retencion-tarjeta-pregunta {
     font-weight: 700;
@@ -3606,6 +3618,93 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-weight: 800;
     color: var(--texto-secundario);
     flex-shrink: 0;
+  }
+
+  .opcion-modo:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .mapa-vf-ayuda {
+    font-size: 13px;
+    color: var(--texto-secundario);
+  }
+
+  .mapa-vf-recortes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .mapa-vf-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 10px;
+    border: 2px solid var(--color-borde-medio);
+    background: var(--bg-superficie);
+  }
+
+  .mapa-vf-item canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+  }
+
+  .mapa-vf-item.correcta {
+    border-color: #3aa76d;
+    background: rgba(58, 167, 109, 0.14);
+  }
+
+  .mapa-vf-item.incorrecta {
+    border-color: #e0574c;
+    background: rgba(224, 87, 76, 0.14);
+  }
+
+  .mapa-vf-etiqueta {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--texto-secundario);
+  }
+
+  .mapa-vf-botones {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .mapa-vf-btn {
+    flex: 1 1 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 2px solid var(--color-borde-medio);
+    background: var(--bg-superficie);
+    color: var(--texto-principal);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .mapa-vf-btn:hover:not(:disabled) {
+    background: var(--bg-superficie-hover);
+    border-color: var(--color-boton);
+  }
+
+  .mapa-vf-btn:disabled { cursor: default; }
+
+  .mapa-vf-btn.correcta {
+    border-color: #3aa76d;
+    background: rgba(58, 167, 109, 0.14);
+    color: #2e7d32;
+  }
+
+  .mapa-vf-btn.incorrecta {
+    border-color: #e0574c;
+    background: rgba(224, 87, 76, 0.14);
+    color: #c0392b;
   }
 
   .detective-ayuda {
@@ -4575,6 +4674,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <button class="boton-secundario" id="btn-pomodoro-repaso-pasivo" style="width:100%; display:none;">👁 Repaso pasivo</button>
     <div class="pomodoro-banner-repaso" id="pomodoro-aviso-repaso"></div>
     <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
+    <label class="enfoque-opcion" title="Al tocar una ruta en Retención se despliega el recorte del mapa"><input type="checkbox" class="chk-movil"> 📱 Pomodoro móvil</label>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-normal">Normal</button>
     <button class="boton-secundario" id="btn-pomodoro-iniciar-dificil">Difícil</button>
     <button class="boton-mini" id="btn-pomodoro-iniciar-historial">🧠 Ver historial de retención</button>
@@ -5196,6 +5296,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="opcion-modo-nombre">Ordenar Rutas</span>
         <span class="opcion-modo-detalle">Arrastrá los renglones para reconstruir las rutas en orden</span>
       </button>
+      <button type="button" class="opcion-modo" id="opcion-otro-verdadero-falso" data-otro-modo="verdadero_falso">
+        <span class="opcion-modo-icono">🗺️</span>
+        <span class="opcion-modo-nombre">Verdadero/Falso</span>
+        <span class="opcion-modo-detalle">Decidí si el recorte del mapa corresponde a la tarjeta</span>
+      </button>
     </div>
     <label class="opcion-demostraciones-wrap" id="wrap-modo-demostraciones" for="chk-modo-demostraciones">
       <input type="checkbox" id="chk-modo-demostraciones">
@@ -5361,6 +5466,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <script>
   const datos = __DATOS_JSON__;
   const MAPA_RUTAS_COORDS = __MAPA_RUTAS_COORDS__;
+  const HAY_MAPA = (__HAY_MAPA__ === 1);
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
   const modoAleatorio = __MODO_ALEATORIO__;
@@ -8749,6 +8855,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
       sincronizarGeometriaSvgMapa();
       renderBordesSvgMapa();
+      reaplicarEnfoqueRetencionMapa();
     };
     img.addEventListener('load', alCargarImg);
     resetearZoomMapa();
@@ -8814,6 +8921,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let zoomMapa = 1;
   let panMapa = { x: 0, y: 0 };
   let arrastreMapa = { activo: false, x: 0, y: 0 };    // x/y: offset inicial del drag (mouse o 1 dedo)
+  let mapaArrastreBloqueado = false;
+  let retencionRutaEnfocada = null;
   let pinchMapa = null;                                // { distancia, zoomInicial } mientras hay 2 dedos
 
   const ES_DISPOSITIVO_TACTIL = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -8825,7 +8934,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!elMapaImg) return;
     const transformStr = 'translate(' + panMapa.x + 'px, ' + panMapa.y + 'px) scale(' + zoomMapa + ')';
     elMapaImg.style.transform = transformStr;
-    elMapaImg.classList.toggle('mapa-img-pan', zoomMapa > 1);
+    elMapaImg.classList.toggle('mapa-img-pan', zoomMapa > 1 && !mapaArrastreBloqueado);
     if (elMapaSvgOverlay) {
       elMapaSvgOverlay.style.transform = transformStr;
     }
@@ -8859,7 +8968,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }, { passive: false });
 
   elMapaImagenWrap.addEventListener('mousedown', (e) => {
-    if (!elMapaImg || zoomMapa <= 1) return;
+    if (!elMapaImg || zoomMapa <= 1 || mapaArrastreBloqueado) return;
     arrastreMapa = { activo: true, x: e.clientX - panMapa.x, y: e.clientY - panMapa.y };
     elMapaImg.classList.add('mapa-img-arrastrando');   // §7: cursor 'grabbing'
   });
@@ -8880,7 +8989,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (e.touches.length === 2) {
       pinchMapa = { distancia: distanciaEntreToquesMapa(e.touches), zoomInicial: zoomMapa };
       arrastreMapa.activo = false;
-    } else if (e.touches.length === 1 && zoomMapa > 1) {
+    } else if (e.touches.length === 1 && zoomMapa > 1 && !mapaArrastreBloqueado) {
       arrastreMapa = { activo: true, x: e.touches[0].clientX - panMapa.x, y: e.touches[0].clientY - panMapa.y };
       elMapaImg.classList.add('mapa-img-arrastrando');
     }
@@ -9044,6 +9153,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     opciones = opciones || {};
     if (resultado === 'saltar') return opciones.comodinUsado ? 0 : -5;
     if (modoEspecial === 'quiz') return resultado === 'si' ? 8 : 0;
+    if (modoEspecial === 'verdadero_falso') return resultado === 'si' ? 5 : 0;
     if (modoEspecial === 'detective') return resultado === 'si' ? 15 : (resultado === 'casi' ? 8 : 0);
     if (resultado === 'si') {
       if (opciones.pistaGratisUsada) return 15;
@@ -9177,6 +9287,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let datosQuizSesion = [];
   let datosDetectiveSesion = [];
   let datosOrdenarSesion = [];
+  let datosVerdaderoFalsoSesion = [];
   let rondasMatching = [];
   let primeroSeleccionadoMatching = null;
   let asociacionesTempMatching = new Set();
@@ -9200,13 +9311,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (modoEspecial === 'quiz') return 'quiz_' + modoJuego;
     if (modoEspecial === 'detective') return 'detective_' + modoJuego;
     if (modoEspecial === 'ordenar') return 'ordenar_' + modoJuego;
+    if (modoEspecial === 'verdadero_falso') return 'verdadero_falso_' + modoJuego;
     if (repasoInteligenteActivo) return 'inteligente';
     return modoJuego;
   }
 
   function esModoEspecialHistorial(modo) {
     const m = String(modo || '');
-    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0 || m.indexOf('ordenar_') === 0;
+    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0 || m.indexOf('ordenar_') === 0 || m.indexOf('verdadero_falso_') === 0;
   }
 
   function nombreModoJuego(modo) {
@@ -9225,6 +9337,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (modo === 'ordenar_light') return '🧩 Ordenar Rutas Light';
     if (modo === 'ordenar_normal') return '🧩 Ordenar Rutas Normal';
     if (modo === 'ordenar_tryhard') return '🧩 Ordenar Rutas Tryhard';
+    if (modo === 'verdadero_falso_light') return '🗺️ Verdadero/Falso Light';
+    if (modo === 'verdadero_falso_normal') return '🗺️ Verdadero/Falso Normal';
+    if (modo === 'verdadero_falso_tryhard') return '🗺️ Verdadero/Falso Tryhard';
     if (modo === 'inteligente') return '🧠 Repaso inteligente';
     if (modo === 'srs') return '🧠 SRS';
     if (modo === 'examen') return '📝 Examen';
@@ -9347,6 +9462,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       modoEspecialPendiente = 'ordenar';
       modoDemostracionesPendiente = false;
       abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'ordenar');
+    } else if (otroModoElegidoEnModal === 'verdadero_falso') {
+      if (!HAY_MAPA) {
+        cerrarModalOtrosModos();
+        await avisar('No hay mapa disponible en este evaluador.');
+        return;
+      }
+      const elegibles = base.filter((t) => generarMapaTarjeta(t) !== null);
+      if (elegibles.length === 0) {
+        cerrarModalOtrosModos();
+        await avisar('No hay tarjetas con rutas ubicadas en el mapa (y otras rutas para usar como falsas) en los temas seleccionados para iniciar el modo Verdadero/Falso.');
+        return;
+      }
+      elModalOtrosModos.classList.remove('abierto');
+      resetearCheckboxDemostracionesModal();
+      modoEspecialPendiente = 'verdadero_falso';
+      modoDemostracionesPendiente = false;
+      abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'verdadero_falso');
     }
   }
 
@@ -9356,6 +9488,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('opcion-otro-quiz').addEventListener('click', () => seleccionarOtroModoEnModal('quiz'));
   document.getElementById('opcion-otro-detective').addEventListener('click', () => seleccionarOtroModoEnModal('detective'));
   document.getElementById('opcion-otro-ordenar').addEventListener('click', () => seleccionarOtroModoEnModal('ordenar'));
+  (function () {
+    const btnMapa = document.getElementById('opcion-otro-verdadero-falso');
+    if (!HAY_MAPA) {
+      btnMapa.disabled = true;
+      btnMapa.title = 'Sin mapa disponible';
+      btnMapa.querySelector('.opcion-modo-detalle').textContent = 'Sin mapa disponible';
+    }
+    btnMapa.addEventListener('click', () => { if (HAY_MAPA) seleccionarOtroModoEnModal('verdadero_falso'); });
+  })();
   document.getElementById('btn-otros-modos-comenzar').addEventListener('click', () => confirmarOtrosModos());
   document.getElementById('btn-otros-modos-cancelar').addEventListener('click', () => cerrarModalOtrosModos());
   function actualizarBarraGamificacion() {
@@ -9435,6 +9576,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     } else if (modoEspecialPendiente === 'ordenar') {
       elTituloModalModo.textContent = 'Elegí el modo de juego — 🧩 Ordenar Rutas';
       elOpcionModoExamen.style.display = 'none';
+    } else if (modoEspecialPendiente === 'verdadero_falso') {
+      elTituloModalModo.textContent = 'Elegí el modo de juego — 🗺️ Verdadero/Falso';
+      elOpcionModoExamen.style.display = 'none';
     } else {
       elTituloModalModo.textContent = 'Elegí el modo de juego';
       elOpcionModoExamen.style.display = '';
@@ -9491,6 +9635,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       iniciarSesionDetective(lista);
     } else if (modoEspecial === 'ordenar') {
       iniciarSesionOrdenar(lista);
+    } else if (modoEspecial === 'verdadero_falso') {
+      iniciarSesionMapa(lista);
     } else {
       iniciarSesion(lista);
     }
@@ -10061,7 +10207,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function ocultarContenedoresEspeciales() {
-    ['cloze-contenedor-activo', 'matching-contenedor-activo', 'quiz-contenedor-activo'].forEach((id) => {
+    ['cloze-contenedor-activo', 'matching-contenedor-activo', 'quiz-contenedor-activo', 'verdadero-falso-contenedor-activo'].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -10226,6 +10372,308 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     actualizarCronometro();
     renderTarjeta();
+  }
+
+  function coordsRutaMapa(id) {
+    const c = MAPA_RUTAS_COORDS[String(id)];
+    if (!c || !Number.isFinite(c.x) || !Number.isFinite(c.y) || !(c.w > 0) || !(c.h > 0)) return null;
+    return c;
+  }
+
+  const _rutasMapaPorTarjeta = new Map();
+
+  function rutasConCoordsDe(t) {
+    let lista = _rutasMapaPorTarjeta.get(t);
+    if (!lista) {
+      const vistos = new Set();
+      lista = [];
+      rutasValidasDe(t).forEach((id) => {
+        const k = String(id);
+        if (vistos.has(k) || !coordsRutaMapa(k)) return;
+        vistos.add(k);
+        lista.push(k);
+      });
+      _rutasMapaPorTarjeta.set(t, lista);
+    }
+    return lista;
+  }
+
+  let _todasRutasMapa = null;
+
+  function todasRutasConCoords() {
+    if (!_todasRutasMapa) {
+      const set = new Set();
+      tarjetasCompletas.forEach((o) => rutasConCoordsDe(o).forEach((k) => set.add(k)));
+      _todasRutasMapa = Array.from(set);
+    }
+    return _todasRutasMapa;
+  }
+
+  function generarMapaTarjeta(t) {
+    if (!HAY_MAPA) return null;
+    const propias = rutasConCoordsDe(t);
+    if (propias.length === 0) return null;
+    const propiasSet = new Set(propias);
+    const pool = todasRutasConCoords().filter((k) => !propiasSet.has(k));
+    if (pool.length === 0) return null;
+    const cantidad = propias.length;
+    const verdadero = Math.random() < 0.5;
+    let rutas;
+    if (verdadero) {
+      rutas = propias.map((id) => ({ id: id, correcta: true }));
+    } else {
+      const minCorrectas = Math.max(0, cantidad - pool.length);
+      const correctas = minCorrectas + Math.floor(Math.random() * (cantidad - minCorrectas));
+      rutas = mezclar(propias).slice(0, correctas).map((id) => ({ id: id, correcta: true }))
+        .concat(mezclar(pool).slice(0, cantidad - correctas).map((id) => ({ id: id, correcta: false })));
+    }
+    return { rutas: mezclar(rutas), verdadero: verdadero, respuesta: null, evaluada: false };
+  }
+
+  let _imgMapaRecorte = null;
+
+  function cargarImagenMapaRecorte(alCargar) {
+    if (!_imgMapaRecorte) {
+      const src = obtenerMapaSrc();
+      if (!src) return;
+      _imgMapaRecorte = new Image();
+      _imgMapaRecorte.src = src;
+    }
+    if (_imgMapaRecorte.complete && _imgMapaRecorte.naturalWidth > 0) {
+      alCargar(_imgMapaRecorte);
+      return;
+    }
+    _imgMapaRecorte.addEventListener('load', () => alCargar(_imgMapaRecorte), { once: true });
+  }
+
+  function crearRecorteMapa(coords, anchoMax) {
+    const canvas = document.createElement('canvas');
+    cargarImagenMapaRecorte((img) => {
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      const rx = (coords.x / 100) * iw;
+      const ry = (coords.y / 100) * ih;
+      const rw = Math.max(1, (coords.w / 100) * iw);
+      const rh = Math.max(1, (coords.h / 100) * ih);
+      const margenX = rw * 0.03 + 6;
+      const margenY = rh * 0.03 + 6;
+      const sx = Math.max(0, rx - margenX);
+      const sy = Math.max(0, ry - margenY);
+      const sw = Math.max(1, Math.min(iw, rx + rw + margenX) - sx);
+      const sh = Math.max(1, Math.min(ih, ry + rh + margenY) - sy);
+      const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+      const escalaCss = Math.min(anchoMax / sw, 900 / sh, 12);
+      const escala = escalaCss * dpr;
+      canvas.width = Math.max(1, Math.round(sw * escala));
+      canvas.height = Math.max(1, Math.round(sh * escala));
+      canvas.style.width = Math.round(sw * escalaCss) + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'rgba(224, 87, 76, 0.85)';
+      ctx.lineWidth = 2 * dpr;
+      ctx.strokeRect((rx - sx) * escala, (ry - sy) * escala, rw * escala, rh * escala);
+    });
+    return canvas;
+  }
+
+  function iniciarSesionMapa(lista) {
+    const validas = [];
+    const datos = [];
+    lista.forEach((t) => {
+      const d = generarMapaTarjeta(t);
+      if (d) {
+        validas.push(t);
+        datos.push(d);
+      }
+    });
+    if (validas.length === 0) {
+      avisar('Ninguna de estas tarjetas tiene rutas ubicadas en el mapa para el modo Verdadero/Falso.');
+      return;
+    }
+    iniciarSesionEspecialBase(validas, () => { datosVerdaderoFalsoSesion = datos; });
+  }
+
+  function renderTarjetaMapa() {
+    const t = tarjetasSesion[indiceActual];
+    const d = datosVerdaderoFalsoSesion[indiceActual];
+    const r = resultados[indiceActual];
+    const yaEvaluada = d.evaluada || r !== null;
+
+    ocultarContenedoresEspeciales();
+    elTemaTexto.textContent = nombreTema(t);
+    elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
+    const contestadas = resultados.filter((x) => x !== null).length;
+    elBarraRelleno.style.width = ((contestadas / tarjetasSesion.length) * 100) + '%';
+
+    elBadgeRutas.style.display = 'none';
+    elBtnRevisar.style.display = 'inline-block';
+    elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
+    elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
+
+    elPrimero.style.display = 'block';
+    elPrimero.textContent = t.primero;
+    elBtnPista.style.display = 'none';
+    elBtnRespuesta.style.display = 'none';
+    elSeparador.style.display = 'none';
+    elSegundo.style.display = 'none';
+    elSegundo.textContent = '';
+
+    renderPanelNota(t);
+    renderRazonesUI(t);
+
+    elRutasContenedor.innerHTML = '';
+    elRutasContenedor.style.display = 'none';
+    if (elZonaEval.nextElementSibling !== elRutasContenedor) {
+      elRutasContenedor.parentNode.insertBefore(elZonaEval, elRutasContenedor);
+    }
+
+    elTextoEval.parentElement.style.display = 'none';
+    elBtnDictadoTextoEval.style.display = 'none';
+    elRespuestaUsuarioResaltada.style.display = 'none';
+    elZonaEval.style.display = 'block';
+
+    let cont = document.getElementById('verdadero-falso-contenedor-activo');
+    if (!cont) {
+      cont = document.createElement('div');
+      cont.id = 'verdadero-falso-contenedor-activo';
+      cont.className = 'quiz-contenedor';
+      elZonaEval.insertBefore(cont, elFilaEval);
+    }
+    cont.style.display = 'flex';
+    cont.innerHTML = '';
+
+    const varias = d.rutas.length > 1;
+    const titulo = document.createElement('div');
+    titulo.className = 'quiz-titulo';
+    titulo.textContent = varias ? '¿Estas rutas corresponden a la tarjeta?' : '¿Esta ruta corresponde a la tarjeta?';
+    cont.appendChild(titulo);
+
+    if (varias) {
+      const ayuda = document.createElement('div');
+      ayuda.className = 'mapa-vf-ayuda';
+      ayuda.textContent = 'Verdadero: todas corresponden. Falso: alguna no corresponde.';
+      cont.appendChild(ayuda);
+    }
+
+    const recortes = document.createElement('div');
+    recortes.className = 'mapa-vf-recortes';
+    d.rutas.forEach((ruta) => {
+      const item = document.createElement('div');
+      item.className = 'mapa-vf-item' + (d.evaluada ? (ruta.correcta ? ' correcta' : ' incorrecta') : '');
+      item.appendChild(crearRecorteMapa(coordsRutaMapa(ruta.id), 900));
+      if (d.evaluada) {
+        const etiqueta = document.createElement('div');
+        etiqueta.className = 'mapa-vf-etiqueta';
+        etiqueta.textContent = 'Ruta #' + ruta.id + (ruta.correcta ? ' · ✓ corresponde a esta tarjeta' : ' · ✗ no corresponde a esta tarjeta');
+        item.appendChild(etiqueta);
+      }
+      recortes.appendChild(item);
+    });
+    cont.appendChild(recortes);
+
+    const botones = document.createElement('div');
+    botones.className = 'mapa-vf-botones';
+    [[true, '✓ Verdadero'], [false, '✗ Falso']].forEach((par) => {
+      const valor = par[0];
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'mapa-vf-btn';
+      btn.textContent = par[1];
+      if (yaEvaluada) {
+        btn.disabled = true;
+        if (d.evaluada) {
+          if (valor === d.verdadero) btn.classList.add('correcta');
+          else if (valor === d.respuesta) btn.classList.add('incorrecta');
+        }
+      } else {
+        btn.addEventListener('click', () => responderMapa(valor));
+      }
+      botones.appendChild(btn);
+    });
+    cont.appendChild(botones);
+
+    elFilaEval.style.display = 'none';
+
+    const ev = evaluaciones[indiceActual];
+    if (d.evaluada && ev) {
+      elResultadoEval.style.display = 'block';
+      elResultadoEval.className = 'resultado-eval ' + (ev.resultado === 'si' ? 'bien' : 'mal');
+      elResultadoEval.textContent = ev.textoDetalle;
+    } else {
+      elResultadoEval.style.display = 'none';
+      elResultadoEval.textContent = '';
+    }
+
+    elEstadoMarca.className = 'estado-marca' + (r ? ' ' + r : '');
+    if (r === 'si') elEstadoMarca.textContent = '✓ Marcada como entendida';
+    else if (r === 'no') elEstadoMarca.textContent = '✗ Marcada como no entendida';
+    else if (r === 'saltar') elEstadoMarca.textContent = '— Pasada sin marcar';
+    else elEstadoMarca.textContent = '';
+
+    const yaMarcada = r !== null;
+    document.querySelector('.botonera').style.display = 'flex';
+    elBtnSi.classList.remove('comprension');
+    elBtnSi.textContent = '✓';
+    elBtnSi.title = 'Entendido';
+    elBtnSi.style.display = 'none';
+    elBtnNo.style.display = 'none';
+    elBtnSaltar.style.display = 'inline-block';
+    elBtnDificil.style.display = 'inline-block';
+    elBtnRazones.style.display = 'inline-block';
+    elBtnSi.disabled = yaMarcada;
+    elBtnNo.disabled = yaMarcada;
+    elBtnSaltar.disabled = yaMarcada;
+
+    elBtnDificil.classList.toggle('activa', esDificil(t));
+    elBtnDificil.textContent = esDificil(t) ? '★ Difícil' : '☆ Difícil';
+
+    elBtnPausa.style.display = cronometroActivo ? 'inline-block' : 'none';
+    elBtnAnterior.disabled = indiceActual === 0;
+    elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+    actualizarBadgeNotaActual();
+  }
+
+  function responderMapa(valor) {
+    if (pausaManual) return;
+    const d = datosVerdaderoFalsoSesion[indiceActual];
+    if (!d || d.evaluada || resultados[indiceActual] !== null) return;
+
+    acumularTiempoActual();
+    indiceCongelado = indiceActual;
+
+    const acierto = valor === d.verdadero;
+    const res = acierto ? 'si' : 'no';
+    d.respuesta = valor;
+    d.evaluada = true;
+    revelado[indiceActual] = true;
+
+    let detalle = '✓ Correcto';
+    if (!acierto) {
+      detalle = d.verdadero
+        ? '✗ Incorrecto — las rutas mostradas sí correspondían a esta tarjeta.'
+        : (d.rutas.length > 1
+          ? '✗ Incorrecto — alguna de las rutas mostradas no correspondía a esta tarjeta.'
+          : '✗ Incorrecto — la ruta mostrada no correspondía a esta tarjeta.');
+    }
+    evaluaciones[indiceActual] = { resultado: res, textoDetalle: detalle };
+    escritos[indiceActual] = valor ? 'Verdadero' : 'Falso';
+    resultados[indiceActual] = res;
+
+    procesarResultadoGamificacion(indiceActual, res, { conPista: false, pistaGratisUsada: false });
+    if (resultados.every((x) => x !== null)) {
+      cronometroActivo = false;
+    }
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function resetearDatosMapaSaltado(d) {
+    if (!d) return;
+    d.respuesta = null;
+    d.evaluada = false;
   }
 
   function segmentarLineaDetective(linea) {
@@ -11612,6 +12060,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (matchCont) matchCont.style.display = 'none';
     const quizCont = document.getElementById('quiz-contenedor-activo');
     if (quizCont) quizCont.style.display = 'none';
+    const mapaCont = document.getElementById('verdadero-falso-contenedor-activo');
+    if (mapaCont) mapaCont.style.display = 'none';
     if (elZonaEval.nextElementSibling !== elRutasContenedor) {
       elRutasContenedor.parentNode.insertBefore(elZonaEval, elRutasContenedor);
     }
@@ -11644,6 +12094,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       renderTarjetaOrdenar();
       return true;
     }
+    if (modoEspecial === 'verdadero_falso') {
+      renderTarjetaMapa();
+      return true;
+    }
     limpiarContenedoresModoEspecial();
     return false;
   }
@@ -11669,6 +12123,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       evaluarOrdenarActual();
       return true;
     }
+    if (modoEspecial === 'verdadero_falso') {
+      return true;
+    }
     return false;
   }
 
@@ -11689,9 +12146,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       } else {
         indiceCongelado = -1;
       }
-    } else if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    } else if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       const datos = modoEspecial === 'quiz' ? datosQuizSesion[indiceActual]
-        : (modoEspecial === 'ordenar' ? datosOrdenarSesion[indiceActual] : datosDetectiveSesion[indiceActual]);
+        : (modoEspecial === 'ordenar' ? datosOrdenarSesion[indiceActual]
+          : (modoEspecial === 'verdadero_falso' ? datosVerdaderoFalsoSesion[indiceActual] : datosDetectiveSesion[indiceActual]));
       if ((datos && datos.evaluada) || resultados[indiceActual] !== null) {
         indiceCongelado = indiceActual;
       } else {
@@ -11728,7 +12186,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           ronda.completada = true;
         }
       });
-    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       resultados.forEach((r, i) => {
         if (r === null) resultados[i] = 'saltar';
       });
@@ -11844,12 +12302,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
-    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       let lista = tarjetasSesion.filter((_, i) => predicado(i));
       if (lista.length === 0) { avisar('No hay tarjetas para repasar con ese criterio.'); return true; }
       if (modoAleatorio) lista = mezclar(lista);
       if (modoEspecial === 'quiz') iniciarSesionQuiz(lista);
       else if (modoEspecial === 'ordenar') iniciarSesionOrdenar(lista);
+      else if (modoEspecial === 'verdadero_falso') iniciarSesionMapa(lista);
       else iniciarSesionDetective(lista);
       return true;
     }
@@ -11868,10 +12327,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
-    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar') {
+    if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       const base = modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion];
       if (modoEspecial === 'quiz') iniciarSesionQuiz(base);
       else if (modoEspecial === 'ordenar') iniciarSesionOrdenar(base);
+      else if (modoEspecial === 'verdadero_falso') iniciarSesionMapa(base);
       else iniciarSesionDetective(base);
       return true;
     }
@@ -11889,6 +12349,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     datosQuizSesion = [];
     datosDetectiveSesion = [];
     datosOrdenarSesion = [];
+    datosVerdaderoFalsoSesion = [];
     rondasMatching = [];
     primeroSeleccionadoMatching = null;
     asociacionesTempMatching.clear();
@@ -18432,6 +18893,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     elVacio.style.display = 'none';
     reconciliarHijos(el, gruposRetencionPorTarjeta(ids), (g) => g.clave, firmaGrupoRetencion, grupoRetencionTarjeta);
     el.querySelectorAll('.fila-retencion-ruta').forEach((fila) => pintarFilaRetencionSesion(fila, fila._rutaId));
+    if (retencionRutaEnfocada !== null && !el.querySelector('.fila-retencion-ruta.enfocada')) cerrarEnfoqueRetencionMapa();
   }
 
   function refrescarFilaRetencionSesion(id) {
@@ -18441,9 +18903,78 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     else renderRetencionSesionLista({ soloLista: true });
   }
 
+  const MOVIL_CLAVE = 'pomodoro_movil_v1';
+  let retencionMovilActivo = (function () {
+    try { return localStorage.getItem(MOVIL_CLAVE) === '1'; } catch (e) { return false; }
+  })();
+
+  function sincronizarChecksMovil() {
+    document.querySelectorAll('.chk-movil').forEach((chk) => {
+      chk.checked = HAY_MAPA && retencionMovilActivo;
+      chk.disabled = !HAY_MAPA;
+    });
+    const lista = document.getElementById('retencion-sesion-lista');
+    if (lista) lista.classList.toggle('retencion-movil', HAY_MAPA && retencionMovilActivo);
+  }
+
+  function cerrarEnfoqueRetencionMapa() {
+    retencionRutaEnfocada = null;
+    mapaArrastreBloqueado = false;
+    const lista = document.getElementById('retencion-sesion-lista');
+    if (lista) {
+      lista.querySelectorAll('.retencion-recorte').forEach((p) => p.remove());
+      lista.querySelectorAll('.fila-retencion-ruta.enfocada').forEach((f) => f.classList.remove('enfocada'));
+    }
+    if (elMapaImg) resetearZoomMapa();
+  }
+
+  function reaplicarEnfoqueRetencionMapa() {
+    if (retencionRutaEnfocada === null) return;
+    const coords = coordsRutaMapa(retencionRutaEnfocada);
+    if (!coords) return;
+    ubicarEnMapa(coords);
+    mapaArrastreBloqueado = true;
+  }
+
+  function alternarEnfoqueRetencionRuta(fila) {
+    if (!HAY_MAPA) return;
+    const id = String(fila._rutaId);
+    const coords = coordsRutaMapa(id);
+    if (!coords) return;
+    if (retencionRutaEnfocada === id && fila.classList.contains('enfocada')) {
+      cerrarEnfoqueRetencionMapa();
+      return;
+    }
+    cerrarEnfoqueRetencionMapa();
+    const panel = document.createElement('div');
+    panel.className = 'retencion-recorte';
+    panel.appendChild(crearRecorteMapa(coords, 900));
+    fila.appendChild(panel);
+    fila.classList.add('enfocada');
+    retencionRutaEnfocada = id;
+    mapaArrastreBloqueado = true;
+    if (elMapaImg) ubicarEnMapa(coords);
+  }
+
+  document.querySelectorAll('.chk-movil').forEach((chk) => {
+    chk.addEventListener('change', () => {
+      retencionMovilActivo = chk.checked;
+      try { escribirLocalSeguro(MOVIL_CLAVE, retencionMovilActivo ? '1' : '0'); } catch (e) { }
+      if (!retencionMovilActivo) cerrarEnfoqueRetencionMapa();
+      sincronizarChecksMovil();
+    });
+  });
+  sincronizarChecksMovil();
+
   document.getElementById('retencion-sesion-lista').addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-accion]');
-    if (!btn) return;
+    if (!btn) {
+      if (!HAY_MAPA || !retencionMovilActivo) return;
+      if (e.target.closest('.retencion-recorte')) return;
+      const filaTocada = e.target.closest('.fila-retencion-ruta');
+      if (filaTocada) alternarEnfoqueRetencionRuta(filaTocada);
+      return;
+    }
     const fila = btn.closest('.fila-retencion-ruta');
     if (!fila) return;
     const id = fila._rutaId;
@@ -21963,7 +22494,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
-    if (resultado === 'saltar' && modoEspecial !== 'quiz' && modoEspecial !== 'detective' && modoEspecial !== 'ordenar') reveladasAlSaltar.add(indiceActual);   // al saltar se ve la respuesta
+    if (resultado === 'saltar' && modoEspecial !== 'quiz' && modoEspecial !== 'detective' && modoEspecial !== 'ordenar' && modoEspecial !== 'verdadero_falso') reveladasAlSaltar.add(indiceActual);   // al saltar se ve la respuesta
 
     if (!modoObservador) {
       procesarResultadoGamificacion(indiceActual, resultado, {
@@ -22908,6 +23439,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         else if (modoEspecial === 'quiz') resetearDatosQuizSaltado(datosQuizSesion[i]);
         else if (modoEspecial === 'detective') resetearDatosDetectiveSaltado(datosDetectiveSesion[i]);
         else if (modoEspecial === 'ordenar') resetearDatosOrdenarSaltado(datosOrdenarSesion[i]);
+        else if (modoEspecial === 'verdadero_falso') resetearDatosMapaSaltado(datosVerdaderoFalsoSesion[i]);
       }
     });
     if (modoEspecial === 'matching') {
@@ -23485,6 +24017,19 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
   }
 
+  function alEntrarDescansoPomodoro() {
+    cerrarEnfoqueRetencionMapa();
+    cerrarModalRetencionRutas();
+    if (elPantallaMapa.style.display !== 'none') {
+      cerrarPantallaMapa();
+    } else if (modoObservador) {
+      salirObservador();
+    } else if (elPantallaObservador.style.display !== 'block') {
+      entrarObservador();
+    }
+    reubicarBadgePomodoro('observador');
+  }
+
   function avanzarFasePomodoro() {
     if (pomodoroFase === 'pretest') {
       autoguardarYCerrarPretestPomodoro();
@@ -23510,6 +24055,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       pomodoroFase = 'descanso';
       pomodoroSegundosRestantes = DURACION_DESCANSO_SEG;
       reproducirSonido('pomodoro_retencion_a_descanso');
+      alEntrarDescansoPomodoro();
     } else if (pomodoroFase === 'descanso') {
       pomodoroCiclo++;
       pomodoroFase = 'retencion';
@@ -23786,6 +24332,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroBraindumpNotaId = null;
     retencionSesionToggles = {};
     retencionSubtemasActivos = {};
+    cerrarEnfoqueRetencionMapa();
     cerrarModalRetencionRutas();
     elPomodoroBadge.style.display = 'none';
     elBtnObservadorSalir.disabled = false;
@@ -23969,6 +24516,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       datosQuizSesion: datosQuizSesion.slice(),
       datosDetectiveSesion: datosDetectiveSesion.map(serializarDatosDetective),
       datosOrdenarSesion: datosOrdenarSesion.slice(),
+      datosVerdaderoFalsoSesion: datosVerdaderoFalsoSesion.slice(),
       rondasMatching: esMatching ? rondasMatching.map(serializarRondaMatching) : [],
       primeroSeleccionadoMatching: primeroSeleccionadoMatching,
       asociacionesTempMatching: copiarSetComoArray(asociacionesTempMatching),
@@ -24157,6 +24705,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (x.modoEspecial === 'cloze' && datosCloze.length !== n) throw new Error('datos Cloze inconsistentes');
     if (x.modoEspecial === 'detective' && datosDetective.length !== n) throw new Error('datos Detective inconsistentes');
     if (x.modoEspecial === 'ordenar' && (x.datosOrdenarSesion || []).length !== n) throw new Error('datos Ordenar inconsistentes');
+    if (x.modoEspecial === 'verdadero_falso' && (x.datosVerdaderoFalsoSesion || []).length !== n) throw new Error('datos Verdadero/Falso inconsistentes');
 
     let srsNuevo = null;
     if (x.srsSesionActiva) {
@@ -24208,6 +24757,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     datosQuizSesion = modoEspecial === 'quiz' ? (x.datosQuizSesion || []) : [];
     datosDetectiveSesion = modoEspecial === 'detective' ? datosDetective : [];
     datosOrdenarSesion = modoEspecial === 'ordenar' ? (x.datosOrdenarSesion || []) : [];
+    datosVerdaderoFalsoSesion = modoEspecial === 'verdadero_falso' ? (x.datosVerdaderoFalsoSesion || []) : [];
     rondasMatching = rondasNuevas;
     primeroSeleccionadoMatching = (x.primeroSeleccionadoMatching === undefined) ? null : x.primeroSeleccionadoMatching;
     asociacionesTempMatching = new Set(x.asociacionesTempMatching || []);
