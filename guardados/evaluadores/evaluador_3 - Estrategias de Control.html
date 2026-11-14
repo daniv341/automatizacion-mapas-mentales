@@ -607,6 +607,13 @@
 
   .bloque-version.txt .etq { color: var(--texto-suave); }
   .acciones-nota-dif { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 2px; }
+  .fila-ir-observador { cursor: pointer; }
+  .fila-ir-observador:hover { text-decoration: underline; }
+  .pomodoro-subtemas { margin: 8px 0; text-align: left; }
+  .pomodoro-subtemas summary { cursor: pointer; font-weight: 600; }
+  .pomodoro-subtemas-lista { max-height: 28vh; overflow-y: auto; margin-top: 6px; padding-left: 4px; font-size: 13px; }
+  .pomodoro-subtemas-lista div { padding: 2px 0; }
+  #modal-pomodoro-resumen .modal-caja { max-height: 90vh; overflow-y: auto; }
 
   #zona-notas details > summary { cursor: pointer; padding: 6px 0; font-size: 14px; color: var(--texto-cabecera); }
 
@@ -3873,7 +3880,7 @@
 <div class="modal-overlay" id="modal-pomodoro-resumen">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <h3>📊 Resumen del Pomodoro</h3>
-    <div id="pomodoro-resumen-analisis-retencion" style="display:none; white-space:pre-line;"></div>
+    <div id="pomodoro-resumen-analisis-retencion" style="display:none;"></div>
     <p>⏱ Tiempo en pretest: <strong id="pomodoro-resumen-lectura"></strong></p>
     <p>🧠 Tiempo en retención: <strong id="pomodoro-resumen-retencion"></strong></p>
     <p>⏱ Tiempo total: <strong id="pomodoro-resumen-total"></strong></p>
@@ -12916,6 +12923,110 @@
     document.getElementById('sync-aviso-pendientes').style.display = hayCambiosSinRespaldar() ? 'block' : 'none';
   }
 
+  const CLAVE_ORION = 'orion_v1';
+  const CLAVE_TAREAS = 'tareas_v1';
+
+  function marcaTiempoSync(v) {
+    if (typeof v === 'number' && isFinite(v)) return v;
+    if (typeof v === 'string') {
+      const n = Number(v);
+      if (isFinite(n) && v.trim() !== '') return n;
+      const f = Date.parse(v);
+      return isNaN(f) ? 0 : f;
+    }
+    return 0;
+  }
+
+  function leerOrionLocal() {
+    if (typeof window.cargarOrion === 'function') {
+      try {
+        const o = window.cargarOrion();
+        if (o && typeof o === 'object') return o;
+      } catch (e) { }
+    }
+    try {
+      const o = JSON.parse(localStorage.getItem(CLAVE_ORION) || 'null');
+      return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function guardarOrionLocal(o) {
+    if (typeof window.guardarOrion === 'function') {
+      try { window.guardarOrion(o); return; } catch (e) { }
+    }
+    escribirLocalSeguro(CLAVE_ORION, JSON.stringify(o));
+  }
+
+  function leerTareasLocal() {
+    if (typeof window.cargarTareas === 'function') {
+      try {
+        const t = window.cargarTareas();
+        if (Array.isArray(t)) return t;
+      } catch (e) { }
+    }
+    try {
+      const t = JSON.parse(localStorage.getItem(CLAVE_TAREAS) || '[]');
+      return Array.isArray(t) ? t : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function guardarTareasLocal(lista) {
+    if (typeof window.guardarTareas === 'function') {
+      try { window.guardarTareas(lista); return; } catch (e) { }
+    }
+    escribirLocalSeguro(CLAVE_TAREAS, JSON.stringify(lista));
+  }
+
+  function avisarCambioGlobal(evento, nombreRender) {
+    try { window.dispatchEvent(new CustomEvent(evento)); } catch (e) { }
+    if (typeof window[nombreRender] === 'function') {
+      try { window[nombreRender](); } catch (e) { }
+    }
+  }
+
+  function fusionarOrionEntrante(entrante) {
+    if (!entrante || typeof entrante !== 'object' || Array.isArray(entrante)) return false;
+    const local = leerOrionLocal();
+    if (!(marcaTiempoSync(entrante.ultimaAlimentacion) > marcaTiempoSync(local.ultimaAlimentacion))) return false;
+    guardarOrionLocal(entrante);
+    avisarCambioGlobal('orion-sincronizado', 'renderOrion');
+    return true;
+  }
+
+  function marcaTarea(t) {
+    return Math.max(marcaTiempoSync(t.modificada), marcaTiempoSync(t.fechaCreacion));
+  }
+
+  function fusionarTareasEntrantes(entrantes) {
+    if (!Array.isArray(entrantes)) return false;
+    const local = leerTareasLocal().slice();
+    const posPorId = new Map();
+    local.forEach((t, i) => { if (t && t.id !== undefined && t.id !== null) posPorId.set(t.id, i); });
+    let cambio = false;
+    entrantes.forEach((t) => {
+      if (!t || typeof t !== 'object' || t.id === undefined || t.id === null) return;
+      if (!posPorId.has(t.id)) {
+        local.push(t);
+        posPorId.set(t.id, local.length - 1);
+        cambio = true;
+        return;
+      }
+      const i = posPorId.get(t.id);
+      if (marcaTarea(t) > marcaTarea(local[i])) {
+        local[i] = t;
+        cambio = true;
+      }
+    });
+    if (!cambio) return false;
+    guardarTareasLocal(local);
+    avisarCambioGlobal('tareas-sincronizadas', 'renderTareas');
+    return true;
+  }
+
   function construirBackupCompleto() {
     return {
       version: 1,
@@ -12932,6 +13043,8 @@
       notasEvaluador: construirExportNotasEvaluador(),
       retencionRutas: construirExportRetencion(),
       analisisSesion: construirExportAnalisis(),
+      orion: leerOrionLocal(),
+      tareas: leerTareasLocal(),
     };
   }
 
@@ -12958,7 +13071,7 @@
       return { error: 'El backup no tiene el campo "evaluador" (formato viejo o inválido).' };
     }
 
-    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'paraRevisar', 'razones', 'imagenes', 'listas', 'notasEvaluador', 'retencionRutas', 'analisisSesion', 'revisar'];
+    const ZONAS = ['gamificacion', 'dificiles', 'notas', 'paraRevisar', 'razones', 'imagenes', 'listas', 'notasEvaluador', 'retencionRutas', 'analisisSesion', 'revisar', 'orion', 'tareas'];
     const presentes = ZONAS.filter((z) => datos[z] !== undefined && datos[z] !== null);
     if (presentes.length === 0) return { error: 'El archivo no tiene ninguna sección reconocida.' };
 
@@ -13066,6 +13179,13 @@
       const lista = Array.isArray(datos.analisisSesion) ? datos.analisisSesion : (datos.analisisSesion.analisisGuardados || []);
       const r = fusionarAnalisisLista(lista);
       contar(r.nuevas > 0 || (eliminadasPorZona.analisis || 0) > 0);
+    }
+
+    if (datos.orion && typeof datos.orion === 'object' && !Array.isArray(datos.orion)) {
+      contar(fusionarOrionEntrante(datos.orion));
+    }
+    if (Array.isArray(datos.tareas)) {
+      contar(fusionarTareasEntrantes(datos.tareas));
     }
 
     if (datos.revisar && typeof datos.revisar === 'object') {
@@ -13252,7 +13372,7 @@
     } catch (e) { }
   }
 
-  async function gistEscribirArchivo(nombreArchivo, objeto) {
+  async function gistEscribirArchivo(nombreArchivo, objeto, extras) {
     const id = await gistAsegurarId();
     const contenidoNuevo = JSON.stringify(objeto, null, 2);
 
@@ -13278,11 +13398,38 @@
       }
     }
 
-    await gistApi('PATCH', '/gists/' + id, {
-      files: { [nombreArchivo]: { content: contenidoNuevo } },
+    const archivos = { [nombreArchivo]: { content: contenidoNuevo } };
+    const contenidosExtras = {};
+    Object.keys(extras || {}).forEach((nombre) => {
+      contenidosExtras[nombre] = JSON.stringify(extras[nombre], null, 2);
+      archivos[nombre] = { content: contenidosExtras[nombre] };
     });
+
+    await gistApi('PATCH', '/gists/' + id, { files: archivos });
     guardarHashVistoGist(nombreArchivo, contenidoNuevo);
     marcarSyncGist(nombreArchivo);
+    Object.keys(contenidosExtras).forEach((nombre) => {
+      guardarHashVistoGist(nombre, contenidosExtras[nombre]);
+      marcarSyncGist(nombre);
+    });
+  }
+
+  async function gistLeerArchivoOpcional(nombreArchivo) {
+    try {
+      return await gistLeerArchivo(nombreArchivo);
+    } catch (e) {
+      if (e && e.tipo === 'no_encontrado') return null;
+      throw e;
+    }
+  }
+
+  async function importarExtrasGist() {
+    let cambios = 0;
+    const orion = await gistLeerArchivoOpcional('orion_v1.json');
+    if (orion && fusionarOrionEntrante(orion)) cambios++;
+    const tareas = await gistLeerArchivoOpcional('tareas_v1.json');
+    if (tareas && fusionarTareasEntrantes(tareas)) cambios++;
+    return cambios;
   }
 
   async function gistLeerArchivo(nombreArchivo) {
@@ -13331,11 +13478,16 @@
   }
 
 const ZONAS_SYNC_GIST = [
-    { zona: 'backup', archivo: 'backup_completo.json', exportar: construirBackupCompleto, importar: async (d) => {
-      const r = await importarBackupCompleto(d);
-      if (r && r.error) throw new Error(r.error);
-      return r;
-    } },
+    { zona: 'backup', archivo: 'backup_completo.json', exportar: construirBackupCompleto,
+      extras: () => ({ 'orion_v1.json': leerOrionLocal(), 'tareas_v1.json': leerTareasLocal() }),
+      importar: async (d) => {
+        const r = await importarBackupCompleto(d);
+        if (r && r.error) throw new Error(r.error);
+        if (r && r.cancelado) return r;
+        const extra = await importarExtrasGist();
+        if (r && typeof r.zonasActualizadas === 'number') r.zonasActualizadas += extra;
+        return r;
+      } },
     { zona: 'historial', archivo: 'gamificacion_export.json', exportar: construirExportGamificacion, importar: async (d) => {
       if (!d || typeof d !== 'object' || (!Array.isArray(d.historial) && typeof d.puntosTotales !== 'number' && !d.inventario)) {
         return { errorFormato: true };
@@ -13366,7 +13518,7 @@ const ZONAS_SYNC_GIST = [
 
   async function gistExportarZona(cfg) {
     try {
-      await gistEscribirArchivo(cfg.archivo, cfg.exportar());
+      await gistEscribirArchivo(cfg.archivo, cfg.exportar(), cfg.extras ? cfg.extras() : undefined);
       await avisar('☁️ Subido a Gist: ' + cfg.archivo);
       actualizarEstadoGist();
     } catch (e) {
@@ -15294,6 +15446,23 @@ const ZONAS_SYNC_GIST = [
   const elSumaImagenes = document.getElementById('suma-imagenes');
   const elInfoImagenes = document.getElementById('nota-imagenes');
   const elVaciarImagenes = document.getElementById('btn-vaciar-imagenes');
+  activarIrObservador(elListaImagenesGuardadas, {
+    resolver: (h) => {
+      const e = datosImagenes[h];
+      if (!e) return -1;
+      return tarjetasCompletas.findIndex((t) => rutasValidasDe(t).some((r) => Number(r) === Number(e.ruta)));
+    },
+    sinTarjeta: (h) => {
+      const e = datosImagenes[h];
+      if (!e) return;
+      const pos = INDICE_IMAGENES.findIndex((i) => i.ruta === e.ruta && i.indice === e.indice);
+      if (pos === -1) return;
+      galeriaPos = pos;
+      resetGaleriaNotaUI();
+      mostrarPantalla('galeria');
+      requestAnimationFrame(() => renderGaleria());
+    },
+  });
 
   function esImagenPropia(h) {
     const e = datosImagenes[h];
@@ -15355,8 +15524,8 @@ const ZONAS_SYNC_GIST = [
     div.className = 'item-nota-otra';
 
     const titulo = document.createElement('div');
-    titulo.textContent = 'Ruta ' + entrada.ruta + ' — imagen ' + (entrada.indice + 1) +
-      (entrada.dificil ? ' · ★ difícil' : '');
+    titulo.appendChild(crearTituloIrObservador('Ruta ' + entrada.ruta + ' — imagen ' + (entrada.indice + 1) +
+      (entrada.dificil ? ' · ★ difícil' : ''), hash));
     div.appendChild(titulo);
 
     const src = srcDeImagen(entrada.ruta, entrada.indice);
@@ -15389,7 +15558,7 @@ const ZONAS_SYNC_GIST = [
 
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', async () => {
+    acc.appendChild(botonMiniFila('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar la nota y la marca de difícil de esta imagen?'))) return;
       delete datosImagenes[hash];
       siguienteRev();
@@ -16214,6 +16383,7 @@ const ZONAS_SYNC_GIST = [
   const elDetDificilesAqui = document.getElementById('det-dificiles-aqui');
   const elSumaDificilesAqui = document.getElementById('suma-dificiles-aqui');
   const elNotaDificiles = document.getElementById('nota-dificiles');
+  activarIrObservador(elListaDificiles);
 
   function grupoActualDificil(h) {
     const v = dificiles[h];
@@ -16284,12 +16454,12 @@ const ZONAS_SYNC_GIST = [
     div.className = 'item-nota-otra';
 
     const titulo = document.createElement('div');
-    titulo.textContent = (p || '(sin texto)') + (s ? ' — ' + s : '');
+    titulo.appendChild(crearTituloIrObservador((p || '(sin texto)') + (s ? ' — ' + s : ''), h));
     div.appendChild(titulo);
 
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', async () => {
+    acc.appendChild(botonMiniFila('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar esta tarjeta de las difíciles guardadas? No se puede deshacer.'))) return;
       delete dificiles[h];
       siguienteRev();
@@ -16423,6 +16593,43 @@ const ZONAS_SYNC_GIST = [
     return b;
   }
 
+  function botonMiniFila(texto, onClick) {
+    return botonMini(texto, (e) => {
+      e.stopPropagation();
+      return onClick(e);
+    });
+  }
+
+  function crearTituloIrObservador(texto, hash) {
+    const el = document.createElement('span');
+    el.className = 'fila-ir-observador';
+    el.dataset.hash = hash;
+    el.textContent = texto;
+    return el;
+  }
+
+  function indiceTarjetaPorHash(h) {
+    return tarjetasCompletas.findIndex((t) => hashTarjeta(t) === h);
+  }
+
+  function activarIrObservador(contenedor, opciones) {
+    const op = opciones || {};
+    const resolver = op.resolver || indiceTarjetaPorHash;
+    contenedor.addEventListener('click', (e) => {
+      const el = e.target.closest('.fila-ir-observador');
+      if (!el || !contenedor.contains(el)) return;
+      e.preventDefault();
+      const h = el.dataset.hash;
+      const idx = resolver(h);
+      if (idx === -1) {
+        if (op.sinTarjeta) op.sinTarjeta(h);
+        return;
+      }
+      abrirTarjetaObservador(idx);
+      if (op.despues) op.despues(idx, h);
+    });
+  }
+
   const nodosNotas = new Map();   // hash -> { fila, grupo: 'dif'|'otras' }
 
   function tarjetaPorHash(h) {
@@ -16446,6 +16653,14 @@ const ZONAS_SYNC_GIST = [
   const elDetNotasOtras = document.getElementById('det-notas-otras');
   const elSumaNotasOtras = document.getElementById('suma-notas-otras');
   const elInfoNotas = document.getElementById('nota-notas');
+  activarIrObservador(elListaNotasDif, {
+    despues: () => {
+      notaAbierta = true;
+      versionNota = 'local';
+      editandoNota = false;
+      renderTarjeta();
+    },
+  });
 
   function construirGrupoNotasLazy() {
     const vistos = new Set();
@@ -16518,6 +16733,8 @@ const ZONAS_SYNC_GIST = [
 
     const sum = document.createElement('summary');
     const tx = document.createElement('span');
+    tx.className = 'fila-ir-observador';
+    tx.dataset.hash = hashTarjeta(t);
     tx.textContent = t.primero || '(sin texto)';
     const badge = document.createElement('span');
     badge.className = 'badge-estado ' + est;
@@ -16535,18 +16752,13 @@ const ZONAS_SYNC_GIST = [
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
     if (est === 'conflicto') {
-      acc.appendChild(botonMini('Quedarme con la mía', () => {
+      acc.appendChild(botonMiniFila('Quedarme con la mía', () => {
         conservarMiNota(t);
         actualizarFilaNotaIndividual(hashTarjeta(t));
       }));
     }
-    acc.appendChild(botonMini('Usar la del txt', async () => {
+    acc.appendChild(botonMiniFila('Usar la del txt (🗑 Borrar)', async () => {
       if (!(await confirmarAccion('Se descarta tu versión y se usa la del txt. ¿Continuar?'))) return;
-      descartarNotaLocal(t);
-      actualizarFilaNotaIndividual(hashTarjeta(t));
-    }));
-    acc.appendChild(botonMini('🗑 Borrar', async () => {
-      if (!(await confirmarAccion('¿Borrar esta nota editada? Se vuelve a usar la versión del txt. No se puede deshacer.'))) return;
       descartarNotaLocal(t);
       actualizarFilaNotaIndividual(hashTarjeta(t));
     }));
@@ -18408,7 +18620,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     const el = document.getElementById('pomodoro-resumen-analisis-retencion');
     if (!entrada || !Array.isArray(entrada.rutas) || entrada.rutas.length === 0) {
       el.style.display = 'none';
-      el.textContent = '';
+      el.innerHTML = '';
       return;
     }
     const porSubt = {};
@@ -18427,25 +18639,33 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       .filter((f) => f.pct < 50)
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-    const lineas = [];
-    if (pctGlobal < 50) {
-      lineas.push('⚠️ Retuviste el ' + pctGlobal + '% de las rutas citadas. Todavía no conviene evaluarte: conviene repasar más antes.');
-    }
-    if (problematicos.length > 0) {
-      if (lineas.length > 0) lineas.push('');
-      lineas.push('Subtemas a repasar (retención < 50%):');
-      problematicos.forEach((f) => {
-        lineas.push('• ' + f.nombre + ': ' + f.pct + '% (' + etiquetaRetencionTexto(f.pct) + ')');
-      });
-    }
-
-    if (lineas.length === 0) {
+    el.innerHTML = '';
+    if (pctGlobal >= 50 && problematicos.length === 0) {
       el.style.display = 'none';
-      el.textContent = '';
       return;
     }
+    if (pctGlobal < 50) {
+      const aviso = document.createElement('p');
+      aviso.textContent = '⚠️ Retuviste el ' + pctGlobal + '% de las rutas citadas. Todavía no conviene evaluarte: conviene repasar más antes.';
+      el.appendChild(aviso);
+    }
+    if (problematicos.length > 0) {
+      const det = document.createElement('details');
+      det.className = 'pomodoro-subtemas';
+      const sum = document.createElement('summary');
+      sum.textContent = 'Subtemas a repasar (retención < 50%) · ' + problematicos.length;
+      det.appendChild(sum);
+      const lista = document.createElement('div');
+      lista.className = 'pomodoro-subtemas-lista';
+      problematicos.forEach((f) => {
+        const fila = document.createElement('div');
+        fila.textContent = '• ' + f.nombre + ': ' + f.pct + '% (' + etiquetaRetencionTexto(f.pct) + ')';
+        lista.appendChild(fila);
+      });
+      det.appendChild(lista);
+      el.appendChild(det);
+    }
     el.style.display = 'block';
-    el.textContent = lineas.join('\n');
   }
 
   function poblarResumenRetencionRutas(entrada) {
@@ -20303,11 +20523,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     div.className = 'item-nota-otra';
     const titulo = document.createElement('div');
     const textoPrimero = entrada.p || entrada.po || '';
-    titulo.textContent = (textoPrimero || '(sin texto)') + (entrada.s ? ' — ' + entrada.s : '');
+    titulo.appendChild(crearTituloIrObservador((textoPrimero || '(sin texto)') + (entrada.s ? ' — ' + entrada.s : ''), hash));
     div.appendChild(titulo);
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', async () => {
+    acc.appendChild(botonMiniFila('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Quitar esta tarjeta de las marcadas para revisar? No se puede deshacer.'))) return;
       delete paraRevisar[hash];
       siguienteRev();
@@ -20357,6 +20577,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elVaciar.style.display = hashes.length > 0 ? 'inline-block' : 'none';
   }
 
+  activarIrObservador(document.getElementById('lista-revisar-guardadas'));
+
   document.getElementById('btn-vaciar-revisar').addEventListener('click', async () => {
     if (Object.keys(paraRevisar).length === 0) return;
     if (!(await confirmarAccion('¿Vaciar todas las tarjetas para revisar? No se puede deshacer.'))) return;
@@ -20386,6 +20608,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const elSumaRazonesOtras = document.getElementById('suma-razones-otras');
   const elInfoRazones = document.getElementById('nota-razones');
   const elVaciarRazones = document.getElementById('btn-vaciar-razones');
+  activarIrObservador(elListaRazonesAqui);
 
   function construirGrupoRazonesLazy() {
     Object.keys(razonesGuardadas).forEach((h) => {
@@ -20447,7 +20670,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const div = document.createElement('div');
     div.className = 'item-nota-otra';
     const titulo = document.createElement('div');
-    titulo.textContent = (entrada.p || '(sin texto)') + (entrada.s ? ' — ' + entrada.s : '');
+    titulo.appendChild(crearTituloIrObservador((entrada.p || '(sin texto)') + (entrada.s ? ' — ' + entrada.s : ''), hash));
     div.appendChild(titulo);
 
     const chips = document.createElement('div');
@@ -20484,7 +20707,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMini('🗑 Borrar', async () => {
+    acc.appendChild(botonMiniFila('🗑 Borrar', async () => {
       if (!(await confirmarAccion('¿Borrar por completo este registro de razones?'))) return;
       delete razonesGuardadas[hash];
       siguienteRev();

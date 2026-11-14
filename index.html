@@ -1232,13 +1232,240 @@
   .modal-btn-cancelar:hover {
     color: var(--texto-principal);
   }
+  .encabezado.encabezado-global {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .encabezado-global h1 {
+    width: 100%;
+    text-align: center;
+  }
+
+  .encabezado-global .barra-botones-vistas {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 100%;
+  }
+
+  #vista-juego [hidden] {
+    display: none !important;
+  }
+
+  .juego-barra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .juego-titulo {
+    font-size: clamp(17px, 4.8vw, 20px);
+    font-weight: 600;
+    color: var(--texto-cabecera);
+  }
+
+  .juego-panel {
+    background: var(--bg-superficie-hover);
+    border: 1.5px solid var(--color-borde-medio);
+    border-radius: 14px;
+    padding: 16px;
+    color: var(--texto-principal);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .juego-panel h2 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: var(--texto-cabecera);
+  }
+
+  .juego-panel ul {
+    margin: 8px 0 14px 20px;
+  }
+
+  .juego-panel li {
+    margin-bottom: 6px;
+  }
+
+  .juego-boton {
+    background: var(--color-boton);
+    color: #ffffff;
+    border: none;
+    border-radius: 24px;
+    padding: 12px 22px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .juego-boton.secundario {
+    background: var(--bg-superficie);
+    color: var(--texto-principal);
+    border: 1.5px solid var(--color-borde-medio);
+  }
+
+  .juego-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+
+  .juego-hud {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .juego-hud-item,
+  .juego-metrica {
+    background: var(--bg-superficie-hover);
+    border: 1.5px solid var(--color-borde-medio);
+    border-radius: 12px;
+    padding: 8px 6px;
+    text-align: center;
+  }
+
+  .juego-hud-valor,
+  .juego-metrica-valor {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--texto-cabecera);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .juego-hud-etiqueta,
+  .juego-metrica-etiqueta {
+    display: block;
+    font-size: 11px;
+    color: var(--texto-suave);
+    margin-top: 2px;
+  }
+
+  .juego-zona {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: clamp(300px, 52vh, 460px);
+    border: 3px solid var(--color-borde-medio);
+    border-radius: 18px;
+    background: var(--bg-superficie-hover);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overflow: hidden;
+  }
+
+  .juego-zona.flash-stop {
+    border-color: #e0392d;
+    animation: juego-flash-borde 0.5s ease-out;
+  }
+
+  .juego-estimulo {
+    width: clamp(110px, 38vw, 160px);
+    height: clamp(110px, 38vw, 160px);
+    border-radius: 50%;
+    background: #1fa35a;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(48px, 16vw, 72px);
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  .juego-estimulo.stop {
+    background: #e0392d;
+    box-shadow: 0 0 0 10px rgba(224, 57, 45, 0.35);
+  }
+
+  .juego-estimulo[hidden] {
+    display: none;
+  }
+
+  .juego-feedback {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 16px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    pointer-events: none;
+    min-height: 26px;
+  }
+
+  .juego-feedback.ok { color: #1fa35a; }
+  .juego-feedback.fallo { color: #e0392d; }
+  .juego-feedback.freno { color: var(--color-boton); }
+
+  .juego-feedback.anim {
+    animation: juego-pop 0.35s ease-out;
+  }
+
+  .juego-pista {
+    text-align: center;
+    font-size: 12px;
+    color: var(--texto-suave);
+    margin-top: 8px;
+  }
+
+  .juego-metricas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .juego-metrica-valor {
+    font-size: 22px;
+  }
+
+  .juego-nota {
+    font-size: 12px;
+    color: var(--texto-suave);
+    margin-top: 12px;
+  }
+
+  @keyframes juego-pop {
+    0% { transform: scale(0.6); opacity: 0; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes juego-flash-borde {
+    0% { box-shadow: inset 0 0 0 0 rgba(224, 57, 45, 0.7); }
+    40% { box-shadow: inset 0 0 60px 20px rgba(224, 57, 45, 0.55); }
+    100% { box-shadow: inset 0 0 0 0 rgba(224, 57, 45, 0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .juego-zona.flash-stop,
+    .juego-feedback.anim {
+      animation: none;
+    }
+  }
+
 </style>
 </head>
 
 <body>
 <div class="contenedor">
 
-  <div class="encabezado">
+  <div class="encabezado encabezado-global">
     <h1>📚 Mis Evaluadores</h1>
     <div class="barra-botones-vistas">
       <button
@@ -1246,6 +1473,11 @@
         id="btn-abrir-orion"
         title="Orion"
       >🐱</button>
+      <button
+        class="boton-icono-circular"
+        id="btn-abrir-juego"
+        title="Stop Signal"
+      >🎮</button>
       <button
         class="boton-icono-circular"
         id="btn-abrir-srs"
@@ -1338,6 +1570,53 @@
     <div class="grid-tienda" id="grid-tienda"></div>
     <div class="acciones-tienda">
       <button class="boton-mini-peligro" id="btn-tienda-resetear">♻️ Resetear puntos e inventario</button>
+    </div>
+  </div>
+
+  <div id="vista-juego" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-juego-volver">← Volver (Esc)</button>
+
+    <div class="juego-barra">
+      <span class="juego-titulo">🛑 Stop Signal</span>
+      <button type="button" class="boton-icono-circular" id="btn-juego-sonido" title="Silenciar o activar sonido">🔊</button>
+    </div>
+
+    <div id="juego-instrucciones" class="juego-panel">
+      <h2>Cómo se juega</h2>
+      <p><strong>Objetivo:</strong> responder lo más rápido posible a la señal verde, pero frenar tu respuesta cuando aparezca la señal de stop.</p>
+      <ul>
+        <li><strong>Señal verde (la mayoría de las veces):</strong> respondé enseguida, antes de que pase 1 segundo.</li>
+        <li><strong>Señal de stop (≈25% de las veces):</strong> después de un instante, el círculo se pone <strong>rojo</strong> con un destello y suena un <strong>beep</strong>. Si lo ves o lo oís, no respondas.</li>
+        <li><strong>Controles:</strong> barra espaciadora o clic en PC; en el celular, tocá la zona de juego. Hay una sola respuesta.</li>
+        <li>Responder antes de 100 ms no cuenta (anticipación). No hace falta ser perfecto: el juego ajusta la dificultad para que frenes cerca del 75% de las veces.</li>
+        <li>La ronda dura 90 segundos. No se guarda nada.</li>
+      </ul>
+      <div class="juego-acciones">
+        <button type="button" class="juego-boton" id="btn-juego-comenzar">Comenzar ronda</button>
+      </div>
+    </div>
+
+    <div id="juego-ronda" hidden>
+      <div class="juego-hud">
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="juego-hud-tiempo">90</span><span class="juego-hud-etiqueta">Segundos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="juego-hud-inhib">0</span><span class="juego-hud-etiqueta">Frenadas</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="juego-hud-tr">—</span><span class="juego-hud-etiqueta">Último TR (ms)</span></div>
+      </div>
+      <div class="juego-zona" id="juego-zona">
+        <div class="juego-estimulo" id="juego-estimulo" hidden>➜</div>
+        <div class="juego-feedback" id="juego-feedback" aria-live="polite"></div>
+      </div>
+      <p class="juego-pista">Espacio, clic o toque para responder · Esc para salir</p>
+    </div>
+
+    <div id="juego-resumen" class="juego-panel" hidden>
+      <h2>Resumen de la ronda</h2>
+      <div class="juego-metricas" id="juego-metricas"></div>
+      <p class="juego-nota">SSRT estimado con el método de la media (TR medio en ensayos go − SSD medio en ensayos stop). Este resumen no se guarda.</p>
+      <div class="juego-acciones">
+        <button type="button" class="juego-boton" id="btn-juego-otra">Jugar otra vez</button>
+        <button type="button" class="juego-boton secundario" id="btn-juego-ver-instr">Ver instrucciones</button>
+      </div>
     </div>
   </div>
 
@@ -1758,6 +2037,7 @@
   const elVistaOrion = document.getElementById('vista-orion');
   const elVistaTareas = document.getElementById('vista-tareas');
   const elVistaStorage = document.getElementById('vista-storage');
+  const elVistaJuego = document.getElementById('vista-juego');
 
   let vistaActual = 'principal';
 
@@ -1769,7 +2049,14 @@
     elVistaOrion.style.display = nombre === 'orion' ? 'block' : 'none';
     elVistaTareas.style.display = nombre === 'tareas' ? 'block' : 'none';
     elVistaStorage.style.display = nombre === 'storage' ? 'block' : 'none';
+    elVistaJuego.style.display = nombre === 'juego' ? 'block' : 'none';
     window.scrollTo(0, 0);
+
+    if (nombre === 'juego') {
+      inicializarVistaJuego();
+    } else {
+      juegoDetenerRonda();
+    }
 
     if (nombre === 'srs') {
       inicializarVistaSrs();
@@ -1788,6 +2075,10 @@
     }
   }
 
+  document.getElementById('btn-abrir-juego')
+    .addEventListener('click', () => mostrarVista('juego'));
+  document.getElementById('btn-juego-volver')
+    .addEventListener('click', () => mostrarVista('principal'));
   document.getElementById('btn-abrir-srs')
     .addEventListener('click', () => mostrarVista('srs'));
   document.getElementById('btn-abrir-tienda')
@@ -1831,7 +2122,7 @@
     if (vistaActual === 'tareas') {
       evento.preventDefault();
       mostrarVista('orion');
-    } else if (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion' || vistaActual === 'storage') {
+    } else if (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion' || vistaActual === 'storage' || vistaActual === 'juego') {
       evento.preventDefault();
       mostrarVista('principal');
     }
@@ -3697,6 +3988,400 @@
       });
       verificarListaTareasVacia();
     });
+  });
+
+  const JUEGO_DURACION_MS = 90000;
+  const JUEGO_VENTANA_MS = 1000;
+  const JUEGO_ANTICIPACION_MS = 100;
+  const JUEGO_PROB_STOP = 0.25;
+  const JUEGO_SSD_INICIAL = 250;
+  const JUEGO_SSD_SUBE = 25;
+  const JUEGO_SSD_BAJA = 75;
+  const JUEGO_SSD_MIN = 50;
+  const JUEGO_SSD_MAX = 800;
+  const JUEGO_MARGEN_TR = 50;
+  const JUEGO_MIN_STOPS_SSRT = 5;
+  const JUEGO_ITI_MIN = 500;
+  const JUEGO_ITI_MAX = 1000;
+
+  const elJuegoInstrucciones = document.getElementById('juego-instrucciones');
+  const elJuegoRonda = document.getElementById('juego-ronda');
+  const elJuegoResumen = document.getElementById('juego-resumen');
+  const elJuegoZona = document.getElementById('juego-zona');
+  const elJuegoEstimulo = document.getElementById('juego-estimulo');
+  const elJuegoFeedback = document.getElementById('juego-feedback');
+  const elJuegoHudTiempo = document.getElementById('juego-hud-tiempo');
+  const elJuegoHudInhib = document.getElementById('juego-hud-inhib');
+  const elJuegoHudTr = document.getElementById('juego-hud-tr');
+  const elJuegoMetricas = document.getElementById('juego-metricas');
+  const elJuegoBtnSonido = document.getElementById('btn-juego-sonido');
+
+  let juegoRonda = null;
+  let juegoSonidoActivo = true;
+  let juegoAudioCtx = null;
+  let juegoTimerFeedback = null;
+  let juegoTimerFlash = null;
+
+  function obtenerAudioCtxJuego() {
+    if (!juegoAudioCtx) {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return null;
+      try {
+        juegoAudioCtx = new Ctor();
+      } catch (e) {
+        return null;
+      }
+    }
+    if (juegoAudioCtx.state === 'suspended') {
+      juegoAudioCtx.resume();
+    }
+    return juegoAudioCtx;
+  }
+
+  function tono(ctx, freq, inicio, duracion, tipo, volumen) {
+    const osc = ctx.createOscillator();
+    const ganancia = ctx.createGain();
+    const t0 = ctx.currentTime + inicio;
+    osc.type = tipo;
+    osc.frequency.setValueAtTime(freq, t0);
+    ganancia.gain.setValueAtTime(0.0001, t0);
+    ganancia.gain.exponentialRampToValueAtTime(volumen, t0 + 0.01);
+    ganancia.gain.exponentialRampToValueAtTime(0.0001, t0 + duracion);
+    osc.connect(ganancia);
+    ganancia.connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + duracion + 0.03);
+  }
+
+  function juegoSonido(tipo) {
+    if (!juegoSonidoActivo) return;
+    const ctx = obtenerAudioCtxJuego();
+    if (!ctx) return;
+    if (tipo === 'stop') {
+      tono(ctx, 1000, 0, 0.18, 'square', 0.22);
+    } else if (tipo === 'ok') {
+      tono(ctx, 660, 0, 0.09, 'sine', 0.14);
+    } else if (tipo === 'fallo') {
+      tono(ctx, 190, 0, 0.22, 'triangle', 0.22);
+    } else if (tipo === 'freno') {
+      tono(ctx, 523, 0, 0.1, 'sine', 0.16);
+      tono(ctx, 784, 0.09, 0.16, 'sine', 0.16);
+    }
+  }
+
+  function juegoActualizarBotonSonido() {
+    elJuegoBtnSonido.textContent = juegoSonidoActivo ? '🔊' : '🔇';
+    elJuegoBtnSonido.setAttribute('aria-pressed', juegoSonidoActivo ? 'false' : 'true');
+  }
+
+  function juegoMostrarPanel(nombre) {
+    elJuegoInstrucciones.hidden = nombre !== 'instrucciones';
+    elJuegoRonda.hidden = nombre !== 'ronda';
+    elJuegoResumen.hidden = nombre !== 'resumen';
+  }
+
+  function juegoMedia(lista) {
+    if (!lista.length) return null;
+    return lista.reduce((a, b) => a + b, 0) / lista.length;
+  }
+
+  function juegoAleatorio(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function juegoLimpiarTimers(r) {
+    clearTimeout(r.timerIti);
+    clearTimeout(r.timerSenal);
+    clearTimeout(r.timerVentana);
+    clearInterval(r.timerHud);
+  }
+
+  function juegoLimpiarVisual() {
+    clearTimeout(juegoTimerFeedback);
+    clearTimeout(juegoTimerFlash);
+    elJuegoEstimulo.hidden = true;
+    elJuegoEstimulo.classList.remove('stop');
+    elJuegoEstimulo.textContent = '➜';
+    elJuegoZona.classList.remove('flash-stop');
+    elJuegoFeedback.textContent = '';
+    elJuegoFeedback.className = 'juego-feedback';
+  }
+
+  function juegoDetenerRonda() {
+    if (juegoRonda) {
+      juegoLimpiarTimers(juegoRonda);
+      juegoRonda = null;
+    }
+    juegoLimpiarVisual();
+  }
+
+  function inicializarVistaJuego() {
+    juegoDetenerRonda();
+    juegoActualizarBotonSonido();
+    juegoMostrarPanel('instrucciones');
+  }
+
+  function juegoAjustarSsd(r) {
+    let valor = r.ssd;
+    if (r.rtsGo.length >= 3) {
+      valor = Math.min(valor, juegoMedia(r.rtsGo) - JUEGO_MARGEN_TR);
+    }
+    r.ssd = Math.round(Math.min(JUEGO_SSD_MAX, Math.max(JUEGO_SSD_MIN, valor)));
+  }
+
+  function juegoActualizarHud() {
+    const r = juegoRonda;
+    if (!r) return;
+    const restante = Math.max(0, r.fin - performance.now());
+    elJuegoHudTiempo.textContent = String(Math.ceil(restante / 1000));
+    elJuegoHudInhib.textContent = String(r.stopsOk);
+    elJuegoHudTr.textContent = r.ultimoRt === null ? '—' : String(Math.round(r.ultimoRt));
+  }
+
+  function juegoMostrarFeedback(texto, clase) {
+    clearTimeout(juegoTimerFeedback);
+    elJuegoFeedback.className = 'juego-feedback ' + clase;
+    elJuegoFeedback.textContent = texto;
+    void elJuegoFeedback.offsetWidth;
+    elJuegoFeedback.classList.add('anim');
+    juegoTimerFeedback = setTimeout(() => {
+      elJuegoFeedback.textContent = '';
+      elJuegoFeedback.className = 'juego-feedback';
+    }, 700);
+  }
+
+  function juegoIniciarRonda() {
+    obtenerAudioCtxJuego();
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+    juegoDetenerRonda();
+    const ahora = performance.now();
+    juegoRonda = {
+      fin: ahora + JUEGO_DURACION_MS,
+      ssd: JUEGO_SSD_INICIAL,
+      ensayo: null,
+      timerIti: null,
+      timerSenal: null,
+      timerVentana: null,
+      timerHud: null,
+      rtsGo: [],
+      ssdsStop: [],
+      goTotal: 0,
+      stopsTotal: 0,
+      stopsOk: 0,
+      stopsFallo: 0,
+      omisiones: 0,
+      anticipaciones: 0,
+      rachaStop: 0,
+      ultimoRt: null
+    };
+    juegoMostrarPanel('ronda');
+    juegoActualizarHud();
+    juegoRonda.timerHud = setInterval(juegoTick, 100);
+    juegoProgramarSiguiente();
+  }
+
+  function juegoTick() {
+    const r = juegoRonda;
+    if (!r) return;
+    if (performance.now() >= r.fin) {
+      juegoTerminarRonda();
+      return;
+    }
+    juegoActualizarHud();
+  }
+
+  function juegoProgramarSiguiente() {
+    const r = juegoRonda;
+    if (!r) return;
+    r.timerIti = setTimeout(juegoIniciarEnsayo, juegoAleatorio(JUEGO_ITI_MIN, JUEGO_ITI_MAX));
+  }
+
+  function juegoIniciarEnsayo() {
+    const r = juegoRonda;
+    if (!r) return;
+    if (performance.now() >= r.fin) {
+      juegoTerminarRonda();
+      return;
+    }
+    const esStop = r.stopsTotal + r.goTotal > 0 && r.rachaStop < 2 && Math.random() < JUEGO_PROB_STOP;
+    r.rachaStop = esStop ? r.rachaStop + 1 : 0;
+    juegoAjustarSsd(r);
+    elJuegoFeedback.textContent = '';
+    elJuegoFeedback.className = 'juego-feedback';
+    elJuegoEstimulo.classList.remove('stop');
+    elJuegoEstimulo.textContent = '➜';
+    elJuegoEstimulo.hidden = false;
+    r.ensayo = { esStop: esStop, ssd: r.ssd, t0: performance.now(), senal: false };
+    r.timerVentana = setTimeout(juegoFinVentana, JUEGO_VENTANA_MS);
+    if (esStop) {
+      r.timerSenal = setTimeout(juegoMostrarSenal, r.ssd);
+    }
+  }
+
+  function juegoMostrarSenal() {
+    const r = juegoRonda;
+    if (!r || !r.ensayo) return;
+    r.ensayo.senal = true;
+    elJuegoEstimulo.classList.add('stop');
+    elJuegoEstimulo.textContent = '✖';
+    elJuegoZona.classList.remove('flash-stop');
+    void elJuegoZona.offsetWidth;
+    elJuegoZona.classList.add('flash-stop');
+    clearTimeout(juegoTimerFlash);
+    juegoTimerFlash = setTimeout(() => elJuegoZona.classList.remove('flash-stop'), 600);
+    juegoSonido('stop');
+  }
+
+  function juegoCerrarEnsayo() {
+    const r = juegoRonda;
+    if (!r) return;
+    clearTimeout(r.timerSenal);
+    clearTimeout(r.timerVentana);
+    r.ensayo = null;
+    elJuegoEstimulo.hidden = true;
+    elJuegoEstimulo.classList.remove('stop');
+    elJuegoEstimulo.textContent = '➜';
+    juegoActualizarHud();
+    juegoProgramarSiguiente();
+  }
+
+  function juegoResponder() {
+    const r = juegoRonda;
+    if (!r || !r.ensayo) return;
+    const ensayo = r.ensayo;
+    const rt = performance.now() - ensayo.t0;
+
+    if (rt < JUEGO_ANTICIPACION_MS) {
+      r.anticipaciones += 1;
+      juegoMostrarFeedback('✗ Muy pronto', 'fallo');
+      juegoSonido('fallo');
+      juegoCerrarEnsayo();
+      return;
+    }
+
+    if (ensayo.esStop) {
+      r.stopsTotal += 1;
+      r.stopsFallo += 1;
+      r.ssdsStop.push(ensayo.ssd);
+      r.ssd = r.ssd - JUEGO_SSD_BAJA;
+      juegoAjustarSsd(r);
+      juegoMostrarFeedback('✗ No alcanzaste a frenar', 'fallo');
+      juegoSonido('fallo');
+    } else {
+      r.goTotal += 1;
+      r.rtsGo.push(rt);
+      r.ultimoRt = rt;
+      juegoMostrarFeedback('✓ ' + Math.round(rt) + ' ms', 'ok');
+      juegoSonido('ok');
+    }
+    juegoCerrarEnsayo();
+  }
+
+  function juegoFinVentana() {
+    const r = juegoRonda;
+    if (!r || !r.ensayo) return;
+    const ensayo = r.ensayo;
+    if (ensayo.esStop) {
+      r.stopsTotal += 1;
+      r.stopsOk += 1;
+      r.ssdsStop.push(ensayo.ssd);
+      r.ssd = r.ssd + JUEGO_SSD_SUBE;
+      juegoAjustarSsd(r);
+      juegoMostrarFeedback('¡frenaste!', 'freno');
+      juegoSonido('freno');
+    } else {
+      r.goTotal += 1;
+      r.omisiones += 1;
+      juegoMostrarFeedback('✗ Sin respuesta', 'fallo');
+      juegoSonido('fallo');
+    }
+    juegoCerrarEnsayo();
+  }
+
+  function juegoTerminarRonda() {
+    const r = juegoRonda;
+    if (!r) return;
+    juegoLimpiarTimers(r);
+    juegoRonda = null;
+    juegoLimpiarVisual();
+
+    const trMedio = juegoMedia(r.rtsGo);
+    const ssdMedio = juegoMedia(r.ssdsStop);
+    const pctInhib = r.stopsTotal > 0 ? (r.stopsOk / r.stopsTotal) * 100 : null;
+    let ssrt = null;
+    if (r.stopsTotal >= JUEGO_MIN_STOPS_SSRT && trMedio !== null && ssdMedio !== null) {
+      const valor = trMedio - ssdMedio;
+      if (isFinite(valor) && valor > 0) ssrt = valor;
+    }
+
+    const metricas = [
+      ['SSRT estimado', ssrt === null ? '—' : Math.round(ssrt) + ' ms'],
+      ['Inhibición', pctInhib === null ? '—' : Math.round(pctInhib) + '%'],
+      ['TR promedio', trMedio === null ? '—' : Math.round(trMedio) + ' ms'],
+      ['SSD final', Math.round(r.ssd) + ' ms'],
+      ['Ensayos stop', r.stopsOk + ' / ' + r.stopsTotal + ' frenados'],
+      ['Fallos de stop', String(r.stopsFallo)],
+      ['Omisiones', String(r.omisiones)],
+      ['Anticipaciones', String(r.anticipaciones)]
+    ];
+
+    elJuegoMetricas.innerHTML = '';
+    metricas.forEach(([etiqueta, valor]) => {
+      const caja = document.createElement('div');
+      caja.className = 'juego-metrica';
+      const v = document.createElement('span');
+      v.className = 'juego-metrica-valor';
+      v.textContent = valor;
+      const e = document.createElement('span');
+      e.className = 'juego-metrica-etiqueta';
+      e.textContent = etiqueta;
+      caja.appendChild(v);
+      caja.appendChild(e);
+      elJuegoMetricas.appendChild(caja);
+    });
+
+    juegoMostrarPanel('resumen');
+  }
+
+  function juegoRondaActiva() {
+    return vistaActual === 'juego' && juegoRonda !== null;
+  }
+
+  elJuegoZona.addEventListener('pointerdown', (evento) => {
+    if (!juegoRondaActiva()) return;
+    evento.preventDefault();
+    juegoResponder();
+  });
+
+  document.addEventListener('keydown', (evento) => {
+    if (!juegoRondaActiva()) return;
+    if (evento.code !== 'Space' && evento.key !== ' ') return;
+    evento.preventDefault();
+    if (evento.repeat) return;
+    juegoResponder();
+  });
+
+  document.addEventListener('keyup', (evento) => {
+    if (!juegoRondaActiva()) return;
+    if (evento.code !== 'Space' && evento.key !== ' ') return;
+    evento.preventDefault();
+  });
+
+  document.getElementById('btn-juego-comenzar')
+    .addEventListener('click', juegoIniciarRonda);
+  document.getElementById('btn-juego-otra')
+    .addEventListener('click', juegoIniciarRonda);
+  document.getElementById('btn-juego-ver-instr')
+    .addEventListener('click', () => {
+      juegoDetenerRonda();
+      juegoMostrarPanel('instrucciones');
+    });
+  elJuegoBtnSonido.addEventListener('click', () => {
+    juegoSonidoActivo = !juegoSonidoActivo;
+    juegoActualizarBotonSonido();
+    if (juegoSonidoActivo) obtenerAudioCtxJuego();
   });
 </script>
 </body>
