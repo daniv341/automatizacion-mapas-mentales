@@ -1250,7 +1250,9 @@
     max-width: 100%;
   }
 
-  #vista-juego [hidden] {
+  #vista-juego [hidden],
+  #vista-cambio [hidden],
+  #vista-mozo [hidden] {
     display: none !important;
   }
 
@@ -1459,6 +1461,272 @@
     }
   }
 
+  .juegos-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .juego-tarjeta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    min-height: 80px;
+    text-align: left;
+    background: var(--bg-superficie-hover);
+    border: 1.5px solid var(--color-borde-medio);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-family: inherit;
+    color: var(--texto-principal);
+    cursor: pointer;
+    transition: border-color 0.15s;
+    touch-action: manipulation;
+  }
+
+  .juego-tarjeta:hover {
+    border-color: var(--color-boton);
+  }
+
+  .juego-tarjeta-icono {
+    font-size: 36px;
+    flex-shrink: 0;
+  }
+
+  .juego-tarjeta-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 13px;
+    color: var(--texto-suave);
+    line-height: 1.35;
+  }
+
+  .juego-tarjeta-texto strong {
+    font-size: 16px;
+    color: var(--texto-cabecera);
+  }
+
+  .juego-feedback.linea {
+    position: static;
+    margin-top: 8px;
+    bottom: auto;
+  }
+
+  .cambio-fase,
+  .mozo-fase {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--texto-cabecera);
+    text-align: center;
+    min-height: 20px;
+    margin-bottom: 8px;
+  }
+
+  .cambio-grilla {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+    padding: 10px;
+    background: var(--bg-superficie-hover);
+    border: 3px solid var(--color-borde-medio);
+    border-radius: 16px;
+  }
+
+  .cambio-celda {
+    position: relative;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-superficie);
+    border: 2px solid var(--color-borde-medio);
+    border-radius: 12px;
+    font-size: clamp(28px, 9vw, 46px);
+    padding: 0;
+    cursor: default;
+    font-family: inherit;
+    color: var(--texto-principal);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .cambio-grilla.n4 .cambio-celda {
+    font-size: clamp(22px, 7vw, 36px);
+  }
+
+  .cambio-celda.respondible {
+    cursor: pointer;
+  }
+
+  .cambio-celda.mascara {
+    background: var(--color-borde-fuerte);
+    border-color: var(--color-borde-fuerte);
+  }
+
+  .cambio-celda.tinte .cambio-emoji {
+    filter: hue-rotate(150deg) saturate(1.5);
+  }
+
+  .cambio-celda.nuevo {
+    border-color: #1fa35a;
+    background: rgba(31, 163, 90, 0.2);
+  }
+
+  .cambio-celda.errada {
+    border-color: #e0392d;
+    background: rgba(224, 57, 45, 0.2);
+  }
+
+  .cambio-antes {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 0.45em;
+    opacity: 0.85;
+  }
+
+  .mozo-escena {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-height: clamp(300px, 50vh, 420px);
+    padding: 14px;
+    background: var(--bg-superficie-hover);
+    border: 3px solid var(--color-borde-medio);
+    border-radius: 16px;
+  }
+
+  .mozo-pedidos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    width: 100%;
+  }
+
+  .mozo-pedido {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-superficie);
+    border: 1.5px solid var(--color-borde-medio);
+    border-radius: 12px;
+    padding: 10px 6px;
+    font-size: 30px;
+  }
+
+  .mozo-pedido small {
+    font-size: 12px;
+    color: var(--texto-suave);
+  }
+
+  .mozo-mesas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .mozo-mesa {
+    min-width: 66px;
+    text-align: center;
+    background: var(--bg-superficie);
+    border: 2px solid var(--color-borde-medio);
+    border-radius: 12px;
+    padding: 6px 10px;
+    font-size: 28px;
+  }
+
+  .mozo-mesa small {
+    display: block;
+    font-size: 11px;
+    color: var(--texto-suave);
+  }
+
+  .mozo-mesa.activa {
+    border-color: var(--color-boton);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+  }
+
+  .mozo-mesa.ok {
+    border-color: #1fa35a;
+    background: rgba(31, 163, 90, 0.18);
+  }
+
+  .mozo-mesa.fallo {
+    border-color: #e0392d;
+    background: rgba(224, 57, 45, 0.18);
+  }
+
+  .mozo-bandeja {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    gap: 10px;
+    width: 100%;
+    margin-top: auto;
+  }
+
+  .mozo-plato {
+    aspect-ratio: 1;
+    font-size: clamp(32px, 9vw, 44px);
+    background: var(--bg-superficie);
+    border: 2px solid var(--color-borde-medio);
+    border-radius: 50%;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mozo-plato.correcto {
+    border-color: #1fa35a;
+    background: rgba(31, 163, 90, 0.25);
+  }
+
+  .mozo-plato.elegido-mal {
+    border-color: #e0392d;
+    background: rgba(224, 57, 45, 0.2);
+  }
+
+  .mozo-distractor {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    min-height: 240px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--bg-superficie);
+    touch-action: manipulation;
+  }
+
+  .mozo-circulo {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mozo-circulo.verde { background: #1fa35a; }
+  .mozo-circulo.rojo { background: #e0392d; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .juego-tarjeta {
+      transition: none;
+    }
+  }
+
 </style>
 </head>
 
@@ -1578,7 +1846,7 @@
 
     <div class="juego-barra">
       <span class="juego-titulo">🛑 Stop Signal</span>
-      <button type="button" class="boton-icono-circular" id="btn-juego-sonido" title="Silenciar o activar sonido">🔊</button>
+      <button type="button" class="boton-icono-circular js-sonido" id="btn-juego-sonido" title="Silenciar o activar sonido">🔊</button>
     </div>
 
     <div id="juego-instrucciones" class="juego-panel">
@@ -1616,6 +1884,121 @@
       <div class="juego-acciones">
         <button type="button" class="juego-boton" id="btn-juego-otra">Jugar otra vez</button>
         <button type="button" class="juego-boton secundario" id="btn-juego-ver-instr">Ver instrucciones</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="vista-juegos" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-juegos-volver">← Volver (Esc)</button>
+    <div class="juego-barra">
+      <span class="juego-titulo">🎮 Menú de minijuegos</span>
+      <button type="button" class="boton-icono-circular js-sonido" title="Silenciar o activar sonido">🔊</button>
+    </div>
+
+    <div class="juegos-grid">
+      <button type="button" class="juego-tarjeta" id="tarjeta-stop">
+        <span class="juego-tarjeta-icono">🛑</span>
+        <span class="juego-tarjeta-texto"><strong>Stop Signal</strong><span>Respondé rápido a la señal verde y frená cuando aparezca el stop.</span></span>
+      </button>
+      <button type="button" class="juego-tarjeta" id="tarjeta-cambio">
+        <span class="juego-tarjeta-icono">🔄</span>
+        <span class="juego-tarjeta-texto"><strong>¿Qué cambió?</strong><span>Memorizá la grilla de emojis y encontrá la celda que cambió.</span></span>
+      </button>
+      <button type="button" class="juego-tarjeta" id="tarjeta-mozo">
+        <span class="juego-tarjeta-icono">🍽️</span>
+        <span class="juego-tarjeta-texto"><strong>Mozo distraído</strong><span>Recordá los pedidos pese a las distracciones y servilos bien.</span></span>
+      </button>
+    </div>
+  </div>
+
+  <div id="vista-cambio" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-cambio-volver">← Volver (Esc)</button>
+    <div class="juego-barra">
+      <span class="juego-titulo">🔄 ¿Qué cambió?</span>
+      <button type="button" class="boton-icono-circular js-sonido" title="Silenciar o activar sonido">🔊</button>
+    </div>
+
+    <div id="cambio-instrucciones" class="juego-panel">
+      <h2>Cómo se juega</h2>
+      <p><strong>Objetivo:</strong> detectar qué cambió entre dos grillas de emojis.</p>
+      <ul>
+        <li>Se muestra una grilla unos segundos. Después aparece una máscara gris muy breve.</li>
+        <li>Luego vuelve la grilla con <strong>un solo cambio</strong>: un emoji desaparece, es reemplazado, cambia de color o intercambia lugar con otro. Tocá la celda que cambió.</li>
+        <li>Tenés unos 4 segundos para responder. Si fallás, se te muestra el cambio antes de seguir.</li>
+        <li>El juego ajusta solo el tiempo de exposición y el tamaño de la grilla para que aciertes cerca del 75% de las veces.</li>
+        <li>La ronda dura 60 segundos; si el tiempo se acaba en medio de un ensayo, ese ensayo se termina. No se guarda nada.</li>
+      </ul>
+      <div class="juego-acciones">
+        <button type="button" class="juego-boton" id="btn-cambio-comenzar">Comenzar ronda</button>
+      </div>
+    </div>
+
+    <div id="cambio-ronda" hidden>
+      <div class="juego-hud">
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="cambio-hud-tiempo">0</span><span class="juego-hud-etiqueta">Segundos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="cambio-hud-aciertos">0</span><span class="juego-hud-etiqueta">Aciertos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="cambio-hud-racha">0</span><span class="juego-hud-etiqueta">Racha</span></div>
+      </div>
+      <div class="cambio-fase" id="cambio-fase"></div>
+      <div class="cambio-grilla" id="cambio-grilla"></div>
+      <div class="juego-feedback linea" id="cambio-feedback" aria-live="polite"></div>
+      <p class="juego-pista">Esc para salir</p>
+    </div>
+
+    <div id="cambio-resumen" class="juego-panel" hidden>
+      <h2>Resumen de la ronda</h2>
+      <div class="juego-metricas" id="cambio-metricas"></div>
+      <p class="juego-nota">Este resumen no se guarda: se pierde al recargar la página.</p>
+      <div class="juego-acciones">
+        <button type="button" class="juego-boton" id="btn-cambio-otra">Jugar otra vez</button>
+        <button type="button" class="juego-boton secundario" id="btn-cambio-ver-instr">Ver instrucciones</button>
+        <button type="button" class="juego-boton secundario" id="btn-cambio-menu">Volver al menú</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="vista-mozo" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-mozo-volver">← Volver (Esc)</button>
+    <div class="juego-barra">
+      <span class="juego-titulo">🍽️ Mozo distraído</span>
+      <button type="button" class="boton-icono-circular js-sonido" title="Silenciar o activar sonido">🔊</button>
+    </div>
+
+    <div id="mozo-instrucciones" class="juego-panel">
+      <h2>Cómo se juega</h2>
+      <p><strong>Objetivo:</strong> recordar qué plato pidió cada mesa y servirlo bien.</p>
+      <ul>
+        <li><strong>Memorizá:</strong> se muestran de 2 a 4 pedidos (cliente y plato) durante unos 5 segundos.</li>
+        <li><strong>Distracción (20 s):</strong> tocá los círculos verdes e ignorá los rojos. Esta parte no suma ni resta puntos: solo estorba tu memoria.</li>
+        <li><strong>Servir:</strong> las mesas se atienden de a una. Tocá en la bandeja el plato que pidió la mesa resaltada. Hay platos de más que no corresponden a ningún pedido. Cada mesa tiene un solo intento.</li>
+        <li>Según cuántos pedidos aciertes, el siguiente ciclo tendrá más o menos pedidos.</li>
+        <li>La ronda dura 90 segundos; si el tiempo se acaba en medio de un ciclo, ese ciclo se termina. No se guarda nada.</li>
+      </ul>
+      <div class="juego-acciones">
+        <button type="button" class="juego-boton" id="btn-mozo-comenzar">Comenzar ronda</button>
+      </div>
+    </div>
+
+    <div id="mozo-ronda" hidden>
+      <div class="juego-hud">
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="mozo-hud-tiempo">0</span><span class="juego-hud-etiqueta">Segundos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="mozo-hud-correctos">0</span><span class="juego-hud-etiqueta">Correctos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="mozo-hud-racha">0</span><span class="juego-hud-etiqueta">Racha</span></div>
+      </div>
+      <div class="mozo-fase" id="mozo-fase"></div>
+      <div class="mozo-escena" id="mozo-escena"></div>
+      <div class="juego-feedback linea" id="mozo-feedback" aria-live="polite"></div>
+      <p class="juego-pista">Esc para salir</p>
+    </div>
+
+    <div id="mozo-resumen" class="juego-panel" hidden>
+      <h2>Resumen de la ronda</h2>
+      <div class="juego-metricas" id="mozo-metricas"></div>
+      <p class="juego-nota">Este resumen no se guarda: se pierde al recargar la página.</p>
+      <div class="juego-acciones">
+        <button type="button" class="juego-boton" id="btn-mozo-otra">Jugar otra vez</button>
+        <button type="button" class="juego-boton secundario" id="btn-mozo-ver-instr">Ver instrucciones</button>
+        <button type="button" class="juego-boton secundario" id="btn-mozo-menu">Volver al menú</button>
       </div>
     </div>
   </div>
@@ -2038,6 +2421,9 @@
   const elVistaTareas = document.getElementById('vista-tareas');
   const elVistaStorage = document.getElementById('vista-storage');
   const elVistaJuego = document.getElementById('vista-juego');
+  const elVistaJuegos = document.getElementById('vista-juegos');
+  const elVistaCambio = document.getElementById('vista-cambio');
+  const elVistaMozo = document.getElementById('vista-mozo');
 
   let vistaActual = 'principal';
 
@@ -2052,10 +2438,27 @@
     elVistaJuego.style.display = nombre === 'juego' ? 'block' : 'none';
     window.scrollTo(0, 0);
 
+    elVistaJuegos.style.display = nombre === 'juegos' ? 'block' : 'none';
+    elVistaCambio.style.display = nombre === 'cambio' ? 'block' : 'none';
+    elVistaMozo.style.display = nombre === 'mozo' ? 'block' : 'none';
+
     if (nombre === 'juego') {
       inicializarVistaJuego();
     } else {
       juegoDetenerRonda();
+    }
+    if (nombre === 'cambio') {
+      inicializarVistaCambio();
+    } else {
+      cambioDetener();
+    }
+    if (nombre === 'mozo') {
+      inicializarVistaMozo();
+    } else {
+      mozoDetener();
+    }
+    if (nombre === 'juegos') {
+      juegoActualizarBotonSonido();
     }
 
     if (nombre === 'srs') {
@@ -2076,9 +2479,21 @@
   }
 
   document.getElementById('btn-abrir-juego')
-    .addEventListener('click', () => mostrarVista('juego'));
-  document.getElementById('btn-juego-volver')
+    .addEventListener('click', () => mostrarVista('juegos'));
+  document.getElementById('btn-juegos-volver')
     .addEventListener('click', () => mostrarVista('principal'));
+  document.getElementById('btn-juego-volver')
+    .addEventListener('click', () => mostrarVista('juegos'));
+  document.getElementById('btn-cambio-volver')
+    .addEventListener('click', () => mostrarVista('juegos'));
+  document.getElementById('btn-mozo-volver')
+    .addEventListener('click', () => mostrarVista('juegos'));
+  document.getElementById('tarjeta-stop')
+    .addEventListener('click', () => mostrarVista('juego'));
+  document.getElementById('tarjeta-cambio')
+    .addEventListener('click', () => mostrarVista('cambio'));
+  document.getElementById('tarjeta-mozo')
+    .addEventListener('click', () => mostrarVista('mozo'));
   document.getElementById('btn-abrir-srs')
     .addEventListener('click', () => mostrarVista('srs'));
   document.getElementById('btn-abrir-tienda')
@@ -2122,7 +2537,10 @@
     if (vistaActual === 'tareas') {
       evento.preventDefault();
       mostrarVista('orion');
-    } else if (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion' || vistaActual === 'storage' || vistaActual === 'juego') {
+    } else if (vistaActual === 'juego' || vistaActual === 'cambio' || vistaActual === 'mozo') {
+      evento.preventDefault();
+      mostrarVista('juegos');
+    } else if (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion' || vistaActual === 'storage' || vistaActual === 'juegos') {
       evento.preventDefault();
       mostrarVista('principal');
     }
@@ -4070,8 +4488,10 @@
   }
 
   function juegoActualizarBotonSonido() {
-    elJuegoBtnSonido.textContent = juegoSonidoActivo ? '🔊' : '🔇';
-    elJuegoBtnSonido.setAttribute('aria-pressed', juegoSonidoActivo ? 'false' : 'true');
+    document.querySelectorAll('.js-sonido').forEach((boton) => {
+      boton.textContent = juegoSonidoActivo ? '🔊' : '🔇';
+      boton.setAttribute('aria-pressed', juegoSonidoActivo ? 'false' : 'true');
+    });
   }
 
   function juegoMostrarPanel(nombre) {
@@ -4378,11 +4798,621 @@
       juegoDetenerRonda();
       juegoMostrarPanel('instrucciones');
     });
-  elJuegoBtnSonido.addEventListener('click', () => {
-    juegoSonidoActivo = !juegoSonidoActivo;
-    juegoActualizarBotonSonido();
-    if (juegoSonidoActivo) obtenerAudioCtxJuego();
+  document.querySelectorAll('.js-sonido').forEach((boton) => {
+    boton.addEventListener('click', () => {
+      juegoSonidoActivo = !juegoSonidoActivo;
+      juegoActualizarBotonSonido();
+      if (juegoSonidoActivo) obtenerAudioCtxJuego();
+    });
   });
+
+  function minijuegoPanel(prefijo, nombre) {
+    ['instrucciones', 'ronda', 'resumen'].forEach((p) => {
+      document.getElementById(prefijo + '-' + p).hidden = p !== nombre;
+    });
+  }
+
+  function minijuegoMetricas(contenedor, lista) {
+    contenedor.innerHTML = '';
+    lista.forEach(([etiqueta, valor]) => {
+      const caja = document.createElement('div');
+      caja.className = 'juego-metrica';
+      const v = document.createElement('span');
+      v.className = 'juego-metrica-valor';
+      v.textContent = valor;
+      const e = document.createElement('span');
+      e.className = 'juego-metrica-etiqueta';
+      e.textContent = etiqueta;
+      caja.appendChild(v);
+      caja.appendChild(e);
+      contenedor.appendChild(caja);
+    });
+  }
+
+  function minijuegoFeedback(el, texto, clase, ms) {
+    clearTimeout(el._timer);
+    el.className = 'juego-feedback linea ' + clase;
+    el.textContent = texto;
+    void el.offsetWidth;
+    el.classList.add('anim');
+    el._timer = setTimeout(() => {
+      el.textContent = '';
+      el.className = 'juego-feedback linea';
+    }, ms);
+  }
+
+  function minijuegoLimpiarFeedback(el) {
+    clearTimeout(el._timer);
+    el.textContent = '';
+    el.className = 'juego-feedback linea';
+  }
+
+  function minijuegoMezclar(lista) {
+    const copia = lista.slice();
+    for (let i = copia.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = copia[i];
+      copia[i] = copia[j];
+      copia[j] = tmp;
+    }
+    return copia;
+  }
+
+  function minijuegoElegir(lista) {
+    return lista[Math.floor(Math.random() * lista.length)];
+  }
+
+  function minijuegoCrear(tag, clase, texto) {
+    const nodo = document.createElement(tag);
+    if (clase) nodo.className = clase;
+    if (texto !== undefined) nodo.textContent = texto;
+    return nodo;
+  }
+
+  const CAMBIO_DURACION_MS = 60000;
+  const CAMBIO_EXPO_INICIAL = 3000;
+  const CAMBIO_EXPO_BAJA = 250;
+  const CAMBIO_EXPO_SUBE = 750;
+  const CAMBIO_EXPO_MIN = 1500;
+  const CAMBIO_EXPO_MAX = 5000;
+  const CAMBIO_MASCARA_MS = 400;
+  const CAMBIO_VENTANA_MS = 4000;
+  const CAMBIO_REVELAR_MS = 1500;
+  const CAMBIO_PAUSA_OK_MS = 500;
+  const CAMBIO_ACIERTOS_PARA_4X4 = 4;
+  const CAMBIO_FALLOS_PARA_3X3 = 2;
+  const CAMBIO_POOL = ['🍎', '🍌', '🍇', '🍓', '🍒', '🍑', '🍋', '🍉', '🍍', '🍊', '🥕', '🌽', '🐸', '🐥', '🦊', '🐙', '🐞', '🦋', '🐠', '🦜', '🌻', '🌵', '🎈', '🚗'];
+  const CAMBIO_ETIQUETAS = {
+    desaparece: 'un emoji desapareció',
+    reemplazo: 'un emoji fue reemplazado',
+    color: 'un emoji cambió de color',
+    intercambio: 'dos emojis intercambiaron lugar'
+  };
+
+  const elCambioFase = document.getElementById('cambio-fase');
+  const elCambioGrilla = document.getElementById('cambio-grilla');
+  const elCambioFeedback = document.getElementById('cambio-feedback');
+  const elCambioHudTiempo = document.getElementById('cambio-hud-tiempo');
+  const elCambioHudAciertos = document.getElementById('cambio-hud-aciertos');
+  const elCambioHudRacha = document.getElementById('cambio-hud-racha');
+
+  let cambioRonda = null;
+
+  function cambioDetener() {
+    if (cambioRonda) {
+      clearTimeout(cambioRonda.timerFase);
+      clearInterval(cambioRonda.timerHud);
+      cambioRonda = null;
+    }
+    elCambioGrilla.innerHTML = '';
+    elCambioFase.textContent = '';
+    minijuegoLimpiarFeedback(elCambioFeedback);
+  }
+
+  function inicializarVistaCambio() {
+    cambioDetener();
+    juegoActualizarBotonSonido();
+    minijuegoPanel('cambio', 'instrucciones');
+  }
+
+  function cambioActualizarHud() {
+    const r = cambioRonda;
+    if (!r) return;
+    elCambioHudTiempo.textContent = String(Math.ceil(Math.max(0, r.fin - performance.now()) / 1000));
+    elCambioHudAciertos.textContent = String(r.aciertos);
+    elCambioHudRacha.textContent = String(r.racha);
+  }
+
+  function cambioIniciar() {
+    obtenerAudioCtxJuego();
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+    cambioDetener();
+    cambioRonda = {
+      fin: performance.now() + CAMBIO_DURACION_MS,
+      expo: CAMBIO_EXPO_INICIAL,
+      n: 3,
+      gridAciertos: 0,
+      gridFallos: 0,
+      racha: 0,
+      mejorRacha: 0,
+      aciertos: 0,
+      ensayos: 0,
+      rts: [],
+      timerFase: null,
+      timerHud: null,
+      ensayo: null
+    };
+    minijuegoPanel('cambio', 'ronda');
+    cambioActualizarHud();
+    cambioRonda.timerHud = setInterval(cambioActualizarHud, 200);
+    cambioNuevoEnsayo();
+  }
+
+  function cambioGenerar(n, alto) {
+    const total = n * n;
+    const emojis = minijuegoMezclar(CAMBIO_POOL).slice(0, total);
+    const antes = emojis.map((e) => ({ e: e, tinte: false }));
+    const despues = antes.map((c) => ({ e: c.e, tinte: c.tinte }));
+    const tipos = alto ? ['desaparece', 'reemplazo', 'color', 'intercambio'] : ['desaparece', 'reemplazo'];
+    const tipo = minijuegoElegir(tipos);
+    let validas;
+    if (tipo === 'intercambio') {
+      const i = Math.floor(Math.random() * total);
+      let j = Math.floor(Math.random() * (total - 1));
+      if (j >= i) j += 1;
+      const tmp = despues[i];
+      despues[i] = despues[j];
+      despues[j] = tmp;
+      validas = [i, j];
+    } else {
+      const i = Math.floor(Math.random() * total);
+      if (tipo === 'desaparece') {
+        despues[i] = { e: '', tinte: false };
+      } else if (tipo === 'reemplazo') {
+        const libres = CAMBIO_POOL.filter((e) => emojis.indexOf(e) === -1);
+        despues[i] = { e: minijuegoElegir(libres), tinte: false };
+      } else {
+        despues[i].tinte = true;
+      }
+      validas = [i];
+    }
+    return { antes: antes, despues: despues, tipo: tipo, validas: validas };
+  }
+
+  function cambioRender(celdas, n, modo, ensayo, tocada) {
+    elCambioGrilla.innerHTML = '';
+    elCambioGrilla.className = 'cambio-grilla n' + n;
+    elCambioGrilla.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+    celdas.forEach((c, i) => {
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'cambio-celda';
+      boton.dataset.i = String(i);
+      if (modo === 'mascara') {
+        boton.classList.add('mascara');
+      } else {
+        const emoji = minijuegoCrear('span', 'cambio-emoji', c.e);
+        boton.appendChild(emoji);
+        if (c.tinte) boton.classList.add('tinte');
+      }
+      if (modo === 'responder') {
+        boton.classList.add('respondible');
+      }
+      if (modo === 'revelar' && ensayo) {
+        if (ensayo.validas.indexOf(i) !== -1) {
+          boton.classList.add('nuevo');
+          boton.appendChild(minijuegoCrear('span', 'cambio-antes', ensayo.antes[i].e));
+          if (c.e === '') {
+            boton.querySelector('.cambio-emoji').textContent = '✕';
+          }
+        } else if (i === tocada) {
+          boton.classList.add('errada');
+        }
+      }
+      elCambioGrilla.appendChild(boton);
+    });
+  }
+
+  function cambioNuevoEnsayo() {
+    const r = cambioRonda;
+    if (!r) return;
+    if (performance.now() >= r.fin) {
+      cambioTerminar();
+      return;
+    }
+    const alto = r.n === 4 || r.expo <= 2000;
+    r.ensayo = cambioGenerar(r.n, alto);
+    r.ensayo.abierto = false;
+    r.ensayo.t0 = 0;
+    minijuegoLimpiarFeedback(elCambioFeedback);
+    elCambioFase.textContent = 'Memorizá la grilla';
+    cambioRender(r.ensayo.antes, r.n, 'ver', null, -1);
+    r.timerFase = setTimeout(cambioMascara, r.expo);
+  }
+
+  function cambioMascara() {
+    const r = cambioRonda;
+    if (!r) return;
+    elCambioFase.textContent = '';
+    cambioRender(r.ensayo.antes, r.n, 'mascara', null, -1);
+    r.timerFase = setTimeout(cambioResponder, CAMBIO_MASCARA_MS);
+  }
+
+  function cambioResponder() {
+    const r = cambioRonda;
+    if (!r) return;
+    elCambioFase.textContent = '¿Qué cambió? Tocá la celda';
+    cambioRender(r.ensayo.despues, r.n, 'responder', null, -1);
+    r.ensayo.t0 = performance.now();
+    r.ensayo.abierto = true;
+    r.timerFase = setTimeout(() => cambioResolver(false, 0, -1, true), CAMBIO_VENTANA_MS);
+  }
+
+  function cambioResolver(acierto, rt, tocada, tiempoAgotado) {
+    const r = cambioRonda;
+    if (!r || !r.ensayo) return;
+    clearTimeout(r.timerFase);
+    r.ensayo.abierto = false;
+    r.ensayos += 1;
+    const ensayo = r.ensayo;
+    let espera;
+    if (acierto) {
+      r.aciertos += 1;
+      r.racha += 1;
+      if (r.racha > r.mejorRacha) r.mejorRacha = r.racha;
+      r.rts.push(rt);
+      r.gridAciertos += 1;
+      r.gridFallos = 0;
+      r.expo = Math.max(CAMBIO_EXPO_MIN, r.expo - CAMBIO_EXPO_BAJA);
+      cambioRender(ensayo.despues, r.n, 'revelar', ensayo, -1);
+      elCambioFase.textContent = '';
+      minijuegoFeedback(elCambioFeedback, '✓ ' + Math.round(rt) + ' ms', 'ok', 900);
+      juegoSonido('ok');
+      espera = CAMBIO_PAUSA_OK_MS;
+    } else {
+      r.racha = 0;
+      r.gridFallos += 1;
+      r.gridAciertos = 0;
+      r.expo = Math.min(CAMBIO_EXPO_MAX, r.expo + CAMBIO_EXPO_SUBE);
+      cambioRender(ensayo.despues, r.n, 'revelar', ensayo, tocada);
+      elCambioFase.textContent = '';
+      const prefijo = tiempoAgotado ? '✗ Se acabó el tiempo: ' : '✗ ';
+      minijuegoFeedback(elCambioFeedback, prefijo + CAMBIO_ETIQUETAS[ensayo.tipo], 'fallo', CAMBIO_REVELAR_MS);
+      juegoSonido('fallo');
+      espera = CAMBIO_REVELAR_MS;
+    }
+    if (r.n === 3 && r.gridAciertos >= CAMBIO_ACIERTOS_PARA_4X4) {
+      r.n = 4;
+      r.gridAciertos = 0;
+      r.gridFallos = 0;
+    } else if (r.n === 4 && r.gridFallos >= CAMBIO_FALLOS_PARA_3X3) {
+      r.n = 3;
+      r.gridAciertos = 0;
+      r.gridFallos = 0;
+    }
+    cambioActualizarHud();
+    r.ensayo = null;
+    r.timerFase = setTimeout(cambioNuevoEnsayo, espera);
+  }
+
+  elCambioGrilla.addEventListener('click', (evento) => {
+    const r = cambioRonda;
+    if (!r || !r.ensayo || !r.ensayo.abierto) return;
+    const celda = evento.target.closest('.cambio-celda');
+    if (!celda) return;
+    const indice = Number(celda.dataset.i);
+    const rt = performance.now() - r.ensayo.t0;
+    cambioResolver(r.ensayo.validas.indexOf(indice) !== -1, rt, indice, false);
+  });
+
+  function cambioTerminar() {
+    const r = cambioRonda;
+    if (!r) return;
+    clearTimeout(r.timerFase);
+    clearInterval(r.timerHud);
+    cambioRonda = null;
+    elCambioGrilla.innerHTML = '';
+    elCambioFase.textContent = '';
+    minijuegoLimpiarFeedback(elCambioFeedback);
+    const pct = r.ensayos > 0 ? Math.round((r.aciertos / r.ensayos) * 100) + '%' : '—';
+    const tr = r.rts.length ? Math.round(r.rts.reduce((a, b) => a + b, 0) / r.rts.length) + ' ms' : '—';
+    minijuegoMetricas(document.getElementById('cambio-metricas'), [
+      ['Aciertos', pct],
+      ['TR promedio', tr],
+      ['Mejor racha', String(r.mejorRacha)],
+      ['Ensayos jugados', String(r.ensayos)],
+      ['Aciertos totales', String(r.aciertos)],
+      ['Exposición final', Math.round(r.expo) + ' ms']
+    ]);
+    minijuegoPanel('cambio', 'resumen');
+  }
+
+  document.getElementById('btn-cambio-comenzar').addEventListener('click', cambioIniciar);
+  document.getElementById('btn-cambio-otra').addEventListener('click', cambioIniciar);
+  document.getElementById('btn-cambio-ver-instr').addEventListener('click', () => {
+    cambioDetener();
+    minijuegoPanel('cambio', 'instrucciones');
+  });
+  document.getElementById('btn-cambio-menu').addEventListener('click', () => mostrarVista('juegos'));
+
+  const MOZO_DURACION_MS = 90000;
+  const MOZO_MEMORIZAR_MS = 5000;
+  const MOZO_DISTRACTOR_MS = 20000;
+  const MOZO_SENUELOS = 2;
+  const MOZO_MIN = 2;
+  const MOZO_MAX = 4;
+  const MOZO_UMBRAL_SUBE = 0.75;
+  const MOZO_UMBRAL_BAJA = 0.5;
+  const MOZO_CARAS = ['😀', '😎', '🤓', '🥳', '😴', '🤠', '🧐', '😺'];
+  const MOZO_PLATOS = ['🍕', '🍔', '🌮', '🍣', '🍝', '🥗', '🍗', '🥪', '🍜', '🥞', '🍰', '🍟', '🥟', '🍩'];
+
+  const elMozoFase = document.getElementById('mozo-fase');
+  const elMozoEscena = document.getElementById('mozo-escena');
+  const elMozoFeedback = document.getElementById('mozo-feedback');
+  const elMozoHudTiempo = document.getElementById('mozo-hud-tiempo');
+  const elMozoHudCorrectos = document.getElementById('mozo-hud-correctos');
+  const elMozoHudRacha = document.getElementById('mozo-hud-racha');
+
+  let mozoRonda = null;
+
+  function mozoDetener() {
+    if (mozoRonda) {
+      clearTimeout(mozoRonda.timerFase);
+      clearTimeout(mozoRonda.timerSpawn);
+      clearInterval(mozoRonda.timerHud);
+      mozoRonda = null;
+    }
+    elMozoEscena.innerHTML = '';
+    elMozoFase.textContent = '';
+    minijuegoLimpiarFeedback(elMozoFeedback);
+  }
+
+  function inicializarVistaMozo() {
+    mozoDetener();
+    juegoActualizarBotonSonido();
+    minijuegoPanel('mozo', 'instrucciones');
+  }
+
+  function mozoActualizarHud() {
+    const r = mozoRonda;
+    if (!r) return;
+    elMozoHudTiempo.textContent = String(Math.ceil(Math.max(0, r.fin - performance.now()) / 1000));
+    elMozoHudCorrectos.textContent = String(r.correctos);
+    elMozoHudRacha.textContent = String(r.racha);
+    if (r.fase === 'distractor') {
+      const resto = Math.max(0, Math.ceil((r.finFase - performance.now()) / 1000));
+      elMozoFase.textContent = 'Distracción (' + resto + ' s): tocá los verdes, ignorá los rojos';
+    }
+  }
+
+  function mozoIniciar() {
+    obtenerAudioCtxJuego();
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+    mozoDetener();
+    mozoRonda = {
+      fin: performance.now() + MOZO_DURACION_MS,
+      k: MOZO_MIN,
+      maxK: MOZO_MIN,
+      fase: '',
+      finFase: 0,
+      ciclo: null,
+      ciclos: 0,
+      correctos: 0,
+      servidos: 0,
+      racha: 0,
+      mejorRacha: 0,
+      bloqueado: false,
+      timerFase: null,
+      timerSpawn: null,
+      timerHud: null
+    };
+    minijuegoPanel('mozo', 'ronda');
+    mozoActualizarHud();
+    mozoRonda.timerHud = setInterval(mozoActualizarHud, 200);
+    mozoNuevoCiclo();
+  }
+
+  function mozoNuevoCiclo() {
+    const r = mozoRonda;
+    if (!r) return;
+    if (performance.now() >= r.fin) {
+      mozoTerminar();
+      return;
+    }
+    const k = r.k;
+    if (k > r.maxK) r.maxK = k;
+    const caras = minijuegoMezclar(MOZO_CARAS).slice(0, k);
+    const platos = minijuegoMezclar(MOZO_PLATOS).slice(0, k + MOZO_SENUELOS);
+    const pedidos = caras.map((cara, i) => ({ mesa: i + 1, cara: cara, plato: platos[i] }));
+    const senuelos = platos.slice(k);
+    const orden = minijuegoMezclar(pedidos.map((p, i) => i));
+    r.ciclo = { pedidos: pedidos, senuelos: senuelos, orden: orden, idx: 0, correctos: 0 };
+    minijuegoLimpiarFeedback(elMozoFeedback);
+    mozoMemorizar();
+  }
+
+  function mozoMemorizar() {
+    const r = mozoRonda;
+    if (!r) return;
+    r.fase = 'memorizar';
+    elMozoFase.textContent = '🧠 Memorizá los pedidos';
+    elMozoEscena.innerHTML = '';
+    const lista = minijuegoCrear('div', 'mozo-pedidos');
+    r.ciclo.pedidos.forEach((p) => {
+      const caja = minijuegoCrear('div', 'mozo-pedido');
+      caja.appendChild(minijuegoCrear('small', '', 'Mesa ' + p.mesa));
+      caja.appendChild(minijuegoCrear('span', '', p.cara + ' ' + p.plato));
+      lista.appendChild(caja);
+    });
+    elMozoEscena.appendChild(lista);
+    r.timerFase = setTimeout(mozoDistractor, MOZO_MEMORIZAR_MS);
+  }
+
+  function mozoDistractor() {
+    const r = mozoRonda;
+    if (!r) return;
+    r.fase = 'distractor';
+    r.finFase = performance.now() + MOZO_DISTRACTOR_MS;
+    elMozoEscena.innerHTML = '';
+    const area = minijuegoCrear('div', 'mozo-distractor');
+    elMozoEscena.appendChild(area);
+    mozoActualizarHud();
+    r.timerFase = setTimeout(() => {
+      clearTimeout(r.timerSpawn);
+      mozoServir();
+    }, MOZO_DISTRACTOR_MS);
+    r.timerSpawn = setTimeout(() => mozoSpawn(area), 400);
+  }
+
+  function mozoSpawn(area) {
+    const r = mozoRonda;
+    if (!r || r.fase !== 'distractor') return;
+    const tam = 60;
+    const ancho = Math.max(0, area.clientWidth - tam);
+    const alto = Math.max(0, area.clientHeight - tam);
+    const circulo = minijuegoCrear('button', 'mozo-circulo ' + (Math.random() < 0.6 ? 'verde' : 'rojo'));
+    circulo.type = 'button';
+    circulo.style.left = Math.round(Math.random() * ancho) + 'px';
+    circulo.style.top = Math.round(Math.random() * alto) + 'px';
+    circulo.addEventListener('pointerdown', (evento) => {
+      evento.preventDefault();
+      if (circulo.classList.contains('verde')) circulo.remove();
+    });
+    area.appendChild(circulo);
+    setTimeout(() => circulo.remove(), 1100);
+    r.timerSpawn = setTimeout(() => mozoSpawn(area), 600 + Math.random() * 300);
+  }
+
+  function mozoServir() {
+    const r = mozoRonda;
+    if (!r) return;
+    r.fase = 'servir';
+    r.bloqueado = false;
+    elMozoEscena.innerHTML = '';
+    const mesas = minijuegoCrear('div', 'mozo-mesas');
+    mesas.id = 'mozo-mesas';
+    r.ciclo.pedidos.forEach((p) => {
+      const chip = minijuegoCrear('div', 'mozo-mesa', p.cara);
+      chip.id = 'mozo-mesa-' + p.mesa;
+      chip.appendChild(minijuegoCrear('small', '', 'Mesa ' + p.mesa));
+      mesas.appendChild(chip);
+    });
+    elMozoEscena.appendChild(mesas);
+    const bandeja = minijuegoCrear('div', 'mozo-bandeja');
+    const platos = minijuegoMezclar(r.ciclo.pedidos.map((p) => p.plato).concat(r.ciclo.senuelos));
+    platos.forEach((plato) => {
+      const boton = minijuegoCrear('button', 'mozo-plato', plato);
+      boton.type = 'button';
+      boton.dataset.plato = plato;
+      boton.addEventListener('click', () => mozoElegir(boton));
+      bandeja.appendChild(boton);
+    });
+    elMozoEscena.appendChild(bandeja);
+    mozoMarcarActiva();
+  }
+
+  function mozoMarcarActiva() {
+    const r = mozoRonda;
+    if (!r) return;
+    const pedido = r.ciclo.pedidos[r.ciclo.orden[r.ciclo.idx]];
+    r.ciclo.pedidos.forEach((p) => {
+      document.getElementById('mozo-mesa-' + p.mesa).classList.remove('activa');
+    });
+    document.getElementById('mozo-mesa-' + pedido.mesa).classList.add('activa');
+    elMozoFase.textContent = '¿Qué pidió la mesa ' + pedido.mesa + ' (' + pedido.cara + ')?';
+    Array.prototype.forEach.call(elMozoEscena.querySelectorAll('.mozo-plato'), (b) => {
+      b.classList.remove('correcto', 'elegido-mal');
+    });
+  }
+
+  function mozoElegir(boton) {
+    const r = mozoRonda;
+    if (!r || r.fase !== 'servir' || r.bloqueado) return;
+    r.bloqueado = true;
+    const pedido = r.ciclo.pedidos[r.ciclo.orden[r.ciclo.idx]];
+    const mesa = document.getElementById('mozo-mesa-' + pedido.mesa);
+    const acierto = boton.dataset.plato === pedido.plato;
+    r.servidos += 1;
+    mesa.classList.remove('activa');
+    let espera;
+    if (acierto) {
+      r.correctos += 1;
+      r.ciclo.correctos += 1;
+      r.racha += 1;
+      if (r.racha > r.mejorRacha) r.mejorRacha = r.racha;
+      mesa.classList.add('ok');
+      boton.classList.add('correcto');
+      minijuegoFeedback(elMozoFeedback, '✓ ¡Bien servido!', 'ok', 800);
+      juegoSonido('ok');
+      espera = 700;
+    } else {
+      r.racha = 0;
+      mesa.classList.add('fallo');
+      boton.classList.add('elegido-mal');
+      Array.prototype.forEach.call(elMozoEscena.querySelectorAll('.mozo-plato'), (b) => {
+        if (b.dataset.plato === pedido.plato) b.classList.add('correcto');
+      });
+      minijuegoFeedback(elMozoFeedback, '✗ Era ' + pedido.plato, 'fallo', 1300);
+      juegoSonido('fallo');
+      espera = 1400;
+    }
+    mozoActualizarHud();
+    r.timerFase = setTimeout(mozoSiguienteMesa, espera);
+  }
+
+  function mozoSiguienteMesa() {
+    const r = mozoRonda;
+    if (!r) return;
+    r.ciclo.idx += 1;
+    if (r.ciclo.idx < r.ciclo.orden.length) {
+      r.bloqueado = false;
+      mozoMarcarActiva();
+      return;
+    }
+    const proporcion = r.ciclo.correctos / r.ciclo.pedidos.length;
+    if (proporcion >= MOZO_UMBRAL_SUBE) {
+      r.k = Math.min(MOZO_MAX, r.k + 1);
+    } else if (proporcion < MOZO_UMBRAL_BAJA) {
+      r.k = Math.max(MOZO_MIN, r.k - 1);
+    }
+    r.ciclos += 1;
+    r.fase = '';
+    mozoNuevoCiclo();
+  }
+
+  function mozoTerminar() {
+    const r = mozoRonda;
+    if (!r) return;
+    clearTimeout(r.timerFase);
+    clearTimeout(r.timerSpawn);
+    clearInterval(r.timerHud);
+    mozoRonda = null;
+    elMozoEscena.innerHTML = '';
+    elMozoFase.textContent = '';
+    minijuegoLimpiarFeedback(elMozoFeedback);
+    const pct = r.servidos > 0 ? Math.round((r.correctos / r.servidos) * 100) + '%' : '—';
+    minijuegoMetricas(document.getElementById('mozo-metricas'), [
+      ['Pedidos correctos', pct],
+      ['Total servidos', String(r.servidos)],
+      ['Pedidos correctos (cant.)', String(r.correctos)],
+      ['Mejor racha', String(r.mejorRacha)],
+      ['Máx. pedidos por ciclo', String(r.maxK)],
+      ['Ciclos completados', String(r.ciclos)]
+    ]);
+    minijuegoPanel('mozo', 'resumen');
+  }
+
+  document.getElementById('btn-mozo-comenzar').addEventListener('click', mozoIniciar);
+  document.getElementById('btn-mozo-otra').addEventListener('click', mozoIniciar);
+  document.getElementById('btn-mozo-ver-instr').addEventListener('click', () => {
+    mozoDetener();
+    minijuegoPanel('mozo', 'instrucciones');
+  });
+  document.getElementById('btn-mozo-menu').addEventListener('click', () => mostrarVista('juegos'));
 </script>
 </body>
 </html>
