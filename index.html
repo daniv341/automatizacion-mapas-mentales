@@ -17,6 +17,19 @@
 })();
 </script>
 
+<script>
+(function () {
+  try {
+    var p = new URLSearchParams(location.search);
+    if (p.get('minijuego') === '1') {
+      var j = p.get('juego');
+      if (['stop', 'cambio', 'mozo', 'luciernagas', 'vigia'].indexOf(j) === -1) j = 'stop';
+      window.MINIJUEGO_EMBEBIDO = { juego: j, silenciado: p.get('muted') === '1' };
+      document.documentElement.classList.add('modo-embebido');
+    }
+  } catch (e) { }
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mis Evaluadores</title>
 
@@ -1727,6 +1740,191 @@
     }
   }
 
+
+
+  .luc-fase {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--texto-cabecera);
+    text-align: center;
+    min-height: 22px;
+    margin-bottom: 8px;
+  }
+  .luc-fase.alreves {
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #ffffff;
+    background: #c2410c;
+    border-radius: 10px;
+    padding: 4px 10px;
+  }
+  .luc-escena {
+    position: relative;
+    width: 100%;
+    height: clamp(300px, 52vh, 440px);
+    border: 3px solid var(--color-borde-medio);
+    border-radius: 18px;
+    background: linear-gradient(180deg, #0a1028 0%, #16204a 100%);
+    overflow: hidden;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .luc-luciernaga {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    margin: -30px 0 0 -30px;
+    padding: 0;
+    border: 2px solid #3a4676;
+    border-radius: 50%;
+    background: radial-gradient(circle, #4a5688 0%, #252d54 70%);
+    cursor: default;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, box-shadow 0.12s, border-color 0.12s;
+    animation: luc-flota 4s ease-in-out infinite alternate;
+  }
+  .luc-escena.respondible .luc-luciernaga {
+    cursor: pointer;
+    border-color: #6b7bb8;
+  }
+  .luc-luciernaga.encendida {
+    background: radial-gradient(circle, #fffbd0 0%, #ffe66d 55%, #e8b923 100%);
+    border-color: #fff3a0;
+    box-shadow: 0 0 28px 12px rgba(255, 230, 109, 0.75);
+  }
+  .luc-luciernaga.errada {
+    border-color: #e0392d;
+    box-shadow: 0 0 14px 4px rgba(224, 57, 45, 0.7);
+  }
+  @keyframes luc-flota {
+    from { transform: translateY(-3px); }
+    to { transform: translateY(3px); }
+  }
+
+  .vig-medidor {
+    max-width: 380px;
+    margin: 0 auto 10px;
+  }
+  .vig-medidor-etiqueta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--texto-cabecera);
+    margin-bottom: 4px;
+  }
+  .vig-medidor-barra {
+    height: 14px;
+    border-radius: 8px;
+    background: var(--color-borde-medio);
+    overflow: hidden;
+  }
+  .vig-medidor-relleno {
+    height: 100%;
+    width: 100%;
+    border-radius: 8px;
+    background: #1fa35a;
+    transition: width 0.25s, background-color 0.25s;
+  }
+  .vig-medidor-relleno.medio { background: #e0a21d; }
+  .vig-medidor-relleno.bajo { background: #e0392d; }
+  .vig-radar {
+    position: relative;
+    width: min(100%, 360px);
+    aspect-ratio: 1;
+    margin: 0 auto;
+    border-radius: 50%;
+    border: 3px solid #1d5f3a;
+    background: radial-gradient(circle, #0c2a1c 0%, #06140d 100%);
+    overflow: hidden;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .vig-radar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle, transparent 0, transparent 16.5%, rgba(61, 255, 138, 0.18) 16.5%, rgba(61, 255, 138, 0.18) 17.5%);
+    pointer-events: none;
+  }
+  .vig-radar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(61, 255, 138, 0) 0deg, rgba(61, 255, 138, 0.28) 60deg, rgba(61, 255, 138, 0) 60.5deg);
+    animation: vig-barrido 4s linear infinite;
+    pointer-events: none;
+  }
+  .vig-radar.lapso { border-color: #ffb020; }
+  .vig-blip {
+    position: absolute;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+  .vig-blip.objetivo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #3dff8a;
+    box-shadow: 0 0 18px 6px rgba(61, 255, 138, 0.8);
+  }
+  .vig-blip.ruido {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    background: #8c4a4a;
+    opacity: 0.75;
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  .vig-lapso {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    border: 3px dashed #ffb020;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: vig-lapso 1s ease-out forwards;
+  }
+  @keyframes vig-barrido {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes vig-lapso {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .luc-luciernaga { animation: none; transition: none; }
+    .vig-radar::after { animation: none; }
+    .vig-lapso { animation: none; }
+    .vig-medidor-relleno { transition: none; }
+  }
+  html.modo-embebido #btn-luc-otra,
+  html.modo-embebido #btn-luc-ver-instr,
+  html.modo-embebido #btn-luc-menu,
+  html.modo-embebido #btn-vig-otra,
+  html.modo-embebido #btn-vig-ver-instr,
+  html.modo-embebido #btn-vig-menu { display: none !important; }
+  .solo-embebido { display: none; }
+  html.modo-embebido .solo-embebido { display: inline-block; }
+  html.modo-embebido .encabezado-global,
+  html.modo-embebido .btn-volver,
+  html.modo-embebido #btn-juego-otra,
+  html.modo-embebido #btn-juego-ver-instr,
+  html.modo-embebido #btn-cambio-otra,
+  html.modo-embebido #btn-cambio-ver-instr,
+  html.modo-embebido #btn-cambio-menu,
+  html.modo-embebido #btn-mozo-otra,
+  html.modo-embebido #btn-mozo-ver-instr,
+  html.modo-embebido #btn-mozo-menu { display: none !important; }
 </style>
 </head>
 
@@ -1884,6 +2082,7 @@
       <div class="juego-acciones">
         <button type="button" class="juego-boton" id="btn-juego-otra">Jugar otra vez</button>
         <button type="button" class="juego-boton secundario" id="btn-juego-ver-instr">Ver instrucciones</button>
+        <button type="button" class="juego-boton solo-embebido js-continuar-estudio" id="btn-juego-continuar">Continuar al estudio</button>
       </div>
     </div>
   </div>
@@ -1908,6 +2107,14 @@
         <span class="juego-tarjeta-icono">🍽️</span>
         <span class="juego-tarjeta-texto"><strong>Mozo distraído</strong><span>Recordá los pedidos pese a las distracciones y servilos bien.</span></span>
       </button>
+      <button type="button" class="juego-tarjeta" id="tarjeta-luciernagas">
+        <span class="juego-tarjeta-icono">✨</span>
+        <span class="juego-tarjeta-texto"><strong>Secuencia de luciérnagas</strong><span>Mirá la secuencia de luces y repetila, a veces al revés.</span></span>
+      </button>
+      <button type="button" class="juego-tarjeta" id="tarjeta-vigia">
+        <span class="juego-tarjeta-icono">📡</span>
+        <span class="juego-tarjeta-texto"><strong>Vigía de consistencia</strong><span>Tocá los blips verdes del radar, ignorá los rojos y mantené un ritmo parejo.</span></span>
+      </button>
     </div>
   </div>
 
@@ -1923,7 +2130,7 @@
       <p><strong>Objetivo:</strong> detectar qué cambió entre dos grillas de emojis.</p>
       <ul>
         <li>Se muestra una grilla unos segundos. Después aparece una máscara gris muy breve.</li>
-        <li>Luego vuelve la grilla con <strong>un solo cambio</strong>: un emoji desaparece, es reemplazado, cambia de color o intercambia lugar con otro. Tocá la celda que cambió.</li>
+        <li>Luego vuelve la grilla con <strong>un solo cambio</strong>: un emoji es reemplazado por otro distinto. Tocá la celda que cambió.</li>
         <li>Tenés unos 4 segundos para responder. Si fallás, se te muestra el cambio antes de seguir.</li>
         <li>El juego ajusta solo el tiempo de exposición y el tamaño de la grilla para que aciertes cerca del 75% de las veces.</li>
         <li>La ronda dura 60 segundos; si el tiempo se acaba en medio de un ensayo, ese ensayo se termina. No se guarda nada.</li>
@@ -1952,6 +2159,7 @@
       <div class="juego-acciones">
         <button type="button" class="juego-boton" id="btn-cambio-otra">Jugar otra vez</button>
         <button type="button" class="juego-boton secundario" id="btn-cambio-ver-instr">Ver instrucciones</button>
+        <button type="button" class="juego-boton solo-embebido js-continuar-estudio" id="btn-cambio-continuar">Continuar al estudio</button>
         <button type="button" class="juego-boton secundario" id="btn-cambio-menu">Volver al menú</button>
       </div>
     </div>
@@ -1998,7 +2206,106 @@
       <div class="juego-acciones">
         <button type="button" class="juego-boton" id="btn-mozo-otra">Jugar otra vez</button>
         <button type="button" class="juego-boton secundario" id="btn-mozo-ver-instr">Ver instrucciones</button>
+        <button type="button" class="juego-boton solo-embebido js-continuar-estudio" id="btn-mozo-continuar">Continuar al estudio</button>
         <button type="button" class="juego-boton secundario" id="btn-mozo-menu">Volver al menú</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="vista-luciernagas" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-luc-volver">← Volver (Esc)</button>
+    <div class="juego-barra">
+      <span class="juego-titulo">✨ Secuencia de luciérnagas</span>
+      <button type="button" class="boton-icono-circular js-sonido" title="Silenciar o activar sonido">🔊</button>
+    </div>
+
+    <div id="luc-instrucciones" class="juego-panel">
+      <h2>Cómo se juega</h2>
+      <p><strong>Objetivo:</strong> recordar la secuencia en que se encienden las luciérnagas y repetirla.</p>
+      <ul>
+        <li><strong>Mirá:</strong> las luciérnagas se encienden de a una, con un sonido que sube de tono en cada paso. Mientras se reproduce no podés tocar.</li>
+        <li><strong>Repetí:</strong> cuando termina, tocá las mismas luciérnagas en el mismo orden. Las posiciones cambian en cada secuencia.</li>
+        <li><strong>Al revés:</strong> desde 4 luces, las secuencias se alternan entre directas y <strong>AL REVÉS</strong> (de la última a la primera). Un aviso te lo indica antes de reproducir.</li>
+        <li>Subís un paso tras 2 aciertos seguidos y bajás uno tras un fallo. Si fallás, ves la secuencia correcta y seguís con otra.</li>
+        <li>La ronda dura 90 segundos; si el tiempo se acaba en medio de una secuencia, esa secuencia se termina. No se guarda nada.</li>
+      </ul>
+      <div class="juego-acciones">
+        <button type="button" class="juego-boton" id="btn-luc-comenzar">Comenzar ronda</button>
+      </div>
+    </div>
+
+    <div id="luc-ronda" hidden>
+      <div class="juego-hud">
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="luc-hud-tiempo">0</span><span class="juego-hud-etiqueta">Segundos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="luc-hud-span">2</span><span class="juego-hud-etiqueta">Largo</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="luc-hud-racha">0</span><span class="juego-hud-etiqueta">Racha</span></div>
+      </div>
+      <div class="luc-fase" id="luc-fase"></div>
+      <div class="luc-escena" id="luc-escena"></div>
+      <div class="juego-feedback linea" id="luc-feedback" aria-live="polite"></div>
+      <p class="juego-pista">Esc para salir</p>
+    </div>
+
+    <div id="luc-resumen" class="juego-panel" hidden>
+      <h2>Resumen de la ronda</h2>
+      <div class="juego-metricas" id="luc-metricas"></div>
+      <p class="juego-nota">Este resumen no se guarda: se pierde al recargar la página.</p>
+      <div class="juego-acciones">
+        <button type="button" class="juego-boton" id="btn-luc-otra">Jugar otra vez</button>
+        <button type="button" class="juego-boton secundario" id="btn-luc-ver-instr">Ver instrucciones</button>
+        <button type="button" class="juego-boton secundario" id="btn-luc-menu">Volver al menú</button>
+        <button type="button" class="juego-boton solo-embebido js-continuar-estudio" id="btn-luc-continuar">Continuar al estudio</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="vista-vigia" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-vig-volver">← Volver (Esc)</button>
+    <div class="juego-barra">
+      <span class="juego-titulo">📡 Vigía de consistencia</span>
+      <button type="button" class="boton-icono-circular js-sonido" title="Silenciar o activar sonido">🔊</button>
+    </div>
+
+    <div id="vig-instrucciones" class="juego-panel">
+      <h2>Cómo se juega</h2>
+      <p><strong>Objetivo:</strong> mantener un tiempo de reacción parejo durante toda la ronda.</p>
+      <ul>
+        <li><strong>Blip verde brillante y redondo:</strong> tocalo cuanto antes (clic, barra espaciadora o toque sobre el radar).</li>
+        <li><strong>Blip rojo apagado y en rombo:</strong> es ruido, ignoralo. Se distingue desde que aparece: nunca tenés que frenar una respuesta ya iniciada.</li>
+        <li>Importa más la <strong>regularidad</strong> de tus respuestas que la velocidad. El medidor de estabilidad cae con los lapsos (omisiones o respuestas muy lentas, que se marcan en el radar) y se recupera con respuestas parejas.</li>
+        <li>Tocar cuando no hay ningún punto cuenta como un error leve, sin más castigo.</li>
+        <li>El ritmo se adapta solo: acelera de a poco cuando vas bien y se alivia bastante cuando fallás.</li>
+        <li>La ronda dura 90 segundos. No se guarda nada.</li>
+      </ul>
+      <div class="juego-acciones">
+        <button type="button" class="juego-boton" id="btn-vig-comenzar">Comenzar ronda</button>
+      </div>
+    </div>
+
+    <div id="vig-ronda" hidden>
+      <div class="juego-hud">
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="vig-hud-tiempo">0</span><span class="juego-hud-etiqueta">Segundos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="vig-hud-aciertos">0</span><span class="juego-hud-etiqueta">Aciertos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="vig-hud-racha">0</span><span class="juego-hud-etiqueta">Racha estable</span></div>
+      </div>
+      <div class="vig-medidor">
+        <div class="vig-medidor-etiqueta"><span>Estabilidad</span><span id="vig-estab-valor">100%</span></div>
+        <div class="vig-medidor-barra"><div class="vig-medidor-relleno" id="vig-estab-relleno"></div></div>
+      </div>
+      <div class="vig-radar" id="vig-radar"></div>
+      <div class="juego-feedback linea" id="vig-feedback" aria-live="polite"></div>
+      <p class="juego-pista">Verde brillante: tocá · Rojo apagado: ignorá · Esc para salir</p>
+    </div>
+
+    <div id="vig-resumen" class="juego-panel" hidden>
+      <h2>Resumen de la ronda</h2>
+      <div class="juego-metricas" id="vig-metricas"></div>
+      <p class="juego-nota">La consistencia pesa más la estabilidad del tiempo de reacción que el porcentaje de aciertos. Este resumen no se guarda.</p>
+      <div class="juego-acciones">
+        <button type="button" class="juego-boton" id="btn-vig-otra">Jugar otra vez</button>
+        <button type="button" class="juego-boton secundario" id="btn-vig-ver-instr">Ver instrucciones</button>
+        <button type="button" class="juego-boton secundario" id="btn-vig-menu">Volver al menú</button>
+        <button type="button" class="juego-boton solo-embebido js-continuar-estudio" id="btn-vig-continuar">Continuar al estudio</button>
       </div>
     </div>
   </div>
@@ -2383,7 +2690,7 @@
 
   elBuscador.addEventListener('input', renderizarSecciones);
 
-  cargar();
+  if (!window.MINIJUEGO_EMBEBIDO) cargar();
 
   // ---------------- INDICADOR DE ALMACENAMIENTO ----------------
   const LIMITE_STORAGE_BYTES = 5242880; // 5 MB
@@ -2424,6 +2731,8 @@
   const elVistaJuegos = document.getElementById('vista-juegos');
   const elVistaCambio = document.getElementById('vista-cambio');
   const elVistaMozo = document.getElementById('vista-mozo');
+  const elVistaLuc = document.getElementById('vista-luciernagas');
+  const elVistaVig = document.getElementById('vista-vigia');
 
   let vistaActual = 'principal';
 
@@ -2441,6 +2750,8 @@
     elVistaJuegos.style.display = nombre === 'juegos' ? 'block' : 'none';
     elVistaCambio.style.display = nombre === 'cambio' ? 'block' : 'none';
     elVistaMozo.style.display = nombre === 'mozo' ? 'block' : 'none';
+    elVistaLuc.style.display = nombre === 'luciernagas' ? 'block' : 'none';
+    elVistaVig.style.display = nombre === 'vigia' ? 'block' : 'none';
 
     if (nombre === 'juego') {
       inicializarVistaJuego();
@@ -2456,6 +2767,16 @@
       inicializarVistaMozo();
     } else {
       mozoDetener();
+    }
+    if (nombre === 'luciernagas') {
+      inicializarVistaLuciernagas();
+    } else {
+      lucDetener();
+    }
+    if (nombre === 'vigia') {
+      inicializarVistaVigia();
+    } else {
+      vigDetener();
     }
     if (nombre === 'juegos') {
       juegoActualizarBotonSonido();
@@ -2519,6 +2840,12 @@
     const esEscape = evento.key === 'Escape' || evento.key === 'Esc';
     if (!esEscape) return;
 
+    if (window.MINIJUEGO_EMBEBIDO) {
+      evento.preventDefault();
+      embebidoEnviar('esc');
+      return;
+    }
+
     const modalConf = document.getElementById('modal-confirmacion-reutilizable');
     if (modalConf && !modalConf.hidden) {
       evento.preventDefault();
@@ -2537,7 +2864,7 @@
     if (vistaActual === 'tareas') {
       evento.preventDefault();
       mostrarVista('orion');
-    } else if (vistaActual === 'juego' || vistaActual === 'cambio' || vistaActual === 'mozo') {
+    } else if (vistaActual === 'juego' || vistaActual === 'cambio' || vistaActual === 'mozo' || vistaActual === 'luciernagas' || vistaActual === 'vigia') {
       evento.preventDefault();
       mostrarVista('juegos');
     } else if (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion' || vistaActual === 'storage' || vistaActual === 'juegos') {
@@ -4435,7 +4762,7 @@
   const elJuegoBtnSonido = document.getElementById('btn-juego-sonido');
 
   let juegoRonda = null;
-  let juegoSonidoActivo = true;
+  let juegoSonidoActivo = !(window.MINIJUEGO_EMBEBIDO && window.MINIJUEGO_EMBEBIDO.silenciado);
   let juegoAudioCtx = null;
   let juegoTimerFeedback = null;
   let juegoTimerFlash = null;
@@ -4803,6 +5130,7 @@
       juegoSonidoActivo = !juegoSonidoActivo;
       juegoActualizarBotonSonido();
       if (juegoSonidoActivo) obtenerAudioCtxJuego();
+      embebidoEnviar('mute', { activo: juegoSonidoActivo });
     });
   });
 
@@ -4955,7 +5283,7 @@
     const emojis = minijuegoMezclar(CAMBIO_POOL).slice(0, total);
     const antes = emojis.map((e) => ({ e: e, tinte: false }));
     const despues = antes.map((c) => ({ e: c.e, tinte: c.tinte }));
-    const tipos = alto ? ['desaparece', 'reemplazo', 'color', 'intercambio'] : ['desaparece', 'reemplazo'];
+    const tipos = ['reemplazo'];
     const tipo = minijuegoElegir(tipos);
     let validas;
     if (tipo === 'intercambio') {
@@ -5295,7 +5623,11 @@
     elMozoEscena.innerHTML = '';
     const mesas = minijuegoCrear('div', 'mozo-mesas');
     mesas.id = 'mozo-mesas';
-    r.ciclo.pedidos.forEach((p) => {
+    let vistaMesas = minijuegoMezclar(r.ciclo.pedidos);
+    for (let intento = 0; intento < 8 && vistaMesas.length > 1 && vistaMesas.every((p, i) => p === r.ciclo.pedidos[i]); intento++) {
+      vistaMesas = minijuegoMezclar(r.ciclo.pedidos);
+    }
+    vistaMesas.forEach((p) => {
       const chip = minijuegoCrear('div', 'mozo-mesa', p.cara);
       chip.id = 'mozo-mesa-' + p.mesa;
       chip.appendChild(minijuegoCrear('small', '', 'Mesa ' + p.mesa));
@@ -5413,6 +5745,632 @@
     minijuegoPanel('mozo', 'instrucciones');
   });
   document.getElementById('btn-mozo-menu').addEventListener('click', () => mostrarVista('juegos'));
+
+  const LUC_DURACION_MS = 90000;
+  const LUC_SPAN_INICIAL = 2;
+  const LUC_SPAN_MIN = 2;
+  const LUC_SPAN_MAX = 8;
+  const LUC_SPAN_ALREVES = 4;
+  const LUC_ACIERTOS_PARA_SUBIR = 2;
+  const LUC_ON_MS = 700;
+  const LUC_PAUSA_MS = 350;
+  const LUC_REVELAR_ON_MS = 380;
+  const LUC_REVELAR_PAUSA_MS = 160;
+  const LUC_PREAVISO_DIRECTA_MS = 600;
+  const LUC_PREAVISO_ALREVES_MS = 1400;
+  const LUC_ENTRE_MS = 900;
+  const LUC_CANTIDAD = 9;
+
+  const elLucFase = document.getElementById('luc-fase');
+  const elLucEscena = document.getElementById('luc-escena');
+  const elLucFeedback = document.getElementById('luc-feedback');
+  const elLucHudTiempo = document.getElementById('luc-hud-tiempo');
+  const elLucHudSpan = document.getElementById('luc-hud-span');
+  const elLucHudRacha = document.getElementById('luc-hud-racha');
+
+  let lucRonda = null;
+
+  function lucEsperar(r, ms, fn) {
+    r.timers.push(setTimeout(fn, ms));
+  }
+
+  function lucDetener() {
+    if (lucRonda) {
+      lucRonda.timers.forEach((t) => clearTimeout(t));
+      clearInterval(lucRonda.timerHud);
+      lucRonda = null;
+    }
+    elLucEscena.innerHTML = '';
+    elLucEscena.classList.remove('respondible');
+    elLucFase.textContent = '';
+    elLucFase.className = 'luc-fase';
+    minijuegoLimpiarFeedback(elLucFeedback);
+  }
+
+  function inicializarVistaLuciernagas() {
+    lucDetener();
+    juegoActualizarBotonSonido();
+    minijuegoPanel('luc', 'instrucciones');
+  }
+
+  function lucActualizarHud() {
+    const r = lucRonda;
+    if (!r) return;
+    elLucHudTiempo.textContent = String(Math.ceil(Math.max(0, r.fin - performance.now()) / 1000));
+    elLucHudSpan.textContent = String(r.span);
+    elLucHudRacha.textContent = String(r.racha);
+  }
+
+  function lucFase(texto, alReves) {
+    elLucFase.textContent = texto;
+    elLucFase.className = 'luc-fase' + (alReves ? ' alreves' : '');
+  }
+
+  function lucTono(paso) {
+    if (!juegoSonidoActivo) return;
+    const ctx = obtenerAudioCtxJuego();
+    if (ctx) tono(ctx, 330 + paso * 58, 0, 0.5, 'sine', 0.1);
+  }
+
+  function lucPosiciones() {
+    const puntos = [];
+    let minimo = 19;
+    let intentos = 0;
+    while (puntos.length < LUC_CANTIDAD) {
+      const x = 10 + Math.random() * 80;
+      const y = 12 + Math.random() * 76;
+      const lejos = puntos.every((p) => Math.hypot(p.x - x, (p.y - y) * 0.8) >= minimo);
+      if (lejos) {
+        puntos.push({ x: x, y: y });
+        intentos = 0;
+      } else {
+        intentos += 1;
+        if (intentos > 300) {
+          minimo -= 1;
+          intentos = 0;
+        }
+      }
+    }
+    return puntos;
+  }
+
+  function lucRenderEscena(posiciones) {
+    elLucEscena.innerHTML = '';
+    elLucEscena.classList.remove('respondible');
+    posiciones.forEach((p, i) => {
+      const boton = minijuegoCrear('button', 'luc-luciernaga');
+      boton.type = 'button';
+      boton.dataset.i = String(i);
+      boton.style.left = p.x.toFixed(1) + '%';
+      boton.style.top = p.y.toFixed(1) + '%';
+      boton.setAttribute('aria-label', 'Luciérnaga ' + (i + 1));
+      elLucEscena.appendChild(boton);
+    });
+  }
+
+  function lucIniciar() {
+    obtenerAudioCtxJuego();
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+    lucDetener();
+    lucRonda = {
+      fin: performance.now() + LUC_DURACION_MS,
+      span: LUC_SPAN_INICIAL,
+      maxSpan: LUC_SPAN_INICIAL,
+      seguidos: 0,
+      proximaInversa: false,
+      fase: '',
+      timers: [],
+      timerHud: null,
+      seq: null,
+      jugadas: 0,
+      correctas: 0,
+      racha: 0,
+      mejorRacha: 0,
+      alReves: 0,
+      alRevesOk: 0
+    };
+    minijuegoPanel('luc', 'ronda');
+    lucActualizarHud();
+    lucRonda.timerHud = setInterval(lucActualizarHud, 200);
+    lucNueva();
+  }
+
+  function lucNueva() {
+    const r = lucRonda;
+    if (!r) return;
+    if (performance.now() >= r.fin) {
+      lucTerminar();
+      return;
+    }
+    const largo = r.span;
+    if (largo > r.maxSpan) r.maxSpan = largo;
+    let inversa = false;
+    if (largo >= LUC_SPAN_ALREVES) {
+      inversa = r.proximaInversa;
+      r.proximaInversa = !r.proximaInversa;
+    }
+    const posiciones = lucPosiciones();
+    const orden = [];
+    for (let i = 0; i < largo; i++) {
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * LUC_CANTIDAD);
+      } while (i > 0 && idx === orden[i - 1]);
+      orden.push(idx);
+    }
+    r.seq = {
+      orden: orden,
+      inversa: inversa,
+      esperada: inversa ? orden.slice().reverse() : orden.slice(),
+      entrada: 0
+    };
+    lucRenderEscena(posiciones);
+    minijuegoLimpiarFeedback(elLucFeedback);
+    r.fase = 'preaviso';
+    if (inversa) {
+      lucFase('⟲ AL REVÉS: repetí de la última a la primera', true);
+    } else {
+      lucFase('Mirá la secuencia', false);
+    }
+    lucActualizarHud();
+    lucEsperar(r, inversa ? LUC_PREAVISO_ALREVES_MS : LUC_PREAVISO_DIRECTA_MS, () => {
+      lucReproducir(r.seq.orden, LUC_ON_MS, LUC_PAUSA_MS, lucAbrirEntrada);
+    });
+  }
+
+  function lucEncender(idx, paso, ms) {
+    const r = lucRonda;
+    if (!r) return;
+    const el = elLucEscena.children[idx];
+    if (!el) return;
+    el.classList.add('encendida');
+    lucTono(paso);
+    lucEsperar(r, ms, () => el.classList.remove('encendida'));
+  }
+
+  function lucReproducir(orden, on, pausa, alFinal) {
+    const r = lucRonda;
+    if (!r) return;
+    r.fase = 'reproduciendo';
+    elLucEscena.classList.remove('respondible');
+    orden.forEach((idx, paso) => {
+      lucEsperar(r, paso * (on + pausa), () => lucEncender(idx, paso, on));
+    });
+    lucEsperar(r, orden.length * (on + pausa), alFinal);
+  }
+
+  function lucAbrirEntrada() {
+    const r = lucRonda;
+    if (!r) return;
+    r.fase = 'responder';
+    elLucEscena.classList.add('respondible');
+    lucFase(r.seq.inversa ? '⟲ AL REVÉS: tocá de la última a la primera' : 'Tu turno: repetí la secuencia', r.seq.inversa);
+  }
+
+  function lucAcierto() {
+    const r = lucRonda;
+    r.fase = 'resuelto';
+    elLucEscena.classList.remove('respondible');
+    r.jugadas += 1;
+    r.correctas += 1;
+    r.racha += 1;
+    if (r.racha > r.mejorRacha) r.mejorRacha = r.racha;
+    if (r.seq.inversa) {
+      r.alReves += 1;
+      r.alRevesOk += 1;
+    }
+    r.seguidos += 1;
+    if (r.seguidos >= LUC_ACIERTOS_PARA_SUBIR) {
+      r.span = Math.min(LUC_SPAN_MAX, r.span + 1);
+      r.seguidos = 0;
+    }
+    minijuegoFeedback(elLucFeedback, '✓ ¡Bien!', 'ok', 800);
+    juegoSonido('ok');
+    lucActualizarHud();
+    lucEsperar(r, LUC_ENTRE_MS, lucNueva);
+  }
+
+  function lucFallo(boton) {
+    const r = lucRonda;
+    r.fase = 'revelando';
+    elLucEscena.classList.remove('respondible');
+    boton.classList.add('errada');
+    r.jugadas += 1;
+    r.racha = 0;
+    r.seguidos = 0;
+    r.span = Math.max(LUC_SPAN_MIN, r.span - 1);
+    if (r.seq.inversa) r.alReves += 1;
+    minijuegoFeedback(elLucFeedback, '✗ Era esta secuencia', 'fallo', 1600);
+    juegoSonido('fallo');
+    lucFase(r.seq.inversa ? 'Así era, de atrás para adelante' : 'Así era', false);
+    lucActualizarHud();
+    lucEsperar(r, 700, () => {
+      lucReproducir(r.seq.esperada, LUC_REVELAR_ON_MS, LUC_REVELAR_PAUSA_MS, () => {
+        lucEsperar(r, 500, lucNueva);
+      });
+    });
+  }
+
+  elLucEscena.addEventListener('pointerdown', (evento) => {
+    const r = lucRonda;
+    if (!r || r.fase !== 'responder') return;
+    const boton = evento.target.closest('.luc-luciernaga');
+    if (!boton) return;
+    evento.preventDefault();
+    const idx = Number(boton.dataset.i);
+    const s = r.seq;
+    if (idx === s.esperada[s.entrada]) {
+      boton.classList.add('encendida');
+      lucTono(s.entrada);
+      lucEsperar(r, 220, () => boton.classList.remove('encendida'));
+      s.entrada += 1;
+      if (s.entrada >= s.esperada.length) lucAcierto();
+    } else {
+      lucFallo(boton);
+    }
+  });
+
+  function lucTerminar() {
+    const r = lucRonda;
+    if (!r) return;
+    r.timers.forEach((t) => clearTimeout(t));
+    clearInterval(r.timerHud);
+    lucRonda = null;
+    elLucEscena.innerHTML = '';
+    elLucEscena.classList.remove('respondible');
+    elLucFase.textContent = '';
+    elLucFase.className = 'luc-fase';
+    minijuegoLimpiarFeedback(elLucFeedback);
+    const pct = r.jugadas > 0 ? Math.round((r.correctas / r.jugadas) * 100) + '%' : '—';
+    minijuegoMetricas(document.getElementById('luc-metricas'), [
+      ['Span máximo', String(r.maxSpan)],
+      ['Secuencias correctas', pct],
+      ['Mejor racha', String(r.mejorRacha)],
+      ['Secuencias jugadas', String(r.jugadas)],
+      ['Aciertos al revés', r.alReves > 0 ? r.alRevesOk + ' / ' + r.alReves : '—']
+    ]);
+    minijuegoPanel('luc', 'resumen');
+  }
+
+  document.getElementById('btn-luc-comenzar').addEventListener('click', lucIniciar);
+  document.getElementById('btn-luc-otra').addEventListener('click', lucIniciar);
+  document.getElementById('btn-luc-ver-instr').addEventListener('click', () => {
+    lucDetener();
+    minijuegoPanel('luc', 'instrucciones');
+  });
+  document.getElementById('btn-luc-menu').addEventListener('click', () => mostrarVista('juegos'));
+  document.getElementById('btn-luc-volver').addEventListener('click', () => mostrarVista('juegos'));
+  document.getElementById('tarjeta-luciernagas').addEventListener('click', () => mostrarVista('luciernagas'));
+
+  const VIG_DURACION_MS = 90000;
+  const VIG_ISI_MIN_MS = 700;
+  const VIG_ISI_MAX_MS = 1400;
+  const VIG_VENTANA_MS = 1200;
+  const VIG_RUIDO_MS = 900;
+  const VIG_PROB_RUIDO = 0.15;
+  const VIG_LAPSO_TR_MS = 850;
+  const VIG_VEL_INICIAL = 1;
+  const VIG_VEL_MIN = 0.8;
+  const VIG_VEL_MAX = 1.6;
+  const VIG_VEL_ACELERA = 0.04;
+  const VIG_VEL_ALIVIA = 0.12;
+  const VIG_BUENAS_PARA_ACELERAR = 3;
+  const VIG_ESTAB_LAPSO = 20;
+  const VIG_ESTAB_ERROR = 5;
+  const VIG_ESTAB_TOQUE_VACIO = 3;
+  const VIG_ESTAB_SUBE = 5;
+  const VIG_ESTAB_BAJA_SUAVE = 4;
+  const VIG_VENTANA_REF = 8;
+
+  const elVigRadar = document.getElementById('vig-radar');
+  const elVigFeedback = document.getElementById('vig-feedback');
+  const elVigHudTiempo = document.getElementById('vig-hud-tiempo');
+  const elVigHudAciertos = document.getElementById('vig-hud-aciertos');
+  const elVigHudRacha = document.getElementById('vig-hud-racha');
+  const elVigEstabValor = document.getElementById('vig-estab-valor');
+  const elVigEstabRelleno = document.getElementById('vig-estab-relleno');
+
+  let vigRonda = null;
+
+  function vigMedia(lista) {
+    if (!lista.length) return null;
+    return lista.reduce((a, b) => a + b, 0) / lista.length;
+  }
+
+  function vigDesvio(lista) {
+    if (lista.length < 2) return null;
+    const m = vigMedia(lista);
+    return Math.sqrt(lista.reduce((a, b) => a + (b - m) * (b - m), 0) / (lista.length - 1));
+  }
+
+  function vigDetener() {
+    if (vigRonda) {
+      clearTimeout(vigRonda.timerIsi);
+      clearTimeout(vigRonda.timerVentana);
+      clearInterval(vigRonda.timerHud);
+      vigRonda = null;
+    }
+    elVigRadar.innerHTML = '';
+    elVigRadar.classList.remove('lapso');
+    minijuegoLimpiarFeedback(elVigFeedback);
+  }
+
+  function inicializarVistaVigia() {
+    vigDetener();
+    juegoActualizarBotonSonido();
+    minijuegoPanel('vig', 'instrucciones');
+  }
+
+  function vigActualizarMedidor() {
+    const r = vigRonda;
+    if (!r) return;
+    const valor = Math.round(r.estab);
+    elVigEstabValor.textContent = valor + '%';
+    elVigEstabRelleno.style.width = valor + '%';
+    elVigEstabRelleno.className = 'vig-medidor-relleno' + (valor <= 33 ? ' bajo' : (valor <= 66 ? ' medio' : ''));
+  }
+
+  function vigActualizarHud() {
+    const r = vigRonda;
+    if (!r) return;
+    elVigHudTiempo.textContent = String(Math.ceil(Math.max(0, r.fin - performance.now()) / 1000));
+    elVigHudAciertos.textContent = String(r.aciertos);
+    elVigHudRacha.textContent = String(r.rachaEstable);
+    vigActualizarMedidor();
+  }
+
+  function vigAjustarEstab(delta) {
+    const r = vigRonda;
+    r.estab = Math.max(0, Math.min(100, r.estab + delta));
+    vigActualizarMedidor();
+  }
+
+  function vigAliviar() {
+    const r = vigRonda;
+    r.vel = Math.min(VIG_VEL_MAX, r.vel + VIG_VEL_ALIVIA);
+    r.buenas = 0;
+  }
+
+  function vigMarcarLapso(x, y) {
+    const marca = minijuegoCrear('div', 'vig-lapso');
+    marca.style.left = x.toFixed(1) + '%';
+    marca.style.top = y.toFixed(1) + '%';
+    elVigRadar.appendChild(marca);
+    setTimeout(() => marca.remove(), 1000);
+    elVigRadar.classList.add('lapso');
+    setTimeout(() => elVigRadar.classList.remove('lapso'), 450);
+  }
+
+  function vigIniciar() {
+    obtenerAudioCtxJuego();
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+    vigDetener();
+    vigRonda = {
+      fin: performance.now() + VIG_DURACION_MS,
+      vel: VIG_VEL_INICIAL,
+      estab: 100,
+      est: null,
+      timerIsi: null,
+      timerVentana: null,
+      timerHud: null,
+      objetivos: 0,
+      aciertos: 0,
+      omisiones: 0,
+      comisiones: 0,
+      toquesVacios: 0,
+      rts: [],
+      lapsos: 0,
+      rachaEstable: 0,
+      mejorRacha: 0,
+      buenas: 0
+    };
+    minijuegoPanel('vig', 'ronda');
+    vigActualizarHud();
+    vigRonda.timerHud = setInterval(vigActualizarHud, 200);
+    vigProgramar();
+  }
+
+  function vigProgramar() {
+    const r = vigRonda;
+    if (!r) return;
+    if (performance.now() >= r.fin) {
+      vigTerminar();
+      return;
+    }
+    const base = VIG_ISI_MIN_MS + Math.random() * (VIG_ISI_MAX_MS - VIG_ISI_MIN_MS);
+    r.timerIsi = setTimeout(vigEstimulo, base * r.vel);
+  }
+
+  function vigEstimulo() {
+    const r = vigRonda;
+    if (!r) return;
+    const tipo = Math.random() < VIG_PROB_RUIDO ? 'ruido' : 'objetivo';
+    const angulo = Math.random() * Math.PI * 2;
+    const radio = Math.sqrt(Math.random()) * 0.78;
+    const x = 50 + Math.cos(angulo) * radio * 50;
+    const y = 50 + Math.sin(angulo) * radio * 50;
+    const blip = minijuegoCrear('div', 'vig-blip ' + tipo);
+    blip.style.left = x.toFixed(1) + '%';
+    blip.style.top = y.toFixed(1) + '%';
+    elVigRadar.appendChild(blip);
+    r.est = { tipo: tipo, t0: performance.now(), el: blip, x: x, y: y };
+    r.timerVentana = setTimeout(vigVencer, tipo === 'objetivo' ? VIG_VENTANA_MS : VIG_RUIDO_MS);
+  }
+
+  function vigCerrarEstimulo() {
+    const r = vigRonda;
+    clearTimeout(r.timerVentana);
+    if (r.est && r.est.el) r.est.el.remove();
+    r.est = null;
+  }
+
+  function vigVencer() {
+    const r = vigRonda;
+    if (!r || !r.est) return;
+    const est = r.est;
+    if (est.tipo === 'objetivo') {
+      r.objetivos += 1;
+      r.omisiones += 1;
+      r.lapsos += 1;
+      r.rachaEstable = 0;
+      vigAjustarEstab(-VIG_ESTAB_LAPSO);
+      vigAliviar();
+      vigMarcarLapso(est.x, est.y);
+      minijuegoFeedback(elVigFeedback, '✗ Se te pasó', 'fallo', 700);
+      juegoSonido('fallo');
+    }
+    vigCerrarEstimulo();
+    vigActualizarHud();
+    vigProgramar();
+  }
+
+  function vigToque() {
+    const r = vigRonda;
+    if (!r) return;
+    const est = r.est;
+    if (!est) {
+      r.toquesVacios += 1;
+      vigAjustarEstab(-VIG_ESTAB_TOQUE_VACIO);
+      minijuegoFeedback(elVigFeedback, '✗ No había nada', 'fallo', 600);
+      juegoSonido('fallo');
+      vigActualizarHud();
+      return;
+    }
+    if (est.tipo === 'ruido') {
+      r.comisiones += 1;
+      r.rachaEstable = 0;
+      vigAjustarEstab(-VIG_ESTAB_ERROR);
+      vigAliviar();
+      minijuegoFeedback(elVigFeedback, '✗ Era ruido', 'fallo', 700);
+      juegoSonido('fallo');
+      vigCerrarEstimulo();
+      vigActualizarHud();
+      vigProgramar();
+      return;
+    }
+    const rt = performance.now() - est.t0;
+    const ref = r.rts.slice(-VIG_VENTANA_REF);
+    const mediaRef = vigMedia(ref);
+    const lapso = rt > VIG_LAPSO_TR_MS;
+    const consistente = !lapso && (ref.length < 3 || Math.abs(rt - mediaRef) <= Math.max(100, mediaRef * 0.3));
+    r.objetivos += 1;
+    r.aciertos += 1;
+    r.rts.push(rt);
+    if (lapso) {
+      r.lapsos += 1;
+      r.rachaEstable = 0;
+      vigAjustarEstab(-VIG_ESTAB_LAPSO);
+      vigAliviar();
+      vigMarcarLapso(est.x, est.y);
+      minijuegoFeedback(elVigFeedback, '✓ Lento: ' + Math.round(rt) + ' ms', 'freno', 700);
+    } else if (consistente) {
+      r.rachaEstable += 1;
+      if (r.rachaEstable > r.mejorRacha) r.mejorRacha = r.rachaEstable;
+      vigAjustarEstab(VIG_ESTAB_SUBE);
+      r.buenas += 1;
+      if (r.buenas % VIG_BUENAS_PARA_ACELERAR === 0) {
+        r.vel = Math.max(VIG_VEL_MIN, r.vel - VIG_VEL_ACELERA);
+      }
+      minijuegoFeedback(elVigFeedback, '✓ ' + Math.round(rt) + ' ms', 'ok', 500);
+    } else {
+      r.rachaEstable = 0;
+      vigAjustarEstab(-VIG_ESTAB_BAJA_SUAVE);
+      minijuegoFeedback(elVigFeedback, '✓ ' + Math.round(rt) + ' ms (irregular)', 'freno', 600);
+    }
+    juegoSonido('ok');
+    vigCerrarEstimulo();
+    vigActualizarHud();
+    vigProgramar();
+  }
+
+  function vigRondaActiva() {
+    return vistaActual === 'vigia' && vigRonda !== null;
+  }
+
+  elVigRadar.addEventListener('pointerdown', (evento) => {
+    if (!vigRondaActiva()) return;
+    evento.preventDefault();
+    vigToque();
+  });
+
+  document.addEventListener('keydown', (evento) => {
+    if (!vigRondaActiva()) return;
+    if (evento.code !== 'Space' && evento.key !== ' ') return;
+    evento.preventDefault();
+    if (evento.repeat) return;
+    vigToque();
+  });
+
+  function vigTerminar() {
+    const r = vigRonda;
+    if (!r) return;
+    clearTimeout(r.timerIsi);
+    clearTimeout(r.timerVentana);
+    clearInterval(r.timerHud);
+    vigRonda = null;
+    elVigRadar.innerHTML = '';
+    elVigRadar.classList.remove('lapso');
+    minijuegoLimpiarFeedback(elVigFeedback);
+    const media = vigMedia(r.rts);
+    const desvio = vigDesvio(r.rts);
+    const pct = r.objetivos > 0 ? Math.round((r.aciertos / r.objetivos) * 100) : null;
+    let consistencia = null;
+    if (r.rts.length >= 5) {
+      const estabilidadTiempo = Math.max(0, 1 - (desvio / media) / 0.6);
+      const precision = r.aciertos / Math.max(1, r.objetivos);
+      consistencia = Math.round(100 * (0.7 * estabilidadTiempo + 0.3 * precision));
+    }
+    minijuegoMetricas(document.getElementById('vig-metricas'), [
+      ['Consistencia', consistencia === null ? '—' : consistencia + ' / 100'],
+      ['Aciertos', pct === null ? '—' : pct + '%'],
+      ['TR promedio', media === null ? '—' : Math.round(media) + ' ms'],
+      ['Variabilidad (SD)', desvio === null ? '—' : Math.round(desvio) + ' ms'],
+      ['Lapsos', String(r.lapsos)],
+      ['Mejor racha estable', String(r.mejorRacha)],
+      ['Errores de toque', String(r.comisiones + r.toquesVacios)]
+    ]);
+    minijuegoPanel('vig', 'resumen');
+  }
+
+  document.getElementById('btn-vig-comenzar').addEventListener('click', vigIniciar);
+  document.getElementById('btn-vig-otra').addEventListener('click', vigIniciar);
+  document.getElementById('btn-vig-ver-instr').addEventListener('click', () => {
+    vigDetener();
+    minijuegoPanel('vig', 'instrucciones');
+  });
+  document.getElementById('btn-vig-menu').addEventListener('click', () => mostrarVista('juegos'));
+  document.getElementById('btn-vig-volver').addEventListener('click', () => mostrarVista('juegos'));
+  document.getElementById('tarjeta-vigia').addEventListener('click', () => mostrarVista('vigia'));
+
+  const embebido = window.MINIJUEGO_EMBEBIDO || null;
+  const embebidoDestino = location.protocol === 'file:' ? '*' : location.origin;
+
+  function embebidoEnviar(tipo, datos) {
+    if (!embebido) return;
+    try {
+      window.parent.postMessage(
+        Object.assign({ fuente: 'minijuego', tipo: tipo, juego: embebido.juego }, datos || {}),
+        embebidoDestino
+      );
+    } catch (e) { }
+  }
+
+  if (embebido) {
+    ['btn-juego-comenzar', 'btn-cambio-comenzar', 'btn-mozo-comenzar', 'btn-luc-comenzar', 'btn-vig-comenzar'].forEach((id) => {
+      document.getElementById(id).addEventListener('click', () => {
+        if (juegoSonidoActivo) obtenerAudioCtxJuego();
+      });
+    });
+    document.querySelectorAll('.js-continuar-estudio').forEach((boton) => {
+      boton.addEventListener('click', () => embebidoEnviar('continuar'));
+    });
+    mostrarVista(embebido.juego === 'stop' ? 'juego' : embebido.juego);
+    embebidoEnviar('listo');
+  }
 </script>
 </body>
 </html>
