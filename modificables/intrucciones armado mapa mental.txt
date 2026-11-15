@@ -14,6 +14,7 @@ accion13: ejecutas "generadorRespuestas", seleccionas el drawio con el mapa y re
 accion14: ejecutas "evaluadorTemas" seleccionas el drawio recordatorio.txt respuestas.txt para que genere el evaluador correspondiente con todas las rutas asociadas, primera y segunda para poder evaluarte en lo estudiado
 
 alternativa: si quieres que la ia te genere el recordatorio.txt de un archivo de respuestas.txt usa el segundo prompt
+skimming: el tercer prompt te genera una nota skimming lista para copiar y pegar, debes adjuntarle el archivo respuestas.txt
 
 nota: no usar '<', '>', '“', '”', '"', '&' y tambien fjarte en las letras VOCALES MAYUSCULAS CON ACENTO en el texto, provoca error en el codigo
 
@@ -339,5 +340,22 @@ cual es funcion accion derivativa respecto al error? + mantener, velocidad & 44
 
 subT LIMITACIONES DE UN CONTROL PID
 que afecta a la parte derivativa del PID? + ruido, pequenas & 63
+
+}
+
+{
+
+# Prompt: Generar nota de Skimming
+
+Actúa como un experto en técnicas de estudio avanzado y síntesis de información. Tu tarea es generar una **"Nota de Skimming"** basada en el contenido del archivo `respuestas.txt` que te proporcionaré al final.
+
+El objetivo de esta nota es que pueda leerla en menos de 2 minutos para identificar los conceptos clave antes de estudiar a fondo.
+
+**Reglas de formato y contenido:**
+1. **Solo lista de conceptos**: Entrega únicamente una lista de los conceptos o términos técnicos más importantes, sin descripciones ni explicaciones de maximo 8 palabras cada una.
+2. **Cantidad adecuada**: Usa la cantidad de líneas necesaria para que se entienda la estructura del tema, sin saturar pero sin quedarse corto. El criterio: que cubra los conceptos clave del material sin relleno.
+3. **Formato limpio**: Debe tener un formato limpio listo para pegar en una nota txt, sin resaltado ni ** ni bullet points solo el listado
+4. **Sin secciones adicionales**: No incluyas resúmenes, introducciones, conclusiones ni secciones separadas. Solo la lista de conceptos.
+5. **Conceptos criticos**: Identifica 3 a 6 ramas, conceptos densos o relaciones que suelen generar confusión o requieren atención especial adjunta el emoji ⚠️al inicio para poder identificarlo
 
 }
