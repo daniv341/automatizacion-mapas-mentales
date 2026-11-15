@@ -23166,8 +23166,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     };
 
     agregar('🔴', 'SubT urgentes', candidatos.filter((c) => c.urgentes).map((c) => c.nombre + ' (' + Math.round(c.score) + '/100)'), 'urgentes');
-    agregar('🎭', 'SubT con sobreconfianza', candidatos.filter((c) => c.sobreconfianza).map((c) => c.nombre), 'sobreconfianza');
-    agregar('🧠', 'SubT próximos a olvido', candidatos.filter((c) => c.olvido).map((c) => c.nombre), 'olvido');
+    agregar('⚠️', 'SubT con sobreconfianza', candidatos.filter((c) => c.sobreconfianza).map((c) => c.nombre), 'sobreconfianza');
+    agregar('😵', 'SubT próximos a olvido', candidatos.filter((c) => c.olvido).map((c) => c.nombre), 'olvido');
 
     let nTarjetasDificiles = 0;
     let nTarjetasConRazon = 0;
