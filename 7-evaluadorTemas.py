@@ -4253,14 +4253,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   @media (prefers-reduced-motion: reduce) {
     .orion-img, .orion-burbuja { transition: none; }
   }
+  .slot-jugar { text-align: center; }
   .btn-jugar-enganche {
-    position: fixed;
-    right: 16px;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-    z-index: 800;
     display: none;
     align-items: center;
     gap: 6px;
+    margin: 2px auto 12px;
     padding: 11px 18px;
     border: none;
     border-radius: 999px;
@@ -4284,6 +4282,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   @media (prefers-reduced-motion: reduce) {
     .btn-jugar-enganche { animation: none; }
   }
+  .aviso-item[data-tipo] { cursor: pointer; }
+  .aviso-item[data-tipo]:hover { border-color: var(--color-boton); }
 </style>
 </style>
 </head>
@@ -4297,6 +4297,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   <div id="pantalla-temas">
     <p class="subtitulo">Elegí qué temas (o tarjetas) querés estudiar</p>
+
+    <div class="slot-jugar" id="slot-jugar-temas"><button type="button" class="btn-jugar-enganche" id="btn-jugar-enganche">🎮 ¿Quieres jugar?</button></div>
 
     <div class="fila-iconos-gamificacion">
       <button class="boton-icono-circular" id="btn-abrir-historial" title="Historial de sesiones">🕐</button>
@@ -4391,6 +4393,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   <div id="pantalla-observador" style="display:none;">
     <p class="subtitulo">Modo observador: tocá una tarjeta para verla (sin evaluarte)</p>
+
+    <div class="slot-jugar" id="slot-jugar-observador"></div>
 
     <div class="fila-mapa-observador">
       <button class="boton-icono-circular" id="btn-notas-evaluador" title="Notas del evaluador">📝</button>
@@ -4812,8 +4816,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
   <button class="boton-mute enfoque-mute" id="btn-mute-enfoque" data-mute-sync title="Silenciar/activar sonidos">🔊</button>
 </div>
-
-<button type="button" class="btn-jugar-enganche" id="btn-jugar-enganche">🎮 ¿Quieres jugar?</button>
 
 <div class="overlay-minijuego" id="overlay-minijuego" role="dialog" aria-modal="true">
   <div class="minijuego-barra">
@@ -17385,7 +17387,7 @@ const ZONAS_SYNC_GIST = [
     renderListaModalRepasoInteligente();
   }
 
-  function abrirModalRepasoInteligente() {
+  function abrirModalRepasoInteligente(categoriaUnica) {
     elChkRIDificiles.checked = true;
     elChkRISobreconfianza.checked = true;
     elChkRIOlvido.checked = true;
@@ -17393,6 +17395,14 @@ const ZONAS_SYNC_GIST = [
     candidatosRepasoInteligente = calcularCandidatosRepasoInteligente();
     elChkRIRazones.checked = true;
     elChkRIRazones.disabled = false;
+    if (typeof categoriaUnica === 'string') {
+      elChkRIDificiles.checked = categoriaUnica === 'dificiles';
+      elChkRISobreconfianza.checked = categoriaUnica === 'sobreconfianza';
+      elChkRIOlvido.checked = categoriaUnica === 'olvido';
+      elChkRIUrgentes.checked = categoriaUnica === 'urgentes';
+      elChkRIRazones.checked = categoriaUnica === 'razones';
+      candidatosRepasoInteligente.forEach((item) => { item.seleccionado = !!item[categoriaUnica]; });
+    }
     renderListaModalRepasoInteligente();
     elModalRepasoInteligente.classList.add('abierto');
   }
@@ -23926,7 +23936,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       lista.hashes.forEach((h) => todosLosHashes.add(h));
     });
     let tarjetasSrs = tarjetasCompletas.filter((t) => todosLosHashes.has(hashTarjeta(t)));
-    if (listasVencidas.length > 1) tarjetasSrs = mezclar(tarjetasSrs);   // varias listas: se mezclan en una sola sesión
+    if (modoAleatorio) tarjetasSrs = mezclar(tarjetasSrs);
 
     iniciarSesion(tarjetasSrs);   // esto resetea srsSesionActiva a null; se fija DESPUÉS
     srsSesionActiva = { nombres: listasVencidas.map((l) => l.nombre), hashesPorLista: hashesPorLista };
@@ -24037,13 +24047,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const avisos = [];
     const ahora = Date.now();
     const candidatos = calcularCandidatosRepasoInteligente();
-    const agregar = (icono, titulo, items) => {
-      if (items.length > 0) avisos.push({ icono: icono, titulo: titulo + ' (' + items.length + ')', items: items });
+    const agregar = (icono, titulo, items, tipo) => {
+      if (items.length > 0) avisos.push({ icono: icono, titulo: titulo + ' (' + items.length + ')', items: items, tipo: tipo });
     };
 
-    agregar('🔴', 'SubT urgentes', candidatos.filter((c) => c.urgentes).map((c) => c.nombre + ' (' + Math.round(c.score) + '/100)'));
-    agregar('🎭', 'SubT con sobreconfianza', candidatos.filter((c) => c.sobreconfianza).map((c) => c.nombre));
-    agregar('🧠', 'SubT próximos a olvido', candidatos.filter((c) => c.olvido).map((c) => c.nombre));
+    agregar('🔴', 'SubT urgentes', candidatos.filter((c) => c.urgentes).map((c) => c.nombre + ' (' + Math.round(c.score) + '/100)'), 'urgentes');
+    agregar('🎭', 'SubT con sobreconfianza', candidatos.filter((c) => c.sobreconfianza).map((c) => c.nombre), 'sobreconfianza');
+    agregar('🧠', 'SubT próximos a olvido', candidatos.filter((c) => c.olvido).map((c) => c.nombre), 'olvido');
 
     let nTarjetasDificiles = 0;
     let nTarjetasConRazon = 0;
@@ -24071,7 +24081,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
           .join(' · ');
         itemsRefuerzo.push('🏷 ' + nTarjetasConRazon + (nTarjetasConRazon === 1 ? ' tarjeta con razones' : ' tarjetas con razones') + (detalleRazones ? ' (' + detalleRazones + ')' : ''));
       }
-      avisos.push({ icono: '🏷', titulo: 'Tarjetas difíciles o con razones (' + nTarjetasPorReforzar + ')', items: itemsRefuerzo });
+      avisos.push({ icono: '🏷', titulo: 'Tarjetas difíciles o con razones (' + nTarjetasPorReforzar + ')', items: itemsRefuerzo, tipo: 'dificiles' });
     }
 
     const vencidas = [];
@@ -24084,8 +24094,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       if (falta <= 0) vencidas.push(l.nombre + ' (nivel ' + srs.currentLevel + ')');
       else if (falta <= 2 * SRS_MS_DIA) proximas.push(l.nombre + ' (' + srsTextoProximoRepaso(srs) + ')');
     });
-    agregar('📚', 'Listas SRS vencidas', vencidas);
-    agregar('⏳', 'Listas SRS próximas a vencer', proximas);
+    agregar('📚', 'Listas SRS vencidas', vencidas, 'srs_vencidas');
+    agregar('⏳', 'Listas SRS próximas a vencer', proximas, 'srs_proximas');
 
     const ultimo = obtenerUltimoPomodoroCompleto();
     if (ultimo) {
@@ -24096,6 +24106,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         avisos.push({
           icono: '🍅',
           titulo: 'Pomodoro pendiente',
+          tipo: 'pomodoro',
           items: ['Retención predicha: ' + Math.round(calcularSRetenido(dias, S) * 100) + '% (último Pomodoro ' + formatearTiempoTranscurridoDias(dias) + ')'],
         });
       }
@@ -24103,12 +24114,12 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     const dificiles = candidatos.filter((c) => c.dificiles).map((c) => c.nombre);
     if (dificiles.length > 0 && !obtenerSkimmingPropio()) {
-      avisos.push({ icono: '👀', titulo: 'Skimming sin crear (hay temas difíciles)', items: dificiles });
+      avisos.push({ icono: '👀', titulo: 'Skimming sin crear (hay temas difíciles)', items: dificiles, tipo: 'skimming' });
     }
 
     const uso = proporcionAlmacenamientoLocal();
     if (uso > 0.8) {
-      avisos.push({ icono: '💾', titulo: 'Almacenamiento cerca del límite', items: ['Uso estimado: ' + Math.round(uso * 100) + '%'] });
+      avisos.push({ icono: '💾', titulo: 'Almacenamiento cerca del límite', items: ['Uso estimado: ' + Math.round(uso * 100) + '%'], tipo: 'almacenamiento' });
     }
     return avisos;
   }
@@ -24131,6 +24142,17 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     avisosActuales.forEach((a) => {
       const caja = document.createElement('div');
       caja.className = 'aviso-item';
+      if (a.tipo) {
+        caja.dataset.tipo = a.tipo;
+        caja.setAttribute('role', 'button');
+        caja.tabIndex = 0;
+        caja.addEventListener('click', () => ejecutarAccionAviso(a.tipo));
+        caja.addEventListener('keydown', (ev) => {
+          if (ev.key !== 'Enter' && ev.key !== ' ') return;
+          ev.preventDefault();
+          ejecutarAccionAviso(a.tipo);
+        });
+      }
       const tit = document.createElement('div');
       tit.className = 'aviso-titulo';
       tit.textContent = a.icono + ' ' + a.titulo;
@@ -24154,6 +24176,16 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function cerrarModalAvisos() {
     elModalAvisos.classList.remove('abierto');
+  }
+
+  function ejecutarAccionAviso(tipo) {
+    cerrarModalAvisos();
+    if (tipo === 'urgentes' || tipo === 'sobreconfianza' || tipo === 'olvido') abrirModalRepasoInteligente(tipo);
+    else if (tipo === 'dificiles') iniciarRepasoPasivo();
+    else if (tipo === 'srs_vencidas' || tipo === 'srs_proximas') abrirModalListas();
+    else if (tipo === 'pomodoro') abrirModalPomodoroIniciar();
+    else if (tipo === 'skimming') abrirNotasEvaluador('skimming');
+    else if (tipo === 'almacenamiento') abrirModalSync();
   }
 
   elBtnAvisos.addEventListener('click', () => abrirModalAvisos());
@@ -26287,6 +26319,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   let juegoBloqueado = false;
   let juegoActividadVista = false;
   const elBtnJugar = document.getElementById('btn-jugar-enganche');
+  const elSlotJugarTemas = document.getElementById('slot-jugar-temas');
+  const elSlotJugarObservador = document.getElementById('slot-jugar-observador');
 
   function juegoActividadEnCurso() {
     if (pomodoroActivo) return true;
@@ -26302,7 +26336,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         juegoActividadVista = false;
       }
     }
-    const enPantalla = elPantallaTemas.style.display !== 'none' || elPantallaObservador.style.display !== 'none';
+    const enObservador = elPantallaObservador.style.display !== 'none';
+    const slotDestino = enObservador ? elSlotJugarObservador : elSlotJugarTemas;
+    if (elBtnJugar.parentElement !== slotDestino) slotDestino.appendChild(elBtnJugar);
+    const enPantalla = elPantallaTemas.style.display !== 'none' || enObservador;
     const visible = enPantalla && !enCurso && !juegoBloqueado && !juegoEnFlujo && !minijuegoAbierto;
     elBtnJugar.classList.toggle('visible', visible);
   }
@@ -26337,6 +26374,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       if (acepta) {
         if (esPomodoro) iniciarPomodoro('normal', true);
         else juegoIniciarEvaluacion();
+      } else {
+        juegoBloqueado = false;
+        juegoActividadVista = false;
       }
       juegoActualizar();
     });
