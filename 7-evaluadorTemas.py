@@ -4253,6 +4253,37 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   @media (prefers-reduced-motion: reduce) {
     .orion-img, .orion-burbuja { transition: none; }
   }
+  .btn-jugar-enganche {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 800;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 18px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff7a18 0%, #ff3d71 100%);
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(255, 61, 113, 0.45);
+    animation: jugar-pulso 2.4s ease-in-out infinite;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-jugar-enganche.visible { display: inline-flex; }
+  .btn-jugar-enganche:hover { filter: brightness(1.08); }
+  .btn-jugar-enganche:active { animation: none; transform: scale(0.96); }
+  @keyframes jugar-pulso {
+    0%, 100% { transform: scale(1); box-shadow: 0 6px 18px rgba(255, 61, 113, 0.45); }
+    50% { transform: scale(1.06); box-shadow: 0 8px 26px rgba(255, 61, 113, 0.65); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-jugar-enganche { animation: none; }
+  }
 </style>
 </style>
 </head>
@@ -4781,6 +4812,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
   <button class="boton-mute enfoque-mute" id="btn-mute-enfoque" data-mute-sync title="Silenciar/activar sonidos">🔊</button>
 </div>
+
+<button type="button" class="btn-jugar-enganche" id="btn-jugar-enganche">🎮 ¿Quieres jugar?</button>
 
 <div class="overlay-minijuego" id="overlay-minijuego" role="dialog" aria-modal="true">
   <div class="minijuego-barra">
@@ -26248,6 +26281,85 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   if (orionHabilitado) orionCargar();
 
+  let minijuegoFinJugado = false;
+  let juegoOrigen = null;
+  let juegoEnFlujo = false;
+  let juegoBloqueado = false;
+  let juegoActividadVista = false;
+  const elBtnJugar = document.getElementById('btn-jugar-enganche');
+
+  function juegoActividadEnCurso() {
+    if (pomodoroActivo) return true;
+    return elAreaTarjeta.style.display !== 'none' && !modoObservador;
+  }
+
+  function juegoActualizar() {
+    const enCurso = juegoActividadEnCurso();
+    if (juegoBloqueado) {
+      if (enCurso) juegoActividadVista = true;
+      else if (juegoActividadVista) {
+        juegoBloqueado = false;
+        juegoActividadVista = false;
+      }
+    }
+    const enPantalla = elPantallaTemas.style.display !== 'none' || elPantallaObservador.style.display !== 'none';
+    const visible = enPantalla && !enCurso && !juegoBloqueado && !juegoEnFlujo && !minijuegoAbierto;
+    elBtnJugar.classList.toggle('visible', visible);
+  }
+
+  function juegoIniciarEvaluacion() {
+    if (tarjetasCompletas.length === 0) return;
+    const lista = modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas];
+    arrancarSesionDesdeModal(lista, null, false, false, 'light');
+  }
+
+  function juegoAlCancelar() {
+    juegoEnFlujo = false;
+    juegoOrigen = null;
+    juegoActualizar();
+  }
+
+  function juegoAlTerminar() {
+    if (!minijuegoFinJugado) {
+      juegoAlCancelar();
+      return;
+    }
+    const origen = juegoOrigen;
+    juegoOrigen = null;
+    juegoBloqueado = true;
+    juegoActividadVista = false;
+    const esPomodoro = origen === 'pomodoro';
+    const pregunta = esPomodoro
+      ? '¡Buena partida! ¿Seguimos con un Pomodoro?'
+      : '¡Buena partida! ¿Seguimos con una evaluación?';
+    confirmarAccion(pregunta, esPomodoro ? 'Empezar Pomodoro' : 'Empezar evaluación').then((acepta) => {
+      juegoEnFlujo = false;
+      if (acepta) {
+        if (esPomodoro) iniciarPomodoro('normal', true);
+        else juegoIniciarEvaluacion();
+      }
+      juegoActualizar();
+    });
+  }
+
+  elBtnJugar.addEventListener('click', () => {
+    if (!elBtnJugar.classList.contains('visible') || minijuegoAbierto) return;
+    juegoOrigen = elPantallaObservador.style.display !== 'none' ? 'pomodoro' : 'evaluacion';
+    juegoEnFlujo = true;
+    juegoActualizar();
+    minijuegoAbrir(juegoAlTerminar, juegoAlCancelar, false);
+  });
+
+  const juegoObservador = new MutationObserver(() => juegoActualizar());
+  [
+    elAreaTarjeta, elPantallaTemas, elPantallaResumen, elPantallaObservador, elPantallaGaleria,
+    elPantallaHuerfanas, elPantallaMapa, elPantallaTienda, elPantallaHistorial,
+    elOverlayMinijuego, elPomodoroBadge,
+  ].forEach((el) => {
+    if (el) juegoObservador.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
+  });
+  juegoActualizar();
+
   function minijuegoRutaIndex() {
     const ruta = location.pathname.toLowerCase();
     return ruta.indexOf('/guardados/antiguos/evaluadores/') !== -1 ? '../../../index.html' : '../../index.html';
@@ -26276,6 +26388,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     minijuegoEnDescanso = !!enDescanso;
     minijuegoAbierto = true;
     minijuegoListo = false;
+    minijuegoFinJugado = false;
     elAvisoMinijuego.style.display = 'none';
     minijuegoActualizarSonido();
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -26339,6 +26452,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       elAvisoMinijuego.style.display = 'none';
       try { elMarcoMinijuego.focus(); elMarcoMinijuego.contentWindow.focus(); } catch (err) { }
     } else if (d.tipo === 'continuar') {
+      minijuegoFinJugado = true;
       minijuegoContinuar();
     } else if (d.tipo === 'esc') {
       minijuegoCancelar();
