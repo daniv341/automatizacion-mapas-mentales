@@ -1436,10 +1436,16 @@
   .titulo-pausa { font-size: 26px; font-weight: 700; color: var(--color-boton); }
   .texto-pausa { font-size: 14px; color: var(--texto-secundario); max-width: 340px; }
 
-  .boton-revisar {
+  .grupo-revisar {
     position: absolute;
     top: 10px;
     left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 1;
+  }
+  .boton-revisar {
     font-size: 12px;
     font-weight: 700;
     color: var(--color-boton);
@@ -1461,18 +1467,20 @@
     gap: 8px;
     width: 100%;
   }
-  .boton-editar-primero {
+  .boton-editar-tarjeta {
     flex: none;
     font-size: 13px;
     line-height: 1;
-    padding: 4px 8px;
-    border-radius: 8px;
+    padding: 2px 8px;
+    border-radius: 12px;
     border: 1.5px solid #e0812a;
     background: #ffe3c2;
     color: #a85a10;
     font-family: inherit;
     cursor: pointer;
   }
+  .boton-editar-tarjeta.editada { background: #ffd199; border: 2px dashed #d9690b; color: #8a4208; }
+  .fila-observador.editada { border: 2px dashed #d9690b; background: rgba(255, 209, 153, 0.25); }
   .boton-leer-primero {
     flex: none;
     font-size: 14px;
@@ -1485,13 +1493,15 @@
     cursor: pointer;
   }
   .boton-leer-primero.leyendo { background: #e3f0ff; border-color: #3b82f6; }
-  .editor-primero {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-  }
-  .input-editar-primero {
+  .modal-editor-tarjeta { width: min(94vw, 560px); max-height: 88vh; text-align: left; overflow-y: auto; }
+  .editor-tarjeta-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .editor-tarjeta-cabecera h3 { margin: 0; }
+  .editor-tarjeta-tabs { display: flex; gap: 8px; margin: 6px 0 10px; flex-wrap: wrap; }
+  .editor-tarjeta-tab { opacity: 0.6; }
+  .editor-tarjeta-tab.activa { opacity: 1; font-weight: 700; }
+  .editor-tarjeta-panel { display: none; flex-direction: column; gap: 8px; }
+  .editor-tarjeta-panel.activo { display: flex; }
+  .input-editar-tarjeta {
     width: 100%;
     box-sizing: border-box;
     border: 1.5px solid #e6d38a;
@@ -1499,12 +1509,27 @@
     padding: 8px 10px;
     font-family: inherit;
     font-size: 15px;
-    font-weight: 700;
     background: #fffdf2;
     color: #4d4216;
   }
-  .input-editar-primero:focus { outline: 2px solid #F2C94C; outline-offset: 1px; }
-  .fila-editor-primero { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .input-editar-tarjeta:focus { outline: 2px solid #F2C94C; outline-offset: 1px; }
+  .edit-rutas-lista, .edit-rutas-opciones { display: flex; flex-direction: column; gap: 6px; }
+  .edit-rutas-opciones { max-height: 36vh; overflow-y: auto; }
+  .edit-ruta-fila {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid #f0e2b0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--texto-secundario);
+  }
+  .edit-ruta-num { font-weight: 700; flex: none; }
+  .edit-ruta-tema { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  .edit-ruta-opcion { cursor: pointer; }
+  .edit-ruta-opcion.marcada { background: #ffe3c2; border-color: #e0812a; }
+  .editor-tarjeta-pie { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
 
   .boton-circular.boton-si.comprension {
     width: auto;
@@ -3766,18 +3791,13 @@
 
     <div class="tarjeta" id="tarjeta">
       <div class="badge-rutas" id="badge-rutas" style="display:none;"></div>
-      <button class="boton-revisar" id="btn-revisar" title="Marcar para revisar (se guarda en este navegador)">🚩 Revisar</button>
+      <div class="grupo-revisar">
+        <button class="boton-revisar" id="btn-revisar" title="Marcar para revisar (se guarda en este navegador)">🚩 Revisar</button>
+        <button class="boton-editar-tarjeta" id="btn-editar-tarjeta" style="display:none;" title="Editar primero, segundo y rutas de esta tarjeta marcada" aria-label="Editar tarjeta">✎</button>
+      </div>
       <div class="fila-primero">
         <div class="primero" id="tarjeta-primero"></div>
         <button class="boton-leer-primero" id="btn-leer-primero" title="Leer en voz alta el «primero»" aria-label="Leer en voz alta el «primero»">🔊</button>
-        <button class="boton-editar-primero" id="btn-editar-primero" style="display:none;" title="Editar el «primero» de esta tarjeta marcada">✎</button>
-      </div>
-      <div class="editor-primero" id="editor-primero" style="display:none;">
-        <input type="text" class="input-editar-primero" id="input-editar-primero" autocomplete="off" placeholder="Nuevo «primero»">
-        <div class="fila-editor-primero">
-          <button class="boton-mini" id="btn-guardar-primero">💾 Guardar</button>
-          <button class="boton-mini" id="btn-cancelar-primero">✕ Cancelar</button>
-        </div>
       </div>
       <div class="zona-segundo" id="zona-segundo">
         <div class="fila-botones-tarjeta">
@@ -4690,6 +4710,38 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-editar-tarjeta">
+  <div class="modal-caja modal-editor-tarjeta" role="dialog" aria-modal="true">
+    <div class="editor-tarjeta-cabecera">
+      <h3>Editar tarjeta</h3>
+      <button type="button" class="boton-mini" id="btn-editar-tarjeta-cerrar" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="editor-tarjeta-tabs">
+      <button type="button" class="boton-mini editor-tarjeta-tab activa" data-tab="primero">Primero</button>
+      <button type="button" class="boton-mini editor-tarjeta-tab" data-tab="segundo">Segundo</button>
+      <button type="button" class="boton-mini editor-tarjeta-tab" data-tab="rutas">Rutas</button>
+    </div>
+    <div class="editor-tarjeta-panel activo" data-panel="primero">
+      <input type="text" class="input-editar-tarjeta" id="input-edit-primero" autocomplete="off" placeholder="Nuevo «primero»">
+    </div>
+    <div class="editor-tarjeta-panel" data-panel="segundo">
+      <input type="text" class="input-editar-tarjeta" id="input-edit-segundo" autocomplete="off" placeholder="Nuevo «segundo»">
+      <p class="modal-ayuda">Al guardar se recalculan las palabras clave del segundo (resaltado de rutas). El hash de la tarjeta no cambia.</p>
+    </div>
+    <div class="editor-tarjeta-panel" data-panel="rutas">
+      <div class="edit-rutas-lista" id="edit-rutas-lista"></div>
+      <button type="button" class="boton-mini" id="btn-edit-rutas-agregar">＋ Agregar ruta</button>
+      <div id="edit-rutas-selector" style="display:none;">
+        <input type="text" class="input-buscador" id="edit-rutas-buscar" autocomplete="off" placeholder="Buscar por número o tema">
+        <div class="edit-rutas-opciones" id="edit-rutas-opciones"></div>
+      </div>
+    </div>
+    <div class="editor-tarjeta-pie">
+      <button type="button" class="boton-reiniciar" id="btn-editar-tarjeta-guardar">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-confirmacion">
   <div class="modal-caja" role="dialog" aria-modal="true">
     <p id="modal-confirmacion-texto"></p>
@@ -4700,7 +4752,7 @@
 
 <div class="modal-overlay" id="modal-primero-editado">
   <div class="modal-caja" role="dialog" aria-modal="true">
-    <h3>Esta tarjeta tiene un «primero» editado.</h3>
+    <h3 id="titulo-primero-editado">Esta tarjeta tiene un «primero» editado.</h3>
     <p>¿Qué querés hacer al desmarcarla?</p>
     <button class="boton-reiniciar" id="btn-primero-editado-revertir">Revertir al original</button>
     <button class="boton-secundario" id="btn-primero-editado-conservar">Desmarcar sin revertir</button>
@@ -4852,7 +4904,10 @@
   const elModalPrimeroEditado = document.getElementById('modal-primero-editado');
   let _resolverPrimeroEditado = null;
 
-  function pedirDecisionPrimeroEditado() {
+  function pedirDecisionPrimeroEditado(completa) {
+    document.getElementById('titulo-primero-editado').textContent = completa
+      ? 'Esta tarjeta tiene ediciones (primero, segundo o rutas).'
+      : 'Esta tarjeta tiene un «primero» editado.';
     return new Promise((resolve) => {
       elModalPrimeroEditado.classList.add('abierto');
       _resolverPrimeroEditado = resolve;
@@ -4882,8 +4937,9 @@
     const previo = paraRevisar[h];
     if (previo && previo.m !== false) {
       let conservar = false;
-      if (primeroEditadoDe(t)) {
-        const decision = await pedirDecisionPrimeroEditado();
+      const ediciones = edicionesDe(t);
+      if (ediciones.p || ediciones.s || ediciones.r) {
+        const decision = await pedirDecisionPrimeroEditado(ediciones.s || ediciones.r);
         if (decision === 'cancelar') return;
         conservar = decision === 'conservar';
       }
@@ -4900,13 +4956,15 @@
       paraRevisar[h] = {
         p: typeof base.p === 'string' ? base.p : '',
         po: t.primero || '',
-        s: t.segundo || '',
+        s: (typeof base.s === 'string' && base.s !== '') ? base.s : (t.segundo || ''),
         espacio: ESPACIO_HASH,
         t: Date.now(),
         rev: siguienteRev(),
       };
+      if (Array.isArray(base.rutasEditadas)) paraRevisar[h].rutasEditadas = base.rutasEditadas.slice();
     }
     guardarParaRevisar();
+    refrescarTrasEdicionTarjeta();
     renderTarjeta();
   }
   let porComprension = [];     // NUEVO: tarjetas marcadas Entendida por comprensión
@@ -5375,6 +5433,7 @@
     } else if (zona === 'pararevisar') {
       idsAEliminar.forEach((h) => { delete paraRevisar[h]; });
       guardarParaRevisar();
+      refrescarTrasEdicionTarjeta();
       repintarTarjetaSiActiva();
     } else if (zona === 'razones') {
       idsAEliminar.forEach((h) => { delete razonesGuardadas[h]; });
@@ -5660,8 +5719,11 @@
 
   actualizarRegistroEspacioActual();
 
+  const originalesTarjeta = new WeakMap();
+
   function hashTarjetaCon(espacio, t) {
-    const base = espacio + '\u0001' + (t.primero || '') + '\u0000' + (t.segundo || '');
+    const orig = originalesTarjeta.get(t);
+    const base = espacio + '\u0001' + (t.primero || '') + '\u0000' + ((orig ? orig.segundo : t.segundo) || '');
     const norm = normalizarPalabra(base).replace(/\s+/g, ' ').trim();
     let h = 5381;
     for (let i = 0; i < norm.length; i++) {
@@ -5708,7 +5770,11 @@
 
   const CLAVE_PARA_REVISAR = 'para_revisar_v1';
   let paraRevisar = cargarRevisarLocal(CLAVE_PARA_REVISAR);
-  const guardarParaRevisar = crearGuardadoDebounced(() => guardarRevisarLocal(CLAVE_PARA_REVISAR, paraRevisar), 250);
+  const guardarParaRevisarDiferido = crearGuardadoDebounced(() => guardarRevisarLocal(CLAVE_PARA_REVISAR, paraRevisar), 250);
+  function guardarParaRevisar() {
+    reaplicarEdicionesTodas();
+    guardarParaRevisarDiferido();
+  }
 
   (function migrarRevisarLegado() {
     let crudo = null;
@@ -5748,112 +5814,383 @@
   function repintarTarjetaSiActiva() {
     if (tarjetasSesion.length > 0 && elAreaTarjeta.style.display !== 'none') renderTarjeta();
   }
-  function borrarPrimeroEditado(h) {
-    const e = paraRevisar[h];
-    if (!e || !e.p) return;
-    if (e.m === false) {
-      delete paraRevisar[h];
-      siguienteRev();
-    } else {
-      e.p = '';
-      e.t = Date.now();
-      e.rev = siguienteRev();
+  function originalDe(t) {
+    let o = originalesTarjeta.get(t);
+    if (!o) {
+      hashTarjeta(t);
+      o = { segundo: t.segundo || '', claves: (t.claves || []).slice(), rutas: (t.rutas || []).slice() };
+      originalesTarjeta.set(t, o);
     }
-    guardarParaRevisar();
+    return o;
   }
 
-  const elFilaPrimero = document.getElementById('tarjeta-primero').parentNode;
-  const elBtnEditarPrimero = document.getElementById('btn-editar-primero');
-  const elEditorPrimero = document.getElementById('editor-primero');
-  const elInputEditarPrimero = document.getElementById('input-editar-primero');
-  let editorPrimeroHash = null;
+  function rutasValidasLista(lista) {
+    const vistos = new Set();
+    const res = [];
+    (Array.isArray(lista) ? lista : []).forEach((x) => {
+      const n = Number(x);
+      if (!Number.isInteger(n) || vistos.has(n) || !Object.prototype.hasOwnProperty.call(rutasDisp, n)) return;
+      vistos.add(n);
+      res.push(n);
+    });
+    return res;
+  }
+
+  function mismasRutas(a, b) {
+    if (a.length !== b.length) return false;
+    const conjunto = new Set(b);
+    return a.every((x) => conjunto.has(x));
+  }
+
+  function aplicarEdicionesDeTarjeta(t) {
+    const o = originalDe(t);
+    const e = paraRevisar[hashTarjeta(t)];
+    const seg = (e && typeof e.s === 'string' && e.s !== '') ? e.s : o.segundo;
+    if (t.segundo !== seg) {
+      t.segundo = seg;
+      t.claves = seg === o.segundo ? o.claves.slice() : extraerClavesFuente(seg);
+    }
+    const rutas = (e && Array.isArray(e.rutasEditadas)) ? rutasValidasLista(e.rutasEditadas) : o.rutas;
+    if (!Array.isArray(t.rutas) || t.rutas.length !== rutas.length || t.rutas.some((x, i) => x !== rutas[i])) {
+      t.rutas = rutas.slice();
+    }
+  }
+
+  function reaplicarEdicionesTodas() {
+    tarjetasCompletas.forEach((t) => aplicarEdicionesDeTarjeta(t));
+  }
+
+  function edicionesDe(t) {
+    const e = paraRevisar[hashTarjeta(t)];
+    const o = originalDe(t);
+    const r = !!(e && Array.isArray(e.rutasEditadas) && !mismasRutas(rutasValidasLista(e.rutasEditadas), rutasValidasLista(o.rutas)));
+    return {
+      p: !!(e && typeof e.p === 'string' && e.p !== ''),
+      s: !!(e && typeof e.s === 'string' && e.s !== '' && e.s !== o.segundo),
+      r: r,
+    };
+  }
+
+  function tarjetaEditada(t) {
+    const x = edicionesDe(t);
+    return x.p || x.s || x.r;
+  }
+
+  function refrescarTrasEdicionTarjeta() {
+    actualizarRegistroEspacioActual();
+    estadisticasConstruidas = false;
+    curvaOlvidoConstruido = false;
+    srsConstruido = false;
+    subtRepasarConstruido = false;
+    sesgoConfianzaConstruido = false;
+    refrescarMarcasObservador();
+  }
+
+  reaplicarEdicionesTodas();
+  actualizarRegistroEspacioActual();
+
+  const elBtnEditarTarjeta = document.getElementById('btn-editar-tarjeta');
+  const elModalEditarTarjeta = document.getElementById('modal-editar-tarjeta');
+  const elInputEditPrimero = document.getElementById('input-edit-primero');
+  const elInputEditSegundo = document.getElementById('input-edit-segundo');
+  const elEditRutasLista = document.getElementById('edit-rutas-lista');
+  const elEditRutasSelector = document.getElementById('edit-rutas-selector');
+  const elEditRutasBuscar = document.getElementById('edit-rutas-buscar');
+  const elEditRutasOpciones = document.getElementById('edit-rutas-opciones');
+  let editorTarjeta = null;
 
   function claveTextoPrimero(texto) {
     return normalizarPalabra(String(texto || '')).split(' ').filter(Boolean).join(' ');
   }
 
-  function cerrarEditorPrimero() {
-    editorPrimeroHash = null;
-    elEditorPrimero.style.display = 'none';
-    elFilaPrimero.style.display = '';
+  function colapsarEspacios(texto) {
+    return String(texto || '').split(' ').filter((x) => x !== '').join(' ');
   }
 
-  function abrirEditorPrimero() {
-    if (!modoObservador || tarjetasSesion.length === 0) return;
+  function terminaEnRutas(texto) {
+    const i = texto.lastIndexOf('&');
+    if (i === -1) return false;
+    return texto.slice(i + 1).split('').every((c) => '0123456789,;. '.indexOf(c) !== -1);
+  }
+
+  function textoInvalidoParaTxt(texto, esPrimero) {
+    if (texto.indexOf('|') !== -1) return 'No puede contener el símbolo «|».';
+    if (esPrimero && texto.indexOf('+') !== -1) return 'El «primero» no puede contener el símbolo «+».';
+    if (terminaEnRutas(texto)) return 'No puede terminar con «&» seguido de números (se interpretaría como rutas).';
+    return '';
+  }
+
+  function parDuplicadoConOtra(t, primero, segundo) {
+    const h = hashTarjeta(t);
+    const cp = claveTextoPrimero(primero);
+    const cs = claveTextoPrimero(segundo);
+    return tarjetasCompletas.some((x) => {
+      if (hashTarjeta(x) === h) return false;
+      const o = originalDe(x);
+      return [[primeroVisibleDe(x), x.segundo], [x.primero, o.segundo]].some((par) =>
+        claveTextoPrimero(par[0]) === cp && claveTextoPrimero(par[1]) === cs);
+    });
+  }
+
+  function edicionTarjetaPermitida() {
+    if (!modoObservador || tarjetasSesion.length === 0) return false;
+    if (pomodoroActivo || modoEspecial) return false;
+    const ov = document.getElementById('overlay-minijuego');
+    return !(ov && ov.classList.contains('abierto'));
+  }
+
+  function sincronizarControlesEdicion(t) {
+    const visible = edicionTarjetaPermitida() && esRevisar(t);
+    elBtnEditarTarjeta.style.display = visible ? 'inline-block' : 'none';
+    elBtnEditarTarjeta.classList.toggle('editada', visible && tarjetaEditada(t));
+    if (!visible && editorTarjeta) cerrarEditorTarjeta();
+  }
+
+  function ocultarControlesEdicion() {
+    elBtnEditarTarjeta.style.display = 'none';
+    if (editorTarjeta) cerrarEditorTarjeta();
+  }
+
+  function mostrarTabEditor(tab) {
+    elModalEditarTarjeta.querySelectorAll('.editor-tarjeta-tab').forEach((b) => {
+      b.classList.toggle('activa', b.dataset.tab === tab);
+    });
+    elModalEditarTarjeta.querySelectorAll('.editor-tarjeta-panel').forEach((p) => {
+      p.classList.toggle('activo', p.dataset.panel === tab);
+    });
+    if (tab === 'primero') elInputEditPrimero.focus();
+    else if (tab === 'segundo') elInputEditSegundo.focus();
+  }
+
+  function renderRutasEditor() {
+    elEditRutasLista.textContent = '';
+    if (editorTarjeta.r.length === 0) {
+      const vacio = document.createElement('p');
+      vacio.textContent = 'Sin rutas asociadas.';
+      elEditRutasLista.appendChild(vacio);
+    }
+    editorTarjeta.r.forEach((id) => {
+      const fila = document.createElement('div');
+      fila.className = 'edit-ruta-fila';
+      const num = document.createElement('span');
+      num.className = 'edit-ruta-num';
+      num.textContent = 'Ruta ' + id;
+      const tema = document.createElement('span');
+      tema.className = 'edit-ruta-tema';
+      tema.textContent = rutasDisp[id].tema || '';
+      const quitar = document.createElement('button');
+      quitar.type = 'button';
+      quitar.className = 'boton-mini';
+      quitar.textContent = '✕';
+      quitar.title = 'Quitar ruta';
+      quitar.addEventListener('click', () => {
+        editorTarjeta.r = editorTarjeta.r.filter((x) => x !== id);
+        renderRutasEditor();
+      });
+      fila.appendChild(num);
+      fila.appendChild(tema);
+      fila.appendChild(quitar);
+      elEditRutasLista.appendChild(fila);
+    });
+    renderOpcionesRutasEditor();
+  }
+
+  function renderOpcionesRutasEditor() {
+    elEditRutasOpciones.textContent = '';
+    if (elEditRutasSelector.style.display === 'none') return;
+    const consulta = claveTextoPrimero(elEditRutasBuscar.value);
+    const tokens = consulta === '' ? [] : consulta.split(' ');
+    const asociadas = new Set(editorTarjeta.r);
+    Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((id) => {
+      const tema = rutasDisp[id].tema || '';
+      const texto = claveTextoPrimero(id + ' ' + tema);
+      if (!tokens.every((tk) => texto.indexOf(tk) !== -1)) return;
+      const fila = document.createElement('label');
+      fila.className = 'edit-ruta-fila edit-ruta-opcion' + (asociadas.has(id) ? ' marcada' : '');
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.checked = asociadas.has(id);
+      const num = document.createElement('span');
+      num.className = 'edit-ruta-num';
+      num.textContent = 'Ruta ' + id;
+      const tm = document.createElement('span');
+      tm.className = 'edit-ruta-tema';
+      tm.textContent = tema;
+      chk.addEventListener('change', () => {
+        if (chk.checked) {
+          if (editorTarjeta.r.indexOf(id) === -1) editorTarjeta.r.push(id);
+        } else {
+          editorTarjeta.r = editorTarjeta.r.filter((x) => x !== id);
+        }
+        const pos = elEditRutasOpciones.scrollTop;
+        renderRutasEditor();
+        elEditRutasOpciones.scrollTop = pos;
+      });
+      fila.appendChild(chk);
+      fila.appendChild(num);
+      fila.appendChild(tm);
+      elEditRutasOpciones.appendChild(fila);
+    });
+  }
+
+  function abrirEditorTarjeta(tab) {
+    if (!edicionTarjetaPermitida()) return;
     const t = tarjetasSesion[indiceActual];
     if (!esRevisar(t)) return;
-    editorPrimeroHash = hashTarjeta(t);
-    elInputEditarPrimero.value = primeroVisibleDe(t);
-    elFilaPrimero.style.display = 'none';
-    elEditorPrimero.style.display = 'flex';
-    elInputEditarPrimero.focus();
-    elInputEditarPrimero.select();
+    const inicial = { p: primeroVisibleDe(t), s: t.segundo || '', r: rutasValidasLista(t.rutas) };
+    editorTarjeta = { t: t, h: hashTarjeta(t), inicial: inicial, r: inicial.r.slice() };
+    elInputEditPrimero.value = inicial.p;
+    elInputEditSegundo.value = inicial.s;
+    elEditRutasBuscar.value = '';
+    elEditRutasSelector.style.display = 'none';
+    elModalEditarTarjeta.classList.add('abierto');
+    renderRutasEditor();
+    mostrarTabEditor(tab || 'primero');
   }
 
-  function sincronizarControlesPrimero(t) {
-    if (editorPrimeroHash !== null && editorPrimeroHash !== hashTarjeta(t)) cerrarEditorPrimero();
-    elBtnEditarPrimero.style.display = (modoObservador && esRevisar(t)) ? 'inline-block' : 'none';
-    if (!modoObservador && editorPrimeroHash !== null) cerrarEditorPrimero();
+  function cerrarEditorTarjeta() {
+    editorTarjeta = null;
+    elModalEditarTarjeta.classList.remove('abierto');
   }
 
-  function ocultarControlesPrimero() {
-    elBtnEditarPrimero.style.display = 'none';
-    if (editorPrimeroHash !== null) cerrarEditorPrimero();
+  function hayCambiosEditorTarjeta() {
+    if (!editorTarjeta) return false;
+    const i = editorTarjeta.inicial;
+    return colapsarEspacios(elInputEditPrimero.value) !== colapsarEspacios(i.p) ||
+      colapsarEspacios(elInputEditSegundo.value) !== colapsarEspacios(i.s) ||
+      !mismasRutas(editorTarjeta.r, i.r);
   }
 
-  async function guardarPrimeroEditado() {
-    if (!modoObservador || tarjetasSesion.length === 0 || editorPrimeroHash === null) return;
-    const t = tarjetasSesion[indiceActual];
-    const h = hashTarjeta(t);
-    if (h !== editorPrimeroHash) { cerrarEditorPrimero(); return; }
-    const texto = elInputEditarPrimero.value.trim();
-    elInputEditarPrimero.blur();
-    if (texto === '') {
-      await avisar('El «primero» no puede quedar vacío.');
-      elInputEditarPrimero.focus();
+  async function intentarCerrarEditorTarjeta() {
+    if (!editorTarjeta) return;
+    if (hayCambiosEditorTarjeta()) {
+      const ok = await confirmarAccion('Hay cambios sin guardar. ¿Descartarlos?', 'Descartar');
+      if (!ok) return;
+    }
+    cerrarEditorTarjeta();
+  }
+
+  async function avisarEnTab(tab, mensaje) {
+    mostrarTabEditor(tab);
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    await avisar(mensaje);
+    mostrarTabEditor(tab);
+  }
+
+  async function guardarEditorTarjeta() {
+    if (!editorTarjeta || !edicionTarjetaPermitida()) return;
+    const t = editorTarjeta.t;
+    const h = editorTarjeta.h;
+    if (hashTarjeta(t) !== h || !esRevisar(t)) { cerrarEditorTarjeta(); return; }
+    const o = originalDe(t);
+    const textoP = colapsarEspacios(elInputEditPrimero.value);
+    const textoS = colapsarEspacios(elInputEditSegundo.value);
+    if (textoP === '') {
+      await avisarEnTab('primero', 'El «primero» no puede quedar vacío.');
       return;
     }
-    const clave = claveTextoPrimero(texto);
-    const duplicada = tarjetasCompletas.some((o) => {
-      const ho = hashTarjeta(o);
-      if (ho === h) return false;
-      if (claveTextoPrimero(o.primero) === clave) return true;
-      const e = paraRevisar[ho];
+    const clave = claveTextoPrimero(textoP);
+    const errorP = textoInvalidoParaTxt(textoP, true);
+    if (errorP) {
+      await avisarEnTab('primero', 'Primero inválido: ' + errorP);
+      return;
+    }
+    const primeroCambio = clave !== claveTextoPrimero(editorTarjeta.inicial.p);
+    const duplicada = primeroCambio && tarjetasCompletas.some((x) => {
+      const hx = hashTarjeta(x);
+      if (hx === h) return false;
+      if (claveTextoPrimero(x.primero) === clave) return true;
+      const e = paraRevisar[hx];
       return !!(e && typeof e.p === 'string' && e.p && claveTextoPrimero(e.p) === clave);
     });
     if (duplicada) {
-      await avisar('Ya existe otra tarjeta con ese mismo «primero». Elegí un texto distinto.');
-      elInputEditarPrimero.focus();
+      await avisarEnTab('primero', 'Ya existe otra tarjeta con ese mismo «primero». Elegí un texto distinto.');
       return;
     }
-    if (claveTextoPrimero(t.primero) === clave) {
-      borrarPrimeroEditado(h);
-    } else {
-      const previo = paraRevisar[h] || {};
-      paraRevisar[h] = {
-        p: texto,
-        po: typeof previo.po === 'string' ? previo.po : (t.primero || ''),
-        s: typeof previo.s === 'string' ? previo.s : (t.segundo || ''),
-        espacio: previo.espacio || ESPACIO_HASH,
-        t: Date.now(),
-        rev: siguienteRev(),
-      };
-      if (previo.m === false) paraRevisar[h].m = false;
-      guardarParaRevisar();
+    if (o.segundo !== '' && textoS === '') {
+      await avisarEnTab('segundo', 'El «segundo» no puede quedar vacío.');
+      return;
     }
-    cerrarEditorPrimero();
+    const errorS = textoInvalidoParaTxt(textoS, false);
+    if (errorS) {
+      await avisarEnTab('segundo', 'Segundo inválido: ' + errorS);
+      return;
+    }
+    if (parDuplicadoConOtra(t, textoP, textoS)) {
+      await avisarEnTab('segundo', 'Ya existe otra tarjeta con el mismo «primero» y «segundo». Cambiá alguno de los dos.');
+      return;
+    }
+    const rutas = rutasValidasLista(editorTarjeta.r);
+    if (!hayCambiosEditorTarjeta()) { cerrarEditorTarjeta(); return; }
+    const previo = paraRevisar[h] || {};
+    const nueva = {
+      p: clave === claveTextoPrimero(o.primero) ? '' : textoP,
+      po: typeof previo.po === 'string' ? previo.po : (t.primero || ''),
+      s: textoS,
+      espacio: previo.espacio || ESPACIO_HASH,
+      t: Date.now(),
+      rev: siguienteRev(),
+    };
+    if (!mismasRutas(rutas, rutasValidasLista(o.rutas))) nueva.rutasEditadas = rutas;
+    if (previo.m === false) nueva.m = false;
+    paraRevisar[h] = nueva;
+    guardarParaRevisar();
+    cerrarEditorTarjeta();
+    refrescarTrasEdicionTarjeta();
     renderTarjeta();
   }
 
-  elBtnEditarPrimero.addEventListener('click', () => abrirEditorPrimero());
-  document.getElementById('btn-guardar-primero').addEventListener('click', () => guardarPrimeroEditado());
-  document.getElementById('btn-cancelar-primero').addEventListener('click', () => cerrarEditorPrimero());
-  elInputEditarPrimero.addEventListener('keydown', (e) => {
-    if (elModalAviso.classList.contains('abierto') || elModalConfirmacion.classList.contains('abierto')) return;
-    e.stopPropagation();
-    if (e.key === 'Enter') { e.preventDefault(); guardarPrimeroEditado(); }
-    else if (e.key === 'Escape') { e.preventDefault(); cerrarEditorPrimero(); }
+  elBtnEditarTarjeta.addEventListener('click', () => abrirEditorTarjeta('primero'));
+  document.getElementById('btn-editar-tarjeta-cerrar').addEventListener('click', () => intentarCerrarEditorTarjeta());
+  document.getElementById('btn-editar-tarjeta-guardar').addEventListener('click', () => guardarEditorTarjeta());
+  elModalEditarTarjeta.addEventListener('click', (evento) => {
+    if (evento.target === elModalEditarTarjeta) intentarCerrarEditorTarjeta();
   });
+  elModalEditarTarjeta.querySelectorAll('.editor-tarjeta-tab').forEach((b) => {
+    b.addEventListener('click', () => mostrarTabEditor(b.dataset.tab));
+  });
+  document.getElementById('btn-edit-rutas-agregar').addEventListener('click', () => {
+    if (!editorTarjeta) return;
+    const abierto = elEditRutasSelector.style.display !== 'none';
+    elEditRutasSelector.style.display = abierto ? 'none' : 'block';
+    if (!abierto) {
+      renderOpcionesRutasEditor();
+      elEditRutasBuscar.focus();
+    }
+  });
+  elEditRutasBuscar.addEventListener('input', () => { if (editorTarjeta) renderOpcionesRutasEditor(); });
+
+  function hayModalEncimaDelEditor() {
+    return elModalAviso.classList.contains('abierto') ||
+      elModalConfirmacion.classList.contains('abierto') ||
+      elModalPrimeroEditado.classList.contains('abierto');
+  }
+
+  elModalEditarTarjeta.addEventListener('keydown', (evento) => {
+    if (hayModalEncimaDelEditor()) return;
+    evento.stopPropagation();
+    if (evento.key === 'Escape') {
+      evento.preventDefault();
+      if (elEditRutasSelector.style.display !== 'none') {
+        elEditRutasSelector.style.display = 'none';
+        return;
+      }
+      intentarCerrarEditorTarjeta();
+    } else if (evento.key === 'Enter' && (evento.target === elInputEditPrimero || evento.target === elInputEditSegundo)) {
+      evento.preventDefault();
+      guardarEditorTarjeta();
+    }
+  });
+
+  document.addEventListener('keydown', (evento) => {
+    if (!editorTarjeta || hayModalEncimaDelEditor()) return;
+    if (elModalEditarTarjeta.contains(evento.target)) return;
+    evento.stopPropagation();
+    if (evento.key === 'Escape') {
+      evento.preventDefault();
+      intentarCerrarEditorTarjeta();
+    }
+  }, true);
 
   function construirExportParaRevisar() {
     const lista = Object.keys(paraRevisar).map((h) => {
@@ -5867,6 +6204,7 @@
         t: e.t || 0,
         rev: typeof e.rev === 'number' ? e.rev : undefined,
       };
+      if (Array.isArray(e.rutasEditadas)) item.rutasEditadas = e.rutasEditadas.slice();
       if (e.m === false) item.m = false;
       return item;
     });
@@ -5875,6 +6213,7 @@
 
   function fusionarParaRevisarLista(lista) {
     let nuevas = 0, actualizadas = 0, conservadas = 0, iguales = 0, invalidas = 0;
+    const tarjetaPorHash = new Map(tarjetasCompletas.map((t) => [hashTarjeta(t), t]));
     lista.forEach((item) => {
       if (!item || typeof item.h !== 'string' || !item.h) {
         invalidas++;
@@ -5890,12 +6229,24 @@
         t: typeof item.t === 'number' ? item.t : 0,
         rev: typeof item.rev === 'number' ? item.rev : undefined,
       };
+      if (Array.isArray(item.rutasEditadas)) entrada.rutasEditadas = rutasValidasLista(item.rutasEditadas);
       if (item.m === false) entrada.m = false;
+      const tObj = tarjetaPorHash.get(item.h);
+      if (tObj) {
+        const orig = originalDe(tObj);
+        const sVisible = entrada.s || orig.segundo;
+        if ((entrada.p || sVisible !== orig.segundo) && parDuplicadoConOtra(tObj, entrada.p || tObj.primero, sVisible)) {
+          entrada.p = '';
+          entrada.s = orig.segundo;
+        }
+      }
       registrarRevVista(entrada.rev);
       if (!local) {
         paraRevisar[item.h] = entrada;
         nuevas++;
-      } else if ((local.p || '') === entrada.p && (local.m === false) === (entrada.m === false)) {
+      } else if ((local.p || '') === entrada.p && (local.s || '') === entrada.s &&
+        JSON.stringify(local.rutasEditadas || null) === JSON.stringify(entrada.rutasEditadas || null) &&
+        (local.m === false) === (entrada.m === false)) {
         iguales++;
       } else if (entranteEsMasReciente(entrada.rev, entrada.t, local.rev, local.t)) {
         paraRevisar[item.h] = entrada;
@@ -5905,6 +6256,7 @@
       }
     });
     guardarParaRevisar();
+    refrescarTrasEdicionTarjeta();
     return { nuevas: nuevas, actualizadas: actualizadas, conservadas: conservadas, iguales: iguales, invalidas: invalidas };
   }
 
@@ -6501,7 +6853,7 @@
     cont.className = 'tc-textos';
     const p = document.createElement('span');
     p.className = 'tc-primero';
-    p.textContent = t.primero;
+    p.textContent = primeroVisibleDe(t);
     cont.appendChild(p);
     if (t.segundo) {
       const sg = document.createElement('span');
@@ -6719,6 +7071,7 @@
       const t = tarjetasCompletas[Number(fila.dataset.idx)];
       const marcas = fila.querySelector('.tc-marcas');
       if (t && marcas) marcas.textContent = textoMarcasTarjeta(t);
+      if (t) fila.classList.toggle('editada', tarjetaEditada(t));
     });
   }
 
@@ -6769,6 +7122,7 @@
           fila.type = 'button';
           fila.className = 'fila-observador';
           fila.dataset.idx = String(i);
+          if (tarjetaEditada(t)) fila.classList.add('editada');
           fila.appendChild(crearTextosTarjeta(t));
           const marcas = document.createElement('span');
           marcas.className = 'tc-marcas';
@@ -9223,7 +9577,7 @@
 
     elBtnRevisar.style.display = 'inline-block';
     elBtnRevisar.classList.toggle('activa', esRevisar(t));
-    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
+    elBtnRevisar.classList.toggle('editada', tarjetaEditada(t));
     elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
 
     elPrimero.style.display = 'block';
@@ -9545,7 +9899,7 @@
     elBadgeRutas.style.display = 'none';
     elBtnRevisar.style.display = 'inline-block';
     elBtnRevisar.classList.toggle('activa', esRevisar(t));
-    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
+    elBtnRevisar.classList.toggle('editada', tarjetaEditada(t));
     elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
 
     elPrimero.style.display = 'block';
@@ -9817,7 +10171,7 @@
     elBadgeRutas.style.display = 'none';
     elBtnRevisar.style.display = 'inline-block';
     elBtnRevisar.classList.toggle('activa', esRevisar(t));
-    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
+    elBtnRevisar.classList.toggle('editada', tarjetaEditada(t));
     elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
 
     elPrimero.style.display = 'block';
@@ -10252,7 +10606,7 @@
 
     elBtnRevisar.style.display = 'inline-block';
     elBtnRevisar.classList.toggle('activa', esRevisar(t));
-    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
+    elBtnRevisar.classList.toggle('editada', tarjetaEditada(t));
     elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
 
     elPrimero.style.display = 'block';
@@ -10570,7 +10924,7 @@
 
     elBtnRevisar.style.display = 'inline-block';
     elBtnRevisar.classList.toggle('activa', esRevisar(t));
-    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(t));
+    elBtnRevisar.classList.toggle('editada', tarjetaEditada(t));
     elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
 
     elPrimero.style.display = 'block';
@@ -14557,7 +14911,7 @@ const ZONAS_SYNC_GIST = [
     pararevisar: {
       plural: 'tarjetas para revisar', titulo: 'tarjetas para revisar',
       almacen: () => paraRevisar, guardar: () => guardarParaRevisar(),
-      repintar: () => repintarTarjetaSiActiva(), explicitas: ['p'],
+      repintar: () => { refrescarTrasEdicionTarjeta(); repintarTarjetaSiActiva(); }, explicitas: ['p', 's', 'rutasEditadas'],
     },
     notas: {
       plural: 'notas', titulo: 'notas',
@@ -21116,7 +21470,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function renderTarjeta() {
-    if (hookInicioRenderTarjeta()) { ocultarControlesPrimero(); return; }
+    if (hookInicioRenderTarjeta()) { ocultarControlesEdicion(); return; }
     if (tarjetasSesion.length === 0) {
       elAreaTarjeta.innerHTML = '<p class="sin-tarjetas">No hay tarjetas para estudiar con los temas elegidos.</p>';
       return;
@@ -21134,7 +21488,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elTemaTexto.textContent = nombreTema(actual);
     elPrimero.textContent = primeroVisibleDe(actual);
     elSegundo.textContent = actual.segundo;
-    sincronizarControlesPrimero(actual);
+    sincronizarControlesEdicion(actual);
 
     if (mostrarSegundo) {
       elBtnPista.style.display = 'none';
@@ -21240,7 +21594,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     elBtnPausa.style.display = (cronometroActivo && !modoObservador) ? 'inline-block' : 'none';
     elBtnRevisar.classList.toggle('activa', esRevisar(actual));
-    elBtnRevisar.classList.toggle('editada', !!primeroEditadoDe(actual));
+    elBtnRevisar.classList.toggle('editada', tarjetaEditada(actual));
     elBtnRevisar.textContent = esRevisar(actual) ? '🚩 Para revisar' : '🚩 Revisar';
 
     const esDif = esDificil(actual);
@@ -23050,7 +23404,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       lista.hashes.forEach((h) => todosLosHashes.add(h));
     });
     let tarjetasSrs = tarjetasCompletas.filter((t) => todosLosHashes.has(hashTarjeta(t)));
-    if (modoAleatorio) tarjetasSrs = mezclar(tarjetasSrs);
+    tarjetasSrs = mezclar(tarjetasSrs);
 
     iniciarSesion(tarjetasSrs);   // esto resetea srsSesionActiva a null; se fija DESPUÉS
     srsSesionActiva = { nombres: listasVencidas.map((l) => l.nombre), hashesPorLista: hashesPorLista };
@@ -23166,8 +23520,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     };
 
     agregar('🔴', 'SubT urgentes', candidatos.filter((c) => c.urgentes).map((c) => c.nombre + ' (' + Math.round(c.score) + '/100)'), 'urgentes');
-    agregar('⚠️', 'SubT con sobreconfianza', candidatos.filter((c) => c.sobreconfianza).map((c) => c.nombre), 'sobreconfianza');
-    agregar('😵', 'SubT próximos a olvido', candidatos.filter((c) => c.olvido).map((c) => c.nombre), 'olvido');
+    agregar('🎭', 'SubT con sobreconfianza', candidatos.filter((c) => c.sobreconfianza).map((c) => c.nombre), 'sobreconfianza');
+    agregar('🧠', 'SubT próximos a olvido', candidatos.filter((c) => c.olvido).map((c) => c.nombre), 'olvido');
 
     let nTarjetasDificiles = 0;
     let nTarjetasConRazon = 0;
