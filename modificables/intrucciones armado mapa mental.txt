@@ -15,6 +15,7 @@ accion14: ejecutas "evaluadorTemas" seleccionas el drawio recordatorio.txt respu
 
 alternativa: si quieres que la ia te genere el recordatorio.txt de un archivo de respuestas.txt usa el segundo prompt
 skimming: el tercer prompt te genera una nota skimming lista para copiar y pegar, debes adjuntarle el archivo respuestas.txt
+tarjetas redundantes: el cuarto prompt te dice que tarjetas son redundantes solapadas confundibles etc, debes pasarle el recordatorio.txt y respuestas.txt, una vez que te las entregue puedes quitarlas del evaluador si gustas
 
 nota: no usar '<', '>', '“', '”', '"', '&' y tambien fjarte en las letras VOCALES MAYUSCULAS CON ACENTO en el texto, provoca error en el codigo
 
@@ -357,5 +358,38 @@ El objetivo de esta nota es que pueda leerla en menos de 2 minutos para identifi
 3. **Formato limpio**: Debe tener un formato limpio listo para pegar en una nota txt, sin resaltado ni ** ni bullet points solo el listado
 4. **Sin secciones adicionales**: No incluyas resúmenes, introducciones, conclusiones ni secciones separadas. Solo la lista de conceptos.
 5. **Conceptos criticos**: Identifica 3 a 6 ramas, conceptos densos o relaciones que suelen generar confusión o requieren atención especial adjunta el emoji ⚠️al inicio para poder identificarlo
+
+}
+
+{
+
+Detectá similitud problemática entre tarjetas de estudio.
+
+ENTRADA
+- recordatorio.txt: cada línea = tarjeta "primero + segundo & 3, 7 | nota".
+  "subT X" encabeza subtema. El primero es la pregunta (clave única), el segundo la respuesta breve, los números tras & son rutas.
+- respuestas.txt: bloques "Ruta N / tema / renglones". La respuesta REAL de una tarjeta es el contenido de sus rutas, no solo el segundo.
+
+CLASIFICÁ (compará ideas, no palabras)
+1. redundante: mismo concepto desarrollado, aunque con sinónimos, otro orden u otra redacción ("X produce Y" = "Y es generado por X").
+2. solapada: comparten rutas y el contenido restante aporta <20% de ideas nuevas.
+3. confundible: primero muy parecido pero respuestas que afirman cosas DISTINTAS.
+   Compartir terminología del mismo tema NO alcanza para ser redundante.
+   Ante duda → confundible.
+
+SALIDA: solo JSON, sin texto extra.
+{
+ "grupos": [{
+   "tipo": "redundante|solapada|confundible",
+   "subT": "...",
+   "tarjetas": ["<primero EXACTO copiado del archivo>", ...],
+   "conservar": "<primero exacto de la más completa>",
+   "ocultar": ["<primero exactos>"],  // vacío si tipo=confundible
+   "motivo": "una línea",
+   "discriminador": "solo confundibles: rasgo que distingue a cada una"
+ }],
+ "ocultar_total": ["<primero exactos, sin duplicados>"]
+}
+Reglas: nunca ocultar todas las de un grupo; no inventar tarjetas; los campos tarjetas/conservar/ocultar son copias literales del primero (son la clave).
 
 }

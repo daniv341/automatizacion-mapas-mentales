@@ -2112,6 +2112,45 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .punto-casi { background: #e0a030; }
 
   .grupo-cronometro { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .grupo-progreso { display: flex; align-items: center; gap: 8px; }
+  .chip-bateria {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border: 1.5px solid;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    line-height: 1.4;
+    cursor: pointer;
+  }
+  .chip-bateria-n { font-variant-numeric: tabular-nums; }
+  .chip-bateria.bateria-verde { background: #d4edda; color: #155724; border-color: #7fc78f; }
+  .chip-bateria.bateria-amarillo { background: #fff3cd; color: #856404; border-color: #e6c75a; }
+  .chip-bateria.bateria-naranja { background: #ffe3c2; color: #a85a10; border-color: #e0812a; }
+  .chip-bateria.bateria-rojo { background: #f8d7da; color: #842029; border-color: #dc6b76; }
+  .chip-bateria.bateria-rojo-inv { background: #c0392b; color: #ffffff; border-color: #922b21; }
+  .pomodoro-badge-fila2 { flex: 0 0 100%; display: flex; gap: 6px; }
+  .overlay-bateria { z-index: 20000; }
+  .bateria-orion {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    width: clamp(80px, 22vw, 150px);
+    height: auto;
+    pointer-events: none;
+    user-select: none;
+    z-index: 1;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+  }
+  .bateria-caja { width: min(92vw, 440px); gap: 12px; }
+  .bateria-motivacion { font-size: 14px; color: var(--texto-secundario); }
+  .bateria-instruccion { font-size: 17px; font-weight: 600; color: var(--texto-cabecera); min-height: 3.2em; }
+  .bateria-countdown { font-size: 56px; font-weight: 700; color: var(--color-boton); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .bateria-botones { display: flex; flex-direction: column; gap: 8px; }
+  .bateria-botones button { width: 100%; }
 
   .badge-nota-actual {
     width: 50px;
@@ -4546,6 +4585,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <button class="boton-mini" id="btn-pomodoro-braindump" style="display:none;">🧠 Braindump</button>
           <button class="boton-mute" id="btn-mute-pomodoro" data-mute-sync title="Silenciar/activar sonidos">🔊</button>
         </span>
+        <span class="pomodoro-badge-fila2">
+          <button type="button" class="chip-bateria bateria-verde" id="btn-bateria-pomodoro" title="Batería mental"><span class="chip-bateria-emoji">🔋</span><span class="chip-bateria-n">5</span></button>
+        </span>
       </div>
     </div>
 
@@ -4761,7 +4803,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <button class="boton-mute" id="btn-mute" data-mute-sync title="Silenciar/activar sonidos">🔊</button>
       </div>
       <div class="fila-navegacion-superior">
-        <div class="progreso-texto" id="progreso-texto"></div>
+        <div class="grupo-progreso">
+          <button type="button" class="chip-bateria bateria-verde" id="btn-bateria-eval" style="display:none;" title="Batería mental"><span class="chip-bateria-emoji">🔋</span><span class="chip-bateria-n">5</span></button>
+          <div class="progreso-texto" id="progreso-texto"></div>
+        </div>
         <div class="grupo-cronometro">
           <button class="boton-mute" id="btn-mute-examen" data-mute-sync style="display:none;" title="Silenciar/activar sonidos">🔊</button>
           <div class="cronometro" id="cronometro">⏱ 00:00</div>
@@ -4889,6 +4934,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <h2>Resumen de la sesión</h2>
     <div class="nota-sesion" id="nota-sesion">🎓 Nota de la sesión: 0.0 / 10</div>
     <p class="modal-ayuda" id="aviso-tiempo-global-resumen" style="display:none; text-align:center;"></p>
+    <p class="modal-ayuda" id="aviso-fatiga-resumen" style="display:none; text-align:center;"></p>
     <div class="nota-listado" id="nota-listado" style="display:none;"></div>
 
     <div class="listas-resumen" id="resumen-gamificacion" style="display:none;">
@@ -4962,6 +5008,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="minijuego-aviso" id="minijuego-aviso">
     <div>No se pudo cargar el minijuego</div>
     <button type="button" class="boton-principal" id="btn-minijuego-continuar">Continuar</button>
+  </div>
+</div>
+
+<div class="modal-overlay overlay-bateria" id="overlay-bateria" role="alertdialog" aria-modal="true">
+  <img class="bateria-orion" id="bateria-orion-img" alt="" draggable="false">
+  <div class="modal-caja bateria-caja">
+    <h3 id="bateria-titulo">🔋 Pausa para recargar</h3>
+    <p class="bateria-motivacion" id="bateria-motivacion">Descansar también es estudiar. Tu cerebro lo va a agradecer.</p>
+    <p class="bateria-instruccion" id="bateria-instruccion"></p>
+    <div class="bateria-countdown" id="bateria-countdown">01:30</div>
+    <div class="bateria-botones" id="bateria-botones" style="display:none;">
+      <button type="button" class="boton-secundario" id="btn-bateria-cansado">Sigo cansado</button>
+      <button type="button" class="boton-reiniciar" id="btn-bateria-mejor">Ya estoy mejor</button>
+    </div>
   </div>
 </div>
 
@@ -5070,6 +5130,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <p id="pomodoro-resumen-skimming-fila" style="display:none;">👀 Skimming: <strong id="pomodoro-resumen-skimming"></strong></p>
     <p>🧠 Tiempo en retención: <strong id="pomodoro-resumen-retencion"></strong></p>
     <p>☕ Descansos totales: <strong id="pomodoro-resumen-descanso"></strong></p>
+    <p class="modal-ayuda" id="pomodoro-resumen-fatiga" style="display:none;"></p>
     <p>⏱ Tiempo total: <strong id="pomodoro-resumen-total"></strong></p>
     <p>⏲️ Ciclos completados: <strong id="pomodoro-resumen-ciclos"></strong></p>
     <div id="pomodoro-resumen-retencion-rutas" style="display:none;">
@@ -5881,6 +5942,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let versionNota = 'local';   // NUEVO: qué versión se ve en el panel: 'local' | 'txt'
   let modoObservador = false;  // NUEVO: viendo tarjetas sin evaluarse (sin cronómetro ni calificación)
   let observadorAbiertos = new Set();  // NUEVO: subT abiertos en la lista del observador
+  let bateriaNivel = 5;
+  let bateriaAvisoDisparado = false;
+  let bateriaPausaActiva = false;
+  let bateriaFatigaResumen = false;
   let pausaManual = false;     // NUEVO: cronómetro pausado a mano (botón ⏸ Pausar)
   let _avisoCuotaMs = 0;
   function escribirLocalSeguro(clave, valor) {
@@ -23192,6 +23257,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function renderTarjeta() {
+    actualizarBateriaMental();
     if (hookInicioRenderTarjeta()) { ocultarControlesEdicion(); return; }
     if (tarjetasSesion.length === 0) {
       elAreaTarjeta.innerHTML = '<p class="sin-tarjetas">No hay tarjetas para estudiar con los temas elegidos.</p>';
@@ -24993,6 +25059,14 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     } else {
       elAvisoGlobal.style.display = 'none';
     }
+    const elAvisoFatiga = document.getElementById('aviso-fatiga-resumen');
+    if (bateriaFatigaResumen) {
+      elAvisoFatiga.textContent = '🔋 Sesión guardada por fatiga. Las tarjetas sin responder quedaron como pasadas sin marcar para que puedas retomarlas más tarde, ya descansado.';
+      elAvisoFatiga.style.display = 'block';
+    } else {
+      elAvisoFatiga.style.display = 'none';
+    }
+    bateriaFatigaResumen = false;
     elNota.className = 'nota-sesion ' + (nota >= 6 ? 'aprobado' : 'desaprobado');
 
     document.getElementById('etq-si').textContent = 'Entendidas (' + conteos.si + ')';
@@ -25842,6 +25916,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroPausaAcumMs = 0;
     pomodoroHoraInicio = Date.now();
     enfoqueReiniciarContador();
+    reiniciarBateriaMental();
     pomodoroAcumulado = { pretest: 0, retencion: 0, skimming: 0, descanso: 0 };
     pomodoroRetencionPresionada = false;
     pomodoroEnBraindumpFinal = false;
@@ -26069,6 +26144,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function cerrarModalPomodoroResumen() {
     elModalPomodoroResumen.classList.remove('abierto');
     elBtnPomodoro.disabled = false;
+    document.getElementById('pomodoro-resumen-fatiga').style.display = 'none';
   }
   document.getElementById('btn-pomodoro-resumen-cerrar').addEventListener('click', () => cerrarModalPomodoroResumen());
 
@@ -26089,6 +26165,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   let _ultimoGuardadoSesionPendienteMs = 0;
 
   function registrarInicioSesionNueva() {
+    reiniciarBateriaMental();
     tiempoInicioSesion = Date.now();
     enfoqueReiniciarContador();
     descartarSesionPendiente();   // sesión nueva: sobrescribe/borra la pendiente anterior
@@ -26570,6 +26647,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (x.segundaPendiente && !modoEspecial && !pausaManual && resultados[indiceActual] === null && elTextoEval.value.trim() !== '') {
       evaluarRespuesta();
     }
+    reiniciarBateriaMental();
     return true;
   }
 
@@ -26926,9 +27004,200 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     } else {
       iniciarIntervaloPomodoro();
     }
+    reiniciarBateriaMental();
     return true;
   }
 
+
+  const BATERIA_MAXIMA = 5;
+  const BATERIA_NIVEL_AVISO = 2;
+  const BATERIA_PAUSA_SEG = 90;
+  const BATERIA_CLASES = ['bateria-verde', 'bateria-amarillo', 'bateria-naranja', 'bateria-rojo', 'bateria-rojo-inv'];
+  const BATERIA_INSTRUCCIONES = [
+    'Poneté de pie y estirá brazos, cuello y espalda con calma.',
+    'Tomá un poco de agua, despacio y sin apuro.',
+    'Buscá a tu alrededor 3 objetos de color azul.',
+    'Mirá un punto lejano, por una ventana o al fondo de la habitación.',
+    'Caminá un poco por tu espacio y soltá los hombros.',
+  ];
+  let bateriaPausaTimer = 0;
+  let bateriaPausaFin = 0;
+  let bateriaCongelado = { evaluacion: false, pomodoro: false };
+
+  function bateriaEsEvaluacionEstandar() {
+    if (modoObservador || modoEspecial || tarjetasSesion.length === 0) return false;
+    return modoJuego === 'light' || modoJuego === 'normal' || modoJuego === 'tryhard';
+  }
+
+  function claseNivelBateria(n) {
+    if (n >= 4) return 'bateria-verde';
+    if (n === 3) return 'bateria-amarillo';
+    if (n === 2) return 'bateria-naranja';
+    if (n === 1) return 'bateria-rojo';
+    return 'bateria-rojo-inv';
+  }
+
+  function actualizarBateriaMental() {
+    const clase = claseNivelBateria(bateriaNivel);
+    const emoji = bateriaNivel <= 1 ? '🪫' : '🔋';
+    const tooltip = 'Batería mental: ' + bateriaNivel + ' de ' + BATERIA_MAXIMA + '. Tocá si notás cansancio mental.';
+    ['btn-bateria-eval', 'btn-bateria-pomodoro'].forEach((id) => {
+      const boton = document.getElementById(id);
+      if (!boton) return;
+      BATERIA_CLASES.forEach((c) => boton.classList.remove(c));
+      boton.classList.add(clase);
+      boton.title = tooltip;
+      boton.setAttribute('aria-label', tooltip);
+      boton.querySelector('.chip-bateria-emoji').textContent = emoji;
+      boton.querySelector('.chip-bateria-n').textContent = String(bateriaNivel);
+    });
+    const chipEvaluacion = document.getElementById('btn-bateria-eval');
+    if (chipEvaluacion) chipEvaluacion.style.display = bateriaEsEvaluacionEstandar() ? 'inline-flex' : 'none';
+  }
+
+  function reiniciarBateriaMental() {
+    bateriaNivel = BATERIA_MAXIMA;
+    bateriaAvisoDisparado = false;
+    actualizarBateriaMental();
+  }
+
+  function congelarTemporizadoresBateria() {
+    bateriaCongelado = { evaluacion: false, pomodoro: false };
+    if (pomodoroActivo) {
+      if (!pomodoroPausado) {
+        pomodoroPausado = true;
+        pomodoroPausaInicio = Date.now();
+        clearInterval(pomodoroIntervalo);
+        bateriaCongelado.pomodoro = true;
+      }
+      return;
+    }
+    if (!modoObservador && !pausaManual && cronometroActivo) {
+      if (!cronometroCongelado()) acumularTiempo();
+      pausaManual = true;
+      bateriaCongelado.evaluacion = true;
+      actualizarCronometro();
+    }
+  }
+
+  function reanudarTemporizadoresBateria() {
+    if (bateriaCongelado.pomodoro && pomodoroActivo && pomodoroPausado) {
+      cerrarPausaPomodoro();
+      pomodoroPausado = false;
+      iniciarIntervaloPomodoro();
+    }
+    if (bateriaCongelado.evaluacion && pausaManual) {
+      pausaManual = false;
+      if (cronometroActivo && !cronometroCongelado()) tiempoInicioTarjeta = Date.now();
+      actualizarCronometro();
+    }
+    bateriaCongelado = { evaluacion: false, pomodoro: false };
+  }
+
+  function cargarOrionFelizBateria() {
+    const img = document.getElementById('bateria-orion-img');
+    if (img.getAttribute('data-cargada') === '1') return;
+    img.setAttribute('data-cargada', '1');
+    img.onerror = () => { img.style.display = 'none'; };
+    img.src = new URL(orionRutaBase() + 'orion-feliz.webp', location.href).href;
+  }
+
+  function tickPausaBateria() {
+    const restante = Math.max(0, Math.ceil((bateriaPausaFin - Date.now()) / 1000));
+    document.getElementById('bateria-countdown').textContent = formatoMMSS(restante);
+    const transcurrido = BATERIA_PAUSA_SEG - restante;
+    const tramo = BATERIA_PAUSA_SEG / BATERIA_INSTRUCCIONES.length;
+    const indice = Math.min(BATERIA_INSTRUCCIONES.length - 1, Math.floor(transcurrido / tramo));
+    document.getElementById('bateria-instruccion').textContent = BATERIA_INSTRUCCIONES[indice];
+    if (restante > 0) return;
+    clearInterval(bateriaPausaTimer);
+    bateriaPausaTimer = 0;
+    document.getElementById('bateria-titulo').textContent = '¡Pausa completada!';
+    document.getElementById('bateria-botones').style.display = 'flex';
+    document.getElementById('btn-bateria-mejor').focus();
+  }
+
+  function iniciarCuentaPausaBateria() {
+    clearInterval(bateriaPausaTimer);
+    bateriaPausaFin = Date.now() + BATERIA_PAUSA_SEG * 1000;
+    document.getElementById('bateria-titulo').textContent = '🔋 Pausa para recargar';
+    document.getElementById('bateria-botones').style.display = 'none';
+    tickPausaBateria();
+    bateriaPausaTimer = setInterval(tickPausaBateria, 500);
+  }
+
+  function abrirPausaBateria() {
+    if (bateriaPausaActiva) return;
+    bateriaPausaActiva = true;
+    congelarTemporizadoresBateria();
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    cargarOrionFelizBateria();
+    document.getElementById('overlay-bateria').classList.add('abierto');
+    iniciarCuentaPausaBateria();
+  }
+
+  function cerrarPausaBateria() {
+    clearInterval(bateriaPausaTimer);
+    bateriaPausaTimer = 0;
+    document.getElementById('overlay-bateria').classList.remove('abierto');
+    bateriaPausaActiva = false;
+  }
+
+  async function terminarSesionPorFatiga() {
+    if (pomodoroActivo) {
+      abandonarPomodoro();
+      const aviso = document.getElementById('pomodoro-resumen-fatiga');
+      aviso.textContent = '🔋 Sesión terminada por fatiga. Tu retención quedó guardada y podés retomar el estudio más tarde, ya descansado.';
+      aviso.style.display = 'block';
+      return;
+    }
+    bateriaFatigaResumen = true;
+    try {
+      await finalizarSesion();
+    } finally {
+      bateriaFatigaResumen = false;
+    }
+  }
+
+  function clickBateriaMental() {
+    if (bateriaPausaActiva) return;
+    bateriaNivel = Math.max(0, bateriaNivel - 1);
+    actualizarBateriaMental();
+    if (bateriaNivel === 0) {
+      terminarSesionPorFatiga();
+      return;
+    }
+    if (bateriaNivel <= BATERIA_NIVEL_AVISO && !bateriaAvisoDisparado) {
+      bateriaAvisoDisparado = true;
+      abrirPausaBateria();
+    }
+  }
+
+  document.getElementById('btn-bateria-eval').addEventListener('click', () => clickBateriaMental());
+  document.getElementById('btn-bateria-pomodoro').addEventListener('click', () => clickBateriaMental());
+
+  document.getElementById('btn-bateria-cansado').addEventListener('click', () => {
+    bateriaNivel = BATERIA_NIVEL_AVISO;
+    bateriaAvisoDisparado = true;
+    actualizarBateriaMental();
+    iniciarCuentaPausaBateria();
+  });
+
+  document.getElementById('btn-bateria-mejor').addEventListener('click', () => {
+    bateriaNivel = BATERIA_MAXIMA;
+    cerrarPausaBateria();
+    reanudarTemporizadoresBateria();
+    actualizarBateriaMental();
+  });
+
+  window.addEventListener('keydown', (ev) => {
+    if (!bateriaPausaActiva) return;
+    ev.stopImmediatePropagation();
+    const dentro = ev.target instanceof Node && document.getElementById('overlay-bateria').contains(ev.target);
+    if (!dentro) ev.preventDefault();
+  }, true);
+
+  actualizarBateriaMental();
 
   const ENFOQUE_CLAVE = 'vigilar_enfoque_v1';
   const ENFOQUE_MIN_FUGA_MS = 3000;
@@ -27037,6 +27306,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function enfoqueAlSalir() {
+    if (bateriaPausaActiva) return;
     if (enfoqueSalidaMs > 0) return;
     const ahora = Date.now();
     enfoqueSalidaMs = ahora;
@@ -27050,6 +27320,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function enfoqueAlVolver() {
+    if (bateriaPausaActiva) return;
     enfoqueDetenerAlarma();
     if (enfoqueSalidaMs === 0) return;
     const ahora = Date.now();
