@@ -2733,6 +2733,41 @@
     text-decoration: line-through;
   }
 
+  .inverso-contenedor { display: flex; flex-direction: column; gap: 10px; width: 100%; text-align: left; }
+  .inverso-inputs { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .inverso-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1.5px solid var(--color-boton);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 15px;
+    background: var(--bg-superficie);
+    color: var(--texto-principal);
+  }
+  .inverso-input:focus { outline: 2px solid var(--color-boton); outline-offset: 1px; }
+  .inverso-bloques { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .inverso-bloque {
+    border: 2px solid var(--color-boton);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--texto-principal);
+    background: var(--bg-superficie);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .inverso-bloque.bien { border-color: #3aa76d; }
+  .inverso-bloque.casi { border-color: #e0a030; }
+  .inverso-bloque.mal { border-color: #e0574c; }
+  .inverso-bloque-titulo { font-weight: 700; }
+  .inverso-bloque-detalle { font-size: 12px; color: var(--texto-secundario); }
+  .inverso-ok { color: #2f8f5b; font-weight: 700; background: rgba(58, 167, 109, 0.18); border-radius: 3px; padding: 0 2px; }
+  .inverso-fallo { color: #c0392b; font-weight: 700; background: rgba(224, 87, 76, 0.18); border-radius: 3px; padding: 0 2px; }
+
   .cloze-correccion {
     display: inline-block;
     font-size: 13px;
@@ -3848,6 +3883,13 @@
         <button type="button" class="boton-icono-circular boton-dictado" id="btn-dictado-texto-eval" data-dictado-target="texto-eval" title="Dictado por voz">🎙</button>
       </div>
       <div class="respuesta-usuario-resaltada" id="respuesta-usuario-resaltada" style="display:none;"></div>
+      <div class="inverso-contenedor" id="inverso-contenedor-activo" style="display:none;">
+        <div class="inverso-inputs" id="inverso-inputs">
+          <input type="text" class="inverso-input" id="inverso-input-primero" autocomplete="off" placeholder="Escribí el concepto (primero)">
+          <input type="text" class="inverso-input" id="inverso-input-segundo" autocomplete="off" placeholder="Escribí la explicación (segundo)">
+        </div>
+        <div class="inverso-bloques" id="inverso-bloques"></div>
+      </div>
       <div class="fila-eval" id="fila-eval">
         <button class="boton-pista" id="btn-evaluar">Evaluar respuesta</button>
       </div>
@@ -4599,6 +4641,11 @@
         <span class="opcion-modo-icono">🧩</span>
         <span class="opcion-modo-nombre">Ordenar Rutas</span>
         <span class="opcion-modo-detalle">Arrastrá los renglones para reconstruir las rutas en orden</span>
+      </button>
+      <button type="button" class="opcion-modo" id="opcion-otro-inverso" data-otro-modo="inverso">
+        <span class="opcion-modo-icono">🔄</span>
+        <span class="opcion-modo-nombre">Inverso</span>
+        <span class="opcion-modo-detalle">Escribí el concepto y la explicación a partir de las rutas</span>
       </button>
       <button type="button" class="opcion-modo" id="opcion-otro-verdadero-falso" data-otro-modo="verdadero_falso">
         <span class="opcion-modo-icono">🗺️</span>
@@ -8928,6 +8975,7 @@
   let datosDetectiveSesion = [];
   let datosOrdenarSesion = [];
   let datosVerdaderoFalsoSesion = [];
+  let datosInversoSesion = [];
   let rondasMatching = [];
   let primeroSeleccionadoMatching = null;
   let asociacionesTempMatching = new Set();
@@ -8952,13 +9000,14 @@
     if (modoEspecial === 'detective') return 'detective_' + modoJuego;
     if (modoEspecial === 'ordenar') return 'ordenar_' + modoJuego;
     if (modoEspecial === 'verdadero_falso') return 'verdadero_falso_' + modoJuego;
+    if (modoEspecial === 'inverso') return 'inverso_' + modoJuego;
     if (repasoInteligenteActivo) return 'inteligente';
     return modoJuego;
   }
 
   function esModoEspecialHistorial(modo) {
     const m = String(modo || '');
-    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0 || m.indexOf('ordenar_') === 0 || m.indexOf('verdadero_falso_') === 0;
+    return m.indexOf('cloze_') === 0 || m.indexOf('matching_') === 0 || m.indexOf('quiz_') === 0 || m.indexOf('detective_') === 0 || m.indexOf('ordenar_') === 0 || m.indexOf('verdadero_falso_') === 0 || m.indexOf('inverso_') === 0;
   }
 
   function nombreModoJuego(modo) {
@@ -8980,6 +9029,9 @@
     if (modo === 'verdadero_falso_light') return '🗺️ Verdadero/Falso Light';
     if (modo === 'verdadero_falso_normal') return '🗺️ Verdadero/Falso Normal';
     if (modo === 'verdadero_falso_tryhard') return '🗺️ Verdadero/Falso Tryhard';
+    if (modo === 'inverso_light') return '🔄 Inverso Light';
+    if (modo === 'inverso_normal') return '🔄 Inverso Normal';
+    if (modo === 'inverso_tryhard') return '🔄 Inverso Tryhard';
     if (modo === 'inteligente') return '🧠 Repaso inteligente';
     if (modo === 'srs') return '🧠 SRS';
     if (modo === 'examen') return '📝 Examen';
@@ -9119,6 +9171,18 @@
       modoEspecialPendiente = 'verdadero_falso';
       modoDemostracionesPendiente = false;
       abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'verdadero_falso');
+    } else if (otroModoElegidoEnModal === 'inverso') {
+      const elegibles = base.filter((t) => esElegibleInverso(t));
+      if (elegibles.length === 0) {
+        cerrarModalOtrosModos();
+        await avisar('No hay tarjetas con segundo y rutas válidas en los temas seleccionados para iniciar el Modo Inverso');
+        return;
+      }
+      elModalOtrosModos.classList.remove('abierto');
+      resetearCheckboxDemostracionesModal();
+      modoEspecialPendiente = 'inverso';
+      modoDemostracionesPendiente = false;
+      abrirModalSeleccionModo(modoAleatorio ? mezclar(elegibles) : elegibles, 'inverso');
     }
   }
 
@@ -9128,6 +9192,7 @@
   document.getElementById('opcion-otro-quiz').addEventListener('click', () => seleccionarOtroModoEnModal('quiz'));
   document.getElementById('opcion-otro-detective').addEventListener('click', () => seleccionarOtroModoEnModal('detective'));
   document.getElementById('opcion-otro-ordenar').addEventListener('click', () => seleccionarOtroModoEnModal('ordenar'));
+  document.getElementById('opcion-otro-inverso').addEventListener('click', () => seleccionarOtroModoEnModal('inverso'));
   (function () {
     const btnMapa = document.getElementById('opcion-otro-verdadero-falso');
     if (!HAY_MAPA) {
@@ -9219,6 +9284,9 @@
     } else if (modoEspecialPendiente === 'verdadero_falso') {
       elTituloModalModo.textContent = 'Elegí el modo de juego — 🗺️ Verdadero/Falso';
       elOpcionModoExamen.style.display = 'none';
+    } else if (modoEspecialPendiente === 'inverso') {
+      elTituloModalModo.textContent = 'Elegí el modo de juego — 🔄 Inverso';
+      elOpcionModoExamen.style.display = 'none';
     } else {
       elTituloModalModo.textContent = 'Elegí el modo de juego';
       elOpcionModoExamen.style.display = '';
@@ -9254,6 +9322,8 @@
       iniciarSesionOrdenar(lista);
     } else if (modoEspecial === 'verdadero_falso') {
       iniciarSesionMapa(lista);
+    } else if (modoEspecial === 'inverso') {
+      iniciarSesionInverso(lista);
     } else {
       iniciarSesion(lista);
     }
@@ -9859,6 +9929,437 @@
     iniciarCronometro();
   }
 
+  const abiertasInversoPorIndice = new Map();
+
+  function crearDatosInverso() {
+    return {
+      textoPrimeroUsuario: '',
+      textoSegundoUsuario: '',
+      resultadoPrimero: null,
+      resultadoSegundo: null,
+      evaluada: false,
+    };
+  }
+
+  function resetearDatosInversoSaltado(d) {
+    if (!d) return;
+    Object.assign(d, crearDatosInverso());
+  }
+
+  function esElegibleInverso(t) {
+    return !!t.segundo && t.segundo.trim() !== '' && rutasValidasDe(t).length > 0;
+  }
+
+  function iniciarSesionInverso(lista) {
+    const validas = lista.filter((t) => esElegibleInverso(t));
+    if (validas.length === 0) {
+      avisar('No hay tarjetas con segundo y rutas válidas en los temas seleccionados para iniciar el Modo Inverso');
+      return;
+    }
+    iniciarSesionEspecialBase(validas, () => {
+      datosInversoSesion = validas.map(() => crearDatosInverso());
+      abiertasInversoPorIndice.clear();
+    });
+  }
+
+  function entradasTextoInverso(texto, conservarStopwords) {
+    const vistos = new Set();
+    const salida = [];
+    for (const m of String(texto || '').matchAll(PATRON_PALABRA_CON_SIMBOLOS)) {
+      const w = normalizarPalabra(m[0]);
+      if (!conservarStopwords && STOPWORDS.has(w)) continue;
+      const e = crearEntrada(w, m[0]);
+      if (vistos.has(e.v[0])) continue;
+      vistos.add(e.v[0]);
+      salida.push(e);
+    }
+    return salida;
+  }
+
+  function entradasPrimeroInverso(texto) {
+    const e = entradasTextoInverso(texto, false);
+    return e.length > 0 ? e : entradasTextoInverso(texto, true);
+  }
+
+  function evaluarPrimeroInverso(t, texto) {
+    const original = entradasPrimeroInverso(primeroVisibleDe(t));
+    const escritas = entradasTextoInverso(texto, true);
+    const conTypo = new Set();
+    const pares = emparejar(original, escritas, (i, j) => conTypo.add(j));
+    const acertadas = [];
+    const faltaron = [];
+    original.forEach((e, i) => {
+      if (pares.has(i)) acertadas.push(e.orig);
+      else faltaron.push(e.orig);
+    });
+    const total = original.length;
+    let resultado;
+    if (total === 0 || faltaron.length * 2 > total) resultado = 'mal';
+    else if (faltaron.length === 0) resultado = 'bien';
+    else resultado = 'casi';
+    const sinDegradar = resultado;
+    resultado = degradarPorTypos(resultado, conTypo.size);
+    return {
+      resultado: resultado,
+      acertadas: acertadas,
+      faltaron: faltaron,
+      total: total,
+      palabrasConTypo: conTypo.size,
+      degradadoPorTypos: resultado !== sinDegradar,
+    };
+  }
+
+  function consolidarResultadoInverso(rp, rs) {
+    const puntos = { bien: 2, casi: 1, mal: 0 };
+    const suma = puntos[rp] + puntos[rs];
+    if (suma >= 4) return 'si';
+    if (suma === 0) return 'no';
+    return 'casi';
+  }
+
+  function etiquetaNivelInverso(nivel) {
+    return nivel === 'bien' ? '✓ Bien' : (nivel === 'casi' ? '~ Casi' : '✗ Mal');
+  }
+
+  function fragmentoInversoColoreado(texto, entradasRef) {
+    const cadena = String(texto || '');
+    const frag = document.createDocumentFragment();
+    let ultimo = 0;
+    for (const m of cadena.matchAll(PATRON_PALABRA_CON_SIMBOLOS)) {
+      if (m.index > ultimo) frag.appendChild(document.createTextNode(cadena.slice(ultimo, m.index)));
+      const w = normalizarPalabra(m[0]);
+      if (STOPWORDS.has(w)) {
+        frag.appendChild(document.createTextNode(m[0]));
+      } else {
+        const entrada = crearEntrada(w, m[0]);
+        const ok = entradasRef.some((r) => compartenRaiz(entrada, r) || seParecen(entrada, r));
+        const span = document.createElement('span');
+        span.className = ok ? 'inverso-ok' : 'inverso-fallo';
+        span.textContent = m[0];
+        frag.appendChild(span);
+      }
+      ultimo = m.index + m[0].length;
+    }
+    if (ultimo < cadena.length) frag.appendChild(document.createTextNode(cadena.slice(ultimo)));
+    return frag;
+  }
+
+  function crearBloqueInverso(titulo, nivel, textoUsuario, textoOriginal, entradasOriginal, detalles) {
+    const entradasUsuario = entradasTextoInverso(textoUsuario, true);
+    const bloque = document.createElement('div');
+    bloque.className = 'inverso-bloque ' + nivel;
+
+    const cab = document.createElement('div');
+    cab.className = 'inverso-bloque-titulo';
+    cab.textContent = titulo + ' — ' + etiquetaNivelInverso(nivel);
+    bloque.appendChild(cab);
+
+    const lineaUsuario = document.createElement('div');
+    const etqUsuario = document.createElement('strong');
+    etqUsuario.textContent = 'Tu respuesta: ';
+    lineaUsuario.appendChild(etqUsuario);
+    if (String(textoUsuario || '').trim() === '') lineaUsuario.appendChild(document.createTextNode('(vacío)'));
+    else lineaUsuario.appendChild(fragmentoInversoColoreado(textoUsuario, entradasOriginal));
+    bloque.appendChild(lineaUsuario);
+
+    const lineaOriginal = document.createElement('div');
+    const etqOriginal = document.createElement('strong');
+    etqOriginal.textContent = 'Original: ';
+    lineaOriginal.appendChild(etqOriginal);
+    lineaOriginal.appendChild(fragmentoInversoColoreado(textoOriginal, entradasUsuario));
+    bloque.appendChild(lineaOriginal);
+
+    detalles.forEach((txt) => {
+      const linea = document.createElement('div');
+      linea.className = 'inverso-bloque-detalle';
+      linea.textContent = txt;
+      bloque.appendChild(linea);
+    });
+    return bloque;
+  }
+
+  function detallesPrimeroInverso(det) {
+    const lineas = ['raíces: ' + det.acertadas.length + ' de ' + det.total +
+      (det.faltaron.length > 0 ? ' — faltaron: ' + det.faltaron.join(', ') : '')];
+    if (det.degradadoPorTypos) {
+      lineas.push('✍️ ' + det.palabrasConTypo + ' palabras con errores de escritura (máximo ' +
+        MAX_PALABRAS_CON_TYPO + ' sin penalización): el resultado bajó un nivel');
+    }
+    return lineas;
+  }
+
+  function detallesSegundoInverso(det) {
+    const lineas = [];
+    if (det.clavesTotal > 0) {
+      lineas.push('claves: ' + det.acertadas.length + ' de ' + det.clavesTotal + ' (' + Math.round(det.propClaves * 100) + '%)' +
+        (det.faltaron.length > 0 ? ' — faltaron: ' + det.faltaron.join(', ') : ''));
+    }
+    lineas.push('coincidencia con el contenido: ' + Math.round(det.sim * 100) + '%');
+    if (det.degradadoPorTypos) {
+      lineas.push('✍️ ' + det.palabrasConTypo + ' palabras con errores de escritura (máximo ' +
+        MAX_PALABRAS_CON_TYPO + ' sin penalización): el resultado bajó un nivel');
+    }
+    return lineas;
+  }
+
+  function renderBloquesInversoEvaluados(t, d) {
+    const cont = document.getElementById('inverso-bloques');
+    cont.textContent = '';
+    const detP = evaluarPrimeroInverso(t, d.textoPrimeroUsuario);
+    const detS = calcularDetalleEval(t, d.textoSegundoUsuario, false);
+    const primeroOriginal = primeroVisibleDe(t);
+    cont.appendChild(crearBloqueInverso('Primero', d.resultadoPrimero || detP.resultado, d.textoPrimeroUsuario,
+      primeroOriginal, entradasPrimeroInverso(primeroOriginal), detallesPrimeroInverso(detP)));
+    const refSegundo = entradasTextoInverso(t.segundo, true).concat(analizarTexto(textoReferenciaDe(t)));
+    cont.appendChild(crearBloqueInverso('Segundo', d.resultadoSegundo || detS.resultado, d.textoSegundoUsuario,
+      t.segundo || '', refSegundo, detallesSegundoInverso(detS)));
+  }
+
+  function renderRutasInverso(validas) {
+    const t = tarjetasSesion[indiceActual];
+    const d = datosInversoSesion[indiceActual];
+    if (!d) {
+      elRutasContenedor.style.display = 'none';
+      return;
+    }
+    elRutasContenedor.style.display = 'block';
+    const claves = new Set(t.claves || []);
+    let raicesUsuario = null;
+    if (d.evaluada) {
+      raicesUsuario = extraerPalabrasUsuario(d.textoPrimeroUsuario);
+      extraerPalabrasUsuario(d.textoSegundoUsuario).forEach((r) => raicesUsuario.add(r));
+    }
+    let abiertas = abiertasInversoPorIndice.get(indiceActual);
+    if (!abiertas) {
+      abiertas = new Set();
+      abiertasInversoPorIndice.set(indiceActual, abiertas);
+    }
+    validas.forEach((id) => {
+      const bloque = rutasDisp[id];
+      const det = document.createElement('details');
+      det.className = 'ruta-acordeon';
+      det.open = abiertas.has(id);
+
+      const sum = document.createElement('summary');
+      sum.textContent = 'Ruta ' + id;
+      det.appendChild(sum);
+
+      det.addEventListener('toggle', () => {
+        if (det.open) abiertas.add(id);
+        else abiertas.delete(id);
+      });
+
+      prepararDetallesLazy(det, () => {
+        const contenido = document.createElement('div');
+        contenido.className = 'ruta-contenido';
+        (bloque.lineas || []).forEach((linea) => {
+          if (esImagen(linea)) {
+            const img = document.createElement('img');
+            img.decoding = 'async';
+            img.loading = 'lazy';
+            img.className = 'ruta-img-thumb';
+            img.src = linea.substring(4);
+            img.alt = 'Imagen de la ruta ' + id;
+            contenido.appendChild(img);
+          } else {
+            agregarLineaResaltada(contenido, linea, claves, raicesUsuario);
+          }
+        });
+        det.appendChild(contenido);
+      });
+
+      elRutasContenedor.appendChild(det);
+    });
+  }
+
+  const elInversoInputPrimero = document.getElementById('inverso-input-primero');
+  const elInversoInputSegundo = document.getElementById('inverso-input-segundo');
+
+  function inversoSinTexto(d) {
+    return String(d.textoPrimeroUsuario || '').trim() === '' && String(d.textoSegundoUsuario || '').trim() === '';
+  }
+
+  function renderTarjetaInverso() {
+    const t = tarjetasSesion[indiceActual];
+    const d = datosInversoSesion[indiceActual];
+    const r = resultados[indiceActual];
+    const contestada = r !== null;
+    const evaluada = d.evaluada;
+    const mostrarOriginales = contestada && !evaluada;
+    const mostrarInputs = !contestada;
+
+    ocultarContenedoresEspeciales();
+    elTemaTexto.textContent = nombreTema(t);
+    elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
+    const contestadas = resultados.filter((x) => x !== null).length;
+    elBarraRelleno.style.width = ((contestadas / tarjetasSesion.length) * 100) + '%';
+
+    const nRutas = rutasValidasDe(t).length;
+    if (nRutas > 0) {
+      elBadgeRutas.textContent = 'rutas = ' + nRutas + sufijoAdvertenciaRutas(rutasValidasDe(t));
+      elBadgeRutas.style.display = 'block';
+    } else {
+      elBadgeRutas.style.display = 'none';
+    }
+
+    elBtnRevisar.style.display = 'inline-block';
+    elBtnRevisar.classList.toggle('activa', esRevisar(t));
+    elBtnRevisar.classList.toggle('editada', tarjetaEditada(t));
+    elBtnRevisar.textContent = esRevisar(t) ? '🚩 Para revisar' : '🚩 Revisar';
+
+    elPrimero.style.display = evaluada ? 'none' : 'block';
+    elPrimero.textContent = mostrarOriginales ? primeroVisibleDe(t) : '🔄 ¿Qué concepto y qué explicación describen estas rutas?';
+    elBtnLeerPrimero.style.display = (mostrarOriginales && ttsDisponible) ? '' : 'none';
+
+    elBtnPista.style.display = 'none';
+    elBtnRespuesta.style.display = contestada ? 'none' : 'inline-block';
+    elBtnRespuesta.textContent = 'Mostrar respuesta';
+    elBtnRespuesta.disabled = false;
+
+    elSeparador.style.display = (mostrarOriginales && t.segundo) ? 'block' : 'none';
+    elSegundo.style.display = (mostrarOriginales && t.segundo) ? 'block' : 'none';
+    elSegundo.textContent = mostrarOriginales ? (t.segundo || '') : '';
+
+    renderPanelNota(t);
+    renderRazonesUI(t);
+
+    renderRutas(t);
+
+    const cont = document.getElementById('inverso-contenedor-activo');
+    cont.style.display = (mostrarInputs || evaluada) ? 'flex' : 'none';
+    document.getElementById('inverso-inputs').style.display = mostrarInputs ? 'flex' : 'none';
+    elInversoInputPrimero.value = d.textoPrimeroUsuario || '';
+    elInversoInputSegundo.value = d.textoSegundoUsuario || '';
+    if (evaluada) renderBloquesInversoEvaluados(t, d);
+    else document.getElementById('inverso-bloques').textContent = '';
+
+    elTextoEval.parentElement.style.display = 'none';
+    elBtnDictadoTextoEval.style.display = 'none';
+    elRespuestaUsuarioResaltada.style.display = 'none';
+    elZonaEval.style.display = (mostrarInputs || evaluada) ? 'block' : 'none';
+    elFilaEval.style.display = mostrarInputs ? 'flex' : 'none';
+    elBtnEvaluar.disabled = !mostrarInputs || inversoSinTexto(d);
+
+    const ev = evaluaciones[indiceActual];
+    if (evaluada && ev) {
+      elResultadoEval.style.display = 'block';
+      elResultadoEval.className = 'resultado-eval ' + (ev.resultado === 'si' ? 'bien' : (ev.resultado === 'casi' ? 'casi' : 'mal'));
+      elResultadoEval.textContent = ev.textoDetalle;
+    } else {
+      elResultadoEval.style.display = 'none';
+      elResultadoEval.textContent = '';
+    }
+
+    elEstadoMarca.className = 'estado-marca' + (r ? ' ' + r : '');
+    if (r === 'si') elEstadoMarca.textContent = '✓ Marcada como entendida';
+    else if (r === 'casi') elEstadoMarca.textContent = '~ Casi entendida';
+    else if (r === 'no') elEstadoMarca.textContent = respuestaMostrada[indiceActual] ? '✗ No entendida — respuesta mostrada' : '✗ Marcada como no entendida';
+    else if (r === 'saltar') elEstadoMarca.textContent = '— Pasada sin marcar';
+    else elEstadoMarca.textContent = '';
+
+    const yaMarcada = r !== null;
+    document.querySelector('.botonera').style.display = 'flex';
+    elBtnSi.classList.remove('comprension');
+    elBtnSi.textContent = '✓';
+    elBtnSi.title = 'Entendido';
+    elBtnSi.style.display = 'none';
+    elBtnNo.style.display = 'none';
+    elBtnSaltar.style.display = 'inline-block';
+    elBtnDificil.style.display = 'inline-block';
+    elBtnRazones.style.display = 'inline-block';
+
+    elBtnSi.disabled = yaMarcada;
+    elBtnNo.disabled = yaMarcada;
+    elBtnSaltar.disabled = yaMarcada;
+
+    elBtnDificil.classList.toggle('activa', esDificil(t));
+    elBtnDificil.textContent = esDificil(t) ? '★ Difícil' : '☆ Difícil';
+
+    elBtnPausa.style.display = cronometroActivo ? 'inline-block' : 'none';
+    elBtnAnterior.disabled = indiceActual === 0;
+    elBtnSiguiente.disabled = indiceActual === tarjetasSesion.length - 1;
+    actualizarBadgeNotaActual();
+  }
+
+  function evaluarInversoActual() {
+    const d = datosInversoSesion[indiceActual];
+    if (!d || d.evaluada || resultados[indiceActual] !== null) return;
+    if (inversoSinTexto(d)) return;
+
+    const t = tarjetasSesion[indiceActual];
+    const textoP = String(d.textoPrimeroUsuario || '').trim();
+    const textoS = String(d.textoSegundoUsuario || '').trim();
+
+    acumularTiempoActual();
+    indiceCongelado = indiceActual;
+
+    const detP = evaluarPrimeroInverso(t, textoP);
+    const detS = calcularDetalleEval(t, textoS, false);
+    const res = consolidarResultadoInverso(detP.resultado, detS.resultado);
+
+    d.textoPrimeroUsuario = textoP;
+    d.textoSegundoUsuario = textoS;
+    d.resultadoPrimero = detP.resultado;
+    d.resultadoSegundo = detS.resultado;
+    d.evaluada = true;
+    revelado[indiceActual] = true;
+    rutasVisibles[indiceActual] = true;
+
+    const textoDetalle = etiquetaNivelInverso(res === 'si' ? 'bien' : (res === 'casi' ? 'casi' : 'mal')) +
+      ' — Primero: ' + etiquetaNivelInverso(detP.resultado) + ' (' + detP.acertadas.length + '/' + detP.total + ' raíces)' +
+      ' · Segundo: ' + etiquetaNivelInverso(detS.resultado) +
+      (detS.clavesTotal > 0 ? ' (claves ' + detS.acertadas.length + '/' + detS.clavesTotal + ')' : '');
+
+    evaluaciones[indiceActual] = {
+      resultado: res,
+      resultadoPrimero: detP.resultado,
+      resultadoSegundo: detS.resultado,
+      acertadas: detP.acertadas.length + detS.acertadas.length,
+      clavesTotal: detP.total + detS.clavesTotal,
+      textoDetalle: textoDetalle,
+    };
+    escritos[indiceActual] = 'Primero: ' + textoP + ' | Segundo: ' + textoS;
+    resultados[indiceActual] = res;
+
+    procesarResultadoGamificacion(indiceActual, res, { conPista: false, pistaGratisUsada: false });
+    if (resultados.every((x) => x !== null)) {
+      cronometroActivo = false;
+    }
+    actualizarCronometro();
+    renderTarjeta();
+  }
+
+  function actualizarBotonEvaluarInverso() {
+    const d = datosInversoSesion[indiceActual];
+    if (!d) return;
+    elBtnEvaluar.disabled = d.evaluada || resultados[indiceActual] !== null || inversoSinTexto(d);
+  }
+
+  elInversoInputPrimero.addEventListener('input', () => {
+    const d = datosInversoSesion[indiceActual];
+    if (modoEspecial !== 'inverso' || !d) return;
+    d.textoPrimeroUsuario = elInversoInputPrimero.value;
+    actualizarBotonEvaluarInverso();
+  });
+  elInversoInputSegundo.addEventListener('input', () => {
+    const d = datosInversoSesion[indiceActual];
+    if (modoEspecial !== 'inverso' || !d) return;
+    d.textoSegundoUsuario = elInversoInputSegundo.value;
+    actualizarBotonEvaluarInverso();
+  });
+  elInversoInputPrimero.addEventListener('keydown', (evento) => {
+    if (evento.key !== 'Enter' || evento.shiftKey) return;
+    evento.preventDefault();
+    evento.stopPropagation();
+    elInversoInputSegundo.focus();
+  });
+  elInversoInputSegundo.addEventListener('keydown', (evento) => {
+    if (evento.key !== 'Enter' || evento.shiftKey) return;
+    evento.preventDefault();
+    evento.stopPropagation();
+    if (!elBtnEvaluar.disabled) evaluarRespuesta();
+  });
+
   function iniciarSesionQuiz(lista) {
     iniciarSesionEspecialBase(lista, () => {
       datosQuizSesion = new Array(tarjetasSesion.length).fill(null);
@@ -9866,7 +10367,7 @@
   }
 
   function ocultarContenedoresEspeciales() {
-    ['cloze-contenedor-activo', 'matching-contenedor-activo', 'quiz-contenedor-activo', 'verdadero-falso-contenedor-activo'].forEach((id) => {
+    ['cloze-contenedor-activo', 'matching-contenedor-activo', 'quiz-contenedor-activo', 'verdadero-falso-contenedor-activo', 'inverso-contenedor-activo'].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -11723,6 +12224,10 @@
     if (quizCont) quizCont.style.display = 'none';
     const mapaCont = document.getElementById('verdadero-falso-contenedor-activo');
     if (mapaCont) mapaCont.style.display = 'none';
+    const inversoCont = document.getElementById('inverso-contenedor-activo');
+    if (inversoCont) inversoCont.style.display = 'none';
+    elPrimero.style.display = '';
+    elBtnLeerPrimero.style.display = ttsDisponible ? '' : 'none';
     if (elZonaEval.nextElementSibling !== elRutasContenedor) {
       elRutasContenedor.parentNode.insertBefore(elZonaEval, elRutasContenedor);
     }
@@ -11759,6 +12264,10 @@
       renderTarjetaMapa();
       return true;
     }
+    if (modoEspecial === 'inverso') {
+      renderTarjetaInverso();
+      return true;
+    }
     limpiarContenedoresModoEspecial();
     return false;
   }
@@ -11787,6 +12296,10 @@
     if (modoEspecial === 'verdadero_falso') {
       return true;
     }
+    if (modoEspecial === 'inverso') {
+      evaluarInversoActual();
+      return true;
+    }
     return false;
   }
 
@@ -11803,6 +12316,13 @@
     } else if (modoEspecial === 'cloze') {
       const clozeData = datosClozeSesion[indiceActual];
       if ((clozeData && clozeData.evaluada) || resultados[indiceActual] !== null) {
+        indiceCongelado = indiceActual;
+      } else {
+        indiceCongelado = -1;
+      }
+    } else if (modoEspecial === 'inverso') {
+      const datosInv = datosInversoSesion[indiceActual];
+      if ((datosInv && datosInv.evaluada) || resultados[indiceActual] !== null) {
         indiceCongelado = indiceActual;
       } else {
         indiceCongelado = -1;
@@ -11847,7 +12367,7 @@
           ronda.completada = true;
         }
       });
-    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
+    } else if (modoEspecial === 'cloze' || modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso' || modoEspecial === 'inverso') {
       resultados.forEach((r, i) => {
         if (r === null) resultados[i] = 'saltar';
       });
@@ -11963,6 +12483,13 @@
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
+    if (modoEspecial === 'inverso') {
+      let lista = tarjetasSesion.filter((_, i) => predicado(i));
+      if (lista.length === 0) { avisar('No hay tarjetas para repasar con ese criterio.'); return true; }
+      if (modoAleatorio) lista = mezclar(lista);
+      iniciarSesionInverso(lista);
+      return true;
+    }
     if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       let lista = tarjetasSesion.filter((_, i) => predicado(i));
       if (lista.length === 0) { avisar('No hay tarjetas para repasar con ese criterio.'); return true; }
@@ -11988,6 +12515,10 @@
       iniciarSesionMatching(nuevasRondas);
       return true;
     }
+    if (modoEspecial === 'inverso') {
+      iniciarSesionInverso(modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion]);
+      return true;
+    }
     if (modoEspecial === 'quiz' || modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'verdadero_falso') {
       const base = modoAleatorio ? mezclar(tarjetasSesion) : [...tarjetasSesion];
       if (modoEspecial === 'quiz') iniciarSesionQuiz(base);
@@ -12011,6 +12542,8 @@
     datosDetectiveSesion = [];
     datosOrdenarSesion = [];
     datosVerdaderoFalsoSesion = [];
+    datosInversoSesion = [];
+    abiertasInversoPorIndice.clear();
     rondasMatching = [];
     primeroSeleccionadoMatching = null;
     asociacionesTempMatching.clear();
@@ -15931,7 +16464,7 @@ const ZONAS_SYNC_GIST = [
           return;
         }
         const activo = document.activeElement;
-        if (activo && activo.classList && activo.classList.contains('cloze-input')) {
+        if (activo && activo.classList && (activo.classList.contains('cloze-input') || activo.classList.contains('inverso-input'))) {
           activo.blur();
           evento.preventDefault();
           return;
@@ -21669,6 +22202,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       return;
     }
 
+    if (modoEspecial === 'inverso') {
+      renderRutasInverso(validas);
+      return;
+    }
+
     if (modoEspecial === 'cloze') {
       const clozeData = datosClozeSesion[indiceActual];
       if (!clozeData) {
@@ -22238,15 +22776,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }, 1000);
   }
 
-  function evaluarRespuesta() {
-    if (pausaManual || segundaPendiente) return;
-    if (hookEvaluarActual()) return;
-    if (resultados[indiceActual] !== null) return;
-    if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elTextoEval);
-    const texto = elTextoEval.value;
-    if (texto.trim() === '') return;
-
-    const actual = tarjetasSesion[indiceActual];
+  function calcularDetalleEval(actual, texto, conPista) {
     const claves = clavesEvalDe(actual);
     const escritas = analizarTexto(texto);
 
@@ -22271,7 +22801,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const sim = (escritas.length === 0 || referencia.length === 0)
       ? 0 : (2 * comunes) / (escritas.length + referencia.length);
 
-    const conPista = !!pistaMostrada[indiceActual];
     let resultado;
     if (claves.length > 0) {
       if (propClaves === 1) {
@@ -22306,6 +22835,20 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       totalEscritas: escritas.length,
       totalReferencia: referencia.length,
     };
+    return detalleEval;
+  }
+
+  function evaluarRespuesta() {
+    if (pausaManual || segundaPendiente) return;
+    if (hookEvaluarActual()) return;
+    if (resultados[indiceActual] !== null) return;
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elTextoEval);
+    const texto = elTextoEval.value;
+    if (texto.trim() === '') return;
+
+    const actual = tarjetasSesion[indiceActual];
+    const detalleEval = calcularDetalleEval(actual, texto, !!pistaMostrada[indiceActual]);
+    const resultado = detalleEval.resultado;
 
     if (resultado === 'mal' && puedeSegundaOportunidad(indiceActual)) {
       const idx = indiceActual;
@@ -22922,6 +23465,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       evento.target.blur();
       return;
     }
+    if (evento.key === 'Escape' && evento.target && evento.target.classList && evento.target.classList.contains('inverso-input')) {
+      evento.target.blur();
+      return;
+    }
+    if (evento.target && evento.target.classList && evento.target.classList.contains('inverso-input')) return;
     if (evento.target === elTextoEval || evento.target === elNotaEditor || evento.target === elGaleriaNotaEditor) return;  // no navegar mientras se escribe
     if (elPantallaGaleria.style.display !== 'none') {
       if (evento.key === 'ArrowLeft') navegarGaleria(-1);
@@ -23336,6 +23884,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         else if (modoEspecial === 'detective') resetearDatosDetectiveSaltado(datosDetectiveSesion[i]);
         else if (modoEspecial === 'ordenar') resetearDatosOrdenarSaltado(datosOrdenarSesion[i]);
         else if (modoEspecial === 'verdadero_falso') resetearDatosMapaSaltado(datosVerdaderoFalsoSesion[i]);
+        else if (modoEspecial === 'inverso') resetearDatosInversoSaltado(datosInversoSesion[i]);
       }
     });
     if (modoEspecial === 'matching') {
@@ -23404,7 +23953,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       lista.hashes.forEach((h) => todosLosHashes.add(h));
     });
     let tarjetasSrs = tarjetasCompletas.filter((t) => todosLosHashes.has(hashTarjeta(t)));
-    tarjetasSrs = mezclar(tarjetasSrs);
+    if (modoAleatorio) tarjetasSrs = mezclar(tarjetasSrs);
 
     iniciarSesion(tarjetasSrs);   // esto resetea srsSesionActiva a null; se fija DESPUÉS
     srsSesionActiva = { nombres: listasVencidas.map((l) => l.nombre), hashesPorLista: hashesPorLista };
@@ -23520,8 +24069,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     };
 
     agregar('🔴', 'SubT urgentes', candidatos.filter((c) => c.urgentes).map((c) => c.nombre + ' (' + Math.round(c.score) + '/100)'), 'urgentes');
-    agregar('🎭', 'SubT con sobreconfianza', candidatos.filter((c) => c.sobreconfianza).map((c) => c.nombre), 'sobreconfianza');
-    agregar('🧠', 'SubT próximos a olvido', candidatos.filter((c) => c.olvido).map((c) => c.nombre), 'olvido');
+    agregar('⚠️', 'SubT con sobreconfianza', candidatos.filter((c) => c.sobreconfianza).map((c) => c.nombre), 'sobreconfianza');
+    agregar('😵', 'SubT próximos a olvido', candidatos.filter((c) => c.olvido).map((c) => c.nombre), 'olvido');
 
     let nTarjetasDificiles = 0;
     let nTarjetasConRazon = 0;
@@ -24450,6 +24999,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       datosDetectiveSesion: datosDetectiveSesion.map(serializarDatosDetective),
       datosOrdenarSesion: datosOrdenarSesion.slice(),
       datosVerdaderoFalsoSesion: datosVerdaderoFalsoSesion.slice(),
+      datosInversoSesion: datosInversoSesion.map((d) => d ? Object.assign({}, d) : null),
       rondasMatching: esMatching ? rondasMatching.map(serializarRondaMatching) : [],
       primeroSeleccionadoMatching: primeroSeleccionadoMatching,
       asociacionesTempMatching: copiarSetComoArray(asociacionesTempMatching),
@@ -24639,6 +25189,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (x.modoEspecial === 'detective' && datosDetective.length !== n) throw new Error('datos Detective inconsistentes');
     if (x.modoEspecial === 'ordenar' && (x.datosOrdenarSesion || []).length !== n) throw new Error('datos Ordenar inconsistentes');
     if (x.modoEspecial === 'verdadero_falso' && (x.datosVerdaderoFalsoSesion || []).length !== n) throw new Error('datos Verdadero/Falso inconsistentes');
+    if (x.modoEspecial === 'inverso' && (x.datosInversoSesion || []).length !== n) throw new Error('datos Inverso inconsistentes');
 
     let srsNuevo = null;
     if (x.srsSesionActiva) {
@@ -24691,6 +25242,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     datosDetectiveSesion = modoEspecial === 'detective' ? datosDetective : [];
     datosOrdenarSesion = modoEspecial === 'ordenar' ? (x.datosOrdenarSesion || []) : [];
     datosVerdaderoFalsoSesion = modoEspecial === 'verdadero_falso' ? (x.datosVerdaderoFalsoSesion || []) : [];
+    datosInversoSesion = modoEspecial === 'inverso' ? (x.datosInversoSesion || []).map((d) => Object.assign(crearDatosInverso(), d || {})) : [];
     rondasMatching = rondasNuevas;
     primeroSeleccionadoMatching = (x.primeroSeleccionadoMatching === undefined) ? null : x.primeroSeleccionadoMatching;
     asociacionesTempMatching = new Set(x.asociacionesTempMatching || []);
