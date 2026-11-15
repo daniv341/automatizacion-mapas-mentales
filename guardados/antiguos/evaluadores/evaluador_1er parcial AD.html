@@ -543,6 +543,12 @@
     animation: aparecer 0.25s ease forwards;
   }
 
+  .panel-nota-rutas-item + .panel-nota-rutas-item {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #e6d38a;
+  }
+
   .panel-nota-titulo {
     font-size: 12px;
     font-weight: 700;
@@ -2279,17 +2285,52 @@
     overflow-y: auto;
     flex-shrink: 0;
   }
-  .mapa-skimming-caja {
+  #det-mapa-skimming > summary::after { content: '⤢'; font-size: 14px; }
+  .modal-skimming-caja {
+    background: var(--bg-superficie);
+    border-radius: 18px;
+    padding: 16px;
+    width: min(95vw, 1000px);
+    height: min(90vh, 800px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  .modal-skimming-caja h3 { font-size: 18px; color: var(--color-boton); margin: 0; }
+  .modal-skimming-visor {
     position: relative;
-    height: 200px;
-    margin: 6px 0 8px 0;
-    overflow-x: auto;
-    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
     background: var(--bg-superficie);
     border: 1px solid var(--color-borde-suave);
     border-radius: 10px;
+    touch-action: none;
+    user-select: none;
   }
-  .mapa-skimming-lienzo { position: relative; }
+  .modal-skimming-visor.skimming-pan { cursor: grab; }
+  .modal-skimming-visor.skimming-arrastrando { cursor: grabbing; }
+  .modal-skimming-escena {
+    position: absolute;
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+  .modal-skimming-escena .mapa-skimming-chip {
+    font-size: calc(13px * var(--sk-escala, 1));
+    padding: calc(4px * var(--sk-escala, 1)) calc(11px * var(--sk-escala, 1));
+    border-radius: calc(14px * var(--sk-escala, 1));
+  }
+  .skimming-zoom-controles {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 5;
+  }
   .mapa-skimming-chip {
     position: absolute;
     box-sizing: border-box;
@@ -2483,6 +2524,35 @@
     padding: 8px 4px 6px;
     border-bottom: 2px solid var(--color-borde-suave);
   }
+  .retencion-tarjeta-cabecera {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    border-bottom: 2px solid var(--color-borde-suave);
+  }
+  .retencion-tarjeta-cabecera .retencion-tarjeta-pregunta {
+    flex: 1;
+    min-width: 0;
+    border-bottom: none;
+  }
+  .boton-revisar-pomodoro {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    margin-top: 5px;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+    font-family: inherit;
+    color: var(--color-boton);
+    background: rgba(255,255,255,0.65);
+    border: 1.5px solid var(--color-boton);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .boton-revisar-pomodoro:disabled { opacity: 0.5; cursor: default; }
+  .boton-revisar-pomodoro.activa { background: #ffe3c2; border-color: #e0812a; }
+  .boton-revisar-pomodoro.activa.editada { background: #ffd199; border: 2px dashed #d9690b; }
   .retencion-ruta-numero { font-weight: 700; min-width: 42px; }
   .retencion-ruta-toggles { display: flex; gap: 8px; margin-left: auto; }
 
@@ -3726,7 +3796,6 @@
       </details>
       <details class="grupo-tema" id="det-mapa-skimming" style="display:none;">
         <summary><span id="suma-mapa-skimming">👀 Skimming (0)</span></summary>
-        <div class="mapa-skimming-caja" id="lista-mapa-skimming"></div>
       </details>
     </div>
 
@@ -3864,6 +3933,11 @@
         <button class="boton-mini" id="btn-nota-cancelar" style="display:none;">Cancelar</button>
         <button class="boton-mini" id="btn-nota-borrar" style="display:none;">🗑 Borrar nota</button>
       </div>
+    </div>
+
+    <div class="panel-nota panel-nota-rutas" id="panel-nota-rutas" style="display:none;">
+      <div class="panel-nota-titulo">💡 Notas de rutas (Pomodoro)</div>
+      <div id="panel-nota-rutas-lista"></div>
     </div>
 
     <div class="chips-razones" id="chips-razones" style="display:none;"></div>
@@ -4107,7 +4181,9 @@
     <h3>📊 Resumen del Pomodoro</h3>
     <div id="pomodoro-resumen-analisis-retencion" style="display:none;"></div>
     <p>⏱ Tiempo en pretest: <strong id="pomodoro-resumen-lectura"></strong></p>
+    <p id="pomodoro-resumen-skimming-fila" style="display:none;">👀 Skimming: <strong id="pomodoro-resumen-skimming"></strong></p>
     <p>🧠 Tiempo en retención: <strong id="pomodoro-resumen-retencion"></strong></p>
+    <p>☕ Descansos totales: <strong id="pomodoro-resumen-descanso"></strong></p>
     <p>⏱ Tiempo total: <strong id="pomodoro-resumen-total"></strong></p>
     <p>⏲️ Ciclos completados: <strong id="pomodoro-resumen-ciclos"></strong></p>
     <div id="pomodoro-resumen-retencion-rutas" style="display:none;">
@@ -4556,8 +4632,24 @@
     </div>
     <div class="panel-razones-acciones" style="justify-content:center; margin-top:12px;">
       <button class="boton-mini" id="btn-duda-ruta-guardar">Guardar</button>
+      <button class="boton-mini" id="btn-duda-ruta-borrar">🗑 Borrar</button>
       <button class="modal-cancelar" id="btn-duda-ruta-cerrar">Cerrar</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-skimming-mapa">
+  <div class="modal-skimming-caja" role="dialog" aria-modal="true">
+    <h3 id="titulo-modal-skimming">👀 Skimming</h3>
+    <div class="modal-skimming-visor" id="visor-skimming">
+      <div class="skimming-zoom-controles" id="skimming-zoom-controles">
+        <button type="button" class="mapa-zoom-boton" id="btn-skimming-zoom-mas" title="Acercar">+</button>
+        <button type="button" class="mapa-zoom-boton" id="btn-skimming-zoom-menos" title="Alejar">−</button>
+        <button type="button" class="mapa-zoom-boton" id="btn-skimming-zoom-reset" title="Restablecer zoom">↺</button>
+      </div>
+      <div class="modal-skimming-escena" id="escena-skimming"></div>
+    </div>
+    <button class="modal-cancelar" id="btn-skimming-cerrar">Cerrar</button>
   </div>
 </div>
 
@@ -4977,9 +5069,7 @@
     if (evento.target === elModalPrimeroEditado) cerrarModalPrimeroEditado('cancelar');
   });
 
-  async function toggleRevisarActual() {
-    if (tarjetasSesion.length === 0) return;
-    const t = tarjetasSesion[indiceActual];
+  async function alternarRevisarTarjeta(t) {
     const h = hashTarjeta(t);
     const previo = paraRevisar[h];
     if (previo && previo.m !== false) {
@@ -4987,7 +5077,7 @@
       const ediciones = edicionesDe(t);
       if (ediciones.p || ediciones.s || ediciones.r) {
         const decision = await pedirDecisionPrimeroEditado(ediciones.s || ediciones.r);
-        if (decision === 'cancelar') return;
+        if (decision === 'cancelar') return false;
         conservar = decision === 'conservar';
       }
       if (conservar) {
@@ -5012,6 +5102,13 @@
     }
     guardarParaRevisar();
     refrescarTrasEdicionTarjeta();
+    return true;
+  }
+
+  async function toggleRevisarActual() {
+    if (tarjetasSesion.length === 0) return;
+    const t = tarjetasSesion[indiceActual];
+    if (!(await alternarRevisarTarjeta(t))) return;
     renderTarjeta();
   }
   let porComprension = [];     // NUEVO: tarjetas marcadas Entendida por comprensión
@@ -6842,7 +6939,7 @@
   let avisosActuales = [];
 
   function mostrarPantalla(nombre) {
-    if (nombre !== 'temas') elBtnAvisos.style.display = 'none';
+    if (nombre !== 'temas' && nombre !== 'observador') elBtnAvisos.style.display = 'none';
     elPantallaTemas.style.display = nombre === 'temas' ? 'block' : 'none';
     elAreaTarjeta.style.display = nombre === 'estudio' ? 'block' : 'none';
     elPantallaResumen.style.display = nombre === 'resumen' ? 'block' : 'none';
@@ -6856,6 +6953,7 @@
     if (nombre === 'observador') {
       requestAnimationFrame(() => {
         renderSiCambioDatos('imagenes', '', renderImagenesPreview);
+        actualizarAvisos();
       });
     }
 
@@ -8362,9 +8460,6 @@
       construirListaSubtMapa('lista-mapa-urgentes', 'urgente', seleccionMapa.urgentes, 'urgente');
     });
 
-    lazyMapaAcordeones.skimming = prepararDetallesLazy(document.getElementById('det-mapa-skimming'), () => {
-      construirChipsSkimming();
-    });
   }
   inicializarAcordeonesMapaLazy();
 
@@ -8429,15 +8524,19 @@
   }
 
   function construirChipsSkimming() {
-    const caja = document.getElementById('lista-mapa-skimming');
+    const visor = document.getElementById('visor-skimming');
+    const escena = document.getElementById('escena-skimming');
     const lineas = lineasSkimming();
-    if (lineas.length === 0) {
-      reemplazarHijos(caja, null);
-      return;
-    }
+    escena.textContent = '';
+    if (lineas.length === 0) return;
 
-    const lienzo = document.createElement('div');
-    lienzo.className = 'mapa-skimming-lienzo';
+    const reservaControles = 56;
+    const anchoVisor = visor.clientWidth || 600;
+    const altoVisor = visor.clientHeight || 400;
+    const anchoDisponible = Math.max(200, anchoVisor - reservaControles);
+    escena.style.width = anchoDisponible + 'px';
+    escena.style.height = altoVisor + 'px';
+
     const fragChips = document.createDocumentFragment();
     const chips = lineas.map((texto) => {
       const chip = document.createElement('span');
@@ -8446,19 +8545,29 @@
       fragChips.appendChild(chip);
       return chip;
     });
-    lienzo.appendChild(fragChips);
-    reemplazarHijos(caja, lienzo);
+    escena.appendChild(fragChips);
 
-    const anchoCaja = caja.clientWidth || 300;
-    const altoCaja = caja.clientHeight || 200;
-    const medidas = chips.map((chip) => ({ w: chip.offsetWidth, h: chip.offsetHeight }));
-    const masAncho = medidas.reduce((m, d) => Math.max(m, d.w), 0);
-    const anchoLienzo = Math.max(anchoCaja - 17, masAncho + 16);
+    let escala = 1.6;
+    let medidas = [];
+    let anchoLienzo = anchoDisponible;
+    let resultado = null;
+    for (let intento = 0; intento < 12; intento++) {
+      escena.style.setProperty('--sk-escala', String(escala));
+      medidas = chips.map((chip) => ({ w: chip.offsetWidth, h: chip.offsetHeight }));
+      const masAncho = medidas.reduce((m, d) => Math.max(m, d.w), 0);
+      anchoLienzo = Math.max(anchoDisponible, masAncho + 16);
+      resultado = colocarChipsSinSuperposicion(medidas, anchoLienzo, altoVisor);
+      if (resultado.altoLienzo <= altoVisor || escala <= 0.3) break;
+      escala = Math.max(0.3, escala * 0.85);
+    }
 
-    const resultado = colocarChipsSinSuperposicion(medidas, anchoLienzo, altoCaja);
-
-    lienzo.style.width = anchoLienzo + 'px';
-    lienzo.style.height = resultado.altoLienzo + 'px';
+    const altoLienzo = Math.max(altoVisor, resultado.altoLienzo);
+    escena.style.width = anchoLienzo + 'px';
+    escena.style.height = altoLienzo + 'px';
+    escena.style.left = '50%';
+    escena.style.top = '50%';
+    escena.style.marginLeft = (-anchoLienzo / 2 - reservaControles / 2) + 'px';
+    escena.style.marginTop = (-altoLienzo / 2) + 'px';
     chips.forEach((chip, i) => {
       const color = COLORES_CHIPS_SKIMMING[Math.floor(Math.random() * COLORES_CHIPS_SKIMMING.length)];
       chip.style.left = resultado.posiciones[i].x + 'px';
@@ -8467,6 +8576,142 @@
       chip.style.color = colorTextoSobreFondo(color);
     });
   }
+
+  const elModalSkimmingMapa = document.getElementById('modal-skimming-mapa');
+  const elVisorSkimming = document.getElementById('visor-skimming');
+  const elEscenaSkimming = document.getElementById('escena-skimming');
+  const ZOOM_SKIMMING_MIN = 0.5;
+  const ZOOM_SKIMMING_MAX = 20;
+  const ZOOM_SKIMMING_PASO = 2;
+  let zoomSkimming = 1;
+  let panSkimming = { x: 0, y: 0 };
+  let arrastreSkimming = { activo: false, x: 0, y: 0 };
+  let pinchSkimming = null;
+  let overflowBodyAntesSkimming = '';
+
+  function aplicarTransformSkimming() {
+    elEscenaSkimming.style.transform = 'translate(' + panSkimming.x + 'px, ' + panSkimming.y + 'px) scale(' + zoomSkimming + ')';
+    elVisorSkimming.classList.toggle('skimming-pan', zoomSkimming > 1);
+  }
+
+  function fijarZoomSkimming(nuevoZoom) {
+    zoomSkimming = Math.min(ZOOM_SKIMMING_MAX, Math.max(ZOOM_SKIMMING_MIN, nuevoZoom));
+    if (zoomSkimming === 1) { panSkimming.x = 0; panSkimming.y = 0; }
+    aplicarTransformSkimming();
+  }
+
+  function resetearZoomSkimming() {
+    zoomSkimming = 1;
+    panSkimming = { x: 0, y: 0 };
+    arrastreSkimming = { activo: false, x: 0, y: 0 };
+    pinchSkimming = null;
+    elVisorSkimming.classList.remove('skimming-arrastrando');
+    aplicarTransformSkimming();
+  }
+
+  function distanciaToquesSkimming(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function abrirModalSkimmingMapa() {
+    const n = lineasSkimming().length;
+    if (n === 0) return;
+    if (!elModalSkimmingMapa.classList.contains('abierto')) {
+      overflowBodyAntesSkimming = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+    }
+    document.getElementById('titulo-modal-skimming').textContent = '👀 Skimming (' + n + ')';
+    elModalSkimmingMapa.classList.add('abierto');
+    resetearZoomSkimming();
+    construirChipsSkimming();
+  }
+
+  function cerrarModalSkimmingMapa() {
+    if (!elModalSkimmingMapa.classList.contains('abierto')) return;
+    elModalSkimmingMapa.classList.remove('abierto');
+    document.body.style.overflow = overflowBodyAntesSkimming;
+    resetearZoomSkimming();
+    elEscenaSkimming.textContent = '';
+  }
+
+  document.querySelector('#det-mapa-skimming > summary').addEventListener('click', (ev) => {
+    ev.preventDefault();
+    abrirModalSkimmingMapa();
+  });
+  document.getElementById('btn-skimming-cerrar').addEventListener('click', () => cerrarModalSkimmingMapa());
+  elModalSkimmingMapa.addEventListener('click', (ev) => {
+    if (ev.target === elModalSkimmingMapa) cerrarModalSkimmingMapa();
+  });
+  window.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape' || !elModalSkimmingMapa.classList.contains('abierto')) return;
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    cerrarModalSkimmingMapa();
+  }, true);
+
+  const elSkimmingZoomControles = document.getElementById('skimming-zoom-controles');
+  elSkimmingZoomControles.addEventListener('mousedown', (ev) => ev.stopPropagation());
+  elSkimmingZoomControles.addEventListener('touchstart', (ev) => ev.stopPropagation(), { passive: true });
+  document.getElementById('btn-skimming-zoom-mas').addEventListener('click', () => fijarZoomSkimming(zoomSkimming + ZOOM_SKIMMING_PASO));
+  document.getElementById('btn-skimming-zoom-menos').addEventListener('click', () => fijarZoomSkimming(zoomSkimming - ZOOM_SKIMMING_PASO));
+  document.getElementById('btn-skimming-zoom-reset').addEventListener('click', () => resetearZoomSkimming());
+
+  elVisorSkimming.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    fijarZoomSkimming(zoomSkimming + (ev.deltaY < 0 ? ZOOM_SKIMMING_PASO : -ZOOM_SKIMMING_PASO));
+  }, { passive: false });
+
+  elVisorSkimming.addEventListener('mousedown', (ev) => {
+    if (zoomSkimming <= 1) return;
+    arrastreSkimming = { activo: true, x: ev.clientX - panSkimming.x, y: ev.clientY - panSkimming.y };
+    elVisorSkimming.classList.add('skimming-arrastrando');
+  });
+  window.addEventListener('mousemove', (ev) => {
+    if (!arrastreSkimming.activo) return;
+    panSkimming.x = ev.clientX - arrastreSkimming.x;
+    panSkimming.y = ev.clientY - arrastreSkimming.y;
+    aplicarTransformSkimming();
+  });
+  window.addEventListener('mouseup', () => {
+    if (!arrastreSkimming.activo) return;
+    arrastreSkimming.activo = false;
+    elVisorSkimming.classList.remove('skimming-arrastrando');
+  });
+
+  elVisorSkimming.addEventListener('touchstart', (ev) => {
+    if (ev.touches.length === 2) {
+      pinchSkimming = { distancia: distanciaToquesSkimming(ev.touches), zoomInicial: zoomSkimming };
+      arrastreSkimming.activo = false;
+    } else if (ev.touches.length === 1 && zoomSkimming > 1) {
+      arrastreSkimming = { activo: true, x: ev.touches[0].clientX - panSkimming.x, y: ev.touches[0].clientY - panSkimming.y };
+      elVisorSkimming.classList.add('skimming-arrastrando');
+    }
+  }, { passive: true });
+  elVisorSkimming.addEventListener('touchmove', (ev) => {
+    if (ev.touches.length === 2 && pinchSkimming) {
+      ev.preventDefault();
+      fijarZoomSkimming(pinchSkimming.zoomInicial * (distanciaToquesSkimming(ev.touches) / pinchSkimming.distancia));
+    } else if (ev.touches.length === 1 && arrastreSkimming.activo) {
+      ev.preventDefault();
+      panSkimming.x = ev.touches[0].clientX - arrastreSkimming.x;
+      panSkimming.y = ev.touches[0].clientY - arrastreSkimming.y;
+      aplicarTransformSkimming();
+    }
+  }, { passive: false });
+  elVisorSkimming.addEventListener('touchend', (ev) => {
+    if (ev.touches.length < 2) pinchSkimming = null;
+    if (ev.touches.length === 0) {
+      arrastreSkimming.activo = false;
+      elVisorSkimming.classList.remove('skimming-arrastrando');
+    }
+  });
+  elVisorSkimming.addEventListener('touchcancel', () => {
+    pinchSkimming = null;
+    arrastreSkimming.activo = false;
+    elVisorSkimming.classList.remove('skimming-arrastrando');
+  });
 
   function prepararListadoAcordeonesMapa() {
     const nRutas = datosRutasMapa.length;
@@ -8485,7 +8730,7 @@
     document.getElementById('suma-mapa-skimming').textContent = '👀 Skimming (' + nSkimming + ')';
     document.getElementById('det-mapa-skimming').style.display = nSkimming > 0 ? '' : 'none';
 
-    ['rutas', 'dificiles', 'sobreconfianza', 'olvido', 'urgentes', 'skimming'].forEach((clave) => {
+    ['rutas', 'dificiles', 'sobreconfianza', 'olvido', 'urgentes'].forEach((clave) => {
       const det = document.getElementById('det-mapa-' + clave);
       const listaEl = document.getElementById('lista-mapa-' + clave);
       if (det) det.open = false;
@@ -8550,6 +8795,7 @@
   }
 
   function cerrarPantallaMapa() {
+    cerrarModalSkimmingMapa();
     elMapaImagenWrap.innerHTML = '';
     elMapaImg = null;
     elMapaSvgOverlay = null;
@@ -19118,9 +19364,33 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     }
     cerrarModalNotaDudaRuta();
     refrescarFilaRetencionSesion(idRutaGuardada);
+    refrescarNotasRutasTarjetaActual();
+  }
+
+  function borrarModalNotaDudaRuta() {
+    if (rutaDudaActivaId === null) return;
+    const idRutaBorrada = rutaDudaActivaId;
+    if (typeof window.__detenerDictadoSiActivoEn === 'function') {
+      window.__detenerDictadoSiActivoEn(elDudaRutaEditor);
+    }
+    const categoriaBorrar = 'duda_ruta_' + idRutaBorrada;
+    notasEvaluador = notasEvaluador.filter((n) => !(n.categoria === categoriaBorrar && (!n.espacio || n.espacio === ESPACIO_HASH)));
+    siguienteRev();
+    guardarNotasEvaluador();
+    rutasConNotaDuda.delete(String(idRutaBorrada));
+    elDudaRutaEditor.value = '';
+    cerrarModalNotaDudaRuta();
+    refrescarFilaRetencionSesion(idRutaBorrada);
+    refrescarNotasRutasTarjetaActual();
+  }
+
+  function refrescarNotasRutasTarjetaActual() {
+    if (tarjetasSesion.length === 0 || elAreaTarjeta.style.display === 'none') return;
+    renderNotasRutasTarjeta(tarjetasSesion[indiceActual]);
   }
 
   document.getElementById('btn-duda-ruta-guardar').addEventListener('click', () => guardarModalNotaDudaRuta());
+  document.getElementById('btn-duda-ruta-borrar').addEventListener('click', () => borrarModalNotaDudaRuta());
   document.getElementById('btn-duda-ruta-cerrar').addEventListener('click', () => cerrarModalNotaDudaRuta());
   elModalNotaDudaRuta.addEventListener('click', (evento) => {
     if (evento.target === elModalNotaDudaRuta) cerrarModalNotaDudaRuta();
@@ -19261,16 +19531,46 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   }
 
   function firmaGrupoRetencion(grupo) {
-    return grupo.pregunta + '||' + grupo.rutas.map((r) => r.id + ':' + r.extras.join('|')).join('||');
+    const tarjetaFirma = tarjetasCompletas[grupo.clave];
+    const marcaRevisar = tarjetaFirma ? (esRevisar(tarjetaFirma) ? '1' : '0') + (tarjetaEditada(tarjetaFirma) ? '1' : '0') : '00';
+    return grupo.pregunta + '||' + marcaRevisar + '||' + grupo.rutas.map((r) => r.id + ':' + r.extras.join('|')).join('||');
   }
 
   function grupoRetencionTarjeta(grupo) {
     const div = document.createElement('div');
     div.className = 'retencion-tarjeta-grupo';
+    const cabecera = document.createElement('div');
+    cabecera.className = 'retencion-tarjeta-cabecera';
     const pregunta = document.createElement('div');
     pregunta.className = 'retencion-tarjeta-pregunta';
     pregunta.textContent = grupo.pregunta;
-    div.appendChild(pregunta);
+    cabecera.appendChild(pregunta);
+    const tarjetaGrupo = tarjetasCompletas[grupo.clave];
+    if (tarjetaGrupo) {
+      const btnRevisar = document.createElement('button');
+      btnRevisar.type = 'button';
+      btnRevisar.className = 'boton-revisar-pomodoro';
+      btnRevisar.textContent = '🚩';
+      const pintarRevisar = () => {
+        const activa = esRevisar(tarjetaGrupo);
+        btnRevisar.classList.toggle('activa', activa);
+        btnRevisar.classList.toggle('editada', tarjetaEditada(tarjetaGrupo));
+        btnRevisar.title = activa ? 'Quitar de para revisar' : 'Marcar para revisar';
+        btnRevisar.setAttribute('aria-pressed', activa ? 'true' : 'false');
+      };
+      pintarRevisar();
+      btnRevisar.addEventListener('click', async () => {
+        btnRevisar.disabled = true;
+        try {
+          await alternarRevisarTarjeta(tarjetaGrupo);
+        } finally {
+          btnRevisar.disabled = false;
+        }
+        pintarRevisar();
+      });
+      cabecera.appendChild(btnRevisar);
+    }
+    div.appendChild(cabecera);
     grupo.rutas.forEach((ruta) => {
       ruta.extras.forEach((texto) => {
         const extra = document.createElement('div');
@@ -19586,7 +19886,9 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   }
 
   function cerrarModalRetencionRutas() {
+    const estabaAbierto = elModalRetencionRutas.classList.contains('abierto');
     elModalRetencionRutas.classList.remove('abierto');
+    if (estabaAbierto) refrescarMarcasObservador();
   }
   document.getElementById('btn-retencion-cerrar').addEventListener('click', () => cerrarModalRetencionRutas());
 
@@ -19689,7 +19991,8 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       ciclos: Math.max(0, pomodoroCiclo - 1),
       tiempoLecturaSeg: pomodoroAcumulado.pretest,
       tiempoRetencionSeg: pomodoroAcumulado.retencion,
-      tiempoRetencionSeg: pomodoroAcumulado.retencion,
+      tiempoSkimmingSeg: pomodoroAcumulado.skimming || 0,
+      tiempoDescansoTotalSeg: pomodoroAcumulado.descanso || 0,
       tiempoTotalSeg: totalSeg,
       totalRutas: total,
       retenidas: retenidas,
@@ -23095,7 +23398,41 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return await confirmarAccion('Tenés cambios sin guardar (nota y/o razones). ¿Descartarlos?');
   }
 
+  function notasDudaRutaDeTarjeta(t) {
+    const vistas = new Set();
+    const resultado = [];
+    (t.rutas || []).forEach((id) => {
+      const clave = String(id);
+      if (vistas.has(clave)) return;
+      vistas.add(clave);
+      const nota = buscarNotaDudaRuta(clave);
+      if (!nota || typeof nota.texto !== 'string' || nota.texto.trim() === '') return;
+      resultado.push({ ruta: clave, texto: nota.texto.trim() });
+    });
+    return resultado;
+  }
+
+  function renderNotasRutasTarjeta(t) {
+    const panel = document.getElementById('panel-nota-rutas');
+    const lista = document.getElementById('panel-nota-rutas-lista');
+    if (!panel || !lista) return;
+    const notas = t ? notasDudaRutaDeTarjeta(t) : [];
+    lista.textContent = '';
+    if (notas.length === 0) {
+      panel.style.display = 'none';
+      return;
+    }
+    notas.forEach((n) => {
+      const item = document.createElement('div');
+      item.className = 'panel-nota-texto panel-nota-rutas-item';
+      item.textContent = 'Ruta ' + n.ruta + ': ' + n.texto;
+      lista.appendChild(item);
+    });
+    panel.style.display = 'block';
+  }
+
   function renderNota(actual) {
+    renderNotasRutasTarjeta(actual);
     const efectiva = notaEfectivaDe(actual);
     const est = estadoNotaDe(actual);
     const hayNota = efectiva !== '';
@@ -24149,9 +24486,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
     const n = avisosActuales.length;
     const enTemas = elPantallaTemas.style.display !== 'none';
+    const enObservador = elPantallaObservador.style.display !== 'none';
     elBadgeAvisosN.textContent = String(n);
     elBtnAvisos.title = n + (n === 1 ? ' aviso' : ' avisos');
-    elBtnAvisos.style.display = (n > 0 && enTemas) ? 'inline-flex' : 'none';
+    elBtnAvisos.style.display = (n > 0 && (enTemas || enObservador)) ? 'inline-flex' : 'none';
   }
 
   function renderPanelAvisos() {
@@ -24354,7 +24692,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   let pomodoroIntervalo = null;
   let pomodoroPausado = false;
   let pomodoroHoraInicio = 0;
-  let pomodoroAcumulado = { pretest: 0, retencion: 0 };
+  let pomodoroAcumulado = { pretest: 0, retencion: 0, skimming: 0, descanso: 0 };
   let pomodoroRetencionPresionada = false;
   let pomodoroEnBraindumpFinal = false;
   let pomodoroTotalSegCongelado = null;
@@ -24406,6 +24744,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elBtnPomodoroRetencion.style.display = (pomodoroFase === 'pretest' || pomodoroFase === 'skimming' || pomodoroFase === 'descanso_largo') ? 'inline-block' : 'none';
     elBtnPomodoroPausar.style.display = (pomodoroFase === 'descanso' || pomodoroFase === 'descanso_largo') ? 'none' : 'inline-block';
     elBtnPomodoroBraindump.style.display = (pomodoroFase === 'retencion' || pomodoroFase === 'descanso') ? 'inline-block' : 'none';
+
+    if (pomodoroActivo) {
+      const enDescanso = pomodoroFase === 'descanso' || pomodoroFase === 'descanso_largo';
+      elBtnPomodoro.disabled = enDescanso || !pomodoroRetencionPresionada;
+    }
   }
 
   function autoguardarYCerrarPretestPomodoro() {
@@ -24427,6 +24770,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function entrarFaseRetencionPomodoro() {
+    cerrarModalSkimmingMapa();
     autoguardarYCerrarPretestPomodoro();
     pomodoroFase = 'retencion';
     pomodoroSegundosRestantes = DURACION_LECTURA_SEG;
@@ -24476,8 +24820,14 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroUltimoTick = ahoraTick;
     if (delta > pomodoroSegundosRestantes) delta = Math.max(1, pomodoroSegundosRestantes);
     pomodoroSegundosRestantes -= delta;
-    if (pomodoroFase === 'pretest' || pomodoroFase === 'skimming') pomodoroAcumulado.pretest += delta;   // lectura = pretest + skimming
-    else if (pomodoroFase === 'retencion') pomodoroAcumulado.retencion += delta;
+    if (pomodoroFase === 'pretest' || pomodoroFase === 'skimming') {
+      pomodoroAcumulado.pretest += delta;
+      if (pomodoroFase === 'skimming') pomodoroAcumulado.skimming += delta;
+    } else if (pomodoroFase === 'retencion') {
+      pomodoroAcumulado.retencion += delta;
+    } else if (pomodoroFase === 'descanso' || pomodoroFase === 'descanso_largo') {
+      pomodoroAcumulado.descanso += delta;
+    }
     if (pomodoroSegundosRestantes <= 0) {
       avanzarFasePomodoro();
     } else {
@@ -24499,6 +24849,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function avanzarFasePomodoro() {
+    cerrarModalSkimmingMapa();
     if (minijuegoAbierto && minijuegoEnDescanso) minijuegoCerrar();
     if (pomodoroFase === 'pretest') {
       autoguardarYCerrarPretestPomodoro();
@@ -24579,6 +24930,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   });
   elBtnPomodoro.addEventListener('click', () => {
     if (!pomodoroActivo) { abrirModalPomodoroIniciar(); return; }
+    if (pomodoroFase === 'descanso' || pomodoroFase === 'descanso_largo') return;
     if (pomodoroRetencionPresionada) { abrirModalRetencionRutas(); }
   });
 
@@ -24604,7 +24956,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroPausaAcumMs = 0;
     pomodoroHoraInicio = Date.now();
     enfoqueReiniciarContador();
-    pomodoroAcumulado = { pretest: 0, retencion: 0 };
+    pomodoroAcumulado = { pretest: 0, retencion: 0, skimming: 0, descanso: 0 };
     pomodoroRetencionPresionada = false;
     pomodoroEnBraindumpFinal = false;
     pomodoroTotalSegCongelado = null;
@@ -24775,6 +25127,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   });
 
   function abandonarPomodoro(totalSegForzado) {
+    cerrarModalSkimmingMapa();
     clearInterval(pomodoroIntervalo);
     autoguardarYCerrarPretestPomodoro();
     if (pomodoroPausado) {
@@ -24789,6 +25142,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       : Math.max(0, Math.round((Date.now() - pomodoroHoraInicio - pomodoroPausaAcumMs) / 1000));
     document.getElementById('pomodoro-resumen-lectura').textContent = formatoMMSS(pomodoroAcumulado.pretest);
     document.getElementById('pomodoro-resumen-retencion').textContent = formatoMMSS(pomodoroAcumulado.retencion);
+    const segSkimmingResumen = pomodoroAcumulado.skimming || 0;
+    document.getElementById('pomodoro-resumen-skimming-fila').style.display = segSkimmingResumen > 0 ? '' : 'none';
+    document.getElementById('pomodoro-resumen-skimming').textContent = formatoMMSS(segSkimmingResumen);
+    document.getElementById('pomodoro-resumen-descanso').textContent = formatoMMSS(pomodoroAcumulado.descanso || 0);
     document.getElementById('pomodoro-resumen-total').textContent = formatoMMSS(totalSeg);
     document.getElementById('pomodoro-resumen-ciclos').textContent = String(Math.max(0, pomodoroCiclo - 1 + (pomodoroFase === 'descanso' ? 1 : 0)));
 
@@ -25382,6 +25739,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       pomodoroSegundosRestantes: pomodoroSegundosRestantes,
       pomodoroPausado: pomodoroPausado,
       pomodoroAcumulado: { pretest: pomodoroAcumulado.pretest, retencion: pomodoroAcumulado.retencion },
+      tiempoSkimmingSeg: pomodoroAcumulado.skimming || 0,
+      tiempoDescansoTotalSeg: pomodoroAcumulado.descanso || 0,
       pomodoroHoraInicio: pomodoroHoraInicio,
       pomodoroPausaAcumMs: pomodoroPausaAcumMs + pausaEnCurso,
       pomodoroRetencionPresionada: pomodoroRetencionPresionada,
@@ -25638,7 +25997,12 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroPausaAcumMs = x.pomodoroPausaAcumMs + fuera;
     pomodoroHoraInicio = x.pomodoroHoraInicio;
     pomodoroUltimoTick = ahora;
-    pomodoroAcumulado = { pretest: Math.round(x.pomodoroAcumulado.pretest), retencion: Math.round(x.pomodoroAcumulado.retencion) };
+    pomodoroAcumulado = {
+      pretest: Math.round(x.pomodoroAcumulado.pretest),
+      retencion: Math.round(x.pomodoroAcumulado.retencion),
+      skimming: pomEsNum(x.tiempoSkimmingSeg) ? Math.max(0, Math.round(x.tiempoSkimmingSeg)) : 0,
+      descanso: pomEsNum(x.tiempoDescansoTotalSeg) ? Math.max(0, Math.round(x.tiempoDescansoTotalSeg)) : 0,
+    };
     pomodoroRetencionPresionada = !!x.pomodoroRetencionPresionada;
     pomodoroEnBraindumpFinal = enBraindump;
     pomodoroBraindumpNotaId = enBraindump ? x.pomodoroBraindumpNotaId : null;
