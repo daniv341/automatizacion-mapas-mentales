@@ -684,8 +684,8 @@ que están comprendidos
 dentro de límites
 superior e inferior
 de la
-capacidad
-medida, recepción o transmisión
+capacidad recepción o transmisión
+medida,
 del instrumento
 
 RUTA 71

@@ -5,7 +5,7 @@ tiempo integral + correcion, suficiente & 3
 tiempo derivativo + velocidad, produce & 4
 que hacen en conjunto? + suma, ajustar & 5
 que logro al ajustar estos parametros? + proveer, eficiente, requiera & 6
-como puedo describir respuesta controlador? + grado, velocidad, oscilacion & 9
+como puedo describir respuesta controlador? + grado, velocidad, oscilacion & 7, 8, 9
 que no garantiza? + control, estabilidad & 10
 controladores PI + sensible, deseado & 11
 
@@ -27,7 +27,7 @@ considera el tiempo? + estacionario, variacion, incluyendo & 23
 que pasa si la ganancia aumenta? + pequeña, rapido, inestibilidad & 25
 que pasa si K tiende a infinito? + on off & 26
 que inconveniente tiene la accion proporcional? + desviacion permanente, consigna & 27
-como podemosreducir el offset? + banda, inestabilidad & 28
+como podemos reducir el offset? + banda, inestabilidad & 28
 que relacion hay entre ganancia y banda proporcional? + aumento, disminuyo & 29
 que es la banda proporcional? + porcentaje, carrera completa & 30
 que es el criterio de sintonia? + valor, caracteristicas & 32
@@ -48,7 +48,7 @@ que es un error? + desviacion existente & 43
 cual es su funcion respecto al error? + mantener, velocidad & 44
 como es el proceso de este controlador? + deriva, multiplica, suma & 45
 por que debo adaptar respuesta? + derivativa, rapido & 46
-por que se caracteriza el controlador derivativo? + derivada, inestabilidad, oscila & 56
+por que se caracteriza el controlador derivativo? + derivada, inestabilidad, oscila & 47
 cuando es adecuada accion derivativa? + retraso, repercusion & 49
 por que no se la usa mucho? + sensibilidad, complicaciones & 52
 que problema tiene esta accion derivativa? + reacciona, velocidad & 50
