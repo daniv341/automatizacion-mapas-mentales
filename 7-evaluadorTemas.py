@@ -5365,6 +5365,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <button class="boton-mini" id="btn-fuente-cargar" type="button">📂 Cargar</button>
       <button class="boton-mini" id="btn-fuente-borrador" type="button">💾 Guardar borrador</button>
       <button class="boton-mini" id="btn-fuente-descargar" type="button">💾 Descargar .txt</button>
+      <button class="boton-mini" id="btn-fuente-exportar-rev" type="button">📤 Exportar ediciones de para revisar</button>
+      <button class="boton-mini" id="btn-fuente-volver" type="button">↩ Volver al generado</button>
     </div>
     <button class="modal-cancelar" id="btn-fuente-cerrar">Cerrar</button>
   </div>
@@ -18163,6 +18165,8 @@ const ZONAS_SYNC_GIST = [
     '• Editar el contenido y descargarlo',
     '• Cargar un TXT modificado desde tu dispositivo',
     '• Guardar borradores en este navegador',
+    '• Exportar a un recordatorio.txt nuevo las ediciones de «para revisar» (solo pestaña recordatorio.txt; no modifica nada de tus datos)',
+    '• Volver al texto generado, descartando el borrador guardado, el archivo cargado y los cambios sin guardar',
     '• En respuestas.txt las imágenes se ven como <imagen>, pero al descargar salen completas en Base64',
     '',
     '❌ No podés:',
@@ -18426,6 +18430,7 @@ const ZONAS_SYNC_GIST = [
     estadoFuente.tab = tab;
     document.getElementById('tab-fuente-recordatorio').classList.toggle('activa', tab === 'recordatorio');
     document.getElementById('tab-fuente-respuestas').classList.toggle('activa', tab === 'respuestas');
+    document.getElementById('btn-fuente-exportar-rev').style.display = tab === 'recordatorio' ? '' : 'none';
     elFuenteTextarea.value = estadoFuente[tab].texto;
     elFuenteTextarea.scrollTop = 0;
     renderEstadoFuente();
@@ -18491,21 +18496,194 @@ const ZONAS_SYNC_GIST = [
     renderEstadoFuente();
   }
 
+  function descargarTextoFuente(nombre, contenido) {
+    const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
   function descargarFuente() {
     volcarTextareaFuente();
     const tab = estadoFuente.tab;
     const est = estadoFuente[tab];
     const contenido = tab === 'respuestas' ? restaurarImagenesFuente(est.texto, est.imagenes) : est.texto;
-    const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = NOMBRES_ARCHIVO_FUENTE[tab];
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    descargarTextoFuente(NOMBRES_ARCHIVO_FUENTE[tab], contenido);
     est.guardado = est.texto;
+  }
+
+  function errorTextoExportFuente(texto, esPrimero) {
+    if (texto === '') return 'No puede quedar vacío.';
+    const error = textoInvalidoParaTxt(texto, esPrimero);
+    if (error) return error;
+    if (/[\\r\\n]/.test(texto)) return 'No puede contener saltos de línea.';
+    return '';
+  }
+
+  function abreviarFuente(texto) {
+    const limpio = String(texto || '').split(' ').filter((x) => x !== '').join(' ');
+    return limpio.length > 40 ? limpio.slice(0, 40) + '…' : limpio;
+  }
+
+  function contarFuente(n, singular, plural) {
+    return n + ' ' + (n === 1 ? singular : plural);
+  }
+
+  function construirExportRecordatorioFuente() {
+    const hashesActuales = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
+    const esAjena = (e) => !!(e && typeof e === 'object' && e.espacio && e.espacio !== ESPACIO_HASH);
+    let ignAjenas = 0;
+    let ignSinTarjeta = 0;
+    Object.keys(paraRevisar).forEach((h) => {
+      if (esAjena(paraRevisar[h])) ignAjenas++;
+      else if (!hashesActuales.has(h)) ignSinTarjeta++;
+    });
+    const entradaDe = (t) => {
+      const e = paraRevisar[hashTarjeta(t)];
+      return (e && typeof e === 'object' && !esAjena(e)) ? e : null;
+    };
+
+    const salida = [];
+    const invalidas = [];
+    let temaPrevio = '';
+    let exportadas = 0;
+    let conEdiciones = 0;
+    let conNotas = 0;
+    let ocultas = 0;
+
+    tarjetasCompletas.forEach((t) => {
+      const e = entradaDe(t);
+      if (e && e.oculta === true) { ocultas++; return; }
+      const o = originalDe(t);
+      let primero = t.primero || '';
+      let segundo = o.segundo || '';
+      let rutas = (o.rutas || []).slice();
+      let editada = false;
+
+      if (e) {
+        if (typeof e.p === 'string' && e.p !== '') {
+          const p = colapsarEspacios(e.p);
+          const error = errorTextoExportFuente(p, true);
+          if (error) {
+            invalidas.push({ tarjeta: abreviarFuente(t.primero), campo: 'primero', error: error });
+          } else if (p !== primero) {
+            primero = p;
+            editada = true;
+          }
+        }
+        if (typeof e.s === 'string' && e.s !== '') {
+          const s = colapsarEspacios(e.s);
+          const error = errorTextoExportFuente(s, false);
+          if (error) {
+            invalidas.push({ tarjeta: abreviarFuente(t.primero), campo: 'segundo', error: error });
+          } else if (s !== segundo) {
+            segundo = s;
+            editada = true;
+          }
+        }
+        if (Array.isArray(e.rutasEditadas)) {
+          const r = rutasValidasLista(e.rutasEditadas);
+          if (!mismasRutas(r, rutasValidasLista(o.rutas))) {
+            rutas = r;
+            editada = true;
+          }
+        }
+      }
+
+      let linea = primero;
+      if (segundo) linea += ' + ' + segundo;
+      if (rutas.length) linea += ' & ' + rutas.join(', ');
+      const nota = String(notaEfectivaDe(t) || '').trim();
+      if (nota) {
+        linea += ' | ' + nota.replace(/\\r\\n|\\r|\\n/g, '\\\\n');
+        conNotas++;
+      }
+
+      const tema = t.tema || '';
+      if (tema !== temaPrevio) {
+        if (salida.length) salida.push('');
+        salida.push('subT ' + tema);
+        temaPrevio = tema;
+      }
+      salida.push(linea);
+      exportadas++;
+      if (editada) conEdiciones++;
+    });
+
+    return {
+      texto: exportadas > 0 ? salida.join('\\n') + '\\n' : '',
+      exportadas: exportadas,
+      conEdiciones: conEdiciones,
+      conNotas: conNotas,
+      ocultas: ocultas,
+      ignAjenas: ignAjenas,
+      ignSinTarjeta: ignSinTarjeta,
+      invalidas: invalidas,
+    };
+  }
+
+  async function exportarEdicionesRevisarFuente() {
+    if (estadoFuente.tab !== 'recordatorio') return;
+    const r = construirExportRecordatorioFuente();
+    const ignoradas = r.ignAjenas + r.ignSinTarjeta;
+    const mensajes = [];
+    if (r.exportadas > 0) {
+      mensajes.push('📤 recordatorio.txt exportado: ' + contarFuente(r.exportadas, 'tarjeta exportada', 'tarjetas exportadas') +
+        ' · ' + r.conEdiciones + ' con ediciones · ' + r.conNotas + ' con notas · ' +
+        contarFuente(r.ocultas, 'oculta excluida', 'ocultas excluidas') + ' · ' +
+        contarFuente(ignoradas, 'entrada ignorada', 'entradas ignoradas') + ' · ' +
+        contarFuente(r.invalidas.length, 'edición inválida', 'ediciones inválidas') + '.');
+    } else {
+      mensajes.push('⚠️ No se descargó nada: no queda ninguna tarjeta exportable. ' +
+        contarFuente(r.ocultas, 'tarjeta oculta excluida', 'tarjetas ocultas excluidas') + ' · ' +
+        contarFuente(ignoradas, 'entrada ignorada', 'entradas ignoradas') + ' · ' +
+        contarFuente(r.invalidas.length, 'edición inválida', 'ediciones inválidas') + '.');
+    }
+    if (ignoradas > 0) {
+      const partes = [];
+      if (r.ignSinTarjeta > 0) partes.push(r.ignSinTarjeta + ' sin tarjeta actual');
+      if (r.ignAjenas > 0) partes.push(r.ignAjenas + ' de otro evaluador');
+      mensajes.push('ℹ️ Entradas de para revisar ignoradas: ' + partes.join(', ') + '.');
+    }
+    r.invalidas.slice(0, 5).forEach((x) => {
+      mensajes.push('⚠️ Edición inválida en «' + x.tarjeta + '» (' + x.campo + '): ' + x.error + ' Se usó el valor original.');
+    });
+    if (r.invalidas.length > 5) mensajes.push('⚠️ …y ' + (r.invalidas.length - 5) + ' edición(es) inválida(s) más.');
+    estadoFuente.recordatorio.fijos = mensajes;
+    renderEstadoFuente();
+    if (r.exportadas === 0) {
+      await avisar('No hay tarjetas para exportar (todas están ocultas o no hay tarjetas). No se descargó ningún archivo.');
+      return;
+    }
+    descargarTextoFuente(NOMBRES_ARCHIVO_FUENTE.recordatorio, r.texto);
+  }
+
+  async function volverAlGeneradoFuente() {
+    const tab = estadoFuente.tab;
+    const nombre = NOMBRES_ARCHIVO_FUENTE[tab];
+    const ok = await confirmarAccion('¿Volver al texto generado de ' + nombre + '? Se descartan el borrador guardado, el archivo cargado y los cambios sin guardar de esta pestaña.', 'Volver al generado');
+    if (!ok) return;
+    clearTimeout(temporizadorEvalFuente);
+    const est = estadoFuente[tab];
+    if (tab === 'respuestas') {
+      const generada = generarRespuestasFuente();
+      est.texto = generada.texto;
+      est.imagenes = generada.imagenes;
+    } else {
+      est.texto = generarRecordatorioFuente();
+    }
+    est.guardado = est.texto;
+    try { localStorage.removeItem(CLAVES_BORRADOR_FUENTE[tab]); } catch (e) { }
+    est.fijos = ['↩ Se volvió al texto generado de ' + nombre + '. Se descartaron el borrador guardado, el archivo cargado y los cambios sin guardar.'];
+    if (leerBorradorFuente(tab) !== null) {
+      est.fijos.push('⚠️ No se pudo borrar el borrador guardado en este navegador: podría reaparecer al reabrir el modal.');
+    }
+    if (estadoFuente.tab === tab) mostrarTabFuente(tab);
   }
 
   function cargarArchivoFuente(archivo) {
@@ -18557,6 +18735,8 @@ const ZONAS_SYNC_GIST = [
   });
   document.getElementById('btn-fuente-borrador').addEventListener('click', () => guardarBorradorFuente());
   document.getElementById('btn-fuente-descargar').addEventListener('click', () => descargarFuente());
+  document.getElementById('btn-fuente-exportar-rev').addEventListener('click', () => exportarEdicionesRevisarFuente());
+  document.getElementById('btn-fuente-volver').addEventListener('click', () => volverAlGeneradoFuente());
   elFuenteTextarea.addEventListener('input', () => {
     clearTimeout(temporizadorEvalFuente);
     temporizadorEvalFuente = setTimeout(() => {
