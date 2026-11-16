@@ -3497,6 +3497,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .toggle-retencion.activa-retenida { background: #d4edda; color: #155724; border-color: #8fcf9f; }
   .toggle-retencion.activa-dificil { background: #ffe3cc; color: #8a4b00; border-color: #e0a860; }
   .toggle-retencion.activa-nota { background: #FFF3C4; color: #8a6d00; border-color: #e0c860; }
+  .toggle-retencion.leyendo { background: #e3f0ff; color: #1d4ed8; border-color: #3b82f6; }
+  .toggle-retencion:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .retencion-entrada {
     border: 1.5px solid var(--color-borde-suave);
@@ -5043,6 +5045,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <label class="enfoque-opcion" title="Ronda de 60–90 s para activar la atención antes de empezar"><input type="checkbox" class="chk-minijuego"> 🎮 Minijuego previo</label>
     <label class="enfoque-opcion" title="Las tarjetas ocultas (🙈) no entran en evaluaciones ni en el Pomodoro"><input type="checkbox" class="chk-excluir-ocultas"> 🙈 Excluir tarjetas ocultas</label>
     <label class="enfoque-opcion" title="Al tocar una ruta en Retención se despliega el recorte del mapa"><input type="checkbox" class="chk-movil"> 📱 Pomodoro móvil</label>
+    <label class="enfoque-opcion" title="Muestra un botón 🔊 en cada ruta de Retención para escucharla en voz alta"><input type="checkbox" class="chk-audio-rutas"> 🔊 Audio en rutas</label>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-normal">Normal</button>
     <button class="boton-secundario" id="btn-pomodoro-iniciar-dificil">Difícil</button>
     <button class="boton-mini" id="btn-pomodoro-iniciar-historial">🧠 Ver historial de retención</button>
@@ -5898,7 +5901,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const MAPA_RUTAS_COORDS = __MAPA_RUTAS_COORDS__;
   const HAY_MAPA = (__HAY_MAPA__ === 1);
   const tarjetasCompletas = datos.tarjetas;
-  const rutasDisp = datos.rutas;   // { numero: { tema: ..., lineas: [...] } }
+  const rutasDisp = datos.rutas;   
   const modoAleatorio = __MODO_ALEATORIO__;
   const UMBRAL_CASI = __UMBRAL_CASI__;
   const PRECIO_COMODIN = __PRECIO_COMODIN__;
@@ -5912,9 +5915,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const DURACION_LECTURA_SEG = __DURACION_LECTURA_SEG__;
   const DURACION_DESCANSO_SEG = __DURACION_DESCANSO_SEG__;
   const SIM_ALTA = __SIM_ALTA__;
-  const SIM_SIN_PISTA = __SIM_SIN_PISTA__;   // NUEVO: todas las claves, sin pista
-  const SIM_CON_PISTA = __SIM_CON_PISTA__;   // NUEVO: todas las claves, con pista (debe ser MAYOR)
-  const STOPWORDS = new Set(__STOPWORDS__);  // NUEVO: palabras vacías (solo para evaluar)
+  const SIM_SIN_PISTA = __SIM_SIN_PISTA__;   
+  const SIM_CON_PISTA = __SIM_CON_PISTA__;   
+  const STOPWORDS = new Set(__STOPWORDS__);  
   const PESO_NO_RET = 0.40;
   const PESO_FALLOS = 0.40;
   const PESO_CASI = 0.20;
@@ -5935,24 +5938,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let resultados = [];
   let tiempos = [];
   let revelado = [];
-  let pistaMostrada = [];  // MODIFICADO: si se usó 'Mostrar pista' (afecta la nota)
+  let pistaMostrada = [];  
   let respuestaMostrada = [];
   let rutasVisibles = [];
-  let escritos = [];       // texto escrito por tarjeta (aunque no se evalue)
-  let evaluaciones = [];   // {resultado, acertadas, faltaron, clavesTotal, propClaves, sim, comunes, totalEscritas, totalReferencia} o null
+  let escritos = [];       
+  let evaluaciones = [];   
   let indiceActual = 0;
-  let cronometroActivo = true; // false cuando ya no queda nada por marcar
-  let indiceCongelado = -1;    // índice de la tarjeta cuya vista congela el cronómetro
-  let notaAbierta = false;     // NUEVO: la nota de la tarjeta actual está abierta (también congela)
-  let editandoNota = false;    // NUEVO: el panel de nota está en modo edición
-  let versionNota = 'local';   // NUEVO: qué versión se ve en el panel: 'local' | 'txt'
-  let modoObservador = false;  // NUEVO: viendo tarjetas sin evaluarse (sin cronómetro ni calificación)
-  let observadorAbiertos = new Set();  // NUEVO: subT abiertos en la lista del observador
+  let cronometroActivo = true; 
+  let indiceCongelado = -1;    
+  let notaAbierta = false;     
+  let editandoNota = false;    
+  let versionNota = 'local';   
+  let modoObservador = false;  
+  let observadorAbiertos = new Set();  
   let bateriaNivel = 5;
   let bateriaAvisoDisparado = false;
   let bateriaPausaActiva = false;
   let bateriaFatigaResumen = false;
-  let pausaManual = false;     // NUEVO: cronómetro pausado a mano (botón ⏸ Pausar)
+  let pausaManual = false;     
   let _avisoCuotaMs = 0;
   function escribirLocalSeguro(clave, valor) {
     try {
@@ -5990,7 +5993,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function guardarRevisarLocal(clave, obj) {
     try { escribirLocalSeguro(clave, JSON.stringify(obj)); } catch (e) {}
   }
-  const movidasVinculo = cargarRevisarLocal('vinculo_movidas_v1');   // claves de hash ya movidas por «Vincular»: no se reimportan
+  const movidasVinculo = cargarRevisarLocal('vinculo_movidas_v1');   
 
   function esRevisar(t) {
     const e = paraRevisar[hashTarjeta(t)];
@@ -6104,9 +6107,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!(await alternarRevisarTarjeta(t))) return;
     renderTarjeta();
   }
-  let porComprension = [];     // NUEVO: tarjetas marcadas Entendida por comprensión
-  let razonesAbierto = false;  // NUEVO: panel de razones abierto (pausa el cronómetro)
-  let razonesPendientes = null; // NUEVO: array de códigos en edición, null si el panel está cerrado
+  let porComprension = [];     
+  let razonesAbierto = false;  
+  let razonesPendientes = null; 
 
   const RAZONES_DEF = [
     { codigo: 'olvido', texto: 'Olvido', color: '#9CA3AF' },
@@ -6203,40 +6206,40 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   let gamificacion = cargarGamificacion();
 
-  let modoJuego = 'light';        // 'tryhard' | 'normal' | 'light' | 'examen'
-  let interaccionExamen = 'libre';   // 'libre' | 'escrito' | 'oral'
+  let modoJuego = 'light';        
+  let interaccionExamen = 'libre';   
   let segundosPorTarjetaExamen = 15;
   let countdownExamenId = null;
   let countdownExamenRestante = 0;
   let countdownIndiceActivo = -1;
-  let tiempoGlobalExamen = false;          // opción del modal: un solo reloj para todo el examen
+  let tiempoGlobalExamen = false;          
   let globalExamenIntervalId = null;
   let globalExamenRestanteMs = 0;
   let globalExamenUltimoTick = 0;
-  let globalExamenPendientesAlVencer = 0;  // >0 si el tiempo global venció con tarjetas sin responder
+  let globalExamenPendientesAlVencer = 0;  
   let vidasMaximas = 0;
   let vidasActuales = 0;
   let puntosSesion = 0;
   let rachaActual = 0;
   let mejorRacha = 0;
   let multiplicadorActual = 1;
-  let puntosPorTarjeta = [];              // paralelo a resultados: puntos ya sumados por cada tarjeta
-  let pistaGratisUsadaPorTarjeta = [];    // paralelo a resultados
+  let puntosPorTarjeta = [];              
+  let pistaGratisUsadaPorTarjeta = [];    
   let gameOverDisparado = false;
   let historialGuardadoEstaSesion = false;
   let analisisGuardadoEstaSesion = false;
-  let ultimaEntradaHistorial = null;       // entrada del historial creada por la sesion actual (para actualizarla si se continua)
-  let puntosSumadosHistorial = 0;          // puntos de la sesion ya sumados a puntosTotales
-  let ultimaEntradaAnalisisSesion = null;  // analisis guardado de esta sesion (se reemplaza si se vuelve a guardar)
-  let reveladasAlSaltar = new Set();       // indices saltados a mano (se vio la respuesta): al reintentar no dan puntos ni racha
-  let srsReaplicable = null;               // sesion SRS ya aplicada: permite recalcular si se continua en la misma sesion
-  let reintentadasSesion = new Set();      // tarjetas (objeto) que ya usaron su reintento en esta sesión
-  let primerIntentoFallido = new Set();    // índices que fallaron el primer intento y usaron segunda oportunidad (quedan para repaso)
-  let reintentoExitoso = new Set();        // subconjunto: el reintento salió bien (recompensa reducida)
-  let segundaPendiente = false;            // hay un diálogo Sí/No abierto
-  let modoZombie = false;   // NUEVO: si es true, se ignora POR COMPLETO la lógica de puntos/vidas/racha
+  let ultimaEntradaHistorial = null;       
+  let puntosSumadosHistorial = 0;          
+  let ultimaEntradaAnalisisSesion = null;  
+  let reveladasAlSaltar = new Set();       
+  let srsReaplicable = null;               
+  let reintentadasSesion = new Set();      
+  let primerIntentoFallido = new Set();    
+  let reintentoExitoso = new Set();        
+  let segundaPendiente = false;            
+  let modoZombie = false;   
   let srsSesionActiva = null;
-  let sonidosActivos = true;   // NUEVO: efímero (no se guarda en localStorage), como pide el prompt
+  let sonidosActivos = true;   
 
   const CLAVE_DIFICILES = 'dificiles_tarjetas_v1';
   let dificiles = cargarDificiles();
@@ -6640,7 +6643,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   const CLAVE_LISTAS = 'listas_guardadas_v1';
   let listas = cargarListas();
-  let listaActivaNombre = null;   // null = selección manual; string = nombre de la lista activa
+  let listaActivaNombre = null;   
 
   function cargarListas() {
     try {
@@ -7577,7 +7580,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   var _guardarNotasDiferido = crearGuardadoDiferidoPerezoso(guardarNotasEvaluadorYa, 250);
   function guardarNotasEvaluador() {
     try {
-      depurarPretestsDuplicados();   // se mantiene sincrono: las vistas leen notasEvaluador en memoria enseguida
+      depurarPretestsDuplicados();   
       _guardarNotasDiferido();
     } catch (e) {
     }
@@ -7671,7 +7674,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elGaleriaImg = document.getElementById('galeria-img');
   const elGaleriaVacia = document.getElementById('galeria-vacia');
   const elGaleriaDescripcion = document.getElementById('galeria-descripcion');
-  const elFilaGaleriaDescarga = document.getElementById('fila-galeria-descarga');   // NUEVO
+  const elFilaGaleriaDescarga = document.getElementById('fila-galeria-descarga');   
   const elBtnGaleriaDificil = document.getElementById('btn-galeria-dificil');
   const elBtnGaleriaNota = document.getElementById('btn-galeria-nota');
   const elPanelGaleriaNota = document.getElementById('panel-galeria-nota');
@@ -7882,16 +7885,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let _utteranceActual = null;
 
   function detenerLecturaPrimero() {
+    const habiaLectura = _utteranceActual !== null;
     _utteranceActual = null;
     elBtnLeerPrimero.classList.remove('leyendo');
-    if (ttsDisponible) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+    if (ttsDisponible && habiaLectura) { try { window.speechSynthesis.cancel(); } catch (e) {} }
   }
 
   function leerPrimeroEnVoz() {
     if (!ttsDisponible) return;
     const texto = (elPrimero.textContent || '').trim();
     if (!texto) return;
-    detenerLecturaPrimero();   // si ya estaba sonando, se corta y se reinicia
+    audioRutasDetener();
+    detenerLecturaPrimero();   
     const u = new SpeechSynthesisUtterance(texto);
     u.lang = 'es-AR';
     const fin = () => {
@@ -7922,8 +7927,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   const elZonaEval = document.getElementById('zona-eval');
   const elTextoEval = document.getElementById('texto-eval');
-  const elRespuestaUsuarioResaltada = document.getElementById('respuesta-usuario-resaltada');   // NUEVO
-  const elBtnDictadoTextoEval = document.getElementById('btn-dictado-texto-eval');   // NUEVO
+  const elRespuestaUsuarioResaltada = document.getElementById('respuesta-usuario-resaltada');   
+  const elBtnDictadoTextoEval = document.getElementById('btn-dictado-texto-eval');   
   const elBtnEvaluar = document.getElementById('btn-evaluar');
   const elBtnNota = document.getElementById('btn-nota');
   const elPanelNota = document.getElementById('panel-nota');
@@ -8026,16 +8031,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let avisosActuales = [];
 
   function mostrarPantalla(nombre) {
+    if (audioRutasPantalla !== nombre) { audioRutasPantalla = nombre; audioRutasDetener(); }
     if (nombre !== 'temas' && nombre !== 'observador') elBtnAvisos.style.display = 'none';
     elPantallaTemas.style.display = nombre === 'temas' ? 'block' : 'none';
     elAreaTarjeta.style.display = nombre === 'estudio' ? 'block' : 'none';
     elPantallaResumen.style.display = nombre === 'resumen' ? 'block' : 'none';
     elPantallaObservador.style.display = nombre === 'observador' ? 'block' : 'none';
-    elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  // NUEVO
-    elPantallaHuerfanas.style.display = nombre === 'huerfanas' ? 'block' : 'none';  // NUEVO
-    elPantallaMapa.style.display = nombre === 'mapa' ? 'flex' : 'none';  // NUEVO
-    elPantallaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';  // NUEVO
-    elPantallaHistorial.style.display = nombre === 'historial' ? 'block' : 'none';  // NUEVO
+    elPantallaGaleria.style.display = nombre === 'galeria' ? 'block' : 'none';  
+    elPantallaHuerfanas.style.display = nombre === 'huerfanas' ? 'block' : 'none';  
+    elPantallaMapa.style.display = nombre === 'mapa' ? 'flex' : 'none';  
+    elPantallaTienda.style.display = nombre === 'tienda' ? 'block' : 'none';  
+    elPantallaHistorial.style.display = nombre === 'historial' ? 'block' : 'none';  
 
     if (nombre === 'observador') {
       requestAnimationFrame(() => {
@@ -8050,9 +8056,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         renderSiCambioDatos('notas', '', renderNotasPreview);
         renderSiCambioDatos('revisar', '', renderRevisarGuardadoPreview);
         renderSiCambioDatos('razones', '', renderRazonesPreview);
-        actualizarMarcasTemas();   // NUEVO: refresca ★/💡/🏷 sin resetear las casillas marcadas
+        actualizarMarcasTemas();   
         actualizarAvisos();
-        evaluarAvisoSRS();         // NUEVO: §4 — avisa si hay listas de Repaso Espaciado vencidas
+        evaluarAvisoSRS();         
       });
     }
     if (nombre !== 'estudio') {
@@ -8179,7 +8185,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function seleccionarListaActiva(nombre) {
-    const lista = buscarListaPropia(nombre);   // NUEVO: nunca una lista ajena con el mismo nombre
+    const lista = buscarListaPropia(nombre);   
     if (!lista) return;
     listaActivaNombre = lista.nombre;
     aplicarSeleccionPorHashes(lista.hashes);
@@ -8206,11 +8212,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       _detallesConstruidos.add(det);
     };
     det.addEventListener('toggle', intentar);
-    if (det.open) intentar();   // ya estaba abierto al prepararlo (p. ej. estado recordado)
+    if (det.open) intentar();   
     return {
       abrirYConstruir() {
-        if (!det.open) det.open = true;   // dispara 'toggle' -> intentar(), sincrónico
-        intentar();                       // red de seguridad por si el navegador no lo disparó ya
+        if (!det.open) det.open = true;   
+        intentar();                       
       },
       invalidar() { _detallesConstruidos.delete(det); },
       refrescar() {
@@ -8304,7 +8310,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     let filtradas = tarjetasCompletas.filter((_, i) => seleccion.has(i));
     if (modoAleatorio) filtradas = mezclar(filtradas);
 
-    abrirModalSeleccionModo(filtradas);  // MODIFICADO: gamificación
+    abrirModalSeleccionModo(filtradas);  
   });
 
   const gruposObservadorInfo = new Map();
@@ -8334,7 +8340,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function construirListaObservador() {
     if (gruposObservadorInfo.size > 0 && elListaObservador.firstChild) {
-      refrescarMarcasObservador();   // ya construida: actualizacion quirurgica
+      refrescarMarcasObservador();   
       return;
     }
     gruposObservadorInfo.clear();
@@ -8412,7 +8418,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     segundaPendiente = false;
     modoZombie = false;
     limpiarAviso();
-    tarjetasSesion = lista ? lista.slice() : [...tarjetasCompletas];   // orden del txt
+    tarjetasSesion = lista ? lista.slice() : [...tarjetasCompletas];   
     const n = tarjetasSesion.length;
     resultados = new Array(n).fill(null);
     tiempos = new Array(n).fill(0);
@@ -8424,7 +8430,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     evaluaciones = new Array(n).fill(null);
     porComprension = new Array(n).fill(false);
     indiceActual = idx;
-    cronometroActivo = false;   // sin cronómetro
+    cronometroActivo = false;   
     indiceCongelado = -1;
     resetPanelesUI();
     modoObservador = true;
@@ -8443,7 +8449,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     elAreaTarjeta.classList.remove('observador');
     mostrarPantalla('observador');
     requestAnimationFrame(() => {
-      construirListaObservador();   // refresca ★ y 💡
+      construirListaObservador();   
       const nombreGrupo = indiceAGrupoObservador.get(ultimo);
       const info = nombreGrupo ? gruposObservadorInfo.get(nombreGrupo) : null;
       if (info && info.lazyCtrl) info.lazyCtrl.abrirYConstruir();
@@ -8458,10 +8464,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   const CLAVE_IMAGENES = 'datos_imagenes_v1';
   let datosImagenes = cargarImagenes();
-  let galeriaPos = 0;            // posición actual dentro de INDICE_IMAGENES
+  let galeriaPos = 0;            
   let galeriaNotaAbierta = false;
   let galeriaEditando = false;
-  let galeriaVerAnterior = false; // false = versión actual, true = versión anterior
+  let galeriaVerAnterior = false; 
 
   function cargarImagenes() {
     try {
@@ -8488,7 +8494,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     for (let i = 0; i < base.length; i++) {
       h = ((h << 5) + h + base.charCodeAt(i)) >>> 0;
     }
-    return 'i' + h.toString(36);   // prefijo 'i' (imagen) para no confundir con 'h' de tarjeta
+    return 'i' + h.toString(36);   
   }
 
   const _cacheHashImagen = new Map();
@@ -8510,13 +8516,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
     return nav;
   }
-  const INDICE_IMAGENES = construirIndiceImagenes();   // fijo: no cambia durante la sesión
+  const INDICE_IMAGENES = construirIndiceImagenes();   
 
   function srcDeImagen(ruta, indice) {
     const lineas = (rutasDisp[ruta] && rutasDisp[ruta].lineas) || [];
     const imagenes = lineas.filter(esImagen);
     const linea = imagenes[indice];
-    return linea ? linea.substring(4) : '';   // quitar el prefijo 'IMG:'
+    return linea ? linea.substring(4) : '';   
   }
 
   function descripcionDeImagen(ruta, indice) {
@@ -8639,7 +8645,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elGaleriaVacia.style.display = 'block';
       elGaleriaDescripcion.style.display = 'none';
       elGaleriaDescripcion.textContent = '';
-      elFilaGaleriaDescarga.style.display = 'none';   // NUEVO: sin imágenes, no aparece
+      elFilaGaleriaDescarga.style.display = 'none';   
       elBtnGaleriaDificil.style.display = 'none';
       elBtnGaleriaNota.style.display = 'none';
       elPanelGaleriaNota.style.display = 'none';
@@ -8650,7 +8656,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     elGaleriaVacia.style.display = 'none';
     elGaleriaImg.style.display = 'inline-block';
-    elFilaGaleriaDescarga.style.display = 'flex';   // NUEVO
+    elFilaGaleriaDescarga.style.display = 'flex';   
     elBtnGaleriaDificil.style.display = 'inline-block';
     elBtnGaleriaNota.style.display = 'inline-flex';
     elBtnGaleriaAnterior.disabled = false;
@@ -8688,14 +8694,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (galeriaEditando) {
       elGaleriaNotaTexto.style.display = 'none';
       elGaleriaNotaEditor.style.display = 'block';
-      document.getElementById('btn-dictado-galeria-nota-editor').style.display = 'flex';   // NUEVO: dictado por voz
+      document.getElementById('btn-dictado-galeria-nota-editor').style.display = 'flex';   
       document.getElementById('btn-galeria-nota-editar').style.display = 'none';
       document.getElementById('btn-galeria-nota-guardar').style.display = 'inline-block';
       document.getElementById('btn-galeria-nota-cancelar').style.display = 'inline-block';
       document.getElementById('btn-galeria-nota-revertir').style.display = 'none';
     } else {
       elGaleriaNotaEditor.style.display = 'none';
-      document.getElementById('btn-dictado-galeria-nota-editor').style.display = 'none';   // NUEVO: dictado por voz
+      document.getElementById('btn-dictado-galeria-nota-editor').style.display = 'none';   
       elGaleriaNotaTexto.style.display = 'block';
       let texto, vacio;
       if (galeriaVerAnterior) {
@@ -8759,7 +8765,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function construirIndiceInvertido(items, extraerTexto) {
-    const indice = new Map();   // token -> Set<id>
+    const indice = new Map();   
     items.forEach((id) => {
       const tokens = tokenizarParaIndice(extraerTexto(id));
       tokens.forEach((tok) => {
@@ -8802,7 +8808,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     for (let i = 0; i < palabras.length; i++) {
       const palabra = palabras[i];
       const idsPalabra = idsPorPalabraEnIndice(indice, palabra);
-      if (idsPalabra === null) continue;   // esta palabra no acota: se ignora, no se pierde nada
+      if (idsPalabra === null) continue;   
       resultado = (resultado === null) ? idsPalabra : new Set(Array.from(resultado).filter((id) => idsPalabra.has(id)));
     }
     return resultado;
@@ -8874,7 +8880,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             img.decoding = 'async';
             img.loading = 'lazy';
             img.className = 'ruta-img-thumb';
-            img.src = linea.substring(4);  // quitar el prefijo 'IMG:'
+            img.src = linea.substring(4);  
             img.alt = 'Imagen de la ruta ' + numeroRuta;
             contenido.appendChild(img);
           } else {
@@ -8888,7 +8894,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     });
     reemplazarHijos(elListaHuerfanas, fragHuerfanas);
   }
-  construirListaHuerfanas();  // una sola vez: no cambia durante la sesión
+  construirListaHuerfanas();  
 
   elListaHuerfanas.addEventListener('click', (evento) => {
     if (evento.target.classList.contains('ruta-img-thumb')) {
@@ -8931,7 +8937,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   };
   let posDownMapaClick = null;
 
-  const GROSOR_BORDE_PX = 2; // grosor deseado EN PANTALLA
+  const GROSOR_BORDE_PX = 2; 
 
   function actualizarGrosorBordeMapa() {
     if (!elMapaImg || !elMapaSvgOverlay) return;
@@ -9890,7 +9896,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (ratioAncho > 2.5) {
         ZOOM_MAPA_MAX = Math.max(30, Math.ceil(20 * (ratioAncho / 2.5)));
       } else {
-        ZOOM_MAPA_MAX = 20; // Mapas normales (como el naranja) se quedan en 20
+        ZOOM_MAPA_MAX = 20; 
       }
       sincronizarGeometriaSvgMapa();
       renderBordesSvgMapa();
@@ -9930,7 +9936,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const uri = nodo ? nodo.textContent.trim() : '';
     const coma = uri.indexOf(',');
     if (coma === -1 || uri.length <= coma + 1) { _mapaSrcCache = ''; return _mapaSrcCache; }
-    let src = uri;   // respaldo: el propio data: URI
+    let src = uri;   
     try {
       const fin = uri.indexOf(';');
       const tipo = uri.slice(5, fin > 5 ? fin : coma) || 'image/png';
@@ -9957,18 +9963,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     a.remove();
   }
 
-  let elMapaImg = null;                               // <img> actual, o null si la pantalla está cerrada
+  let elMapaImg = null;                               
   let zoomMapa = 1;
   let panMapa = { x: 0, y: 0 };
-  let arrastreMapa = { activo: false, x: 0, y: 0 };    // x/y: offset inicial del drag (mouse o 1 dedo)
+  let arrastreMapa = { activo: false, x: 0, y: 0 };    
   let mapaArrastreBloqueado = false;
   let retencionRutaEnfocada = null;
-  let pinchMapa = null;                                // { distancia, zoomInicial } mientras hay 2 dedos
+  let pinchMapa = null;                                
 
   const ES_DISPOSITIVO_TACTIL = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
   const ZOOM_MAPA_MIN = 0.5;
-  let ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 20 : 20;     // PC: se mantiene igual que antes, la de la izquierda es tactil, la otra pc
-  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 2 : 2;   // PC: se mantiene igual que antes, idem
+  let ZOOM_MAPA_MAX = ES_DISPOSITIVO_TACTIL ? 20 : 20;     
+  const ZOOM_MAPA_PASO = ES_DISPOSITIVO_TACTIL ? 2 : 2;   
 
   function aplicarTransformMapa() {
     if (!elMapaImg) return;
@@ -9983,7 +9989,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function fijarZoomMapa(nuevoZoom) {
     zoomMapa = Math.min(ZOOM_MAPA_MAX, Math.max(ZOOM_MAPA_MIN, nuevoZoom));
-    if (zoomMapa === 1) { panMapa.x = 0; panMapa.y = 0; }   // §5: al volver a 1 también se resetea la posición
+    if (zoomMapa === 1) { panMapa.x = 0; panMapa.y = 0; }   
     aplicarTransformMapa();
   }
 
@@ -10010,7 +10016,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   elMapaImagenWrap.addEventListener('mousedown', (e) => {
     if (!elMapaImg || zoomMapa <= 1 || mapaArrastreBloqueado) return;
     arrastreMapa = { activo: true, x: e.clientX - panMapa.x, y: e.clientY - panMapa.y };
-    elMapaImg.classList.add('mapa-img-arrastrando');   // §7: cursor 'grabbing'
+    elMapaImg.classList.add('mapa-img-arrastrando');   
   });
   window.addEventListener('mousemove', (e) => {
     if (!arrastreMapa.activo || !elMapaImg) return;
@@ -10207,7 +10213,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function puntosFinales(resultado, opciones) {
     const base = calcularPuntosBase(resultado, opciones);
-    const factor = (opciones && typeof opciones.factor === 'number') ? opciones.factor : 1;   // 1 = sin cambios
+    const factor = (opciones && typeof opciones.factor === 'number') ? opciones.factor : 1;   
     return base > 0 ? Math.round(base * multiplicadorActual * factor) : base;
   }
 
@@ -10251,7 +10257,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     opciones = opciones || {};
     const yaVista = reveladasAlSaltar.has(indice) && (resultado === 'si' || resultado === 'casi');
-    if (yaVista) {   // se vio la respuesta al saltarla: el reintento no suma puntos ni racha
+    if (yaVista) {   
       opciones = Object.assign({}, opciones, { factor: 0 });
       mostrarAviso('👁 Esta tarjeta ya se había visto al saltarla: no suma puntos ni racha.');
     }
@@ -10296,7 +10302,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function ajustarPuntosGamificacion(indice, resultado, opciones) {
     if (modoObservador) return;
-    if (modoZombie) return;   // NUEVO: sesión zombie -> puntaje congelado, ni el ajuste de "entendida" suma
+    if (modoZombie) return;   
     if (reveladasAlSaltar.has(indice)) opciones = Object.assign({}, opciones, { factor: 0 });
     const puntos = puntosFinales(resultado, opciones);
     const anterior = puntosPorTarjeta[indice] || 0;
@@ -10615,6 +10621,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function abrirModalSeleccionModo(lista, tipoEspecial, esRepasoInteligente) {
+    if (elModalSesionPendiente.classList.contains('abierto')) return;
     if (!lista || lista.length === 0) { avisar('No hay tarjetas para iniciar la sesión.'); return; }
     listaPendienteInicio = lista;
     modoEspecialPendiente = tipoEspecial || null;
@@ -11106,7 +11113,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     indiceCongelado = indiceActual;
 
     let aciertos = 0;
-    let huecosConTypo = 0;   // huecos aceptados solo por tolerancia de errores
+    let huecosConTypo = 0;   
     const palabrasCorrectas = [];
 
     Object.keys(clozeData.rutas).forEach((idRuta) => {
@@ -13504,7 +13511,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     });
 
-    nErrores = Math.max(nIncorrectas, nFaltantes);   // una asociación equivocada ya no cuenta doble (ruta de más + ruta faltante)
+    nErrores = Math.max(nIncorrectas, nFaltantes);   
     itemP.asociadasUsuario = asociadas;
     itemP.evaluado = true;
     itemP.cantidadErrores = nErrores;
@@ -13521,7 +13528,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!modoZombie) {
       if (nErrores === 0) {
         if (!esModoSinGamificacion()) {
-          const yaVista = reveladasAlSaltar.has(indiceActual);   // ronda saltada a mano: no da puntos ni racha
+          const yaVista = reveladasAlSaltar.has(indiceActual);   
           const pts = yaVista ? 0 : Math.round(8 * multiplicadorActual);
           puntosSesion += pts;
           puntosPorTarjeta[indiceActual] = (puntosPorTarjeta[indiceActual] || 0) + pts;
@@ -13731,7 +13738,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             ronda.completada = true;
           }
         } else {
-          resultados[i] = resultadoRondaMatching(ronda);   // todos los pares evaluados pero la ronda no se había cerrado
+          resultados[i] = resultadoRondaMatching(ronda);   
           ronda.completada = true;
         }
       });
@@ -14005,10 +14012,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
 
   function dispararGameOver() {
-    if (esModoSinGamificacion()) return;   // nunca en Light
-    if (gameOverDisparado) return;       // no disparar 2 veces
+    if (esModoSinGamificacion()) return;   
+    if (gameOverDisparado) return;       
     gameOverDisparado = true;
-    if (cronometroActivo && !cronometroCongelado()) acumularTiempo();   // el tiempo del modal no cuenta
+    if (cronometroActivo && !cronometroCongelado()) acumularTiempo();   
     pausaManual = true;
     reproducirSonido('game_over');
     elModalGameOver.classList.add('abierto');
@@ -14054,12 +14061,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (sesiones.length <= LIMITE_HISTORIAL_POR_EVALUADOR) return;
       const ordenadas = sesiones.slice().sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
       const exceso = sesiones.length - LIMITE_HISTORIAL_POR_EVALUADOR;
-      const aExtraer = ordenadas.slice(0, exceso);   // las más antiguas, justo las que exceden el límite
+      const aExtraer = ordenadas.slice(0, exceso);   
       consolidarResumenEvaluador(esp, aExtraer);
       aExtraer.forEach((s) => aQuitar.add(s));
     });
     if (aQuitar.size > 0) {
-      aQuitar.forEach((s) => registrarTumbaHistorial(s.fecha));   // evita que una importacion vieja los vuelva a contar
+      aQuitar.forEach((s) => registrarTumbaHistorial(s.fecha));   
       gamificacion.historial = gamificacion.historial.filter((s) => !aQuitar.has(s));
     }
   }
@@ -14086,7 +14093,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     actualizarBarraGamificacion();
     estadisticasConstruidas = false;
     srsConstruido = false;
-    nodosHistorial.delete(entrada.fecha);   // el historial cachea el nodo por fecha: sin esto seguiría mostrando nota/puntos viejos
+    nodosHistorial.delete(entrada.fecha);   
     delete _firmasRender.historial;
   }
 
@@ -14106,11 +14113,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const duracionMs = tiempos.reduce((a, b) => a + b, 0);
     gamificacion.historial.push({
       fecha: new Date().toISOString(),
-      modo: codigoModoHistorial(),   // NUEVO: distingue las sesiones de Repaso Espaciado
+      modo: codigoModoHistorial(),   
       nota: Math.round(nota * 10) / 10,
       duracion_ms: duracionMs,
       puntos_ganados: esModoSinGamificacion() ? 0 : puntosSesion,
-      espacio: ESPACIO_HASH,   // NUEVO: de que evaluador es esta sesion
+      espacio: ESPACIO_HASH,   
       tarjetas: tarjetasSesion.map((t) => hashTarjeta(t)),
       conteos: conteos
         ? { si: conteos.si || 0, casi: conteos.casi || 0, no: conteos.no || 0, pista: conteos.pista || 0, resp: conteos.resp || 0, evaluadas: conteos.evaluadas || 0 }
@@ -14140,7 +14147,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     }
     ultimaEntradaHistorial = gamificacion.historial[gamificacion.historial.length - 1];
-    podarHistorialPorEvaluador();   // NUEVO: justo después de agregar la entrada, antes de persistir
+    podarHistorialPorEvaluador();   
     puntosSumadosHistorial = 0;
     if (!esModoSinGamificacion()) {
       gamificacion.puntosTotales += puntosSesion;
@@ -14266,7 +14273,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   document.getElementById('btn-tienda-resetear').addEventListener('click', async () => {
     if (!(await confirmarAccion('¿Resetear tus puntos y todo tu inventario a 0? Esto no afecta tus sesiones, difíciles, notas ni otros datos. No se puede deshacer.'))) return;
     gamificacion.puntosTotales = 0;
-    gamificacion.puntosGastados = gamificacion.ganadosBruto;   // el libro queda en 0 y una importacion vieja no lo revive
+    gamificacion.puntosGastados = gamificacion.ganadosBruto;   
     Object.keys(gamificacion.inventario).forEach((clave) => {
       gamificacion.inventario[clave] = 0;
       gamificacion.consumidos[clave] = gamificacion.comprados[clave] || 0;
@@ -14313,7 +14320,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const filtrados = lista.hashes.filter((h) => vigentes.has(h) || recuperables.has(h));
       if (filtrados.length !== lista.hashes.length) {
         cambio = true;
-        if (filtrados.length === 0) return false;   // lista vacía: se borra
+        if (filtrados.length === 0) return false;   
         lista.hashes = filtrados;
         lista.modificada = Date.now();
         lista.rev = siguienteRev();
@@ -14507,7 +14514,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     limpiarListasContraTarjetasActuales();
     const listasPropias = listas.filter((l) => !l.espacio || l.espacio === ESPACIO_HASH);
     const listasDeOtros = listas.filter((l) => l.espacio && l.espacio !== ESPACIO_HASH);
-    const ordenadas = listasPropias.slice().sort((a, b) => b.creada - a.creada);   // más reciente primero
+    const ordenadas = listasPropias.slice().sort((a, b) => b.creada - a.creada);   
 
     document.getElementById('det-listas-aqui').style.display = ordenadas.length > 0 ? 'block' : 'none';
     document.getElementById('suma-listas-aqui').textContent = 'De este evaluador (' + ordenadas.length + ')';
@@ -14657,7 +14664,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const impEspacio = typeof imp.espacio === 'string' && imp.espacio ? imp.espacio : ESPACIO_HASH;
       const impId = (typeof imp.id === 'string' && imp.id) ? imp.id : null;
       let existente = impId ? (listas.find((l) => l.id === impId && (l.espacio || ESPACIO_HASH) === impEspacio) || null) : null;
-      if (!existente) existente = buscarListaEnEspacio(imp.nombre, impEspacio);   // listas viejas sin id: por nombre
+      if (!existente) existente = buscarListaEnEspacio(imp.nombre, impEspacio);   
       const impModificada = typeof imp.modificada === 'number' ? imp.modificada : 0;
       const impRev = typeof imp.rev === 'number' ? imp.rev : undefined;
       registrarRevVista(impRev);
@@ -14669,8 +14676,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           creada: typeof imp.creada === 'number' ? imp.creada : Date.now(),
           modificada: impModificada || Date.now(),
           rev: impRev,
-          srs: normalizarSrsImportado(imp.srs),   // NUEVO: el progreso de Repaso Espaciado viaja con la lista
-          espacio: impEspacio,   // NUEVO: el espacio que traía el JSON (o este evaluador si no traía)
+          srs: normalizarSrsImportado(imp.srs),   
+          espacio: impEspacio,   
         };
         listas.push(nuevaLista);
         nuevas++;
@@ -14686,8 +14693,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         existente.creada = typeof imp.creada === 'number' ? imp.creada : existente.creada;
         existente.modificada = impModificada;
         existente.rev = impRev;
-        existente.srs = normalizarSrsImportado(imp.srs);   // NUEVO
-        existente.espacio = impEspacio;   // NUEVO: ya coincidía (se buscó por nombre+espacio), normaliza legacy
+        existente.srs = normalizarSrsImportado(imp.srs);   
+        existente.espacio = impEspacio;   
         actualizadas++;
       } else {
         conservadas++;
@@ -14715,7 +14722,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function abrirModalGuardarLista() {
-    listaRenombrandoNombre = null;   // NUEVO: modo "guardar nueva lista"
+    listaRenombrandoNombre = null;   
     elGuardarListaTitulo.textContent = '📋 Guardar como lista';
     elGuardarListaDescripcion.textContent = 'Nombrá esta selección de tarjetas para poder reutilizarla después.';
     elBtnGuardarListaAceptar.textContent = 'Guardar';
@@ -14726,7 +14733,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function abrirModalRenombrarLista(nombreActual) {
-    const lista = buscarListaPropia(nombreActual);   // nunca una lista ajena con el mismo nombre
+    const lista = buscarListaPropia(nombreActual);   
     if (!lista) return;
     listaRenombrandoNombre = lista.nombre;
     elGuardarListaTitulo.textContent = '✏️ Renombrar lista';
@@ -14741,7 +14748,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function cerrarModalGuardarLista() {
     elModalGuardarLista.classList.remove('abierto');
-    listaRenombrandoNombre = null;   // NUEVO: por las dudas, que no quede modo "renombrar" pegado
+    listaRenombrandoNombre = null;   
   }
   elBtnResumenGuardarLista.addEventListener('click', () => abrirModalGuardarLista());
   document.getElementById('btn-guardar-lista-cancelar').addEventListener('click', () => cerrarModalGuardarLista());
@@ -14753,7 +14760,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   let ultimoAnalisisFilas = [];
 
   function agruparSesionPorTema() {
-    const grupos = new Map();   // nombre -> indices[]
+    const grupos = new Map();   
     tarjetasSesion.forEach((t, i) => {
       const nombre = nombreTema(t);
       if (!grupos.has(nombre)) grupos.set(nombre, []);
@@ -14790,7 +14797,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const segFallas = Math.round(tiempoProFallas / 1000);
     const segEvaluadas = Math.round(tiempoProEvaluadas / 1000);
 
-    const comentarios = [];   // { texto, color }
+    const comentarios = [];   
 
     if (pctFallos >= 70) comentarios.push({ texto: 'Revisión urgente (' + pctFallosR + '% fallos)', color: 'rojo' });
     if (aciertos.length === 0 && nEval >= 2) comentarios.push({ texto: 'No acertaste ninguna (0 de ' + nEval + ')', color: 'rojo' });
@@ -14892,7 +14899,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return;
     }
 
-    filas.sort((a, b) => a.info.pctAciertos - b.info.pctAciertos);   // peor a mejor
+    filas.sort((a, b) => a.info.pctAciertos - b.info.pctAciertos);   
 
     const frag = document.createDocumentFragment();
 
@@ -15248,8 +15255,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function asociarRetroactivamente(lista) {
     let n = 0;
     gamificacion.historial.forEach((s) => {
-      if (s.listado) return;   // ya tenía un listado asignado: no se toca
-      if (!Array.isArray(s.tarjetas)) return;   // sesiones viejas sin este dato: no se puede comparar
+      if (s.listado) return;   
+      if (!Array.isArray(s.tarjetas)) return;   
       if (mismoConjuntoHashes(s.tarjetas, lista.hashes)) { s.listado = lista.nombre; s.listado_id = lista.id; n++; }
     });
     if (n > 0) guardarGamificacion();
@@ -15261,7 +15268,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     if (listaRenombrandoNombre !== null) {
       const lista = buscarListaPropia(listaRenombrandoNombre);
-      if (!lista) { cerrarModalGuardarLista(); return; }   // se borró mientras el modal estaba abierto
+      if (!lista) { cerrarModalGuardarLista(); return; }   
       if (nombre.toLowerCase() !== lista.nombre.toLowerCase() && buscarListaPropia(nombre)) {
         elGuardarListaError.textContent = 'Ya existe una lista llamada «' + nombre + '».';
         elGuardarListaError.style.display = 'block';
@@ -15301,7 +15308,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const elNotaListado = document.getElementById('nota-listado');
 
   function renderResumenListado() {
-    const nombre = listaActivaNombre;   // siempre una lista PROPIA (viene de seleccionarListaActiva)
+    const nombre = listaActivaNombre;   
     if (!nombre || !buscarListaPropia(nombre)) { elNotaListado.style.display = 'none'; return; }
     const listaActiva = buscarListaPropia(nombre);
     const sesiones = gamificacion.historial.filter((s) => esSesionLocal(s) && sesionPerteneceALista(s, listaActiva));
@@ -15366,7 +15373,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return !isNaN(f) && f > ultimo;
     })) return true;
     const foto = obtenerSnapshotBackup();
-    if (!foto) return ultimo > 0 ? false : (gamificacion.puntosTotales > 0);   // nunca hubo backup: solo avisa si ya hay algo que perder
+    if (!foto) return ultimo > 0 ? false : (gamificacion.puntosTotales > 0);   
     if (gamificacion.puntosTotales !== foto.puntosTotales) return true;
     const inv = gamificacion.inventario, invFoto = foto.inventario || {};
     if (Object.keys(inv).some((k) => (inv[k] || 0) !== (invFoto[k] || 0))) return true;
@@ -15512,7 +15519,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'backup_completo.json';   // RENOMBRADO: nombre fijo, se sobrescribe si se exporta de nuevo
+    a.download = 'backup_completo.json';   
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -16120,7 +16127,7 @@ const ZONAS_SYNC_GIST = [
     el.style.display = 'block';
   }
 
-  const nodosHistorial = new Map();   // fecha -> nodo item-historial
+  const nodosHistorial = new Map();   
 
   function construirItemHistorial(entrada) {
     const item = document.createElement('div');
@@ -16150,7 +16157,7 @@ const ZONAS_SYNC_GIST = [
     detalle.appendChild(duracionTxt);
     detalle.appendChild(puntosTxt);
     item.appendChild(detalle);
-    actualizarListadoEnItem(item, entrada);   // NUEVO: arma/actualiza el "listado" (ver más abajo)
+    actualizarListadoEnItem(item, entrada);   
 
     if (esSesionLocal(entrada)) {
       const acciones = document.createElement('div');
@@ -16196,14 +16203,14 @@ const ZONAS_SYNC_GIST = [
   }
 
   function renderHistorial() {
-    delete _firmasRender.historial;   // cualquier render directo invalida la cache de apertura
+    delete _firmasRender.historial;   
     renderHistorialCompleto();
     refrescarHeatmapHistorialSiAbierto();
   }
 
   function renderHistorialCompleto() {
     const todas = gamificacion.historial;
-    const historial = todas.filter(esSesionLocal);   // la lista principal es solo de ESTE evaluador
+    const historial = todas.filter(esSesionLocal);   
     elListaHistorial.innerHTML = '';
 
     if (nodosHistorial.size > 0) {
@@ -16219,7 +16226,7 @@ const ZONAS_SYNC_GIST = [
     if (historial.length === 0) {
       elListaHistorial.style.display = 'none';
       elHistorialVacio.style.display = 'block';
-      document.getElementById('historial-paginacion').style.display = 'none';   // NUEVO: oculta los controles si no hay nada que paginar
+      document.getElementById('historial-paginacion').style.display = 'none';   
       return;
     }
     elListaHistorial.style.display = 'block';
@@ -16238,7 +16245,7 @@ const ZONAS_SYNC_GIST = [
         item = construirItemHistorial(entrada);
         nodosHistorial.set(entrada.fecha, item);
       } else {
-        actualizarListadoEnItem(item, entrada);   // CORREGIDO: refresca lo único que puede cambiar con el tiempo
+        actualizarListadoEnItem(item, entrada);   
       }
       elListaHistorial.appendChild(item);
     });
@@ -16534,7 +16541,7 @@ const ZONAS_SYNC_GIST = [
     }
 
     const firma = etiquetaUnidad + '|' + grupos.map((g) => g.esp + ':' + g.cantidad + ':' + etiquetaEspacio(g.esp)).join('|');
-    if (elLista._firmaGrupos === firma && elLista.firstChild) return;   // mismo contenido: no reconstruir
+    if (elLista._firmaGrupos === firma && elLista.firstChild) return;   
     elLista._firmaGrupos = firma;
 
     const frag = document.createDocumentFragment();
@@ -16688,9 +16695,9 @@ const ZONAS_SYNC_GIST = [
       if (!sesion || typeof sesion !== 'object') return;
       const f = String(sesion.fecha);
       if (fechasLocales.has(f)) return;
-      if (gamificacion.historialBorrado && gamificacion.historialBorrado[f]) return;   // borrada o consolidada a proposito
+      if (gamificacion.historialBorrado && gamificacion.historialBorrado[f]) return;   
       const copia = Object.assign({}, sesion);
-      if (typeof copia.espacio !== 'string') delete copia.espacio;   // sin identificar
+      if (typeof copia.espacio !== 'string') delete copia.espacio;   
       gamificacion.historial.push(copia);
       fechasLocales.add(f);
     });
@@ -16723,7 +16730,7 @@ const ZONAS_SYNC_GIST = [
       }
     });
 
-    podarHistorialPorEvaluador();   // por si el historial importado supera el límite por evaluador
+    podarHistorialPorEvaluador();   
     guardarGamificacion();
     estadisticasConstruidas = false;
     srsConstruido = false;
@@ -16766,10 +16773,10 @@ const ZONAS_SYNC_GIST = [
   document.getElementById('input-importar-historial').addEventListener('change', (evento) => {
     const archivo = evento.target.files && evento.target.files[0];
     if (archivo) importarHistorial(archivo);
-    evento.target.value = '';   // permite volver a elegir el mismo archivo más adelante
+    evento.target.value = '';   
   });
 
-  let historialPaginaActual = 1;   // NUEVO: página actual del historial (1-indexado)
+  let historialPaginaActual = 1;   
   const HISTORIAL_POR_PAGINA = 15;
 
   const LIMITE_STORAGE_BYTES = 5242880;
@@ -16961,13 +16968,13 @@ const ZONAS_SYNC_GIST = [
       lista.hashes.forEach((h) => {
         if (mapa.has(h)) { nuevos.push(mapa.get(h)); movidas++; cambio = true; }
         else if (vigentes.has(h)) { nuevos.push(h); }
-        else { cambio = true; }   // huérfano: se descarta
+        else { cambio = true; }   
       });
       if (cambio) {
         lista.hashes = nuevos;
         lista.modificada = Date.now();
         lista.rev = siguienteRev();
-        lista.espacio = ESPACIO_HASH;   // NUEVO: tras migrar, pasa a ser una lista de ESTE evaluador
+        lista.espacio = ESPACIO_HASH;   
       }
       return nuevos.length > 0;
     });
@@ -17088,7 +17095,7 @@ const ZONAS_SYNC_GIST = [
       const almacen = z.almacen();
       const movs = movimientosVinculo(zona, viejo);
       const tomadas = movs.map((m) => ({ a: m.a, v: almacen[m.de] }));
-      movs.forEach((m) => { delete almacen[m.de]; movidasVinculo[m.de] = Date.now(); });   // la clave vieja no debe resucitar al importar
+      movs.forEach((m) => { delete almacen[m.de]; movidasVinculo[m.de] = Date.now(); });   
       guardarRevisarLocal('vinculo_movidas_v1', movidasVinculo);
       tomadas.forEach((x) => {
         const fusionada = tieneClave(almacen, x.a)
@@ -17107,7 +17114,7 @@ const ZONAS_SYNC_GIST = [
   }
 
   const ICONOS_ZONA_VINCULO = { dificiles: '☆', pararevisar: '✎', notas: '💡', razones: '🏷', imagenes: '🖼', listas: '📋', sesiones: '🕐', notasEvaluador: '📝', retencionRutas: '🧠', analisisSesion: '📑' };
-  const ZONAS_HASH_PURGABLES = ['dificiles', 'pararevisar', 'notas', 'razones', 'imagenes'];   // las únicas donde puede quedar un residuo que valga la pena ofrecer borrar
+  const ZONAS_HASH_PURGABLES = ['dificiles', 'pararevisar', 'notas', 'razones', 'imagenes'];   
 
   function zonasSeleccionadasTodo() {
     return Array.from(document.querySelectorAll('.vinc-zona-chk:checked')).map((c) => c.value);
@@ -17248,7 +17255,7 @@ const ZONAS_SYNC_GIST = [
     const el = document.getElementById('lista-borrar-evaluador');
     const espacios = espaciosBorrables();
     const firma = espacios.join('|');
-    if (el._firma === firma && el.firstChild) return;   // misma lista de evaluadores: no reconstruir
+    if (el._firma === firma && el.firstChild) return;   
     el._firma = firma;
     const frag = document.createDocumentFragment();
     if (espacios.length === 0) {
@@ -17298,7 +17305,7 @@ const ZONAS_SYNC_GIST = [
     if (!(await confirmarAccion('¿Borrar TODOS los datos de «' + espacio + '» (sesiones, difíciles, notas, razones, imágenes, listas, notas del evaluador, retención de rutas y análisis de sesión)? ' +
       'No se puede deshacer. Tus puntos totales y tu inventario NO se ven afectados.'))) return;
 
-    gamificacion.historial.filter((s) => espacioDeSesion(s) === espacio).forEach((s) => registrarTumbaHistorial(s.fecha));   // que no resuciten al importar
+    gamificacion.historial.filter((s) => espacioDeSesion(s) === espacio).forEach((s) => registrarTumbaHistorial(s.fecha));   
     if (gamificacion.resumenPorEvaluador) delete gamificacion.resumenPorEvaluador[espacio];
     gamificacion.historial = gamificacion.historial.filter((s) => espacioDeSesion(s) !== espacio);
     guardarGamificacion();
@@ -17339,7 +17346,7 @@ const ZONAS_SYNC_GIST = [
 
     retencionRutas = retencionRutas.filter((r) => r.espacio !== espacio);
     guardarRetencionRutas();
-    recalcularYGuardarSAjustadoPomodoro();   // la duración ajustada del Pomodoro depende de la retención borrada
+    recalcularYGuardarSAjustadoPomodoro();   
     renderRetencionHistorial();
 
     analisisGuardados = analisisGuardados.filter((a) => a.espacio !== espacio);
@@ -17391,7 +17398,7 @@ const ZONAS_SYNC_GIST = [
   const elVincConfirmar = document.getElementById('vinc-confirmar');
   const elBtnVincAceptar = document.getElementById('btn-vinc-aceptar');
   let vincZona = null;
-  let vincEspacioFijo = null;   // null = el usuario lo escribe; string = viene de un grupo de sesiones
+  let vincEspacioFijo = null;   
 
   function espacioViejoActual() {
     return vincEspacioFijo !== null ? vincEspacioFijo : normalizarEspacioViejo(elVincEspacio.value);
@@ -17578,7 +17585,7 @@ const ZONAS_SYNC_GIST = [
       btn.appendChild(tag);
     }
     btn.appendChild(resaltarCoincidenciaBuscador(texto, consultaNorm));
-    btn._onClick = onClick;   // delegacion: un unico listener por dropdown (ver instalarDelegacionDropdown)
+    btn._onClick = onClick;   
     return btn;
   }
 
@@ -17634,7 +17641,7 @@ const ZONAS_SYNC_GIST = [
       const input = info.cuerpoEl ? info.cuerpoEl.querySelector('input[data-idx="' + idx + '"]') : null;
       if (input) {
         input.checked = true;
-        input.dispatchEvent(new Event('change'));  // reutiliza actualizarResumenGrupo/actualizarConteoSeleccion
+        input.dispatchEvent(new Event('change'));  
       }
     }
     cerrarDropdownBuscador(elDropdownBuscadorTemas);
@@ -17760,11 +17767,11 @@ const ZONAS_SYNC_GIST = [
   document.addEventListener('keydown', (evento) => {
     if (evento.key !== 'Escape') return;
     if (document.getElementById('modal-srs-aviso').classList.contains('abierto')) return;
-    if (elModalTutorial.classList.contains('abierto')) { cerrarModalTutorial(); return; }   // tutorial: va encima del modal de inicio
+    if (elModalTutorial.classList.contains('abierto')) { cerrarModalTutorial(); return; }   
 
     if (elModalConfirmacion.classList.contains('abierto')) { cerrarModalConfirmacion(false); return; }
     if (elModalAviso.classList.contains('abierto')) { cerrarModalAviso(); return; }
-    if (elModalSyncEliminaciones.classList.contains('abierto')) { cerrarModalSyncEliminaciones('cancelar'); return; }   // el modal de decisión está arriba de todo
+    if (elModalSyncEliminaciones.classList.contains('abierto')) { cerrarModalSyncEliminaciones('cancelar'); return; }   
     if (elModalPrimeroEditado.classList.contains('abierto')) { cerrarModalPrimeroEditado('cancelar'); return; }
     if (elModalPendientes.classList.contains('abierto')) { cerrarModalPendientes('volver'); return; }
     if (elModalSegunda.classList.contains('abierto')) { document.getElementById('btn-segunda-no').click(); return; }
@@ -17812,9 +17819,9 @@ const ZONAS_SYNC_GIST = [
     if (elModalConfirmacion.classList.contains('abierto')) { evento.preventDefault(); elBtnConfirmacionAceptar.click(); return; }
     if (elModalPendientes.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pendientes-volver').click(); return; }
     if (elModalAviso.classList.contains('abierto')) { evento.preventDefault(); elBtnAvisoAceptar.click(); return; }
-    if (elModalTutorial.classList.contains('abierto')) return;   // Enter no debe iniciar el Pomodoro desde el tutorial
+    if (elModalTutorial.classList.contains('abierto')) return;   
     if (elModalPomodoroIniciar.classList.contains('abierto')) {
-      if (document.activeElement && (document.activeElement.id === 'btn-pomodoro-tutorial' || document.activeElement.id === 'btn-pomodoro-repaso-pasivo')) return;   // Enter sobre estos botones solo los activa
+      if (document.activeElement && (document.activeElement.id === 'btn-pomodoro-tutorial' || document.activeElement.id === 'btn-pomodoro-repaso-pasivo')) return;   
       evento.preventDefault(); document.getElementById('btn-pomodoro-iniciar-normal').click(); return;
     }
     if (elModalPomodoroAbandonar.classList.contains('abierto')) { evento.preventDefault(); document.getElementById('btn-pomodoro-abandonar-si').click(); return; }
@@ -17901,7 +17908,7 @@ const ZONAS_SYNC_GIST = [
     }
   });
 
-  const nodosImagenes = new Map();   // hash -> fila
+  const nodosImagenes = new Map();   
 
   const elListaImagenesGuardadas = document.getElementById('lista-imagenes-guardadas');
   const elDetImagenes = document.getElementById('det-imagenes');
@@ -18786,7 +18793,7 @@ const ZONAS_SYNC_GIST = [
 
   document.getElementById('btn-modo-completo').addEventListener('click', () => {
     if (tarjetasCompletas.length === 0) return;
-    abrirModalSeleccionModo(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);  // MODIFICADO: gamificación
+    abrirModalSeleccionModo(modoAleatorio ? mezclar(tarjetasCompletas) : [...tarjetasCompletas]);  
   });
 
   const elModalRepasoInteligente = document.getElementById('modal-repaso-inteligente');
@@ -19278,7 +19285,7 @@ const ZONAS_SYNC_GIST = [
     });
   }
 
-  const nodosNotas = new Map();   // hash -> { fila, grupo: 'dif'|'otras' }
+  const nodosNotas = new Map();   
 
   function tarjetaPorHash(h) {
     return tarjetasCompletas.find((t) => hashTarjeta(t) === h);
@@ -19720,6 +19727,7 @@ const ZONAS_SYNC_GIST = [
   }
 
   function abrirHojaBraindump(idNota) {
+    audioRutasDetener();
     braindumpEditandoId = idNota || null;
     braindumpAbiertoEnHoja = true;
     modoHojaNotasEval = 'braindump';
@@ -19826,6 +19834,7 @@ const ZONAS_SYNC_GIST = [
   function mostrarTabNotasEvaluador(tab) {
     if (pomodoroActivo && pomodoroFase === 'pretest' && tab !== 'pretest') return;
     if (pomodoroEnBraindumpFinal && tab !== 'braindump') return;
+    if (tab === 'braindump') audioRutasDetener();
 
     detenerDictadoHojaCompartida();
     tabNotasEvalActual = tab;
@@ -19942,7 +19951,7 @@ const ZONAS_SYNC_GIST = [
   function cancelarHojaCompartida() {
     detenerDictadoHojaCompartida();
     if (pomodoroActivo && modoHojaNotasEval === 'pretest' && pomodoroFase === 'pretest') {
-      guardarHojaCompartida();   // durante el Pomodoro, Escape/Cancelar no descarta lo escrito ni salta la fase
+      guardarHojaCompartida();   
       return;
     }
     if (pomodoroActivo && modoHojaNotasEval === 'skimming' && pomodoroFase === 'skimming') {
@@ -20372,7 +20381,7 @@ const ZONAS_SYNC_GIST = [
     if (pomodoroActivo && !opts.desdeTransicionPomodoro && (modoHojaNotasEval === 'pretest' || modoHojaNotasEval === 'skimming') &&
         (pomodoroFase === 'pretest' || pomodoroFase === 'skimming')) {
       const notaHoja = obtenerNotaUnicaPropia(modoHojaNotasEval);
-      if (notaHoja) {   // cerrar con la X durante el Pomodoro guarda lo escrito
+      if (notaHoja) {   
         notaHoja.texto = elHojaEditor.value.trim();
         notaHoja.modificada = Date.now();
         notaHoja.rev = siguienteRev();
@@ -20539,7 +20548,7 @@ const ZONAS_SYNC_GIST = [
   }
 
   let retencionRutas = cargarRetencionRutas();
-  const MAX_RETENCION_RUTAS = 10;   // NUEVO: mismo tope que análisis de sesión
+  const MAX_RETENCION_RUTAS = 10;   
 
   function limitarRetencionRutas() {
     retencionRutas.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
@@ -20762,6 +20771,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       r.toggles.removeChild(r.btnNota);
       r.btnNota = null;
     }
+    audioRutasPintarBoton(div, id);
   }
 
   function filaRetencionSesion(id) {
@@ -20788,7 +20798,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     toggles.appendChild(btnDif);
     div.appendChild(toggles);
 
-    div._refs = { num: num, toggles: toggles, btnRet: btnRet, btnDif: btnDif, btnNota: null };
+    div._refs = { num: num, toggles: toggles, btnRet: btnRet, btnDif: btnDif, btnNota: null, btnAudio: null };
     pintarFilaRetencionSesion(div, id);
     return div;
   }
@@ -20801,7 +20811,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     chk.checked = retencionSubtemasActivos[nombre] !== false;
     chk.addEventListener('change', () => {
       retencionSubtemasActivos[nombre] = chk.checked;
-      renderRetencionSesionLista({ soloLista: true });   // los chips no cambian: solo se filtra la lista
+      renderRetencionSesionLista({ soloLista: true });   
     });
     label.appendChild(chk);
     label.appendChild(document.createTextNode(nombre));
@@ -21008,12 +21018,124 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     const id = fila._rutaId;
     const accion = btn.dataset.accion;
     if (accion === 'nota') { abrirModalNotaDudaRuta(id); return; }
+    if (accion === 'audio') { audioRutasLeer(id); return; }
     const est = retencionSesionToggles[id] || (retencionSesionToggles[id] = { retenida: false, dificil: false });
     if (accion === 'retenida') est.retenida = !est.retenida;
     else if (accion === 'dificil') est.dificil = !est.dificil;
     else return;
     pintarFilaRetencionSesion(fila, id);
   });
+
+  const AUDIO_RUTAS_CLAVE = 'audio_rutas_v1';
+  var audioRutasHabilitado = (function () {
+    try { return localStorage.getItem(AUDIO_RUTAS_CLAVE) === '1'; } catch (e) { return false; }
+  })();
+  var audioRutasLeyendo = null;
+  var audioRutasToken = 0;
+  var audioRutasUtterance = null;
+  var audioRutasPantalla = null;
+
+  function audioRutasLineasTexto(id) {
+    const lineas = (rutasDisp[id] && rutasDisp[id].lineas) || [];
+    return lineas.filter((l) => typeof l === 'string' && !esImagen(l) && l.trim() !== '');
+  }
+
+  function audioRutasNombrarSimbolos(texto) {
+    let salida = '';
+    Array.from(texto).forEach((c) => {
+      if (Object.prototype.hasOwnProperty.call(SIMBOLOS_ESPECIALES, c)) salida += ' ' + SIMBOLOS_ESPECIALES[c] + ' ';
+      else salida += c;
+    });
+    return salida.replace(/ {2,}/g, ' ').trim();
+  }
+
+  function audioRutasPintarBoton(div, id) {
+    const r = div._refs;
+    const visible = ttsDisponible && audioRutasHabilitado && pomodoroActivo;
+    if (!visible) {
+      if (r.btnAudio) {
+        r.toggles.removeChild(r.btnAudio);
+        r.btnAudio = null;
+      }
+      return;
+    }
+    if (!r.btnAudio) {
+      r.btnAudio = document.createElement('button');
+      r.btnAudio.type = 'button';
+      r.btnAudio.dataset.accion = 'audio';
+      r.toggles.insertBefore(r.btnAudio, r.btnNota || null);
+    }
+    const sinTexto = audioRutasLineasTexto(id).length === 0;
+    const leyendo = audioRutasLeyendo === String(id);
+    r.btnAudio.disabled = sinTexto;
+    r.btnAudio.className = 'toggle-retencion' + (leyendo ? ' leyendo' : '');
+    r.btnAudio.textContent = leyendo ? '⏹ Leyendo' : '🔊';
+    r.btnAudio.title = sinTexto
+      ? 'Esta ruta no tiene renglones de texto para leer (solo imágenes)'
+      : (leyendo ? 'Detener la lectura' : 'Leer esta ruta en voz alta');
+    r.btnAudio.setAttribute('aria-pressed', leyendo ? 'true' : 'false');
+  }
+
+  function audioRutasPintarTodas() {
+    const lista = document.getElementById('retencion-sesion-lista');
+    if (!lista) return;
+    lista.querySelectorAll('.fila-retencion-ruta').forEach((fila) => pintarFilaRetencionSesion(fila, fila._rutaId));
+  }
+
+  function audioRutasDetener() {
+    audioRutasToken++;
+    if (audioRutasLeyendo === null) return;
+    audioRutasLeyendo = null;
+    audioRutasUtterance = null;
+    if (ttsDisponible) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+    audioRutasPintarTodas();
+  }
+
+  function audioRutasLeer(id) {
+    if (!ttsDisponible) return;
+    const clave = String(id);
+    if (audioRutasLeyendo === clave) { audioRutasDetener(); return; }
+    const renglones = audioRutasLineasTexto(clave).map(audioRutasNombrarSimbolos).filter((t) => t !== '');
+    if (renglones.length === 0) return;
+    audioRutasDetener();
+    detenerLecturaPrimero();
+    const token = ++audioRutasToken;
+    audioRutasLeyendo = clave;
+    audioRutasPintarTodas();
+    const terminar = () => {
+      if (token !== audioRutasToken) return;
+      audioRutasLeyendo = null;
+      audioRutasUtterance = null;
+      audioRutasPintarTodas();
+    };
+    const hablar = (i) => {
+      if (token !== audioRutasToken) return;
+      if (i >= renglones.length) { terminar(); return; }
+      const u = new SpeechSynthesisUtterance(renglones[i]);
+      u.lang = 'es-AR';
+      u.onend = () => hablar(i + 1);
+      u.onerror = () => terminar();
+      audioRutasUtterance = u;
+      try { window.speechSynthesis.speak(u); } catch (e) { terminar(); }
+    };
+    setTimeout(() => hablar(0), 50);
+  }
+
+  function audioRutasSincronizarChecks() {
+    document.querySelectorAll('.chk-audio-rutas').forEach((chk) => { chk.checked = audioRutasHabilitado; });
+  }
+  document.querySelectorAll('.chk-audio-rutas').forEach((chk) => {
+    chk.addEventListener('change', () => {
+      audioRutasHabilitado = chk.checked;
+      try { escribirLocalSeguro(AUDIO_RUTAS_CLAVE, audioRutasHabilitado ? '1' : '0'); } catch (e) { }
+      audioRutasSincronizarChecks();
+      if (!audioRutasHabilitado) audioRutasDetener();
+      audioRutasPintarTodas();
+    });
+  });
+  audioRutasSincronizarChecks();
+  window.addEventListener('beforeunload', audioRutasDetener);
+  window.addEventListener('pagehide', audioRutasDetener);
 
   const RETENCION_POR_PAGINA = 15;
   let retencionHistorialPaginaActual = 1;
@@ -21196,6 +21318,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   }
 
   function cerrarModalRetencionRutas() {
+    audioRutasDetener();
     const estabaAbierto = elModalRetencionRutas.classList.contains('abierto');
     elModalRetencionRutas.classList.remove('abierto');
     if (estabaAbierto) refrescarMarcasObservador();
@@ -22738,7 +22861,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function calcularScoreSubtema(nombreSubtema) {
     const hayAnalisis = tieneAnalisisGuardado(nombreSubtema);
     return combinarScoreSubtema(
-      pctNoRetenidaPorSubtema(nombreSubtema),   // null = sin datos de retención
+      pctNoRetenidaPorSubtema(nombreSubtema),   
       hayAnalisis,
       hayAnalisis ? (promedioCampoAnalisis(nombreSubtema, 'pctFallos') || 0) : 0,
       hayAnalisis ? (promedioCampoAnalisis(nombreSubtema, 'pctCasi') || 0) : 0,
@@ -23339,7 +23462,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     repintarTarjetaSiActiva();
   });
 
-  const nodosRazones = new Map();   // hash -> { fila, grupo: 'aqui'|'otras' }
+  const nodosRazones = new Map();   
 
   function grupoActualRazon(h) {
     if (!razonesGuardadas[h]) return null;
@@ -23597,7 +23720,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     resultados = new Array(lista.length).fill(null);
     tiempos = new Array(lista.length).fill(0);
     revelado = new Array(lista.length).fill(false);
-    pistaMostrada = new Array(lista.length).fill(false);  // MODIFICADO
+    pistaMostrada = new Array(lista.length).fill(false);  
     respuestaMostrada = new Array(lista.length).fill(false);
     rutasVisibles = new Array(lista.length).fill(false);
     escritos = new Array(lista.length).fill('');
@@ -23630,13 +23753,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elBtnAnalisisSesionGuardar.disabled = false;
     elBtnAnalisisSesionGuardar.textContent = '💾 Guardar análisis';
     actualizarBadgeNotaActual();
-    modoZombie = false;   // NUEVO: una sesión nueva nunca arranca en modo zombie
+    modoZombie = false;   
     reintentadasSesion = new Set();
     primerIntentoFallido = new Set();
     reintentoExitoso = new Set();
     segundaPendiente = false;
-    srsSesionActiva = null;   // NUEVO: toda sesión nueva arranca como sesión normal
-    actualizarBadgeSrs();     // NUEVO
+    srsSesionActiva = null;   
+    actualizarBadgeSrs();     
     limpiarAviso();
     actualizarBarraGamificacion();
 
@@ -23793,8 +23916,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elBtnDificil.textContent = esDif ? '★ Difícil' : '☆ Difícil';
     elBtnDificil.classList.toggle('activa', esDif);
 
-    renderNota(actual);  // NUEVO: botón 💡 + panel de nota
-    renderRazones(actual);  // NUEVO: botón 🏷 + panel de razones
+    renderNota(actual);  
+    renderRazones(actual);  
 
     renderRutas(actual);
 
@@ -24089,7 +24212,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function crearEntrada(w, orig) {
     const v = variantesRaiz(w);
-    const nombreSimbolo = SIMBOLOS_ESPECIALES[orig];   // se busca por 'orig': los símbolos distinguen mayús/minús (Ω ≠ ω)
+    const nombreSimbolo = SIMBOLOS_ESPECIALES[orig];   
     if (nombreSimbolo) {
       const nombreNorm = normalizarPalabra(nombreSimbolo);
       if (v.indexOf(nombreNorm) === -1) v.push(nombreNorm);
@@ -24281,7 +24404,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function puedeSegundaOportunidad(idx) {
     if (modoObservador || modoZombie || segundaPendiente) return false;
     if (modoEspecial !== null) return false;
-    if (esModoSinGamificacion()) return false;   // CORREGIDO: consumible de Normal/Tryhard, no de Light
+    if (esModoSinGamificacion()) return false;   
     if ((gamificacion.inventario.segundasOportunidades || 0) <= 0) return false;
     return !reintentadasSesion.has(tarjetasSesion[idx]);
   }
@@ -24297,7 +24420,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       'Si acertás el reintento cobrás el ' + Math.round(FACTOR_RECOMPENSA_REINTENTO * 100) +
       ' % de los puntos y tu racha sigue creciendo. La tarjeta igual queda para repaso.';
     elModalSegunda.classList.add('abierto');
-    document.getElementById('btn-segunda-no').focus();   // el consumible solo se gasta con un clic explícito en Sí
+    document.getElementById('btn-segunda-no').focus();   
   }
 
   function resolverSegundaOportunidad(acepta) {
@@ -24357,7 +24480,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function totalSegundosGlobalExamen(totalTarjetas) {
-    return Math.ceil(totalTarjetas * 30 * 1.25);   // 30 s por tarjeta + 25 %
+    return Math.ceil(totalTarjetas * 30 * 1.25);   
   }
 
   function renderCountdownGlobalExamen() {
@@ -24384,7 +24507,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const ahora = Date.now();
     const delta = ahora - globalExamenUltimoTick;
     globalExamenUltimoTick = ahora;
-    if (pausaManual) return;   // en pausa manual el reloj global no avanza
+    if (pausaManual) return;   
     globalExamenRestanteMs -= delta;
     if (globalExamenRestanteMs <= 0) {
       globalExamenRestanteMs = 0;
@@ -24399,7 +24522,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     detenerCountdownGlobalExamen();
     if (modoJuego !== 'examen' || !quedanPendientes()) return;
     if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elTextoEval);
-    if (cronometroActivo && !cronometroCongelado()) acumularTiempo();   // antes de cerrar paneles
+    if (cronometroActivo && !cronometroCongelado()) acumularTiempo();   
     let pendientes = 0;
     for (let i = 0; i < resultados.length; i++) {
       if (resultados[i] === null) {
@@ -24440,7 +24563,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const escritas = analizarTexto(texto);
 
     const entradasClaves = claves.map((c) => crearEntrada(c, c));
-    const palabrasConTypo = new Set();   // índices de palabras escritas que solo emparejaron por tolerancia de errores
+    const palabrasConTypo = new Set();   
     const paresClaves = emparejar(entradasClaves, escritas, (i, j) => palabrasConTypo.add(j));
     const acertadas = [];
     const faltaron = [];
@@ -24477,7 +24600,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
 
     const resultadoSinDegradar = resultado;
-    resultado = degradarPorTypos(resultado, palabrasConTypo.size);   // más de 4 palabras con errores: bien→casi, casi→mal
+    resultado = degradarPorTypos(resultado, palabrasConTypo.size);   
 
     const detalleEval = {
       resultado,
@@ -24592,7 +24715,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     resultados[indiceActual] = resultado;
     revelado[indiceActual] = true;
-    if (resultado === 'saltar' && modoEspecial !== 'quiz' && modoEspecial !== 'detective' && modoEspecial !== 'ordenar' && modoEspecial !== 'verdadero_falso') reveladasAlSaltar.add(indiceActual);   // al saltar se ve la respuesta
+    if (resultado === 'saltar' && modoEspecial !== 'quiz' && modoEspecial !== 'detective' && modoEspecial !== 'ordenar' && modoEspecial !== 'verdadero_falso') reveladasAlSaltar.add(indiceActual);   
 
     if (!modoObservador) {
       procesarResultadoGamificacion(indiceActual, resultado, {
@@ -24609,7 +24732,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       tiempoInicioTarjeta = Date.now();
     }
 
-    if (cronometroActivo && !quedanPendientes()) {   // los modos especiales no pasan por la parada del render genérico
+    if (cronometroActivo && !quedanPendientes()) {   
       cronometroActivo = false;
       actualizarCronometro();
     }
@@ -24620,7 +24743,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   async function mostrarRespuesta() {
     if (pausaManual || segundaPendiente) return;
     if (rutasVisibles[indiceActual]) return;
-    if (!(await confirmarDescartarBorrador())) return;   // igual que marcar(): no perder una nota/razones sin guardar
+    if (!(await confirmarDescartarBorrador())) return;   
     if (rutasVisibles[indiceActual]) return;
 
     rutasVisibles[indiceActual] = true;
@@ -24659,7 +24782,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const ev = evaluaciones[indiceActual];
     if (!ev || (ev.resultado !== 'casi' && ev.resultado !== 'mal')) return;
     if (resultados[indiceActual] === 'si') return;
-    const resultadoOriginal = ev.resultado;   // 'casi' o 'mal', antes de la corrección
+    const resultadoOriginal = ev.resultado;   
     resultados[indiceActual] = 'si';
     porComprension[indiceActual] = true;
 
@@ -24670,7 +24793,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       factor: reintentoExitoso.has(indiceActual) ? FACTOR_RECOMPENSA_REINTENTO : 1,
     });
     if (resultadoOriginal === 'mal' && !reveladasAlSaltar.has(indiceActual)) {
-      actualizarRachaTrasResultado('si', false);  // incrementa racha + recalcula multiplicador (puede sonar "racha")
+      actualizarRachaTrasResultado('si', false);  
     }
     reproducirSonido('bien');
     actualizarBarraGamificacion();
@@ -24714,7 +24837,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
 
     hookCambioIndiceEspecial();
-    resetPanelesUI();  // NUEVO: nota y razones se cierran al cambiar de tarjeta
+    resetPanelesUI();  
     renderTarjeta();
   }
 
@@ -24821,14 +24944,14 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (editandoNota) {
       elPanelNotaTexto.style.display = 'none';
       elNotaEditor.style.display = 'block';
-      document.getElementById('btn-dictado-nota-editor').style.display = 'flex';   // NUEVO: dictado por voz
+      document.getElementById('btn-dictado-nota-editor').style.display = 'flex';   
       elBtnNotaEditar.style.display = 'none';
       elBtnNotaGuardar.style.display = 'inline-block';
       elBtnNotaCancelar.style.display = 'inline-block';
       elBtnNotaBorrar.style.display = hayNota ? 'inline-block' : 'none';
     } else {
       elNotaEditor.style.display = 'none';
-      document.getElementById('btn-dictado-nota-editor').style.display = 'none';   // NUEVO: dictado por voz
+      document.getElementById('btn-dictado-nota-editor').style.display = 'none';   
       elPanelNotaTexto.style.display = 'block';
       let texto, vacio;
       if (versionNota === 'txt') {
@@ -24957,7 +25080,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function abrirRazones() {
     const actual = tarjetasSesion[indiceActual];
-    if (!actual || notaAbierta) return;   // un panel a la vez
+    if (!actual || notaAbierta) return;   
     if (cronometroActivo && !cronometroCongelado()) acumularTiempo();
     razonesAbierto = true;
     razonesPendientes = razonesDeTarjeta(actual).slice();
@@ -25042,7 +25165,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elBtnRazones.classList.toggle('activa', guardadas.length > 0 || razonesAbierto);
     elBtnRazones.disabled = notaAbierta;
 
-    renderChipsRazones(actual);   // chips de solo lectura (lo ya guardado)
+    renderChipsRazones(actual);   
 
     elPanelRazones.style.display = razonesAbierto ? 'block' : 'none';
     if (!razonesAbierto) return;
@@ -25130,7 +25253,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   });
   elBtnPausa.addEventListener('click', () => pausarManual());
   elBtnReanudar.addEventListener('click', () => {
-    if (pomodoroPausado) { reanudarPomodoro(); return; }   // NUEVO: overlay reutilizado por el Pomodoro
+    if (pomodoroPausado) { reanudarPomodoro(); return; }   
     reanudarManual();
   });
   elBtnRevisar.addEventListener('click', () => toggleRevisarActual());
@@ -25141,7 +25264,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   elBtnFinalizar.addEventListener('click', () => intentarFinalizarSesion());
 
   document.addEventListener('keydown', (evento) => {
-    if (elModalSegunda.classList.contains('abierto')) return;   // NUEVO: dialogo de segunda oportunidad abierto
+    if (elModalSegunda.classList.contains('abierto')) return;   
     if (elModalContinuar.classList.contains('abierto')) {
       if (evento.key === 'Escape') cerrarModalContinuar();
       return;
@@ -25163,7 +25286,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       return;
     }
     if (evento.target && evento.target.classList && evento.target.classList.contains('inverso-input')) return;
-    if (evento.target === elTextoEval || evento.target === elNotaEditor || evento.target === elGaleriaNotaEditor) return;  // no navegar mientras se escribe
+    if (evento.target === elTextoEval || evento.target === elNotaEditor || evento.target === elGaleriaNotaEditor) return;  
     if (elPantallaGaleria.style.display !== 'none') {
       if (evento.key === 'ArrowLeft') navegarGaleria(-1);
       if (evento.key === 'ArrowRight') navegarGaleria(1);
@@ -25176,7 +25299,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function actualizarCronometro() {
     const congelado = cronometroCongelado();
-    const parado = !cronometroActivo;   // sesión completa: nada más por marcar
+    const parado = !cronometroActivo;   
     const ahora = Date.now();
     const enCurso = (congelado || parado) ? 0 : (ahora - tiempoInicioTarjeta);
     const totalMs = tiempos.reduce((a, b) => a + b, 0) + enCurso;
@@ -25259,7 +25382,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   async function finalizarSesion(opciones) {
-    const forzar = !!(opciones && opciones.forzar === true);   // vencimiento del tiempo global: sin diálogos
+    const forzar = !!(opciones && opciones.forzar === true);   
     if (!forzar && !(await confirmarDescartarBorrador())) return;
     detenerCountdownExamen();
     detenerCountdownGlobalExamen();
@@ -25276,8 +25399,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function calcularNota() {
     let puntos = 0;
     resultados.forEach((r, i) => {
-      if (r === 'si') puntos += (pistaMostrada[i] || reintentoExitoso.has(i)) ? 0.5 : 1;   // reintento acertado = 0.5
-      else if (r === 'casi') puntos += 0.5;   // NUEVO: Casi = 0.5
+      if (r === 'si') puntos += (pistaMostrada[i] || reintentoExitoso.has(i)) ? 0.5 : 1;   
+      else if (r === 'casi') puntos += 0.5;   
     });
     return tarjetasSesion.length > 0 ? (10 * puntos) / tarjetasSesion.length : 0;
   }
@@ -25379,8 +25502,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return item;
   }
 
-  const _resumenListaDatos = new Map();   // idContenedor -> { indices, mostrarRazones }
-  const _resumenListaCtrl = new Map();    // idContenedor -> lazyCtrl
+  const _resumenListaDatos = new Map();   
+  const _resumenListaCtrl = new Map();    
 
   function construirListaResumenLazy(idContenedor) {
     const datos = _resumenListaDatos.get(idContenedor) || { indices: [], mostrarRazones: true };
@@ -25437,7 +25560,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function mostrarResumen() {
-    descartarSesionPendiente();   // la sesión terminó: ya no hay nada pendiente de recuperar
+    descartarSesionPendiente();   
     const conteos = { si: 0, casi: 0, no: 0, saltar: 0, pista: 0, resp: 0, evaluadas: 0 };
     const indices = { si: [], casi: [], no: [], saltar: [] };
 
@@ -25490,7 +25613,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     const idxRevisar = [];
     tarjetasSesion.forEach((t, i) => { if (esRevisar(t)) idxRevisar.push(i); });
-    llenarLista('lista-revisar', idxRevisar, false);   // NUEVO: sin razones en "Revisar"
+    llenarLista('lista-revisar', idxRevisar, false);   
     document.getElementById('etq-revisar').textContent = '🚩 Para revisar (' + idxRevisar.length + ')';
 
     const elBtnContinuar = document.getElementById('btn-continuar-pendientes');
@@ -25592,11 +25715,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       primeroSeleccionadoMatching = null;
       asociacionesTempMatching.clear();
     }
-    analisisGuardadoEstaSesion = false;   // el análisis se podrá volver a guardar (reemplaza al anterior)
+    analisisGuardadoEstaSesion = false;   
     elBtnAnalisisSesionGuardar.disabled = false;
     elBtnAnalisisSesionGuardar.textContent = '💾 Guardar análisis';
     globalExamenPendientesAlVencer = 0;
-    if (srsReaplicable && !srsSesionActiva) {   // el progreso SRS se recalcula con lo respondido en la continuación
+    if (srsReaplicable && !srsSesionActiva) {   
       srsSesionActiva = srsReaplicable;
       actualizarBadgeSrs();
     }
@@ -25634,7 +25757,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   document.getElementById('btn-modo-observador').addEventListener('click', () => entrarObservador());
   document.getElementById('btn-observador-salir').addEventListener('click', () => {
-    if (pomodoroActivo) return;   // NUEVO: bloqueado mientras el Pomodoro corre (también deshabilitado visualmente)
+    if (pomodoroActivo) return;   
     mostrarPantalla('temas');
   });
   document.getElementById('btn-observador-volver').addEventListener('click', () => salirObservador());
@@ -25645,7 +25768,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function iniciarSesionSRS(listasVencidas) {
-    if (modoJuego === 'examen') configurarModoJuego('normal');   // el Examen oculta pistas/navegación: no se hereda
+    if (modoJuego === 'examen') configurarModoJuego('normal');   
     limpiarModoEspecialAlSalir();
     const hashesPorLista = {};
     const todosLosHashes = new Set();
@@ -25661,7 +25784,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
     if (modoAleatorio) tarjetasSrs = mezclar(tarjetasSrs);
 
-    iniciarSesion(tarjetasSrs);   // esto resetea srsSesionActiva a null; se fija DESPUÉS
+    iniciarSesion(tarjetasSrs);   
     srsSesionActiva = { nombres: listasVencidas.map((l) => l.nombre), hashesPorLista: hashesPorLista };
     actualizarBadgeSrs();
   }
@@ -25670,21 +25793,21 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (!srsSesionActiva) return;
     const hashesPorLista = srsSesionActiva.hashesPorLista;
     srsSesionActiva.nombres.forEach((nombre) => {
-      const lista = buscarListaPropia(nombre);   // NUEVO: las listas vencidas de SRS siempre son propias
-      if (!lista) return;   // pudo haberse borrado durante la sesión; no hay nada que actualizar
+      const lista = buscarListaPropia(nombre);   
+      if (!lista) return;   
       const hashesLista = hashesPorLista[nombre];
       let total = 0, exitos = 0;
       tarjetasSesion.forEach((t, i) => {
         if (!hashesLista.has(hashTarjeta(t))) return;
         total++;
         const r = resultados[i];
-        if (r === 'si' || r === 'casi') exitos++;   // 'no', 'saltar' y sin responder cuentan como fallo
+        if (r === 'si' || r === 'casi') exitos++;   
       });
       if (total === 0) return;
       const pct = exitos / total;
       const srs = obtenerSrsLista(lista);
       if (!srsSesionActiva.previos) srsSesionActiva.previos = {};
-      if (srsSesionActiva.previos[nombre]) Object.assign(srs, srsSesionActiva.previos[nombre]);   // reaplicación: parte del estado previo
+      if (srsSesionActiva.previos[nombre]) Object.assign(srs, srsSesionActiva.previos[nombre]);   
       else srsSesionActiva.previos[nombre] = Object.assign({}, srs);
       if (pct >= 0.8) srs.currentLevel += 1;
       else if (pct >= 0.6) {  }
@@ -25709,11 +25832,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   let srsListasVencidasAviso = [];
   let ultimoAvisoSrsMs = 0;
   function evaluarAvisoSRS() {
-    if (elModalSesionPendiente.classList.contains('abierto')) return;   // primero se resuelve la sesión pendiente
+    if (elModalSesionPendiente.classList.contains('abierto')) return;   
     limpiarListasContraTarjetasActuales();
     const vencidas = listas.filter((l) => (!l.espacio || l.espacio === ESPACIO_HASH) && srsListaParaAviso(l));
     if (vencidas.length === 0) return;
-    if (Date.now() - ultimoAvisoSrsMs < 1800000) return;   // no repetir el aviso en cada vuelta a "temas" (máx. 1 cada 30 min)
+    if (Date.now() - ultimoAvisoSrsMs < 1800000) return;   
     ultimoAvisoSrsMs = Date.now();
     srsListasVencidasAviso = vencidas;
     const elLista = document.getElementById('srs-aviso-lista');
@@ -25732,7 +25855,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   });
   document.getElementById('btn-srs-omitir-hoy').addEventListener('click', () => {
     const manana = new Date();
-    manana.setHours(24, 0, 0, 0);   // medianoche local del día siguiente
+    manana.setHours(24, 0, 0, 0);   
     srsListasVencidasAviso.forEach((l) => {
       obtenerSrsLista(l).snoozeUntil = manana.getTime();
       l.modificada = Date.now();
@@ -25743,7 +25866,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   });
   document.getElementById('btn-srs-recordar-luego').addEventListener('click', () => {
     srsListasVencidasAviso.forEach((l) => {
-      obtenerSrsLista(l).snoozeUntil = Date.now() + 7200000;   // 2 horas
+      obtenerSrsLista(l).snoozeUntil = Date.now() + 7200000;   
       l.modificada = Date.now();
       l.rev = siguienteRev();
     });
@@ -25932,9 +26055,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
 
     let reconocimiento = null;
-    let textareaDictadoActivo = null;   // <textarea> recibiendo dictado ahora (null si ninguno)
-    let botonActivo = null;             // su botón 🎙 correspondiente
-    let targetPendiente = null;         // { boton, textarea } a iniciar apenas termine el anterior
+    let textareaDictadoActivo = null;   
+    let botonActivo = null;             
+    let targetPendiente = null;         
 
     function detenerVisualDictado() {
       if (botonActivo) {
@@ -26140,6 +26263,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function entrarFaseRetencionPomodoro() {
+    audioRutasDetener();
     cerrarModalSkimmingMapa();
     autoguardarYCerrarPretestPomodoro();
     pomodoroFase = 'retencion';
@@ -26152,6 +26276,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function saltarASkimmingPomodoro() {
     if (!pomodoroActivo || pomodoroFase !== 'pretest' || pomodoroModo !== 'dificil') return;
+    audioRutasDetener();
     if (elModalNotasEvaluador.classList.contains('abierto')) {
       autoguardarYCerrarPretestPomodoro();
     }
@@ -26163,6 +26288,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function saltarDesdePretestPomodoro() {
     if (!pomodoroActivo || pomodoroFase !== 'pretest') return;
+    audioRutasDetener();
     if (pomodoroModo === 'dificil') {
       pomodoroFase = 'skimming';
       pomodoroSegundosRestantes = DURACION_SKIMMING_SEG;
@@ -26219,6 +26345,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function avanzarFasePomodoro() {
+    audioRutasDetener();
     cerrarModalSkimmingMapa();
     if (minijuegoAbierto && minijuegoEnDescanso) minijuegoCerrar();
     if (pomodoroFase === 'pretest') {
@@ -26276,6 +26403,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function abrirModalPomodoroIniciar() {
+    if (elModalSesionPendiente.classList.contains('abierto')) return;
     document.getElementById('btn-pomodoro-repaso-pasivo').style.display =
       tarjetasCompletas.some((t) => tarjetaEntraRepasoPasivo(t)) ? '' : 'none';
     renderSiCambioDatos('avisoPomodoro', Math.floor(Date.now() / 60000), renderAvisoRepasoPomodoro);
@@ -26305,6 +26433,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   });
 
   function iniciarPomodoro(modo, desdeMinijuego) {
+    if (elModalSesionPendiente.classList.contains('abierto')) return;
     if (minijuegoHabilitado && !desdeMinijuego) {
       cerrarModalPomodoroIniciar();
       minijuegoAbrir(
@@ -26336,8 +26465,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     retencionSesionToggles = {};
     retencionSubtemasActivos = {};
 
-    descartarSesionPendiente();            // un Pomodoro nuevo anula cualquier sesión de evaluación pendiente
-    descartarSesionPomodoroPendiente();    // y reemplaza cualquier Pomodoro pendiente anterior
+    descartarSesionPendiente();            
+    descartarSesionPomodoroPendiente();    
 
     obtenerContextoAudio();
 
@@ -26377,6 +26506,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function iniciarBraindumpPomodoro() {
     if (!pomodoroActivo || (pomodoroFase !== 'retencion' && pomodoroFase !== 'descanso')) return;
+    audioRutasDetener();
     clearInterval(pomodoroIntervalo);
     if (pomodoroPausado) {
       cerrarPausaPomodoro();
@@ -26446,7 +26576,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       const nota = notasEvaluador.find((n) => n.id === pomodoroBraindumpNotaId);
       if (nota) {
         const textoBd = elHojaEditor.value.trim();
-        if (textoBd === '') {   // no dejar una nota braindump vacía en la lista ni en los backups
+        if (textoBd === '') {   
           notasEvaluador = notasEvaluador.filter((n) => n.id !== nota.id);
         } else {
           nota.texto = textoBd;
@@ -26466,6 +26596,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function pausarPomodoro() {
     if (!pomodoroActivo || pomodoroPausado || pomodoroFase === 'descanso' || pomodoroFase === 'descanso_largo') return;
+    audioRutasDetener();
     pomodoroPausado = true;
     pomodoroPausaInicio = Date.now();
     clearInterval(pomodoroIntervalo);
@@ -26536,7 +26667,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     poblarAnalisisRetencionPomodoro(entradaRetencion);
 
     pomodoroActivo = false;
-    borrarClaveSesionPomodoro();   // el Pomodoro terminó: ya no hay nada pendiente de recuperar
+    borrarClaveSesionPomodoro();   
     pomodoroRetencionPresionada = false;
     pomodoroEnBraindumpFinal = false;
     pomodoroTotalSegCongelado = null;
@@ -26570,7 +26701,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const PREFIJO_SESION_PENDIENTE = 'sesion_pendiente_';
   const CLAVE_SESION_PENDIENTE = PREFIJO_SESION_PENDIENTE + ESPACIO_HASH;
   const VERSION_SESION_PENDIENTE = 1;
-  const EDAD_MAXIMA_SESION_PENDIENTE_MS = 2 * 24 * 60 * 60 * 1000;   // 2 días
+  const EDAD_MAXIMA_SESION_PENDIENTE_MS = 2 * 24 * 60 * 60 * 1000;   
   const elModalSesionPendiente = document.getElementById('modal-sesion-pendiente');
   let tiempoInicioSesion = 0;
   let _ultimoGuardadoSesionPendienteMs = 0;
@@ -26579,8 +26710,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     reiniciarBateriaMental();
     tiempoInicioSesion = Date.now();
     enfoqueReiniciarContador();
-    descartarSesionPendiente();   // sesión nueva: sobrescribe/borra la pendiente anterior
-    descartarSesionPomodoroPendiente();   // una evaluación nueva anula cualquier Pomodoro pendiente
+    descartarSesionPendiente();   
+    descartarSesionPomodoroPendiente();   
   }
 
   function descartarSesionPendiente() {
@@ -26602,7 +26733,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       }
       borrar.forEach((clave) => localStorage.removeItem(clave));
     } catch (e) { }
-    limpiarSesionesPomodoroAntiguas();   // y las sesiones Pomodoro vencidas
+    limpiarSesionesPomodoroAntiguas();   
   }
 
   function hashContenidoTarjetas() {
@@ -26635,7 +26766,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       marcadas: copiarSetComoArray(d.marcadas),
       alteradasIdx: (d.alteradas || []).map((sg) => sg.idx),
     });
-    delete c.alteradas;   // referencias compartidas con rutas: se reconstruyen al recuperar
+    delete c.alteradas;   
     delete c.segPorIdx;
     return c;
   }
@@ -26665,7 +26796,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const ahora = Date.now();
     const esMatching = modoEspecial === 'matching';
 
-    const tiemposGuardar = tiempos.slice();   // incluye el tiempo de la tarjeta en curso, sin tocar el cronómetro vivo
+    const tiemposGuardar = tiempos.slice();   
     if (cronometroActivo && !cronometroCongelado() && indiceActual < tiemposGuardar.length) {
       tiemposGuardar[indiceActual] += Math.max(0, ahora - tiempoInicioTarjeta);
     }
@@ -26751,10 +26882,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     };
   }
 
-  function guardarSesionPendiente() {
+  function guardarSesionPendiente(forzar) {
     if (!sesionActivaParaGuardar()) return false;
     const ahora = Date.now();
-    if (ahora - _ultimoGuardadoSesionPendienteMs < 200) return true;   // beforeunload + pagehide seguidos
+    if (forzar !== true && ahora - _ultimoGuardadoSesionPendienteMs < 200) return true;   
     try {
       const ok = escribirLocalSeguro(CLAVE_SESION_PENDIENTE, JSON.stringify(construirSesionPendiente()));
       if (ok) _ultimoGuardadoSesionPendienteMs = ahora;
@@ -26764,7 +26895,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       return false;
     }
   }
-  _guardadosPendientes.push({ flush: guardarSesionPendiente });   // beforeunload + pagehide + visibilitychange (oculta)
+  _guardadosPendientes.push({ flush: guardarSesionPendiente });   
   window.addEventListener('beforeunload', guardarSesionPendiente);
 
   function sesionTerminadaDespues(sesion) {
@@ -26781,8 +26912,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (!Array.isArray(sesion.resultados) || sesion.resultados.length === 0) return false;
     if (!Number.isFinite(sesion.timestampCreacion) || !Number.isFinite(sesion.timestampUltimaActividad)) return false;
     if ((Date.now() - sesion.timestampUltimaActividad) > EDAD_MAXIMA_SESION_PENDIENTE_MS) return false;
-    if (sesion.hashTarjetas !== hashContenidoTarjetas()) return false;   // el contenido del evaluador cambió
-    if (sesionTerminadaDespues(sesion)) return false;                    // otra sesión terminó mientras tanto
+    if (sesion.hashTarjetas !== hashContenidoTarjetas()) return false;   
+    if (sesionTerminadaDespues(sesion)) return false;                    
     return true;
   }
 
@@ -26809,7 +26940,19 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return (x.globalExamenRestanteMs || 0) - transcurrido;
   }
 
+  window.addEventListener('keydown', (ev) => {
+    if (!elModalSesionPendiente.classList.contains('abierto')) return;
+    if (ev.target instanceof Node && elModalSesionPendiente.contains(ev.target)) return;
+    ev.stopImmediatePropagation();
+    ev.preventDefault();
+    const botonContinuar = document.getElementById('btn-sesion-pendiente-continuar');
+    if (botonContinuar) botonContinuar.focus();
+  }, true);
+
   function mostrarModalRecuperacion(sesion) {
+    document.getElementById('sesion-pendiente-titulo').textContent = '♻️ Sesión sin terminar';
+    document.getElementById('sesion-pendiente-texto').textContent = 'Quedó una sesión de estudio sin finalizar en este evaluador. ¿Querés continuarla?';
+    document.getElementById('btn-sesion-pendiente-continuar').textContent = 'Continuar sesión';
     const elDetalles = document.getElementById('sesion-pendiente-detalles');
     elDetalles.innerHTML = '';
     const total = sesion.resultados.length;
@@ -26842,9 +26985,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     document.getElementById('btn-sesion-pendiente-descartar').onclick = () => {
       descartarSesionPendiente();
       elModalSesionPendiente.classList.remove('abierto');
-      evaluarAvisoSRS();   // se había pospuesto mientras el modal estaba abierto
+      evaluarAvisoSRS();   
     };
     elModalSesionPendiente.classList.add('abierto');
+    document.getElementById('btn-sesion-pendiente-continuar').focus();
   }
 
   function restaurarSesionPendiente(x) {
@@ -26989,7 +27133,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pistaGratisUsadaPorTarjeta = x.pistaGratisUsadaPorTarjeta.slice();
     gameOverDisparado = !!x.gameOverDisparado;
     modoZombie = !!x.modoZombie;
-    segundaPendiente = false;   // si estaba pendiente, se vuelve a ofrecer más abajo
+    segundaPendiente = false;   
     reintentadasSesion = new Set((x.reintentadasSesion || [])
       .map((h) => tarjetasSesion.find((t) => hashTarjeta(t) === h)).filter(Boolean));
     primerIntentoFallido = new Set(x.primerIntentoFallido || []);
@@ -27028,7 +27172,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     actualizarBadgeSrs();
     actualizarBarraGamificacion();
     mostrarPantalla('estudio');
-    iniciarCronometro();   // el tiempo acumulado ya está en tiempos[]; la tarjeta en curso arranca desde ahora
+    iniciarCronometro();   
     renderTarjeta();
 
     if (notaAbierta && editandoNota && typeof x.textoNotaEnEdicion === 'string') elNotaEditor.value = x.textoNotaEnEdicion;
@@ -27051,7 +27195,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       elCountdownGlobalExamen.style.display = 'inline-block';
       renderCountdownGlobalExamen();
       globalExamenIntervalId = setInterval(tickCountdownGlobalExamen, 500);
-      if (restanteGlobal <= 0) venceTiempoGlobalExamen();   // tiempo agotado: las pendientes cuentan como no entendidas
+      if (restanteGlobal <= 0) venceTiempoGlobalExamen();   
     }
 
     mostrarAviso('♻️ Sesión recuperada: seguís en la tarjeta ' + (indiceActual + 1) + ' de ' + n + '.');
@@ -27066,7 +27210,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const PREFIJO_SESION_POMODORO = 'sesion_pomodoro_';
   const CLAVE_SESION_POMODORO = PREFIJO_SESION_POMODORO + ESPACIO_HASH;
   const VERSION_SESION_POMODORO = 1;
-  const EDAD_MAXIMA_SESION_POMODORO_MS = EDAD_MAXIMA_SESION_PENDIENTE_MS;   // 2 días, igual que la evaluación
+  const EDAD_MAXIMA_SESION_POMODORO_MS = EDAD_MAXIMA_SESION_PENDIENTE_MS;   
   const FASES_POMODORO_VALIDAS = ['pretest', 'skimming', 'descanso_largo', 'retencion', 'descanso'];
   const FASES_POMODORO_PAUSABLES = ['pretest', 'skimming', 'retencion'];
   let _ultimoGuardadoSesionPomodoroMs = 0;
@@ -27122,7 +27266,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       pomodoroRetencionPresionada: pomodoroRetencionPresionada,
       pomodoroEnBraindumpFinal: pomodoroEnBraindumpFinal,
       pomodoroBraindumpNotaId: pomodoroBraindumpNotaId,
-      pomodoroTotalSegCongelado: pomodoroTotalSegCongelado,   // total "congelado" al entrar al braindump
+      pomodoroTotalSegCongelado: pomodoroTotalSegCongelado,   
 
       retencionSesionToggles: retencionSesionToggles,
       retencionSubtemasActivos: retencionSubtemasActivos,
@@ -27134,10 +27278,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     };
   }
 
-  function guardarSesionPomodoroPendiente() {
+  function guardarSesionPomodoroPendiente(forzar) {
     if (!sesionPomodoroActivaParaGuardar()) return false;
     const ahora = Date.now();
-    if (ahora - _ultimoGuardadoSesionPomodoroMs < 200) return true;   // beforeunload + pagehide seguidos
+    if (forzar !== true && ahora - _ultimoGuardadoSesionPomodoroMs < 200) return true;   
     try {
       const ok = escribirLocalSeguro(CLAVE_SESION_POMODORO, JSON.stringify(construirSesionPomodoroPendiente()));
       if (ok) _ultimoGuardadoSesionPomodoroMs = ahora;
@@ -27163,7 +27307,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (!pomEsObj(ac) || !pomEsNum(ac.pretest) || !pomEsNum(ac.retencion) || ac.pretest < 0 || ac.retencion < 0) return false;
     if (!pomEsNum(s.timestampUltimaActividad) || s.timestampUltimaActividad <= 0) return false;
     if ((Date.now() - s.timestampUltimaActividad) > EDAD_MAXIMA_SESION_POMODORO_MS) return false;
-    if (s.hashTarjetas !== hashContenidoTarjetas()) return false;   // el contenido del evaluador cambió
+    if (s.hashTarjetas !== hashContenidoTarjetas()) return false;   
     if (!pomEsObj(s.retencionSesionToggles) || !pomEsObj(s.retencionSubtemasActivos)) return false;
     if (s.pomodoroTotalSegCongelado !== null && s.pomodoroTotalSegCongelado !== undefined && !pomEsNum(s.pomodoroTotalSegCongelado)) return false;
     if (s.pomodoroEnBraindumpFinal) {
@@ -27183,7 +27327,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (!hoja) return null;
     const porId = notasEvaluador.find((n) => n.id === hoja.notaId && n.categoria === hoja.modo);
     if (porId) return porId;
-    if (hoja.modo === 'pretest' || hoja.modo === 'skimming') return obtenerNotaUnicaPropia(hoja.modo);   // p. ej. depuración de duplicados
+    if (hoja.modo === 'pretest' || hoja.modo === 'skimming') return obtenerNotaUnicaPropia(hoja.modo);   
     return null;
   }
 
@@ -27314,9 +27458,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     document.getElementById('btn-sesion-pendiente-descartar').onclick = () => {
       descartarSesionPomodoroPendiente(sesion);
       elModalSesionPendiente.classList.remove('abierto');
-      evaluarAvisoSRS();   // se había pospuesto mientras el modal estaba abierto
+      evaluarAvisoSRS();   
     };
     elModalSesionPendiente.classList.add('abierto');
+    document.getElementById('btn-sesion-pendiente-continuar').focus();
   }
 
   function copiarMapaPomodoro(origen, esperaBooleano) {
@@ -27370,7 +27515,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroCiclo = Math.max(1, Math.floor(x.pomodoroCiclo));
     pomodoroSegundosRestantes = Math.max(0, Math.round(x.pomodoroSegundosRestantes));
     pomodoroPausado = pausado;
-    pomodoroPausaInicio = pausado ? ahora : 0;   // la pausa vuelve a contar como no válida desde ahora
+    pomodoroPausaInicio = pausado ? ahora : 0;   
     pomodoroPausaAcumMs = x.pomodoroPausaAcumMs + fuera;
     pomodoroHoraInicio = x.pomodoroHoraInicio;
     pomodoroUltimoTick = ahora;
@@ -27388,13 +27533,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     retencionSubtemasActivos = copiarMapaPomodoro(x.retencionSubtemasActivos, true);
 
     obtenerContextoAudio();
-    cerrarModalRetencionRutas();   // los toggles se restauran, pero el modal nunca se reabre solo
+    cerrarModalRetencionRutas();   
     elOverlayPausa.classList.remove('abierto');
     elBtnPomodoro.disabled = !pomodoroRetencionPresionada;
     elBtnObservadorSalir.disabled = true;
     elPomodoroBadge.style.display = enBraindump ? 'none' : 'flex';
 
-    entrarObservador();   // el Pomodoro siempre vive sobre el observador y sus pantallas hijas
+    entrarObservador();   
     reubicarBadgePomodoro(nombrePantallaActivaActual());
     actualizarBadgePomodoro();
 
@@ -27403,7 +27548,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       if (x.hoja && x.hoja.modo === 'braindump' && x.hoja.notaId === pomodoroBraindumpNotaId) elHojaEditor.value = x.hoja.texto;
     } else if (x.hoja || pomodoroFase === 'pretest') {
       const modo = x.hoja ? x.hoja.modo : 'pretest';
-      if (!x.hoja) crearPretestPropio('');   // la fase pretest siempre vive en la hoja compartida
+      if (!x.hoja) crearPretestPropio('');   
       abrirNotasEvaluador(modo);
       if (x.hoja && modoHojaNotasEval === modo) elHojaEditor.value = x.hoja.texto;
     }
@@ -27543,6 +27688,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (bateriaPausaActiva) return;
     bateriaPausaActiva = true;
     congelarTemporizadoresBateria();
+    enfoqueCerrarReto();
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     cargarOrionFelizBateria();
     document.getElementById('overlay-bateria').classList.add('abierto');
@@ -27556,34 +27702,76 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     bateriaPausaActiva = false;
   }
 
-  async function terminarSesionPorFatiga() {
+  function bateriaSesionElegibleFuga() {
+    if (elModalSesionPendiente.classList.contains('abierto')) return false;
     if (pomodoroActivo) {
-      abandonarPomodoro();
-      const aviso = document.getElementById('pomodoro-resumen-fatiga');
-      aviso.textContent = '🔋 Sesión terminada por fatiga. Tu retención quedó guardada y podés retomar el estudio más tarde, ya descansado.';
-      aviso.style.display = 'block';
-      return;
+      if (pomodoroPausado || pomodoroEnBraindumpFinal) return false;
+      return pomodoroFase === 'pretest' || pomodoroFase === 'skimming' || pomodoroFase === 'retencion';
     }
-    bateriaFatigaResumen = true;
-    try {
-      await finalizarSesion();
-    } finally {
-      bateriaFatigaResumen = false;
-    }
+    if (pausaManual || elAreaTarjeta.style.display === 'none') return false;
+    return bateriaEsEvaluacionEstandar();
   }
 
-  function clickBateriaMental() {
-    if (bateriaPausaActiva) return;
+  function detenerSesionEvaluacionPorBateria() {
+    detenerCronometro();
+    detenerCountdownExamen();
+    detenerCountdownGlobalExamen();
+    elOverlayPausa.classList.remove('abierto');
+    mostrarPantalla('temas');
+  }
+
+  function detenerSesionPomodoroPorBateria() {
+    cerrarModalSkimmingMapa();
+    if (minijuegoAbierto && minijuegoEnDescanso) minijuegoCerrar();
+    clearInterval(pomodoroIntervalo);
+    autoguardarYCerrarPretestPomodoro();
+    cerrarEnfoqueRetencionMapa();
+    cerrarModalRetencionRutas();
+    if (elPantallaMapa.style.display !== 'none') cerrarPantallaMapa();
+    revertirRestauracionPomodoroFallida();
+    modoObservador = false;
+    elAreaTarjeta.classList.remove('observador');
+    if (elPomodoroBadge.parentElement !== elSlotPomodoroObservador) elSlotPomodoroObservador.appendChild(elPomodoroBadge);
+    mostrarPantalla('temas');
+  }
+
+  function suspenderSesionPorBateriaCero() {
+    enfoqueCerrarReto();
+    enfoqueDetenerAlarma();
+    const esPomodoro = pomodoroActivo;
+    if (esPomodoro ? !sesionPomodoroActivaParaGuardar() : !sesionActivaParaGuardar()) return false;
+    const guardado = esPomodoro ? guardarSesionPomodoroPendiente(true) : guardarSesionPendiente(true);
+    if (!guardado) return false;
+    const sesion = esPomodoro ? cargarSesionPomodoroPendiente() : cargarSesionPendiente();
+    if (!sesion) return false;
+    if (esPomodoro) detenerSesionPomodoroPorBateria();
+    else detenerSesionEvaluacionPorBateria();
+    reiniciarBateriaMental();
+    if (esPomodoro) mostrarModalRecuperacionPomodoro(sesion);
+    else mostrarModalRecuperacion(sesion);
+    return true;
+  }
+
+  function bateriaDescontarUnidad() {
+    if (bateriaPausaActiva) return null;
     bateriaNivel = Math.max(0, bateriaNivel - 1);
     actualizarBateriaMental();
     if (bateriaNivel === 0) {
-      terminarSesionPorFatiga();
-      return;
+      if (suspenderSesionPorBateriaCero()) return 'cero';
+      bateriaNivel = 1;
+      actualizarBateriaMental();
+      return 'ok';
     }
     if (bateriaNivel <= BATERIA_NIVEL_AVISO && !bateriaAvisoDisparado) {
       bateriaAvisoDisparado = true;
       abrirPausaBateria();
+      return 'pausa';
     }
+    return 'ok';
+  }
+
+  function clickBateriaMental() {
+    bateriaDescontarUnidad();
   }
 
   document.getElementById('btn-bateria-eval').addEventListener('click', () => clickBateriaMental());
@@ -27628,6 +27816,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   let enfoqueUltimaFugaFin = 0;
   let enfoqueSalidaMs = 0;
   let enfoqueSalidaVigilada = false;
+  let enfoqueSalidaBateria = false;
   let enfoqueAlarma = null;
   let enfoqueUltimoTipo = null;
   let enfoqueReto = null;
@@ -27723,6 +27912,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (enfoqueSalidaMs > 0) return;
     const ahora = Date.now();
     enfoqueSalidaMs = ahora;
+    enfoqueSalidaBateria = bateriaSesionElegibleFuga();
     const id = enfoqueIdVigilado();
     enfoqueSalidaVigilada = id !== null;
     if (!enfoqueSalidaVigilada) return;
@@ -27739,9 +27929,15 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const ahora = Date.now();
     const duracionMs = ahora - enfoqueSalidaMs;
     const vigiladaAlSalir = enfoqueSalidaVigilada;
+    const bateriaAlSalir = enfoqueSalidaBateria;
     enfoqueSalidaMs = 0;
     enfoqueSalidaVigilada = false;
-    if (!vigiladaAlSalir || duracionMs < ENFOQUE_MIN_FUGA_MS) return;
+    enfoqueSalidaBateria = false;
+    if (duracionMs < ENFOQUE_MIN_FUGA_MS) return;
+    let resultadoBateria = null;
+    if (bateriaAlSalir && bateriaSesionElegibleFuga()) resultadoBateria = bateriaDescontarUnidad();
+    if (resultadoBateria === 'cero') return;
+    if (!vigiladaAlSalir) return;
     const id = enfoqueIdVigilado();
     if (id === null) {
       if (enfoqueReto) enfoqueCerrarReto();
@@ -27751,6 +27947,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     enfoqueSincronizarSesion(id);
     enfoqueContador++;
     enfoqueUltimaFugaFin = ahora;
+    if (resultadoBateria === 'pausa') { enfoqueCerrarReto(); return; }
     enfoqueAbrirReto(enfoqueContador, duracionMs);
   }
 
@@ -28491,7 +28688,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   limpiarSesionesAntiguas();
   const _sesionPendienteAlCargar = cargarSesionPendiente();
-  if (_sesionPendienteAlCargar) mostrarModalRecuperacion(_sesionPendienteAlCargar);   // antes de mostrar "temas"
+  if (_sesionPendienteAlCargar) mostrarModalRecuperacion(_sesionPendienteAlCargar);   
 
   if (_sesionPendienteAlCargar) {
     descartarSesionPomodoroPendiente();
