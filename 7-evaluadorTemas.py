@@ -2412,6 +2412,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
   .boton-editar-tarjeta.editada { background: #ffd199; border: 2px dashed #d9690b; color: #8a4208; }
   .fila-observador.editada { border: 2px dashed #d9690b; background: rgba(255, 209, 153, 0.25); }
+  .fila-observador.tarjeta-oculta, .item-dropdown-buscador.tarjeta-oculta { opacity: 0.5; }
   .boton-leer-primero {
     flex: none;
     font-size: 14px;
@@ -5040,6 +5041,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
     <label class="enfoque-opcion" title="Un gato que te acompaña mientras estudiás"><input type="checkbox" class="chk-compania-orion"> 🐱 Compañía de Orion</label>
     <label class="enfoque-opcion" title="Ronda de 60–90 s para activar la atención antes de empezar"><input type="checkbox" class="chk-minijuego"> 🎮 Minijuego previo</label>
+    <label class="enfoque-opcion" title="Las tarjetas ocultas (🙈) no entran en evaluaciones ni en el Pomodoro"><input type="checkbox" class="chk-excluir-ocultas"> 🙈 Excluir tarjetas ocultas</label>
     <label class="enfoque-opcion" title="Al tocar una ruta en Retención se despliega el recorte del mapa"><input type="checkbox" class="chk-movil"> 📱 Pomodoro móvil</label>
     <button class="boton-reiniciar" id="btn-pomodoro-iniciar-normal">Normal</button>
     <button class="boton-secundario" id="btn-pomodoro-iniciar-dificil">Difícil</button>
@@ -5729,6 +5731,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
     <label class="enfoque-opcion" title="Un gato que te acompaña mientras estudiás"><input type="checkbox" class="chk-compania-orion"> 🐱 Compañía de Orion</label>
     <label class="enfoque-opcion" title="Ronda de 60–90 s para activar la atención antes de empezar"><input type="checkbox" class="chk-minijuego"> 🎮 Minijuego previo</label>
+    <label class="enfoque-opcion" title="Las tarjetas ocultas (🙈) no entran en evaluaciones ni en el Pomodoro"><input type="checkbox" class="chk-excluir-ocultas"> 🙈 Excluir tarjetas ocultas</label>
     <button class="boton-principal" id="btn-modo-confirmar">Comenzar</button>
     <button class="modal-cancelar" id="btn-modo-cancelar">Cancelar</button>
   </div>
@@ -5822,6 +5825,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="edit-rutas-opciones" id="edit-rutas-opciones"></div>
       </div>
     </div>
+    <label class="enfoque-opcion" title="Se aplica al instante; no necesita Guardar"><input type="checkbox" id="chk-editor-oculta"> 🙈 Ocultar de evaluación y Pomodoro</label>
     <div class="editor-tarjeta-pie">
       <button type="button" class="boton-reiniciar" id="btn-editar-tarjeta-guardar">💾 Guardar</button>
     </div>
@@ -6035,6 +6039,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         previo.m = false;
         previo.t = Date.now();
         previo.rev = siguienteRev();
+      } else if (previo.oculta === true) {
+        paraRevisar[h] = {
+          p: '',
+          po: typeof previo.po === 'string' ? previo.po : (t.primero || ''),
+          s: '',
+          espacio: previo.espacio || ESPACIO_HASH,
+          t: Date.now(),
+          rev: siguienteRev(),
+          m: false,
+          oculta: true,
+        };
       } else {
         delete paraRevisar[h];
         siguienteRev();
@@ -6050,6 +6065,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         rev: siguienteRev(),
       };
       if (Array.isArray(base.rutasEditadas)) paraRevisar[h].rutasEditadas = base.rutasEditadas.slice();
+      if (base.oculta === true) paraRevisar[h].oculta = true;
+    }
+    guardarParaRevisar();
+    refrescarTrasEdicionTarjeta();
+    return true;
+  }
+
+  function establecerOcultaTarjeta(t, valor) {
+    const h = hashTarjeta(t);
+    const e = paraRevisar[h];
+    if (!e) return false;
+    if ((e.oculta === true) === valor) return true;
+    if (valor) {
+      e.oculta = true;
+      e.t = Date.now();
+      e.rev = siguienteRev();
+    } else {
+      delete e.oculta;
+      if (e.m === false && !tarjetaEditada(t)) {
+        delete paraRevisar[h];
+        siguienteRev();
+      } else {
+        e.t = Date.now();
+        e.rev = siguienteRev();
+      }
     }
     guardarParaRevisar();
     refrescarTrasEdicionTarjeta();
@@ -6713,6 +6753,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const srs = obtenerSrsLista(lista);
     if (!srs.activated || srs.graduated) return false;
     if (!lista.hashes || lista.hashes.length === 0) return false;
+    if (!listaTieneTarjetasVisibles(lista)) return false;
     if (Date.now() < (srs.lastReviewDate + calcularIntervaloDias(srs.currentLevel) * SRS_MS_DIA)) return false;
     if (Date.now() < (srs.snoozeUntil || 0)) return false;
     return true;
@@ -6868,7 +6909,90 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const guardarParaRevisarDiferido = crearGuardadoDebounced(() => guardarRevisarLocal(CLAVE_PARA_REVISAR, paraRevisar), 250);
   function guardarParaRevisar() {
     reaplicarEdicionesTodas();
+    verificarCambioOcultas();
     guardarParaRevisarDiferido();
+  }
+
+  const OCULTAS_CLAVE = 'excluir_ocultas_v1';
+  let ocultasExcluir = (function () {
+    try { return localStorage.getItem(OCULTAS_CLAVE) !== '0'; } catch (e) { return true; }
+  })();
+  let ocultasExcluirSesion = ocultasExcluir;
+  let _tarjetasConsideradasCache = null;
+
+  function firmaOcultas() {
+    return Object.keys(paraRevisar).filter((h) => paraRevisar[h] && paraRevisar[h].oculta === true).sort().join(',');
+  }
+  let ocultasFirmaPrevia = firmaOcultas();
+
+  function esOculta(t) {
+    const e = paraRevisar[hashTarjeta(t)];
+    return !!(e && e.oculta === true);
+  }
+
+  function ocultasExcluirVigente() {
+    let activo = false;
+    try { activo = pomodoroActivo; } catch (e) { activo = false; }
+    return activo ? ocultasExcluirSesion : ocultasExcluir;
+  }
+
+  function tarjetaConsiderada(t) {
+    return !ocultasExcluirVigente() || !esOculta(t);
+  }
+
+  function tarjetasConsideradas() {
+    if (!ocultasExcluirVigente()) return tarjetasCompletas;
+    if (_tarjetasConsideradasCache === null) {
+      _tarjetasConsideradasCache = tarjetasCompletas.filter((t) => !esOculta(t));
+    }
+    return _tarjetasConsideradasCache;
+  }
+
+  function filtrarOcultasPersistido(lista) {
+    return ocultasExcluir ? lista.filter((t) => !esOculta(t)) : lista;
+  }
+
+  function hashesVisiblesActuales() {
+    return new Set(tarjetasConsideradas().map((t) => hashTarjeta(t)));
+  }
+
+  function listaTieneTarjetasVisibles(lista) {
+    if (!lista || !lista.hashes) return false;
+    if (!ocultasExcluirVigente()) return true;
+    const visibles = hashesVisiblesActuales();
+    return lista.hashes.some((h) => visibles.has(h));
+  }
+
+  function invalidarCachesOcultas() {
+    _tarjetasConsideradasCache = null;
+    const reseteos = [
+      () => { _cacheAgruparPorTema = null; },
+      () => { _cacheAgruparPorTemaCompleto = null; },
+      () => { _cacheRutasCitadas = null; },
+      () => { _cacheRutasPorSubtema = null; },
+      () => { _cacheMapaRutaASubtema = null; },
+      () => { _mapaTarjetasPorRutaRetencion = null; },
+      () => { estadisticasConstruidas = false; },
+      () => { curvaOlvidoConstruido = false; },
+      () => { srsConstruido = false; },
+      () => { subtRepasarConstruido = false; },
+      () => { sesgoConfianzaConstruido = false; },
+      () => {
+        if (gruposTemaInfo.size > 0) {
+          indiceAGrupoTema.clear();
+          construirListaTemas();
+        }
+      },
+      () => { actualizarConteoSeleccion(); },
+    ];
+    reseteos.forEach((f) => { try { f(); } catch (e) { } });
+  }
+
+  function verificarCambioOcultas() {
+    const firma = firmaOcultas();
+    if (firma === ocultasFirmaPrevia) return;
+    ocultasFirmaPrevia = firma;
+    invalidarCachesOcultas();
   }
 
   (function migrarRevisarLegado() {
@@ -7035,7 +7159,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function sincronizarControlesEdicion(t) {
-    const visible = edicionTarjetaPermitida() && esRevisar(t);
+    const visible = edicionTarjetaPermitida() && (esRevisar(t) || esOculta(t));
     elBtnEditarTarjeta.style.display = visible ? 'inline-block' : 'none';
     elBtnEditarTarjeta.classList.toggle('editada', visible && tarjetaEditada(t));
     if (!visible && editorTarjeta) cerrarEditorTarjeta();
@@ -7131,11 +7255,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   function abrirEditorTarjeta(tab) {
     if (!edicionTarjetaPermitida()) return;
     const t = tarjetasSesion[indiceActual];
-    if (!esRevisar(t)) return;
+    if (!esRevisar(t) && !esOculta(t)) return;
     const inicial = { p: primeroVisibleDe(t), s: t.segundo || '', r: rutasValidasLista(t.rutas) };
     editorTarjeta = { t: t, h: hashTarjeta(t), inicial: inicial, r: inicial.r.slice() };
     elInputEditPrimero.value = inicial.p;
     elInputEditSegundo.value = inicial.s;
+    document.getElementById('chk-editor-oculta').checked = esOculta(t);
     elEditRutasBuscar.value = '';
     elEditRutasSelector.style.display = 'none';
     elModalEditarTarjeta.classList.add('abierto');
@@ -7176,7 +7301,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     if (!editorTarjeta || !edicionTarjetaPermitida()) return;
     const t = editorTarjeta.t;
     const h = editorTarjeta.h;
-    if (hashTarjeta(t) !== h || !esRevisar(t)) { cerrarEditorTarjeta(); return; }
+    if (hashTarjeta(t) !== h || (!esRevisar(t) && !esOculta(t))) { cerrarEditorTarjeta(); return; }
     const o = originalDe(t);
     const textoP = colapsarEspacios(elInputEditPrimero.value);
     const textoS = colapsarEspacios(elInputEditSegundo.value);
@@ -7228,6 +7353,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     };
     if (!mismasRutas(rutas, rutasValidasLista(o.rutas))) nueva.rutasEditadas = rutas;
     if (previo.m === false) nueva.m = false;
+    if (previo.oculta === true) nueva.oculta = true;
     paraRevisar[h] = nueva;
     guardarParaRevisar();
     cerrarEditorTarjeta();
@@ -7236,6 +7362,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   elBtnEditarTarjeta.addEventListener('click', () => abrirEditorTarjeta('primero'));
+  document.getElementById('chk-editor-oculta').addEventListener('change', (ev) => {
+    if (!editorTarjeta || !edicionTarjetaPermitida()) return;
+    const chk = ev.target;
+    if (!establecerOcultaTarjeta(editorTarjeta.t, chk.checked)) chk.checked = esOculta(editorTarjeta.t);
+  });
   document.getElementById('btn-editar-tarjeta-cerrar').addEventListener('click', () => intentarCerrarEditorTarjeta());
   document.getElementById('btn-editar-tarjeta-guardar').addEventListener('click', () => guardarEditorTarjeta());
   elModalEditarTarjeta.addEventListener('click', (evento) => {
@@ -7301,6 +7432,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       };
       if (Array.isArray(e.rutasEditadas)) item.rutasEditadas = e.rutasEditadas.slice();
       if (e.m === false) item.m = false;
+      if (e.oculta === true) item.oculta = true;
       return item;
     });
     return { version: 1, rev: asegurarRevActual(), timestamp_backup: Date.now(), paraRevisar: lista };
@@ -7326,6 +7458,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       };
       if (Array.isArray(item.rutasEditadas)) entrada.rutasEditadas = rutasValidasLista(item.rutasEditadas);
       if (item.m === false) entrada.m = false;
+      if (item.oculta === true) entrada.oculta = true;
       const tObj = tarjetaPorHash.get(item.h);
       if (tObj) {
         const orig = originalDe(tObj);
@@ -7341,7 +7474,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         nuevas++;
       } else if ((local.p || '') === entrada.p && (local.s || '') === entrada.s &&
         JSON.stringify(local.rutasEditadas || null) === JSON.stringify(entrada.rutasEditadas || null) &&
-        (local.m === false) === (entrada.m === false)) {
+        (local.m === false) === (entrada.m === false) &&
+        (local.oculta === true) === (entrada.oculta === true)) {
         iguales++;
       } else if (entranteEsMasReciente(entrada.rev, entrada.t, local.rev, local.t)) {
         paraRevisar[item.h] = entrada;
@@ -7932,15 +8066,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   var _cacheAgruparPorTema = null;
-  function agruparPorTema() {
-    if (_cacheAgruparPorTema) return _cacheAgruparPorTema;
+  var _cacheAgruparPorTemaCompleto = null;
+  function agruparPorTemaCompleto() {
+    if (_cacheAgruparPorTemaCompleto) return _cacheAgruparPorTemaCompleto;
     const mapa = new Map();
     tarjetasCompletas.forEach((t, i) => {
       const nombre = nombreTema(t);
       if (!mapa.has(nombre)) mapa.set(nombre, []);
       mapa.get(nombre).push(i);
     });
-    _cacheAgruparPorTema = Array.from(mapa.entries()).map((par) => ({ nombre: par[0], indices: par[1] }));
+    _cacheAgruparPorTemaCompleto = Array.from(mapa.entries()).map((par) => ({ nombre: par[0], indices: par[1] }));
+    return _cacheAgruparPorTemaCompleto;
+  }
+
+  function agruparPorTema() {
+    if (!ocultasExcluirVigente()) return agruparPorTemaCompleto();
+    if (_cacheAgruparPorTema) return _cacheAgruparPorTema;
+    _cacheAgruparPorTema = agruparPorTemaCompleto()
+      .map((g) => ({ nombre: g.nombre, indices: g.indices.filter((i) => !esOculta(tarjetasCompletas[i])) }))
+      .filter((g) => g.indices.length > 0);
     return _cacheAgruparPorTema;
   }
 
@@ -7986,8 +8130,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     return set;
   }
 
+  function indicesSeleccionadosEfectivos() {
+    const set = new Set();
+    tarjetasCompletas.forEach((t, i) => { if (estaSeleccionado(i) && tarjetaConsiderada(t)) set.add(i); });
+    return set;
+  }
+
   function actualizarConteoSeleccion() {
-    const n = indicesSeleccionados().size;
+    const n = indicesSeleccionadosEfectivos().size;
     const btn = document.getElementById('btn-comenzar');
     btn.textContent = n > 0 ? 'Comenzar estudio (' + n + ')' : 'Comenzar estudio';
     btn.disabled = n === 0;
@@ -8146,8 +8296,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   });
 
   document.getElementById('btn-comenzar').addEventListener('click', () => {
+    if (indicesSeleccionadosEfectivos().size === 0) return;
     const seleccion = indicesSeleccionados();
-    if (seleccion.size === 0) return;
 
     let filtradas = tarjetasCompletas.filter((_, i) => seleccion.has(i));
     if (modoAleatorio) filtradas = mezclar(filtradas);
@@ -8159,7 +8309,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   const indiceAGrupoObservador = new Map();
 
   function textoMarcasTarjeta(t) {
-    return (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
+    return (esDificil(t) ? '★' : '') + (esRevisar(t) ? ' 🚩' : '') + (esOculta(t) ? ' 🙈' : '') + (notaEfectivaDe(t) !== '' ? ' 💡' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
   }
 
   function refrescarMarcasObservador() {
@@ -8167,7 +8317,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const t = tarjetasCompletas[Number(fila.dataset.idx)];
       const marcas = fila.querySelector('.tc-marcas');
       if (t && marcas) marcas.textContent = textoMarcasTarjeta(t);
-      if (t) fila.classList.toggle('editada', tarjetaEditada(t));
+      if (t) {
+        fila.classList.toggle('editada', tarjetaEditada(t));
+        fila.classList.toggle('tarjeta-oculta', esOculta(t));
+      }
     });
   }
 
@@ -8184,7 +8337,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     gruposObservadorInfo.clear();
     const frag = document.createDocumentFragment();
-    agruparPorTema().forEach((g) => {
+    agruparPorTemaCompleto().forEach((g) => {
       const det = document.createElement('details');
       det.className = 'grupo-tema';
       det.open = observadorAbiertos.has(g.nombre);
@@ -8219,6 +8372,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           fila.className = 'fila-observador';
           fila.dataset.idx = String(i);
           if (tarjetaEditada(t)) fila.classList.add('editada');
+          if (esOculta(t)) fila.classList.add('tarjeta-oculta');
           fila.appendChild(crearTextosTarjeta(t));
           const marcas = document.createElement('span');
           marcas.className = 'tc-marcas';
@@ -8866,7 +9020,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     const mapaCanonicos = construirMapaSubTCanonicos();
 
     const rutasDificilesSet = new Set();
-    tarjetasCompletas.forEach((t) => {
+    tarjetasConsideradas().forEach((t) => {
       if (!esDificil(t)) return;
       rutasValidasDe(t).forEach((idRuta) => rutasDificilesSet.add(Number(idRuta)));
     });
@@ -10503,6 +10657,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   }
 
   function arrancarSesionDesdeModal(lista, especial, inteligentePendiente, demoPendiente, modo) {
+    ocultasExcluirSesion = ocultasExcluir;
+    if (ocultasExcluirSesion) {
+      if (especial === 'matching') {
+        const baseMatching = obtenerTarjetasBaseSeleccionadas();
+        if (baseMatching.some((t) => esOculta(t))) {
+          lista = construirRondasMatching(baseMatching.filter((t) => !esOculta(t)));
+        }
+      } else {
+        lista = lista.filter((t) => !esOculta(t));
+      }
+      if (!lista || lista.length === 0) {
+        avisar('No quedan tarjetas visibles para esta sesión: todas las elegidas están ocultas. Desmarcá «Excluir tarjetas ocultas» para incluirlas.');
+        return;
+      }
+    }
     modoEspecial = especial;
     repasoInteligenteActivo = !especial && inteligentePendiente;
     modoDemostracionesCloze = (especial === 'cloze') ? demoPendiente : false;
@@ -13789,7 +13958,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       elDetalleTiempoGlobal.style.display = 'none';
       return;
     }
-    const n = listaPendienteInicio ? listaPendienteInicio.length : 0;
+    const n = listaPendienteInicio ? filtrarOcultasPersistido(listaPendienteInicio).length : 0;
     elDetalleTiempoGlobal.style.display = 'block';
     elDetalleTiempoGlobal.textContent = n > 0
       ? 'Tiempo total: ' + formatearTiempo(totalSegundosGlobalExamen(n) * 1000) + ' (' + n + ' tarjetas × 30 s + 25 %)'
@@ -13812,9 +13981,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     repasoInteligentePendiente = false;
     if (!lista) return;
     const arrancarExamen = () => {
+      ocultasExcluirSesion = ocultasExcluir;
+      const listaExamen = filtrarOcultasPersistido(lista);
+      if (listaExamen.length === 0) {
+        avisar('No quedan tarjetas visibles para esta sesión: todas las elegidas están ocultas. Desmarcá «Excluir tarjetas ocultas» para incluirlas.');
+        return;
+      }
       repasoInteligenteActivo = inteligentePendiente;
       configurarModoJuego('examen');
-      iniciarSesion(lista);
+      iniciarSesion(listaExamen);
     };
     if (minijuegoHabilitado) {
       minijuegoAbrir(
@@ -14359,7 +14534,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   function listasSrsPendientesRepaso() {
     const ahora = Date.now();
-    const vigentes = hashesVigentesActuales();
+    const vigentes = hashesVisiblesActuales();
     return listas.filter((l) => {
       if (l.espacio && l.espacio !== ESPACIO_HASH) return false;
       const srs = obtenerSrsLista(l);
@@ -16641,7 +16816,7 @@ const ZONAS_SYNC_GIST = [
     pararevisar: {
       plural: 'tarjetas para revisar', titulo: 'tarjetas para revisar',
       almacen: () => paraRevisar, guardar: () => guardarParaRevisar(),
-      repintar: () => { refrescarTrasEdicionTarjeta(); repintarTarjetaSiActiva(); }, explicitas: ['p', 's', 'rutasEditadas'],
+      repintar: () => { refrescarTrasEdicionTarjeta(); repintarTarjetaSiActiva(); }, explicitas: ['p', 's', 'rutasEditadas', 'oculta'],
     },
     notas: {
       plural: 'notas', titulo: 'notas',
@@ -17469,8 +17644,10 @@ const ZONAS_SYNC_GIST = [
     if (consultaNorm === '') { vaciarDropdownBuscador(elDropdownBuscadorTemas); return; }
     renderResultadosDropdown(elDropdownBuscadorTemas, consultaNorm, buscarTarjetasGlobal, (r) => {
       const t = tarjetasCompletas[r.idx];
-      return crearItemDropdownBuscador('[' + nombreTema(t) + ']', r.texto, consultaNorm,
+      const itemTemas = crearItemDropdownBuscador((esOculta(t) ? '🙈 ' : '') + '[' + nombreTema(t) + ']', r.texto, consultaNorm,
         () => seleccionarResultadoBuscadorTemas(r.idx));
+      if (esOculta(t)) itemTemas.classList.add('tarjeta-oculta');
+      return itemTemas;
     });
   }
 
@@ -17479,11 +17656,13 @@ const ZONAS_SYNC_GIST = [
     if (consultaNorm === '') { vaciarDropdownBuscador(elDropdownBuscadorObservador); return; }
     renderResultadosDropdown(elDropdownBuscadorObservador, consultaNorm, buscarTarjetasGlobal, (r) => {
       const t = tarjetasCompletas[r.idx];
-      return crearItemDropdownBuscador('[' + nombreTema(t) + ']', r.texto, consultaNorm, () => {
+      const itemObservador = crearItemDropdownBuscador((esOculta(t) ? '🙈 ' : '') + '[' + nombreTema(t) + ']', r.texto, consultaNorm, () => {
         cerrarDropdownBuscador(elDropdownBuscadorObservador);
         elInputBuscadorObservador.value = '';
         abrirTarjetaObservador(r.idx);
       });
+      if (esOculta(t)) itemObservador.classList.add('tarjeta-oculta');
+      return itemObservador;
     });
   }
 
@@ -20204,7 +20383,7 @@ const ZONAS_SYNC_GIST = [
   function todasLasRutasCitadas() {
     if (_cacheRutasCitadas) return _cacheRutasCitadas;
     const set = new Set();
-    tarjetasCompletas.forEach((t) => {
+    tarjetasConsideradas().forEach((t) => {
       (t.rutas || []).forEach((id) => { if (rutasDisp.hasOwnProperty(id)) set.add(id); });
     });
     _cacheRutasCitadas = Array.from(set).sort((a, b) => Number(a) - Number(b));
@@ -20215,7 +20394,7 @@ const ZONAS_SYNC_GIST = [
   function agruparRutasPorSubtema() {
     if (_cacheRutasPorSubtema) return _cacheRutasPorSubtema;
     const mapa = new Map();
-    tarjetasCompletas.forEach((t) => {
+    tarjetasConsideradas().forEach((t) => {
       const nombre = nombreTema(t);
       (t.rutas || []).forEach((id) => {
         if (!rutasDisp.hasOwnProperty(id)) return;
@@ -20360,7 +20539,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   function tarjetasQueCitanRuta(id) {
     if (!_mapaTarjetasPorRutaRetencion) {
       const mapa = new Map();
-      tarjetasCompletas.forEach((t) => {
+      tarjetasConsideradas().forEach((t) => {
         const vistas = new Set();
         (t.rutas || []).forEach((r) => {
           const clave = String(r);
@@ -20457,7 +20636,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       const propias = [];
       (t.rutas || []).forEach((id) => {
         const clave = String(id);
-        if (!activas.has(clave) || propias.indexOf(clave) !== -1) return;
+        if (!tarjetaConsiderada(t) || !activas.has(clave) || propias.indexOf(clave) !== -1) return;
         propias.push(clave);
       });
       propias.sort((x, y) => Number(x) - Number(y));
@@ -22873,13 +23052,42 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     div.appendChild(titulo);
     const acc = document.createElement('div');
     acc.className = 'acciones-nota-dif';
-    acc.appendChild(botonMiniFila('🗑 Borrar', async () => {
-      if (!(await confirmarAccion('¿Quitar esta tarjeta de las marcadas para revisar? No se puede deshacer.'))) return;
-      delete paraRevisar[hash];
-      siguienteRev();
-      guardarParaRevisar();
+    const etiquetaOculta = document.createElement('label');
+    etiquetaOculta.className = 'enfoque-opcion';
+    const chkOculta = document.createElement('input');
+    chkOculta.type = 'checkbox';
+    chkOculta.checked = entrada.oculta === true;
+    chkOculta.addEventListener('change', () => {
+      const tarjeta = tarjetaPorHash(hash);
+      if (tarjeta) establecerOcultaTarjeta(tarjeta, chkOculta.checked);
       renderRevisarGuardadoPreview();
-    }));
+    });
+    etiquetaOculta.appendChild(chkOculta);
+    etiquetaOculta.appendChild(document.createTextNode(' 🙈 Ocultar de evaluación y Pomodoro'));
+    div.appendChild(etiquetaOculta);
+    if (entrada.m !== false) {
+      acc.appendChild(botonMiniFila('🗑 Borrar', async () => {
+        if (!(await confirmarAccion('¿Quitar esta tarjeta de las marcadas para revisar? No se puede deshacer.'))) return;
+        const actual = paraRevisar[hash];
+        if (actual && actual.oculta === true) {
+          paraRevisar[hash] = {
+            p: '',
+            po: typeof actual.po === 'string' ? actual.po : '',
+            s: '',
+            espacio: actual.espacio || ESPACIO_HASH,
+            t: Date.now(),
+            rev: siguienteRev(),
+            m: false,
+            oculta: true,
+          };
+        } else {
+          delete paraRevisar[hash];
+          siguienteRev();
+        }
+        guardarParaRevisar();
+        renderRevisarGuardadoPreview();
+      }));
+    }
     div.appendChild(acc);
     return div;
   }
@@ -22892,10 +23100,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const elVaciar = document.getElementById('btn-vaciar-revisar');
     const hashesAqui = new Set(tarjetasCompletas.map((t) => hashTarjeta(t)));
     const hashes = Object.keys(paraRevisar).filter((h) => paraRevisar[h].m !== false);
+    const hashesLista = Object.keys(paraRevisar).filter((h) => paraRevisar[h].m !== false || paraRevisar[h].oculta === true);
     const otrasItems = [];
     let nAqui = 0;
     const frag = document.createDocumentFragment();
-    hashes.forEach((h) => {
+    hashesLista.forEach((h) => {
       if (hashesAqui.has(h)) {
         frag.appendChild(filaRevisarGuardada(h, paraRevisar[h]));
         nAqui++;
@@ -22928,7 +23137,22 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   document.getElementById('btn-vaciar-revisar').addEventListener('click', async () => {
     if (Object.keys(paraRevisar).length === 0) return;
     if (!(await confirmarAccion('¿Vaciar todas las tarjetas para revisar? No se puede deshacer.'))) return;
-    paraRevisar = {};
+    const conservadasOcultas = {};
+    Object.keys(paraRevisar).forEach((h) => {
+      const e = paraRevisar[h];
+      if (!e || e.oculta !== true) return;
+      conservadasOcultas[h] = {
+        p: '',
+        po: typeof e.po === 'string' ? e.po : '',
+        s: '',
+        espacio: e.espacio || ESPACIO_HASH,
+        t: Date.now(),
+        rev: siguienteRev(),
+        m: false,
+        oculta: true,
+      };
+    });
+    paraRevisar = conservadasOcultas;
     siguienteRev();
     guardarParaRevisar();
     renderRevisarGuardadoPreview();
@@ -24991,7 +25215,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     const posTxt = new Map();
     tarjetasCompletas.forEach((t, i) => posTxt.set(t, i));
-    const ordenTemas = agruparPorTema().map((g) => g.nombre);
+    const ordenTemas = agruparPorTemaCompleto().map((g) => g.nombre);
 
     const grupos = new Map();
     indices.forEach((i) => {
@@ -25249,7 +25473,12 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       hashesPorLista[lista.nombre] = new Set(lista.hashes);
       lista.hashes.forEach((h) => todosLosHashes.add(h));
     });
-    let tarjetasSrs = tarjetasCompletas.filter((t) => todosLosHashes.has(hashTarjeta(t)));
+    ocultasExcluirSesion = ocultasExcluir;
+    let tarjetasSrs = tarjetasCompletas.filter((t) => todosLosHashes.has(hashTarjeta(t)) && (!ocultasExcluirSesion || !esOculta(t)));
+    if (tarjetasSrs.length === 0) {
+      avisar('Las tarjetas de estas listas están ocultas y se excluyen de la evaluación. Desmarcá «Excluir tarjetas ocultas» para repasarlas.');
+      return;
+    }
     if (modoAleatorio) tarjetasSrs = mezclar(tarjetasSrs);
 
     iniciarSesion(tarjetasSrs);   // esto resetea srsSesionActiva a null; se fija DESPUÉS
@@ -25373,7 +25602,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     let nTarjetasConRazon = 0;
     let nTarjetasPorReforzar = 0;
     const conteoRazonesAviso = {};
-    tarjetasCompletas.forEach((t) => {
+    tarjetasConsideradas().forEach((t) => {
       const esDif = esDificil(t);
       const razonesT = razonesDeTarjeta(t);
       if (esDif) nTarjetasDificiles++;
@@ -25402,6 +25631,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const proximas = [];
     listas.forEach((l) => {
       if ((l.espacio && l.espacio !== ESPACIO_HASH) || !l.hashes || l.hashes.length === 0) return;
+      if (!listaTieneTarjetasVisibles(l)) return;
       const srs = obtenerSrsLista(l);
       if (!srs.activated || srs.graduated) return;
       const falta = srs.lastReviewDate + calcularIntervaloDias(srs.currentLevel) * SRS_MS_DIA - ahora;
@@ -25917,6 +26147,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     pomodoroHoraInicio = Date.now();
     enfoqueReiniciarContador();
     reiniciarBateriaMental();
+    ocultasExcluirSesion = ocultasExcluir;
     pomodoroAcumulado = { pretest: 0, retencion: 0, skimming: 0, descanso: 0 };
     pomodoroRetencionPresionada = false;
     pomodoroEnBraindumpFinal = false;
@@ -26437,6 +26668,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function restaurarSesionPendiente(x) {
+    ocultasExcluirSesion = ocultasExcluir;
     const porHash = new Map();
     tarjetasCompletas.forEach((t) => {
       const h = hashTarjeta(t);
@@ -26940,6 +27172,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function restaurarSesionPomodoroPendiente(x) {
+    ocultasExcluirSesion = ocultasExcluir;
     if (pomodoroActivo) throw new Error('ya hay un Pomodoro activo');
     if (tarjetasCompletas.length === 0) throw new Error('el evaluador no tiene tarjetas');
     const enBraindump = !!x.pomodoroEnBraindumpFinal;
@@ -27579,6 +27812,19 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     b.textContent = sonidosActivos ? '🔊' : '🔇';
     if (b.id !== 'btn-mute') b.addEventListener('click', () => toggleMute());
   });
+  function ocultasSincronizarChecks() {
+    document.querySelectorAll('.chk-excluir-ocultas').forEach((chk) => { chk.checked = ocultasExcluir; });
+  }
+  document.querySelectorAll('.chk-excluir-ocultas').forEach((chk) => {
+    chk.addEventListener('change', () => {
+      ocultasExcluir = chk.checked;
+      try { escribirLocalSeguro(OCULTAS_CLAVE, ocultasExcluir ? '1' : '0'); } catch (e) { }
+      ocultasSincronizarChecks();
+      invalidarCachesOcultas();
+    });
+  });
+  ocultasSincronizarChecks();
+
   const MINIJUEGO_CLAVE = 'minijuego_previo_v1';
   const MINIJUEGO_IDS = ['stop', 'cambio', 'mozo', 'luciernagas', 'vigia'];
   const MINIJUEGO_TIMEOUT_MS = 7000;
