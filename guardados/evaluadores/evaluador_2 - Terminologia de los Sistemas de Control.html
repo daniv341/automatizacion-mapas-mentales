@@ -5378,14 +5378,35 @@
   }
 
   const _guardadosPendientes = [];
+  const _clavesStorageArranque = (function () {
+    const a = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k) a.push(k);
+      }
+    } catch (e) { }
+    return a;
+  })();
 
   var _versionDatos = 0;
+  var _versionStorage = 0;
+  function _enIdle(fn, timeoutMs) {
+    if (window.requestIdleCallback) requestIdleCallback(fn, { timeout: timeoutMs || 3000 });
+    else setTimeout(fn, 200);
+  }
+  function _claveAfectaRenders(k) {
+    if (typeof k !== 'string') return true;
+    return !(k === 'reloj_logico_v1' || k === 'registro_espacios_v1' || k === 'tema_app_v1' ||
+      k.indexOf('sesion_pendiente_') === 0 || k.indexOf('sesion_pomodoro_') === 0 ||
+      k.indexOf('ultimo_backup_snapshot_') === 0 || k.indexOf('gist_') === 0);
+  }
   (function () {
     try {
       const setOriginal = Storage.prototype.setItem;
       const removeOriginal = Storage.prototype.removeItem;
-      Storage.prototype.setItem = function () { _versionDatos++; return setOriginal.apply(this, arguments); };
-      Storage.prototype.removeItem = function () { _versionDatos++; return removeOriginal.apply(this, arguments); };
+      Storage.prototype.setItem = function (k) { _versionStorage++; if (_claveAfectaRenders(k)) _versionDatos++; return setOriginal.apply(this, arguments); };
+      Storage.prototype.removeItem = function (k) { _versionStorage++; if (_claveAfectaRenders(k)) _versionDatos++; return removeOriginal.apply(this, arguments); };
     } catch (e) { }
   })();
   const _firmasRender = {};
@@ -5959,6 +5980,7 @@
       });
     });
     const reg = cargarRegistroEspacios();
+    if (reg.espacios[ESPACIO_HASH] === rutasUnicas.size) return;
     reg.espacios[ESPACIO_HASH] = rutasUnicas.size;
     guardarRegistroEspacios(reg.espacios);
   }
@@ -5971,8 +5993,6 @@
       guardarRegistroEspacios(reg.espacios);
     }
   }
-
-  actualizarRegistroEspacioActual();
 
   const originalesTarjeta = new WeakMap();
 
@@ -6042,7 +6062,12 @@
   function firmaOcultas() {
     return Object.keys(paraRevisar).filter((h) => paraRevisar[h] && paraRevisar[h].oculta === true).sort().join(',');
   }
-  let ocultasFirmaPrevia = firmaOcultas();
+  function clavesOcultasActuales() {
+    const r = [];
+    Object.keys(paraRevisar).forEach((h) => { if (paraRevisar[h] && paraRevisar[h].oculta === true) r.push(h); });
+    return r;
+  }
+  let ocultasFirmaPrevia = new Set(clavesOcultasActuales());
 
   function esOculta(t) {
     const e = paraRevisar[hashTarjeta(t)];
@@ -6071,9 +6096,18 @@
     return ocultasExcluir ? lista.filter((t) => !esOculta(t)) : lista;
   }
 
+  let _cacheHashesVisiblesLen = -1;
+  let _cacheHashesVisibles = null;
+  let _cacheHashesVisiblesRef = null;
   function hashesVisiblesActuales() {
-    return new Set(tarjetasConsideradas().map((t) => hashTarjeta(t)));
+    const base = tarjetasConsideradas();
+    if (_cacheHashesVisibles !== null && _cacheHashesVisiblesRef === base && _cacheHashesVisiblesLen === base.length) return _cacheHashesVisibles;
+    _cacheHashesVisibles = new Set(base.map((t) => hashTarjeta(t)));
+    _cacheHashesVisiblesRef = base;
+    _cacheHashesVisiblesLen = base.length;
+    return _cacheHashesVisibles;
   }
+
 
   function listaTieneTarjetasVisibles(lista) {
     if (!lista || !lista.hashes) return false;
@@ -6108,9 +6142,9 @@
   }
 
   function verificarCambioOcultas() {
-    const firma = firmaOcultas();
-    if (firma === ocultasFirmaPrevia) return;
-    ocultasFirmaPrevia = firma;
+    const actuales = clavesOcultasActuales();
+    if (actuales.length === ocultasFirmaPrevia.size && actuales.every((h) => ocultasFirmaPrevia.has(h))) return;
+    ocultasFirmaPrevia = new Set(actuales);
     invalidarCachesOcultas();
   }
 
@@ -6225,7 +6259,7 @@
   }
 
   reaplicarEdicionesTodas();
-  actualizarRegistroEspacioActual();
+  _enIdle(actualizarRegistroEspacioActual, 4000);
 
   const elBtnEditarTarjeta = document.getElementById('btn-editar-tarjeta');
   const elModalEditarTarjeta = document.getElementById('modal-editar-tarjeta');
@@ -6333,43 +6367,62 @@
     renderOpcionesRutasEditor();
   }
 
+  let _idsRutasEditor = null;
+  const _textoRutaEditor = new Map();
+  function _textoRutaEditorDe(id) {
+    let t = _textoRutaEditor.get(id);
+    if (t === undefined) {
+      t = claveTextoPrimero(id + ' ' + (rutasDisp[id].tema || ''));
+      _textoRutaEditor.set(id, t);
+    }
+    return t;
+  }
+
   function renderOpcionesRutasEditor() {
     elEditRutasOpciones.textContent = '';
     if (elEditRutasSelector.style.display === 'none') return;
     const consulta = claveTextoPrimero(elEditRutasBuscar.value);
     const tokens = consulta === '' ? [] : consulta.split(' ');
     const asociadas = new Set(editorTarjeta.r);
-    Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((id) => {
+    if (_idsRutasEditor === null) _idsRutasEditor = Object.keys(rutasDisp).map(Number).sort((a, b) => a - b);
+    const frag = document.createDocumentFragment();
+    _idsRutasEditor.forEach((id) => {
       const tema = rutasDisp[id].tema || '';
-      const texto = claveTextoPrimero(id + ' ' + tema);
+      const texto = _textoRutaEditorDe(id);
       if (!tokens.every((tk) => texto.indexOf(tk) !== -1)) return;
       const fila = document.createElement('label');
       fila.className = 'edit-ruta-fila edit-ruta-opcion' + (asociadas.has(id) ? ' marcada' : '');
       const chk = document.createElement('input');
       chk.type = 'checkbox';
       chk.checked = asociadas.has(id);
+      chk.dataset.rutaId = String(id);
       const num = document.createElement('span');
       num.className = 'edit-ruta-num';
       num.textContent = 'Ruta ' + id;
       const tm = document.createElement('span');
       tm.className = 'edit-ruta-tema';
       tm.textContent = tema;
-      chk.addEventListener('change', () => {
-        if (chk.checked) {
-          if (editorTarjeta.r.indexOf(id) === -1) editorTarjeta.r.push(id);
-        } else {
-          editorTarjeta.r = editorTarjeta.r.filter((x) => x !== id);
-        }
-        const pos = elEditRutasOpciones.scrollTop;
-        renderRutasEditor();
-        elEditRutasOpciones.scrollTop = pos;
-      });
       fila.appendChild(chk);
       fila.appendChild(num);
       fila.appendChild(tm);
-      elEditRutasOpciones.appendChild(fila);
+      frag.appendChild(fila);
     });
+    elEditRutasOpciones.appendChild(frag);
   }
+
+  elEditRutasOpciones.addEventListener('change', (ev) => {
+    const chk = ev.target;
+    if (!chk || chk.type !== 'checkbox' || chk.dataset.rutaId === undefined || !editorTarjeta) return;
+    const id = Number(chk.dataset.rutaId);
+    if (chk.checked) {
+      if (editorTarjeta.r.indexOf(id) === -1) editorTarjeta.r.push(id);
+    } else {
+      editorTarjeta.r = editorTarjeta.r.filter((x) => x !== id);
+    }
+    const pos = elEditRutasOpciones.scrollTop;
+    renderRutasEditor();
+    elEditRutasOpciones.scrollTop = pos;
+  });
 
   function abrirEditorTarjeta(tab) {
     if (!edicionTarjetaPermitida()) return;
@@ -6503,7 +6556,12 @@
       elEditRutasBuscar.focus();
     }
   });
-  elEditRutasBuscar.addEventListener('input', () => { if (editorTarjeta) renderOpcionesRutasEditor(); });
+  let _timerBuscarRutasEditor = 0;
+  elEditRutasBuscar.addEventListener('input', () => {
+    if (!editorTarjeta) return;
+    clearTimeout(_timerBuscarRutasEditor);
+    _timerBuscarRutasEditor = setTimeout(() => { if (editorTarjeta) renderOpcionesRutasEditor(); }, 90);
+  });
 
   function hayModalEncimaDelEditor() {
     return elModalAviso.classList.contains('abierto') ||
@@ -6997,8 +7055,79 @@
   const elBtnLeerPrimero = document.getElementById('btn-leer-primero');
   const ttsDisponible = ('speechSynthesis' in window) && (typeof SpeechSynthesisUtterance !== 'undefined');
   let _utteranceActual = null;
+  let _lecturaPrimeroToken = 0;
+
+  const VOZ_TROZO_MIN = 60;
+  const VOZ_TROZO_COMA = 100;
+  const VOZ_TROZO_MAX = 140;
+  const VOZ_ABREVIATURA = /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{0,3}\.$/;
+
+  function vozSuavizarBloque(bloque) {
+    let t = String(bloque).replace(/\r\n|\r|\n/g, ' ').replace(/[…—]/g, ' ');
+    t = t.replace(/[;:]/g, (m, i, todo) => ((/[0-9]/.test(todo.charAt(i - 1)) && /[0-9]/.test(todo.charAt(i + 1))) ? m : ','));
+    t = t.replace(/\s+/g, ' ').trim();
+    return t.replace(/\.+$/, '').trim();
+  }
+
+  function vozPrepararTexto(bloques) {
+    return bloques.map(vozSuavizarBloque).filter((t) => t !== '').join(' ').replace(/\s+/g, ' ').trim();
+  }
+
+  function vozPartirTexto(texto) {
+    const trozos = [];
+    let actual = '';
+    texto.split(' ').filter(Boolean).forEach((palabra) => {
+      actual = actual === '' ? palabra : actual + ' ' + palabra;
+      const finOracion = /[.!?]$/.test(palabra) && !VOZ_ABREVIATURA.test(palabra);
+      const finComa = /,$/.test(palabra);
+      if ((finOracion && actual.length >= VOZ_TROZO_MIN) || (finComa && actual.length >= VOZ_TROZO_COMA) || actual.length >= VOZ_TROZO_MAX) {
+        trozos.push(actual);
+        actual = '';
+      }
+    });
+    if (actual !== '') trozos.push(actual);
+    return trozos;
+  }
+
+  function vozHablarTrozos(trozos, esVigente, alCrearUtterance, alTerminar) {
+    const refs = [];
+    const encolados = [];
+    let terminado = false;
+    let inactivo = 0;
+    let guardia = 0;
+    const terminar = () => {
+      if (terminado) return;
+      terminado = true;
+      clearInterval(guardia);
+      if (esVigente()) alTerminar();
+    };
+    const encolar = (i) => {
+      if (terminado || !esVigente() || i >= trozos.length || encolados[i]) return;
+      encolados[i] = true;
+      const u = new SpeechSynthesisUtterance(trozos[i]);
+      u.lang = 'es-AR';
+      u.rate = 0.6 // velocidad de lectura de rutas en sesion pomodoro
+      u.onstart = () => encolar(i + 1);
+      u.onend = () => {
+        if (i === trozos.length - 1) terminar();
+        else encolar(i + 1);
+      };
+      u.onerror = () => terminar();
+      refs.push(u);
+      alCrearUtterance(u);
+      try { window.speechSynthesis.speak(u); } catch (e) { terminar(); }
+    };
+    guardia = setInterval(() => {
+      if (terminado || !esVigente()) { clearInterval(guardia); return; }
+      const motor = window.speechSynthesis;
+      inactivo = (!motor.speaking && !motor.pending) ? inactivo + 1 : 0;
+      if (inactivo >= 2) terminar();
+    }, 4000);
+    setTimeout(() => encolar(0), 50);
+  }
 
   function detenerLecturaPrimero() {
+    _lecturaPrimeroToken++;
     const habiaLectura = _utteranceActual !== null;
     _utteranceActual = null;
     elBtnLeerPrimero.classList.remove('leyendo');
@@ -7007,20 +7136,18 @@
 
   function leerPrimeroEnVoz() {
     if (!ttsDisponible) return;
-    const texto = (elPrimero.textContent || '').trim();
-    if (!texto) return;
+    const trozos = vozPartirTexto(vozPrepararTexto([elPrimero.textContent || '']));
+    if (trozos.length === 0) return;
     audioRutasDetener();
-    detenerLecturaPrimero();   
-    const u = new SpeechSynthesisUtterance(texto);
-    u.lang = 'es-AR';
-    const fin = () => {
-      if (_utteranceActual === u) { _utteranceActual = null; elBtnLeerPrimero.classList.remove('leyendo'); }
-    };
-    u.onend = fin;
-    u.onerror = fin;
-    _utteranceActual = u;
+    detenerLecturaPrimero();
+    const token = ++_lecturaPrimeroToken;
     elBtnLeerPrimero.classList.add('leyendo');
-    setTimeout(() => { if (_utteranceActual === u) window.speechSynthesis.speak(u); }, 50);
+    vozHablarTrozos(
+      trozos,
+      () => token === _lecturaPrimeroToken,
+      (u) => { _utteranceActual = u; },
+      () => { _utteranceActual = null; elBtnLeerPrimero.classList.remove('leyendo'); }
+    );
   }
 
   if (!ttsDisponible) elBtnLeerPrimero.style.display = 'none';
@@ -7266,13 +7393,16 @@
   }
 
   function actualizarMarcasTemas() {
-    elListaTemas.querySelectorAll('.item-tarjeta-check').forEach((fila) => {
-      const c = fila.querySelector('input[data-idx]');
-      const marcas = fila.querySelector('.tc-marcas');
-      if (!c || !marcas) return;
-      const t = tarjetasCompletas[Number(c.dataset.idx)];
-      if (!t) return;
-      marcas.textContent = (esDificil(t) ? '★ ' : '') + (notaEfectivaDe(t) !== '' ? '💡 ' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
+    renderSiCambioDatos('marcasTemas', '', () => {
+      elListaTemas.querySelectorAll('.item-tarjeta-check').forEach((fila) => {
+        const c = fila.querySelector('input[data-idx]');
+        const marcas = fila.querySelector('.tc-marcas');
+        if (!c || !marcas) return;
+        const t = tarjetasCompletas[Number(c.dataset.idx)];
+        if (!t) return;
+        const txt = (esDificil(t) ? '★ ' : '') + (notaEfectivaDe(t) !== '' ? '💡 ' : '') + (razonesDeTarjeta(t).length > 0 ? ' 🏷' : '');
+        if (marcas.textContent !== txt) marcas.textContent = txt;
+      });
     });
   }
 
@@ -7621,11 +7751,20 @@
     return h;
   }
 
+  const _imagenesPorRuta = new Map();
+  function imagenesDeRuta(ruta) {
+    let imgs = _imagenesPorRuta.get(ruta);
+    if (imgs === undefined) {
+      const lineas = (rutasDisp[ruta] && rutasDisp[ruta].lineas) || [];
+      imgs = lineas.filter(esImagen);
+      _imagenesPorRuta.set(ruta, imgs);
+    }
+    return imgs;
+  }
   function construirIndiceImagenes() {
     const nav = [];
     Object.keys(rutasDisp).map(Number).sort((a, b) => a - b).forEach((ruta) => {
-      const lineas = (rutasDisp[ruta] && rutasDisp[ruta].lineas) || [];
-      const cantidad = lineas.filter(esImagen).length;
+      const cantidad = imagenesDeRuta(ruta).length;
       for (let i = 0; i < cantidad; i++) nav.push({ ruta: ruta, indice: i });
     });
     return nav;
@@ -7633,8 +7772,7 @@
   const INDICE_IMAGENES = construirIndiceImagenes();   
 
   function srcDeImagen(ruta, indice) {
-    const lineas = (rutasDisp[ruta] && rutasDisp[ruta].lineas) || [];
-    const imagenes = lineas.filter(esImagen);
+    const imagenes = imagenesDeRuta(ruta);
     const linea = imagenes[indice];
     return linea ? linea.substring(4) : '';   
   }
@@ -8705,11 +8843,39 @@
   function colocarChipsSinSuperposicion(medidas, anchoLienzo, altoInicial) {
     const margen = 8;
     const separacion = 6;
-    const colocados = [];
+    const TAM_CELDA = 48;
+    const grilla = new Map();
+    let fondoMax = margen - separacion - 1;
     let altoLienzo = altoInicial;
-    const choca = (x, y, w, h) => colocados.some((c) =>
-      x < c.x + c.w + separacion && x + w + separacion > c.x &&
-      y < c.y + c.h + separacion && y + h + separacion > c.y);
+    const celda = (v) => Math.max(0, Math.floor(v / TAM_CELDA));
+    const choca = (x, y, w, h) => {
+      const cx1 = celda(x + w);
+      const cy1 = celda(y + h);
+      for (let cy = celda(y); cy <= cy1; cy++) {
+        for (let cx = celda(x); cx <= cx1; cx++) {
+          const lista = grilla.get(cy * 8192 + cx);
+          if (!lista) continue;
+          for (let k = 0; k < lista.length; k++) {
+            const c = lista[k];
+            if (x < c.x + c.w + separacion && x + w + separacion > c.x &&
+              y < c.y + c.h + separacion && y + h + separacion > c.y) return true;
+          }
+        }
+      }
+      return false;
+    };
+    const registrar = (c) => {
+      const cx1 = celda(c.x + c.w + separacion);
+      const cy1 = celda(c.y + c.h + separacion);
+      for (let cy = celda(c.y - separacion); cy <= cy1; cy++) {
+        for (let cx = celda(c.x - separacion); cx <= cx1; cx++) {
+          const clave = cy * 8192 + cx;
+          const lista = grilla.get(clave);
+          if (lista) lista.push(c); else grilla.set(clave, [c]);
+        }
+      }
+      if (c.y + c.h > fondoMax) fondoMax = c.y + c.h;
+    };
 
     const orden = medidas.map((_, i) => i).sort((a, b) => medidas[b].w - medidas[a].w);
     const posiciones = new Array(medidas.length);
@@ -8735,15 +8901,13 @@
       }
 
       if (!pos) {
-        let fondo = margen - separacion - 1;
-        colocados.forEach((c) => { if (c.y + c.h > fondo) fondo = c.y + c.h; });
-        const y = fondo + separacion + 1;
+        const y = fondoMax + separacion + 1;
         const x = margen + Math.random() * Math.max(0, anchoLienzo - 2 * margen - w);
         pos = { x: x, y: y };
         if (y + h + margen > altoLienzo) altoLienzo = y + h + margen;
       }
 
-      colocados.push({ x: pos.x, y: pos.y, w: w, h: h });
+      registrar({ x: pos.x, y: pos.y, w: w, h: h });
       posiciones[i] = pos;
     });
 
@@ -9058,6 +9222,7 @@
       const bytes = new Uint8Array(binario.length);
       for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
       src = URL.createObjectURL(new Blob([bytes], { type: tipo }));
+      if (nodo) nodo.textContent = '';
     } catch (e) {
       src = uri;
     }
@@ -14804,8 +14969,8 @@
       const clavesIdViejas = [];
       const clavesSyncViejas = [];
 
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
+      for (let i = 0; i < _clavesStorageArranque.length; i++) {
+        const k = _clavesStorageArranque[i];
         if (!k) continue;
         if (k.indexOf(prefijoId) === 0 && k !== CLAVE_GIST_ID) clavesIdViejas.push(k);
         else if (k.indexOf(prefijoSync) === 0 && k !== CLAVE_GIST_ULTIMA_SYNC) clavesSyncViejas.push(k);
@@ -15895,14 +16060,21 @@ const ZONAS_SYNC_GIST = [
 
   const LIMITE_STORAGE_BYTES = 5242880;
 
-  function calcularUsoStorage() {
-    let bytes = 0;
+  let _cacheCaracteresStorage = { v: -1, t: 0, n: 0 };
+  function _caracteresStorage() {
+    const ahora = Date.now();
+    if (_cacheCaracteresStorage.v === _versionStorage && ahora - _cacheCaracteresStorage.t < 30000) return _cacheCaracteresStorage.n;
+    let total = 0;
     for (let i = 0; i < localStorage.length; i++) {
       const clave = localStorage.key(i);
       const valor = localStorage.getItem(clave) || '';
-      bytes += (clave.length + valor.length) * 2;
+      total += clave.length + valor.length;
     }
-    return bytes;
+    _cacheCaracteresStorage = { v: _versionStorage, t: ahora, n: total };
+    return total;
+  }
+  function calcularUsoStorage() {
+    return _caracteresStorage() * 2;
   }
 
   function renderIndicadorStorage() {
@@ -16836,7 +17008,7 @@ const ZONAS_SYNC_GIST = [
   }
 
   function etiquetaResultadoGaleria(r) {
-    const totalImgsRuta = INDICE_IMAGENES.filter((e) => e.ruta === r.ruta).length;
+    const totalImgsRuta = typeof r.ruta === 'number' ? imagenesDeRuta(r.ruta).length : 0;
     return totalImgsRuta > 1
       ? 'Ruta ' + r.ruta + ' (img ' + (r.indice + 1) + '/' + totalImgsRuta + '):'
       : 'Ruta ' + r.ruta + ':';
@@ -17979,6 +18151,16 @@ const ZONAS_SYNC_GIST = [
     return lista;
   }
 
+  let _botonRIProgramado = false;
+  function programarBotonRepasoInteligente() {
+    if (_botonRIProgramado) return;
+    _botonRIProgramado = true;
+    _enIdle(() => {
+      _botonRIProgramado = false;
+      try { actualizarBotonRepasoInteligente(); } catch (e) { }
+    }, 3000);
+  }
+
   function actualizarBotonRepasoInteligente() {
     const btnD = document.getElementById('btn-modo-dificiles');
     if (!btnD) return;
@@ -18015,18 +18197,14 @@ const ZONAS_SYNC_GIST = [
 
   function renderListaModalRepasoInteligente() {
     elListaSubtRI.innerHTML = '';
-    candidatosRepasoInteligente.forEach((item) => {
+    candidatosRepasoInteligente.forEach((item, idxRI) => {
       const label = document.createElement('label');
       label.className = 'ri-fila-subt';
 
       const chk = document.createElement('input');
       chk.type = 'checkbox';
       chk.checked = item.seleccionado;
-      chk.addEventListener('change', () => {
-        item.seleccionado = chk.checked;
-        item.manualmenteMarcado = chk.checked;
-        actualizarEstadoVacioYBotonRI();
-      });
+      chk.dataset.riIdx = String(idxRI);
 
       const nombre = document.createElement('span');
       nombre.className = 'ri-subt-nombre';
@@ -18049,6 +18227,16 @@ const ZONAS_SYNC_GIST = [
 
     actualizarEstadoVacioYBotonRI();
   }
+
+  elListaSubtRI.addEventListener('change', (ev) => {
+    const chk = ev.target;
+    if (!chk || chk.type !== 'checkbox' || chk.dataset.riIdx === undefined) return;
+    const item = candidatosRepasoInteligente[Number(chk.dataset.riIdx)];
+    if (!item) return;
+    item.seleccionado = chk.checked;
+    item.manualmenteMarcado = chk.checked;
+    actualizarEstadoVacioYBotonRI();
+  });
 
   function alCambiarCategoriaRI(categoria, marcado) {
     const activas = categoriasActivasRI();
@@ -18186,7 +18374,7 @@ const ZONAS_SYNC_GIST = [
       null,
       'De otros evaluadores'
     );
-    actualizarBotonRepasoInteligente();
+    programarBotonRepasoInteligente();
     const totalActivas = Object.keys(dificiles).filter((h) => dificiles[h].activa).length;
     elNotaDificiles.textContent = totalActivas === 0
       ? 'Todavía no marcaste ninguna tarjeta como difícil (botón ☆ Difícil durante el estudio).'
@@ -20209,30 +20397,19 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     if (!ttsDisponible) return;
     const clave = String(id);
     if (audioRutasLeyendo === clave) { audioRutasDetener(); return; }
-    const renglones = audioRutasLineasTexto(clave).map(audioRutasNombrarSimbolos).filter((t) => t !== '');
-    if (renglones.length === 0) return;
+    const trozos = vozPartirTexto(vozPrepararTexto(audioRutasLineasTexto(clave).map(audioRutasNombrarSimbolos)));
+    if (trozos.length === 0) return;
     audioRutasDetener();
     detenerLecturaPrimero();
     const token = ++audioRutasToken;
     audioRutasLeyendo = clave;
     audioRutasPintarTodas();
-    const terminar = () => {
-      if (token !== audioRutasToken) return;
-      audioRutasLeyendo = null;
-      audioRutasUtterance = null;
-      audioRutasPintarTodas();
-    };
-    const hablar = (i) => {
-      if (token !== audioRutasToken) return;
-      if (i >= renglones.length) { terminar(); return; }
-      const u = new SpeechSynthesisUtterance(renglones[i]);
-      u.lang = 'es-AR';
-      u.onend = () => hablar(i + 1);
-      u.onerror = () => terminar();
-      audioRutasUtterance = u;
-      try { window.speechSynthesis.speak(u); } catch (e) { terminar(); }
-    };
-    setTimeout(() => hablar(0), 50);
+    vozHablarTrozos(
+      trozos,
+      () => token === audioRutasToken,
+      (u) => { audioRutasUtterance = u; },
+      () => { audioRutasLeyendo = null; audioRutasUtterance = null; audioRutasPintarTodas(); }
+    );
   }
 
   function audioRutasSincronizarChecks() {
@@ -21425,9 +21602,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function obtenerUltimoPomodoroCompleto() {
     const totalCitadas = todasLasRutasCitadas().length;
     if (totalCitadas === 0) return null;
-    const propias = retencionPropias()
-      .slice()
-      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    const propias = _scoreCtx().retDesc;
     for (let i = 0; i < propias.length; i++) {
       const rutasEntrada = Array.isArray(propias[i].rutas) ? propias[i].rutas : [];
       if (rutasEntrada.length / totalCitadas >= 0.80) {
@@ -21924,33 +22099,65 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return gamificacion.historial.filter((s) => esSesionLocal(s) && !esModoEspecialHistorial(s.modo));
   }
 
+  let _scoreCtxCache = null;
+  function _scoreCtx() {
+    const c = _scoreCtxCache;
+    if (c && c.v === _versionDatos && c.r === retencionRutas && c.rn === retencionRutas.length &&
+      c.a === analisisGuardados && c.an === analisisGuardados.length) return c;
+    const propiosAn = analisisPropiosParaScore();
+    const nuevo = {
+      v: _versionDatos, r: retencionRutas, rn: retencionRutas.length, a: analisisGuardados, an: analisisGuardados.length,
+      anTodos: propiosAn,
+      an10: propiosAn.slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 10),
+      retPropias: null,
+      retDesc: null,
+      ret10: null,
+      pct: new Map(), prom: new Map(), tiene: new Map(), sesgo: new Map(),
+    };
+    nuevo.retPropias = retencionPropias();
+    nuevo.retDesc = nuevo.retPropias.slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    nuevo.ret10 = nuevo.retDesc.slice(0, 10);
+    _scoreCtxCache = nuevo;
+    return nuevo;
+  }
+
   function promedioCampoAnalisis(nombreSubtema, campo) {
-    const propios = analisisPropiosParaScore().slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 10);
+    const ctx = _scoreCtx();
+    const clave = campo + '|' + nombreSubtema;
+    if (ctx.prom.has(clave)) return ctx.prom.get(clave);
     const valores = [];
-    propios.forEach((entrada) => {
+    ctx.an10.forEach((entrada) => {
       (entrada.subT || []).forEach((s) => {
         if (s.nombre === nombreSubtema && typeof s[campo] === 'number') valores.push(s[campo]);
       });
     });
-    if (valores.length === 0) return null;
-    return valores.reduce((a, b) => a + b, 0) / valores.length;
+    const res = valores.length === 0 ? null : valores.reduce((a, b) => a + b, 0) / valores.length;
+    ctx.prom.set(clave, res);
+    return res;
   }
 
   function tieneAnalisisGuardado(nombreSubtema) {
-    return analisisPropiosParaScore().some((entrada) => (entrada.subT || []).some((s) => s.nombre === nombreSubtema));
+    const ctx = _scoreCtx();
+    if (ctx.tiene.has(nombreSubtema)) return ctx.tiene.get(nombreSubtema);
+    const res = ctx.anTodos.some((entrada) => (entrada.subT || []).some((s) => s.nombre === nombreSubtema));
+    ctx.tiene.set(nombreSubtema, res);
+    return res;
   }
 
   function pctNoRetenidaPorSubtema(nombreSubtema) {
+    const ctx = _scoreCtx();
+    if (ctx.pct.has(nombreSubtema)) return ctx.pct.get(nombreSubtema);
     let total = 0, noRet = 0;
-    retencionPropias().slice().sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 10).forEach((entrada) => {
+    ctx.ret10.forEach((entrada) => {
       (entrada.rutas || []).forEach((r) => {
         if (r.subtema !== nombreSubtema) return;
         total++;
         if (!r.retenida) noRet++;
       });
     });
-    if (total === 0) return null;
-    return (noRet / total) * 100;
+    const res = total === 0 ? null : (noRet / total) * 100;
+    ctx.pct.set(nombreSubtema, res);
+    return res;
   }
 
   function combinarScoreSubtema(pctNoRet, hayAnalisis, pctFallosTotal, pctCasi, pctPista, pctResp) {
@@ -21995,10 +22202,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   let sesgoConfianzaConstruido = false;
 
   function calcularSesgoSubT(nombreSubtema) {
-    const ultimos10Analisis = analisisPropiosParaScore()
-      .slice()
-      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)))
-      .slice(0, 10);
+    const ctxSesgo = _scoreCtx();
+    const sesgoPrevio = ctxSesgo.sesgo.get(nombreSubtema);
+    if (sesgoPrevio) return sesgoPrevio;
+    const ultimos10Analisis = ctxSesgo.an10;
 
     let sumaPonderada = 0;
     let sumaEvaluadas = 0;
@@ -22018,10 +22225,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
     const promedioPctAciertos = sumaEvaluadas > 0 ? (sumaPonderada / sumaEvaluadas) : 50;
 
-    const ultimas10Ret = retencionPropias()
-      .slice()
-      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-      .slice(0, 10);
+    const ultimas10Ret = ctxSesgo.ret10;
 
     let totalRutas = 0;
     let retenidas = 0;
@@ -22049,7 +22253,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       ordenSesgo = 3;
     }
 
-    return {
+    const resultadoSesgo = {
       pctAnalisis: Math.round(promedioPctAciertos),
       pctRetencion: Math.round(pctRetenidas),
       diferencia: Math.round(diferencia),
@@ -22057,6 +22261,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       ordenSesgo: ordenSesgo,
       analisisDisponibles: analisisDisponibles,
     };
+    ctxSesgo.sesgo.set(nombreSubtema, resultadoSesgo);
+    return resultadoSesgo;
   }
 
   function construirDetalleSesgo(det, contenedor, nombreSubtema) {
@@ -22934,7 +23140,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       ? 'inline-block' : 'none';
 
     elProgresoTexto.textContent = 'Tarjeta ' + (indiceActual + 1) + ' de ' + tarjetasSesion.length;
-    const marcadas = resultados.filter((r) => r !== null).length;
+    let marcadas = 0;
+    for (let iMarca = 0; iMarca < resultados.length; iMarca++) if (resultados[iMarca] !== null) marcadas++;
     elBarraRelleno.style.width = (marcadas / tarjetasSesion.length * 100) + '%';
 
     let textoEstado = '';
@@ -23043,11 +23250,12 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elTarjeta.style.animation = null;
   }
 
+  const _REGEX_PALABRA_LINEA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g;
   function agregarLineaResaltada(contenedor, linea, claves, raicesUsuario) {
     const div = document.createElement('div');
     div.className = 'ruta-linea';
 
-    const regexPalabra = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g;
+    const regexPalabra = _REGEX_PALABRA_LINEA;
     let ultimo = 0;
     for (const m of linea.matchAll(regexPalabra)) {
       if (m.index > ultimo) {
@@ -23055,7 +23263,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       }
       const norm = normalizarPalabra(m[0]);
       const esClave = claves.has(norm);
-      const coincideUsuario = !!raicesUsuario && variantesRaiz(m[0]).some((r) => raicesUsuario.has(r));
+      const coincideUsuario = !!raicesUsuario && variantesRaizRO(m[0]).some((r) => raicesUsuario.has(r));
       if (esClave) {
         const fuerte = document.createElement('strong');
         fuerte.className = 'palabra-clave';
@@ -23080,9 +23288,20 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function renderRutas(tarjeta) {
+    const validas = rutasValidasDe(tarjeta);
+    const _especialRutas = modoEspecial === 'detective' || modoEspecial === 'ordenar' || modoEspecial === 'inverso' || modoEspecial === 'cloze';
+    const sigPrev = elRutasContenedor._sigRutas;
+    if (sigPrev && !_especialRutas && validas.length > 0 && rutasVisibles[indiceActual] &&
+      elRutasContenedor.firstChild && elRutasContenedor.firstChild === sigPrev.n0 &&
+      sigPrev.t === tarjeta && sigPrev.i === indiceActual && sigPrev.cl === tarjeta.claves &&
+      sigPrev.ev === !!evaluaciones[indiceActual] && sigPrev.es === (escritos[indiceActual] || '') &&
+      sigPrev.v === validas.join(',')) {
+      elRutasContenedor.style.display = 'block';
+      return;
+    }
+    elRutasContenedor._sigRutas = null;
     elRutasContenedor.innerHTML = '';
 
-    const validas = rutasValidasDe(tarjeta);
     if (validas.length === 0) {
       elRutasContenedor.style.display = 'none';
       return;
@@ -23229,6 +23448,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
       elRutasContenedor.appendChild(det);
     });
+    elRutasContenedor._sigRutas = {
+      n0: elRutasContenedor.firstChild, t: tarjeta, i: indiceActual, cl: tarjeta.claves,
+      ev: !!evaluaciones[indiceActual], es: (escritos[indiceActual] || ''), v: validas.join(','),
+    };
   }
 
   const SUFIJOS_RAIZ = [
@@ -23245,7 +23468,22 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     'ismo','ista','ero','aje'
   ];
 
+  var _memoRaiz = null;
   function raiz(palabra) {
+    if (palabra.length > 80) return raizSinCache(palabra);
+    const memo = _memoRaiz || (_memoRaiz = new Map());
+    let r = memo.get(palabra);
+    if (r === undefined) {
+      r = raizSinCache(palabra);
+      if (memo.size > 5000) memo.clear();
+      memo.set(palabra, r);
+    }
+    return r;
+  }
+
+  const _RE_DIMINUTIVO = /^(.+?)(itos|itas|ito|ita|illos|illas|illo|illa|icos|icas|ico|ica)$/;
+  const _RE_AUMENTATIVO = /^(.+?)(otes|otas|ote|ota|ones|onas|on|ona)$/;
+  function raizSinCache(palabra) {
     let p = normalizarPalabra(palabra).trim();
     if (p.length <= 3) return p;
     if (p.endsWith('ces') && p.length > 4) return p.slice(0, -3) + 'z';
@@ -23258,9 +23496,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     for (const suf of SUFIJOS_RAIZ) {
       if (p.endsWith(suf) && p.length - suf.length >= 4) { p = p.slice(0, -suf.length); return terminarRaiz(p); }
     }
-    const dim = p.match(/^(.+?)(itos|itas|ito|ita|illos|illas|illo|illa|icos|icas|ico|ica)$/);
+    const dim = p.match(_RE_DIMINUTIVO);
     if (dim && dim[1].length >= 3) return dim[1];
-    const aum = p.match(/^(.+?)(otes|otas|ote|ota|ones|onas|on|ona)$/);
+    const aum = p.match(_RE_AUMENTATIVO);
     if (aum && aum[1].length >= 3) return aum[1];
     for (const suf of ['ar', 'er', 'ir']) {
       if (p.endsWith(suf) && p.length - suf.length >= 3) { p = p.slice(0, -suf.length); break; }
@@ -23274,7 +23512,22 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return p;
   }
 
+  var _memoVariantes = null;
+  function variantesRaizRO(palabra) {
+    if (palabra.length > 80) return variantesRaizSinCache(palabra);
+    const memo = _memoVariantes || (_memoVariantes = new Map());
+    let v = memo.get(palabra);
+    if (v === undefined) {
+      v = variantesRaizSinCache(palabra);
+      if (memo.size > 5000) memo.clear();
+      memo.set(palabra, v);
+    }
+    return v;
+  }
   function variantesRaiz(palabra) {
+    return variantesRaizRO(palabra).slice();
+  }
+  function variantesRaizSinCache(palabra) {
     const p = normalizarPalabra(palabra).trim();
     const v = [raiz(p)];
     if (p.endsWith('es') && p.length >= 5) {
@@ -23287,14 +23540,20 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   const MAX_ERRORES_POR_PALABRA = 2;
   const MAX_PALABRAS_CON_TYPO = 4;
 
+  var _deBuf1 = [], _deBuf2 = [], _deBuf3 = [];
   function distanciaEdicion(a, b) {
     if (a === b) return 0;
     const la = a.length, lb = b.length;
     if (la === 0) return lb;
     if (lb === 0) return la;
-    let prev2 = new Array(lb + 1).fill(0);
-    let prev = new Array(lb + 1);
-    let cur = new Array(lb + 1);
+    if (_deBuf1.length < lb + 1) {
+      _deBuf1 = new Array(lb + 1).fill(0);
+      _deBuf2 = new Array(lb + 1).fill(0);
+      _deBuf3 = new Array(lb + 1).fill(0);
+    }
+    let prev2 = _deBuf1;
+    let prev = _deBuf2;
+    let cur = _deBuf3;
     for (let j = 0; j <= lb; j++) prev[j] = j;
     for (let i = 1; i <= la; i++) {
       cur[0] = i;
@@ -23337,7 +23596,19 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return { w: w, orig: orig, v: v };
   }
 
+  var _memoAnalizarTexto = null;
   function analizarTexto(texto) {
+    if (typeof texto !== 'string' || texto.length > 20000) return analizarTextoSinCache(texto);
+    const memo = _memoAnalizarTexto || (_memoAnalizarTexto = new Map());
+    let r = memo.get(texto);
+    if (r === undefined) {
+      r = analizarTextoSinCache(texto);
+      if (memo.size > 60) memo.clear();
+      memo.set(texto, r);
+    }
+    return r;
+  }
+  function analizarTextoSinCache(texto) {
     const vistos = new Set();
     const salida = [];
     for (const m of texto.matchAll(PATRON_PALABRA_CON_SIMBOLOS)) {
@@ -23420,14 +23691,20 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     return (tarjeta.claves || []).filter((c) => c.length >= 3 && !STOPWORDS.has(c));
   }
 
+  const _cacheTextoRef = new WeakMap();
   function textoReferenciaDe(tarjeta) {
+    const rutasT = tarjeta.rutas;
+    const cache = _cacheTextoRef.get(tarjeta);
+    if (cache && cache.r === rutasT && cache.n === (rutasT ? rutasT.length : 0) && cache.s === tarjeta.segundo) return cache.t;
     const partes = [];
     rutasValidasDe(tarjeta).forEach((id) => {
       (rutasDisp[id].lineas || []).forEach((linea) => {
         if (!esImagen(linea)) partes.push(linea);
       });
     });
-    return partes.length > 0 ? partes.join(' ') : (tarjeta.segundo || '');
+    const texto = partes.length > 0 ? partes.join(' ') : (tarjeta.segundo || '');
+    _cacheTextoRef.set(tarjeta, { r: rutasT, n: (rutasT ? rutasT.length : 0), s: tarjeta.segundo, t: texto });
+    return texto;
   }
 
   function evaluable(tarjeta) {
@@ -23599,7 +23876,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function renderCountdownGlobalExamen() {
     const seg = Math.ceil(Math.max(0, globalExamenRestanteMs) / 1000);
-    elCountdownGlobalExamen.textContent = '⏳ Tiempo restante: ' + formatearTiempo(seg * 1000);
+    const textoCountdownGlobal = '⏳ Tiempo restante: ' + formatearTiempo(seg * 1000);
+    if (elCountdownGlobalExamen.textContent !== textoCountdownGlobal) elCountdownGlobalExamen.textContent = textoCountdownGlobal;
     elCountdownGlobalExamen.classList.toggle('urgente', seg <= 60);
   }
 
@@ -24165,7 +24443,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   const CLAVE_RAZONES = 'razones_tarjetas_v1';
   let razonesGuardadas = cargarRazones();
-  try { actualizarBotonRepasoInteligente(); } catch (e) { }
+  programarBotonRepasoInteligente();
 
   function cargarRazones() {
     try {
@@ -24183,7 +24461,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       escribirLocalSeguro(CLAVE_RAZONES, JSON.stringify(razonesGuardadas));
     } catch (e) {
     }
-    try { actualizarBotonRepasoInteligente(); } catch (e) { }
+    programarBotonRepasoInteligente();
   }
   const guardarRazones = crearGuardadoDebounced(guardarRazonesYa, 250);
 
@@ -24418,16 +24696,21 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const enCurso = (congelado || parado) ? 0 : (ahora - tiempoInicioTarjeta);
     const totalMs = tiempos.reduce((a, b) => a + b, 0) + enCurso;
     const icono = parado ? '⏹ ' : (congelado ? '⏸ ' : '⏱ ');
-    elCronometro.textContent = icono + formatearTiempo(totalMs);
-    elCronometro.className = (parado || congelado) ? 'cronometro congelado' : 'cronometro';
+    const textoCrono = icono + formatearTiempo(totalMs);
+    const claseCrono = (parado || congelado) ? 'cronometro congelado' : 'cronometro';
+    if (elCronometro.textContent !== textoCrono) elCronometro.textContent = textoCrono;
+    if (elCronometro.className !== claseCrono) elCronometro.className = claseCrono;
   }
 
   function iniciarCronometro() {
     tiempoInicioTarjeta = Date.now();
     detenerCronometro();
     actualizarCronometro();
-    cronometroIntervalId = setInterval(actualizarCronometro, 1000);
+    cronometroIntervalId = setInterval(() => { if (!document.hidden) actualizarCronometro(); }, 1000);
   }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && cronometroIntervalId !== null) actualizarCronometro();
+  });
 
   function detenerCronometro() {
     if (cronometroIntervalId !== null) {
@@ -24992,12 +25275,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function proporcionAlmacenamientoLocal() {
     try {
-      let total = 0;
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        total += k.length + (localStorage.getItem(k) || '').length;
-      }
-      return total / LIMITE_ALMACENAMIENTO_CARACTERES;
+      return _caracteresStorage() / LIMITE_ALMACENAMIENTO_CARACTERES;
     } catch (e) {
       return 0;
     }
@@ -25087,7 +25365,9 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function actualizarAvisos() {
     try {
-      avisosActuales = calcularAvisos();
+      renderSiCambioDatos('avisos', Math.floor(Date.now() / 60000) + '|' + (ocultasExcluirVigente() ? 1 : 0), () => {
+        avisosActuales = calcularAvisos();
+      });
     } catch (e) {
       avisosActuales = [];
     }
@@ -25108,12 +25388,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         caja.dataset.tipo = a.tipo;
         caja.setAttribute('role', 'button');
         caja.tabIndex = 0;
-        caja.addEventListener('click', () => ejecutarAccionAviso(a.tipo));
-        caja.addEventListener('keydown', (ev) => {
-          if (ev.key !== 'Enter' && ev.key !== ' ') return;
-          ev.preventDefault();
-          ejecutarAccionAviso(a.tipo);
-        });
       }
       const tit = document.createElement('div');
       tit.className = 'aviso-titulo';
@@ -25130,6 +25404,18 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       elAvisosLista.appendChild(caja);
     });
   }
+
+  elAvisosLista.addEventListener('click', (ev) => {
+    const caja = ev.target && ev.target.closest ? ev.target.closest('.aviso-item[data-tipo]') : null;
+    if (caja && elAvisosLista.contains(caja)) ejecutarAccionAviso(caja.dataset.tipo);
+  });
+  elAvisosLista.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const caja = ev.target && ev.target.closest ? ev.target.closest('.aviso-item[data-tipo]') : null;
+    if (!caja || !elAvisosLista.contains(caja)) return;
+    ev.preventDefault();
+    ejecutarAccionAviso(caja.dataset.tipo);
+  });
 
   function abrirModalAvisos() {
     renderPanelAvisos();
@@ -25340,11 +25626,13 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     const claseFase = (pomodoroFase === 'pretest' || pomodoroFase === 'skimming')
       ? 'fase-lectura'
       : (pomodoroFase === 'retencion' ? 'fase-retencion' : 'fase-descanso');
-    elPomodoroBadge.className = 'pomodoro-badge ' + claseFase;
+    const claseBadgePomodoro = 'pomodoro-badge ' + claseFase;
+    if (elPomodoroBadge.className !== claseBadgePomodoro) elPomodoroBadge.className = claseBadgePomodoro;
 
     const esFaseCiclo = pomodoroFase === 'retencion' || pomodoroFase === 'descanso';
     const textoCiclo = esFaseCiclo ? (' · ⏲️ Ciclo ' + pomodoroCiclo) : '';
-    elPomodoroBadgeInfo.textContent = (etiquetas[pomodoroFase] || '') + textoCiclo + ' · ' + formatoMMSS(pomodoroSegundosRestantes);
+    const textoBadgeInfo = (etiquetas[pomodoroFase] || '') + textoCiclo + ' · ' + formatoMMSS(pomodoroSegundosRestantes);
+    if (elPomodoroBadgeInfo.textContent !== textoBadgeInfo) elPomodoroBadgeInfo.textContent = textoBadgeInfo;
     elPomodoroBadgeInfo.classList.toggle('ultimo-minuto', pomodoroSegundosRestantes <= 60);
 
     elBtnPomodoroSkimming.style.display = (pomodoroFase === 'pretest' && pomodoroModo === 'dificil') ? 'inline-block' : 'none';
@@ -25835,8 +26123,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function limpiarSesionesAntiguas() {
     try {
       const borrar = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const clave = localStorage.key(i);
+      for (let i = 0; i < _clavesStorageArranque.length; i++) {
+        const clave = _clavesStorageArranque[i];
         if (!clave || clave.indexOf(PREFIJO_SESION_PENDIENTE) !== 0) continue;
         let ts = 0;
         try {
@@ -26487,8 +26775,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   function limpiarSesionesPomodoroAntiguas() {
     try {
       const borrar = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const clave = localStorage.key(i);
+      for (let i = 0; i < _clavesStorageArranque.length; i++) {
+        const clave = _clavesStorageArranque[i];
         if (!clave || clave.indexOf(PREFIJO_SESION_POMODORO) !== 0) continue;
         let sesion = null;
         try { sesion = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (e) { sesion = null; }
@@ -26776,11 +27064,14 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
 
   function tickPausaBateria() {
     const restante = Math.max(0, Math.ceil((bateriaPausaFin - Date.now()) / 1000));
-    document.getElementById('bateria-countdown').textContent = formatoMMSS(restante);
+    const elBateriaCuenta = document.getElementById('bateria-countdown');
+    const textoBateriaCuenta = formatoMMSS(restante);
+    if (elBateriaCuenta.textContent !== textoBateriaCuenta) elBateriaCuenta.textContent = textoBateriaCuenta;
     const transcurrido = BATERIA_PAUSA_SEG - restante;
     const tramo = BATERIA_PAUSA_SEG / BATERIA_INSTRUCCIONES.length;
     const indice = Math.min(BATERIA_INSTRUCCIONES.length - 1, Math.floor(transcurrido / tramo));
-    document.getElementById('bateria-instruccion').textContent = BATERIA_INSTRUCCIONES[indice];
+    const elBateriaInstr = document.getElementById('bateria-instruccion');
+    if (elBateriaInstr.textContent !== BATERIA_INSTRUCCIONES[indice]) elBateriaInstr.textContent = BATERIA_INSTRUCCIONES[indice];
     if (restante > 0) return;
     clearInterval(bateriaPausaTimer);
     bateriaPausaTimer = 0;
@@ -27559,7 +27850,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   });
   orionSincronizarChecks();
 
-  const orionObservador = new MutationObserver(() => orionActualizar());
+  const orionObservador = new MutationObserver(() => {
+    orionActualizar();
+    if (typeof juegoActualizar === 'function') juegoActualizar();
+  });
   [
     elAreaTarjeta, elPantallaTemas, elPantallaResumen, elPantallaObservador, elPantallaGaleria,
     elPantallaHuerfanas, elPantallaMapa, elPantallaTienda, elPantallaHistorial,
@@ -27668,14 +27962,6 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     minijuegoAbrir(juegoAlTerminar, juegoAlCancelar, false);
   });
 
-  const juegoObservador = new MutationObserver(() => juegoActualizar());
-  [
-    elAreaTarjeta, elPantallaTemas, elPantallaResumen, elPantallaObservador, elPantallaGaleria,
-    elPantallaHuerfanas, elPantallaMapa, elPantallaTienda, elPantallaHistorial,
-    elOverlayMinijuego, elPomodoroBadge,
-  ].forEach((el) => {
-    if (el) juegoObservador.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
-  });
   juegoActualizar();
 
   function minijuegoRutaIndex() {
