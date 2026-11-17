@@ -1404,7 +1404,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   .boton-nota { position: relative; }
   .boton-nota.vacia { border-style: dashed; opacity: 0.6; }
-  .boton-nota.dif::after {
+  .boton-nota.dif::after,
+  .boton-nota.con-rutas::after {
     content: '';
     position: absolute;
     top: 1px;
@@ -1427,6 +1428,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     padding: 12px 16px 14px 16px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     animation: aparecer 0.25s ease forwards;
+  }
+
+  .panel-nota-rutas {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed #e6d38a;
   }
 
   .panel-nota-rutas-item + .panel-nota-rutas-item {
@@ -4867,11 +4874,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <button class="boton-mini" id="btn-nota-cancelar" style="display:none;">Cancelar</button>
         <button class="boton-mini" id="btn-nota-borrar" style="display:none;">🗑 Borrar nota</button>
       </div>
-    </div>
-
-    <div class="panel-nota panel-nota-rutas" id="panel-nota-rutas" style="display:none;">
-      <div class="panel-nota-titulo">💡 Notas de rutas (Pomodoro)</div>
-      <div id="panel-nota-rutas-lista"></div>
+      <div class="panel-nota-rutas" id="panel-nota-rutas" style="display:none;">
+        <div class="panel-nota-titulo">💡 Notas de rutas (Pomodoro)</div>
+        <div id="panel-nota-rutas-lista"></div>
+      </div>
     </div>
 
     <div class="chips-razones" id="chips-razones" style="display:none;"></div>
@@ -7992,7 +7998,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       encolados[i] = true;
       const u = new SpeechSynthesisUtterance(trozos[i]);
       u.lang = 'es-AR';
-      u.rate = 0.6 // velocidad de lectura de rutas en sesion pomodoro
       u.onstart = () => encolar(i + 1);
       u.onend = () => {
         if (i === trozos.length - 1) terminar();
@@ -20893,7 +20898,9 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
 
   function refrescarNotasRutasTarjetaActual() {
     if (tarjetasSesion.length === 0 || elAreaTarjeta.style.display === 'none') return;
-    renderNotasRutasTarjeta(tarjetasSesion[indiceActual]);
+    const tActual = tarjetasSesion[indiceActual];
+    if (elBtnNota.style.display !== 'none') renderNota(tActual);
+    else renderNotasRutasTarjeta(tActual);
   }
 
   document.getElementById('btn-duda-ruta-guardar').addEventListener('click', () => guardarModalNotaDudaRuta());
@@ -25177,7 +25184,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     lista.textContent = '';
     if (notas.length === 0) {
       panel.style.display = 'none';
-      return;
+      return false;
     }
     notas.forEach((n) => {
       const item = document.createElement('div');
@@ -25186,10 +25193,11 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       lista.appendChild(item);
     });
     panel.style.display = 'block';
+    return true;
   }
 
   function renderNota(actual) {
-    renderNotasRutasTarjeta(actual);
+    const hayRutas = renderNotasRutasTarjeta(actual) === true;
     const efectiva = notaEfectivaDe(actual);
     const est = estadoNotaDe(actual);
     const hayNota = efectiva !== '';
@@ -25198,9 +25206,10 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elBtnNota.style.display = 'inline-flex';
     elBtnNota.disabled = razonesAbierto;
     elBtnNota.classList.toggle('activa', notaAbierta);
-    elBtnNota.classList.toggle('vacia', !hayNota && !hayDif && !notaAbierta);
+    elBtnNota.classList.toggle('vacia', !hayNota && !hayDif && !hayRutas && !notaAbierta);
     elBtnNota.classList.toggle('dif', hayDif);
-    elBtnNota.title = (hayNota || hayDif)
+    elBtnNota.classList.toggle('con-rutas', hayRutas);
+    elBtnNota.title = (hayNota || hayDif || hayRutas)
       ? 'Ver/ocultar nota (pausa el cronómetro)'
       : 'Agregar nota (pausa el cronómetro)';
 
@@ -25257,7 +25266,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (cronometroActivo && !cronometroCongelado()) acumularTiempo();
     notaAbierta = true;
     versionNota = 'local';
-    editandoNota = (notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual');
+    editandoNota = (notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual' && notasDudaRutaDeTarjeta(actual).length === 0);
     if (editandoNota) elNotaEditor.value = '';
     actualizarCronometro();
     renderTarjeta();
@@ -25299,7 +25308,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     guardarNotaLocal(actual, elNotaEditor.value);
     editandoNota = false;
     versionNota = 'local';
-    if (notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual') {
+    if (notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual' && notasDudaRutaDeTarjeta(actual).length === 0) {
       cerrarNota();
     } else {
       renderTarjeta();
@@ -25311,7 +25320,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     if (!(await confirmarDescartarBorrador())) return;
     if (typeof window.__detenerDictadoSiActivoEn === 'function') window.__detenerDictadoSiActivoEn(elNotaEditor);
     editandoNota = false;
-    if (actual && notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual') {
+    if (actual && notaEfectivaDe(actual) === '' && estadoNotaDe(actual) === 'igual' && notasDudaRutaDeTarjeta(actual).length === 0) {
       cerrarNota();
     } else {
       renderTarjeta();
