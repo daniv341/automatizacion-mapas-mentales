@@ -5011,6 +5011,8 @@
   </div>
 </div>
 
+<audio id="audio-rutas" preload="metadata" style="display:none"></audio>
+
 <div class="lightbox" id="lightbox">
   <button class="lightbox-cerrar" title="Cerrar">&times;</button>
   <img id="lightbox-img" src="" alt="Imagen ampliada" decoding="async">
@@ -5019,6 +5021,8 @@
 <script>
   const datos = {"tarjetas": [{"tema": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR", "primero": "quien creo SCOR?", "segundo": "Supply Chain Council", "rutas": [1], "claves": ["supply", "chain", "council"], "nota": ""}, {"tema": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR", "primero": "que nos proporciona este marco?", "segundo": "vincula, unificada", "rutas": [3], "claves": ["vincula", "unificada"], "nota": ""}, {"tema": "ALCANCE Y PROCESOS SCOR", "primero": "que describe este modelo?", "segundo": "empresariales, demanda", "rutas": [4], "claves": ["empresariales", "demanda"], "nota": ""}, {"tema": "ALCANCE Y PROCESOS SCOR", "primero": "se organiza en torno a que?", "segundo": "cinco procesos, sencillas", "rutas": [5, 6], "claves": ["cinco", "procesos", "sencillas"], "nota": ""}, {"tema": "ALCANCE Y PROCESOS SCOR", "primero": "esta diseñado y mantenido para que?", "segundo": "soporte, diversa", "rutas": [7], "claves": ["soporte", "diversa"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "que permiten los atributos de rendimiento?", "segundo": "analizarla, comparacion", "rutas": [9], "claves": ["analizarla", "comparacion"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "que atributos identifica SCOR?", "segundo": "cinco, agilidad, dificil", "rutas": [10, 11], "claves": ["cinco", "agilidad", "dificil"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "que son las metricas nivel 1?", "segundo": "rendimiento, calculos", "rutas": [12, 13], "claves": ["rendimiento", "calculos"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "las metricas en SCOR como son?", "segundo": "jerarquicas", "rutas": [14], "claves": ["jerarquicas"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "a partir de que se crean las metricas nivel 1?", "segundo": "inferiores", "rutas": [15], "claves": ["inferiores"], "nota": ""}, {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "primero": "que son las metricas nivel 2?", "segundo": "reducido", "rutas": [16], "claves": ["reducido"], "nota": ""}, {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "primero": "que proporciona la seccion dedicada a personal?", "segundo": "herramientas, conocimientos", "rutas": [19], "claves": ["herramientas", "conocimientos"], "nota": ""}, {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "primero": "que es una competencia?", "segundo": "capacidad, caracterizada", "rutas": [20], "claves": ["capacidad", "caracterizada"], "nota": ""}, {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "primero": "que es la experiencia?", "segundo": "conocimiento, mediante", "rutas": [21, 22], "claves": ["conocimiento", "mediante"], "nota": ""}, {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "primero": "que es un aptitud?", "segundo": "natural, adquirida", "rutas": [23], "claves": ["natural", "adquirida"], "nota": ""}, {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "primero": "que es la formacion?", "segundo": "competencia, comportamiento", "rutas": [24], "claves": ["competencia", "comportamiento"], "nota": ""}, {"tema": "PRÁCTICAS SCOR", "primero": "para que las empresas utilizan estas practicas?", "segundo": "identificar, operar", "rutas": [25], "claves": ["identificar", "operar"], "nota": ""}, {"tema": "PRÁCTICAS SCOR", "primero": "que recomienda SCC para adoptar SCOR?", "segundo": "adapten, investigacion", "rutas": [27], "claves": ["adapten", "investigacion"], "nota": ""}], "rutas": {"1": {"tema": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR", "lineas": ["Supply Chain Operations Reference (SCOR®)", "es una creación del", "Supply Chain Council (SCC)"]}, "2": {"tema": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR", "lineas": ["Modelo SCOR", "recoge", "visión consensuada del Consejo", "sobre gestión", "cadena suministro"]}, "3": {"tema": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR", "lineas": ["el modelo SCOR proporciona", "1 marco único", "que vincula", "procesos empresariales, métricas, mejores prácticas y características tecnológicas", "en una estructura unificada", "para facilitar comunicación", "entre socios cadena suministro y", "mejorar eficacia", "gestión cadena suministro y", "actividades relacionadas", "con su mejora"]}, "4": {"tema": "ALCANCE Y PROCESOS SCOR", "lineas": ["el modelo SCOR", "describe", "actividades empresariales", "asociadas a todas fases", "del proceso", "satisfacer demanda 1 cliente"]}, "5": {"tema": "ALCANCE Y PROCESOS SCOR", "lineas": ["el modelo en sí", "se organiza en torno", "a cinco procesos", "gestión principales"]}, "6": {"tema": "ALCANCE Y PROCESOS SCOR", "lineas": ["Mediante estos componentes básicos procesos,", "modelo SCOR", "puede utilizarse", "para describir", "cadenas suministro", "tanto muy sencillas", "como muy complejas"]}, "7": {"tema": "ALCANCE Y PROCESOS SCOR", "lineas": ["el modelo está", "diseñado y", "se mantiene", "para dar soporte", "a cadenas suministro", "diversa complejidad y", "en múltiples sectores"]}, "8": {"tema": "ESTRUCTURA PROCESOS SCOR (NIVEL 1 Y NIVEL 2)", "lineas": ["Planificar", "Fuente y Abastecer", "Realizar y Fabricar", "Entrega", "Devolución", "Habilitar y Facilitar"]}, "9": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["los atributos rendimiento", "una cadena suministro", "permiten", "analizarla y evaluarla", "en comparación", "con otras cadenas suministro", "que aplican", "estrategias competitivas"]}, "10": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["SCOR identifica", "cinco atributos fundamentales", "del rendimiento cadena suministro:", "fiabilidad,", "capacidad respuesta,", "agilidad,", "costes y", "gestión activos"]}, "11": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["Sin estas características,", "resulta difícil comparar", "una organización", "que opta estratégicamente", "ser proveedor bajo coste", "con una organización", "que opta por competir en", "fiabilidad y", "rendimiento"]}, "12": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["las métricas estratégicas nivel 1", "están directamente relacionadas", "con atributos rendimiento"]}, "13": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["Estas métricas nivel 1", "son cálculos", "mediante los cuales", "una organización", "puede medir su éxito", "a hora alcanzar", "posicionamiento deseado en mercado"]}, "14": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["Muchas métricas del modelo SCOR", "son jerárquicas,", "al igual que son", "elementos proceso"]}, "15": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["las métricas nivel 1", "se crean a partir", "cálculos niveles inferiores"]}, "16": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["las métricas nivel 2", "suelen estar asociadas", "a 1 subconjunto más reducido", "de procesos"]}, "17": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["Además,", "métricas (diagnósticos)", "se utilizan para diagnosticar", "variaciones en rendimiento", "con respecto al plan"]}, "18": {"tema": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR", "lineas": ["Métricas Nivel 1", "por Atributo", "Fiabilidad", "Capacidad respuesta", "Agilidad", "Coste", "Eficiencia en gestión activos"]}, "19": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["la sección dedicada al personal", "proporciona herramientas", "para gestionar talento", "en cadena suministro", "mediante incorporación 1 estándar", "que describe", "conocimientos especializados necesarios", "para", "realizar tareas y", "gestionar procesos"]}, "20": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["En SCOR,", "una competencia", "es capacidad", "obtener resultados predeterminados", "con 1 mínimo", "tiempo y energía,", "caracterizada", "por una definición estándar con", "experiencia,", "aptitudes y", "formación asociadas"]}, "21": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["la experiencia es", "conocimiento o capacidad", "adquiridos", "mediante", "observación o participación activa,", "que son", "obtenidos al realizar trabajo", "en 1 entorno real y"]}, "22": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["al enfrentarse", "a diferentes situaciones", "que requieren distintas acciones"]}, "23": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["la aptitud", "es una capacidad natural,", "adquirida, aprendida o desarrollada", "para realizar 1 determinado tipo trabajo", "a 1 nivel concreto"]}, "24": {"tema": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO", "lineas": ["la formación", "desarrolla una competencia o 1 tipo comportamiento", "a través instrucción"]}, "25": {"tema": "PRÁCTICAS SCOR", "lineas": ["las empresas", "utilizan prácticas", "para identificar formas", "alternativas o deseadas", "operar en sus cadenas suministro"]}, "26": {"tema": "PRÁCTICAS SCOR", "lineas": ["las prácticas SCOR", "pueden constituir 1 subconjunto del", "conjunto total prácticas", "que reconoce una empresa"]}, "27": {"tema": "PRÁCTICAS SCOR", "lineas": ["el Supply Chain Council", "recomienda a empresas", "interesadas en adoptar SCOR", "que adapten este marco", "mediante", "investigación, revisión y integración prácticas relevantes", "del", "sector y", "propia empresa (internalización)"]}}, "descripciones_rutas": {}};
   const MAPA_RUTAS_COORDS = {"1": {"x": 0.0, "y": 26.8, "w": 1.47, "h": 22.22, "subT": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR"}, "2": {"x": 1.87, "y": 26.8, "w": 1.71, "h": 42.48, "subT": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR"}, "3": {"x": 3.98, "y": 26.8, "w": 9.07, "h": 47.06, "subT": "DEFINICIÓN Y PROPÓSITO DEL MODELO SCOR"}, "4": {"x": 13.44, "y": 26.8, "w": 1.5, "h": 39.87, "subT": "ALCANCE Y PROCESOS SCOR"}, "5": {"x": 15.34, "y": 26.8, "w": 1.47, "h": 30.72, "subT": "ALCANCE Y PROCESOS SCOR"}, "6": {"x": 17.21, "y": 26.8, "w": 1.47, "h": 56.21, "subT": "ALCANCE Y PROCESOS SCOR"}, "7": {"x": 19.08, "y": 26.8, "w": 1.5, "h": 47.06, "subT": "ALCANCE Y PROCESOS SCOR"}, "8": {"x": 20.97, "y": 26.8, "w": 11.48, "h": 4.44, "subT": "ESTRUCTURA PROCESOS SCOR (NIVEL 1 Y NIVEL 2)"}, "9": {"x": 31.9, "y": 26.8, "w": 3.39, "h": 54.25, "subT": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR"}, "10": {"x": 35.69, "y": 26.8, "w": 9.5, "h": 26.01, "subT": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR"}, "11": {"x": 44.53, "y": 26.8, "w": 3.82, "h": 69.93, "subT": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR"}, "12": {"x": 47.7, "y": 26.8, "w": 1.5, "h": 18.3, "subT": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR"}, "13": {"x": 49.59, "y": 26.8, "w": 1.5, "h": 47.06, "subT": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR"}, "14": {"x": 51.48, "y": 26.8, "w": 1.71, "h": 33.33, "subT": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR"}, "15": {"x": 53.59, "y": 26.8, "w": 1.58, "h": 19.87, "subT": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR"}, "16": {"x": 55.57, "y": 26.8, "w": 1.58, "h": 27.58, "subT": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR"}, "17": {"x": 57.56, "y": 26.8, "w": 1.47, "h": 39.22, "subT": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR"}, "18": {"x": 59.43, "y": 26.8, "w": 9.5, "h": 18.82, "subT": "ATRIBUTOS RENDIMIENTO Y MÉTRICAS SCOR"}, "19": {"x": 68.39, "y": 26.8, "w": 3.34, "h": 73.2, "subT": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO"}, "20": {"x": 71.2, "y": 26.8, "w": 5.28, "h": 61.44, "subT": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO"}, "21": {"x": 76.69, "y": 26.8, "w": 5.28, "h": 54.25, "subT": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO"}, "22": {"x": 78.58, "y": 69.93, "w": 1.5, "h": 18.3, "subT": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO"}, "23": {"x": 81.98, "y": 26.8, "w": 5.28, "h": 32.68, "subT": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO"}, "24": {"x": 87.66, "y": 26.8, "w": 3.39, "h": 18.3, "subT": "PERSONAS: COMPETENCIAS EN LA CADENA SUMINISTRO"}, "25": {"x": 90.5, "y": 26.8, "w": 3.39, "h": 32.68, "subT": "PRÁCTICAS SCOR"}, "26": {"x": 94.28, "y": 26.8, "w": 1.5, "h": 25.49, "subT": "PRÁCTICAS SCOR"}, "27": {"x": 93.01, "y": 26.8, "w": 6.99, "h": 69.93, "subT": "PRÁCTICAS SCOR"}};
+  const AUDIO_RUTAS_OFFSETS = {"1": 0.0, "2": 9.96, "3": 17.472, "4": 40.608, "5": 50.448, "6": 57.336, "7": 69.432, "8": 79.392, "9": 87.168, "10": 99.408, "11": 112.824, "12": 127.608, "13": 135.696, "14": 147.216, "15": 154.728, "16": 161.352, "17": 169.392, "18": 179.784, "19": 189.288, "20": 205.776, "21": 222.264, "22": 234.936, "23": 241.32, "24": 252.984, "25": 260.4, "26": 269.64, "27": 278.592};
+  const AUDIO_RUTAS_SRC = "../voz/SCOR.mp3";
   const HAY_MAPA = (1 === 1);
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   
@@ -20327,7 +20331,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     const id = fila._rutaId;
     const accion = btn.dataset.accion;
     if (accion === 'nota') { abrirModalNotaDudaRuta(id); return; }
-    if (accion === 'audio') { audioRutasLeer(id); return; }
+    if (accion === 'audio') { audioRutasAlternar(id); return; }
     const est = retencionSesionToggles[id] || (retencionSesionToggles[id] = { retenida: false, dificil: false });
     if (accion === 'retenida') est.retenida = !est.retenida;
     else if (accion === 'dificil') est.dificil = !est.dificil;
@@ -20336,31 +20340,48 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   });
 
   const AUDIO_RUTAS_CLAVE = 'audio_rutas_v1';
+  var audioRutasDisponible = Object.keys(AUDIO_RUTAS_OFFSETS).length > 0;
   var audioRutasHabilitado = (function () {
+    if (!audioRutasDisponible) return false;
     try { return localStorage.getItem(AUDIO_RUTAS_CLAVE) === '1'; } catch (e) { return false; }
   })();
+
   var audioRutasLeyendo = null;
   var audioRutasToken = 0;
-  var audioRutasUtterance = null;
+  var audioRutasIntervalo = 0;
   var audioRutasPantalla = null;
+  var audioRutasLimpiar = null;
 
-  function audioRutasLineasTexto(id) {
-    const lineas = (rutasDisp[id] && rutasDisp[id].lineas) || [];
-    return lineas.filter((l) => typeof l === 'string' && !esImagen(l) && l.trim() !== '');
+  function audioRutasSrcResuelto() {
+    const ruta = location.pathname.toLowerCase();
+    return ruta.indexOf('/guardados/antiguos/evaluadores/') !== -1 ? '../' + AUDIO_RUTAS_SRC : AUDIO_RUTAS_SRC;
   }
 
-  function audioRutasNombrarSimbolos(texto) {
-    let salida = '';
-    Array.from(texto).forEach((c) => {
-      if (Object.prototype.hasOwnProperty.call(SIMBOLOS_ESPECIALES, c)) salida += ' ' + SIMBOLOS_ESPECIALES[c] + ' ';
-      else salida += c;
+  function audioRutasPrecargar() {
+    if (!audioRutasDisponible || !audioRutasHabilitado) return;
+    const el = document.getElementById('audio-rutas');
+    if (!el || el.getAttribute('src')) return;
+    el.src = audioRutasSrcResuelto();
+    el.load();
+  }
+
+  function audioRutasInicioDe(id) {
+    const valor = AUDIO_RUTAS_OFFSETS[String(id)];
+    return typeof valor === 'number' ? valor : null;
+  }
+
+  function audioRutasFinDe(inicio) {
+    let fin = Infinity;
+    Object.keys(AUDIO_RUTAS_OFFSETS).forEach((k) => {
+      const v = AUDIO_RUTAS_OFFSETS[k];
+      if (v > inicio && v < fin) fin = v;
     });
-    return salida.replace(/ {2,}/g, ' ').trim();
+    return fin;
   }
 
   function audioRutasPintarBoton(div, id) {
     const r = div._refs;
-    const visible = ttsDisponible && audioRutasHabilitado && pomodoroActivo;
+    const visible = audioRutasDisponible && audioRutasHabilitado && pomodoroActivo;
     if (!visible) {
       if (r.btnAudio) {
         r.toggles.removeChild(r.btnAudio);
@@ -20374,13 +20395,13 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       r.btnAudio.dataset.accion = 'audio';
       r.toggles.insertBefore(r.btnAudio, r.btnNota || null);
     }
-    const sinTexto = audioRutasLineasTexto(id).length === 0;
+    const sinAudio = audioRutasInicioDe(id) === null;
     const leyendo = audioRutasLeyendo === String(id);
-    r.btnAudio.disabled = sinTexto;
+    r.btnAudio.disabled = sinAudio;
     r.btnAudio.className = 'toggle-retencion' + (leyendo ? ' leyendo' : '');
     r.btnAudio.textContent = leyendo ? '⏹ Leyendo' : '🔊';
-    r.btnAudio.title = sinTexto
-      ? 'Esta ruta no tiene renglones de texto para leer (solo imágenes)'
+    r.btnAudio.title = sinAudio
+      ? 'Esta ruta no tiene audio (solo imágenes o falló su generación)'
       : (leyendo ? 'Detener la lectura' : 'Leer esta ruta en voz alta');
     r.btnAudio.setAttribute('aria-pressed', leyendo ? 'true' : 'false');
   }
@@ -20393,45 +20414,150 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
 
   function audioRutasDetener() {
     audioRutasToken++;
-    if (audioRutasLeyendo === null) return;
+    clearInterval(audioRutasIntervalo);
+    audioRutasIntervalo = 0;
+    if (audioRutasLimpiar) {
+      const fn = audioRutasLimpiar;
+      audioRutasLimpiar = null;
+      fn();
+    }
+    const el = document.getElementById('audio-rutas');
+    if (el) {
+      try { el.pause(); } catch (e) {}
+      el.muted = false;
+    }
+    if (!audioRutasLeyendo) return;
     audioRutasLeyendo = null;
-    audioRutasUtterance = null;
-    if (ttsDisponible) { try { window.speechSynthesis.cancel(); } catch (e) {} }
     audioRutasPintarTodas();
   }
 
-  function audioRutasLeer(id) {
-    if (!ttsDisponible) return;
+  function audioRutasNoDisponible() {
+    audioRutasDetener();
+    audioRutasDisponible = false;
+    audioRutasHabilitado = false;
+    audioRutasSincronizarChecks();
+    audioRutasPintarTodas();
+  }
+
+  function audioRutasAlternar(id) {
+    if (!audioRutasDisponible) return;
     const clave = String(id);
     if (audioRutasLeyendo === clave) { audioRutasDetener(); return; }
-    const trozos = vozPartirTexto(vozPrepararTexto(audioRutasLineasTexto(clave).map(audioRutasNombrarSimbolos)));
-    if (trozos.length === 0) return;
+    const inicio = audioRutasInicioDe(clave);
+    if (inicio === null) return;
     audioRutasDetener();
     detenerLecturaPrimero();
+    const el = document.getElementById('audio-rutas');
+    if (!el) return;
     const token = ++audioRutasToken;
+    const fin = audioRutasFinDe(inicio);
     audioRutasLeyendo = clave;
     audioRutasPintarTodas();
-    vozHablarTrozos(
-      trozos,
-      () => token === audioRutasToken,
-      (u) => { audioRutasUtterance = u; },
-      () => { audioRutasLeyendo = null; audioRutasUtterance = null; audioRutasPintarTodas(); }
-    );
+    if (!el.getAttribute('src')) el.src = audioRutasSrcResuelto();
+
+    let posicionado = false;
+    let playIniciado = false;
+    const escuchas = [];
+    const agregarEscucha = (tipo, fn) => {
+      el.addEventListener(tipo, fn);
+      escuchas.push([tipo, fn]);
+    };
+    const limpiarEscuchas = () => {
+      while (escuchas.length) {
+        const par = escuchas.pop();
+        el.removeEventListener(par[0], par[1]);
+      }
+    };
+    audioRutasLimpiar = limpiarEscuchas;
+
+    const vigilar = () => {
+      clearInterval(audioRutasIntervalo);
+      audioRutasIntervalo = setInterval(() => {
+        if (token !== audioRutasToken) { clearInterval(audioRutasIntervalo); audioRutasIntervalo = 0; return; }
+        if (el.seeking) return;
+        if (el.currentTime >= fin - 0.2) audioRutasDetener();
+      }, 40);
+    };
+
+    const confirmarInicio = () => {
+      if (posicionado || token !== audioRutasToken) return;
+      posicionado = true;
+      limpiarEscuchas();
+      el.muted = false;
+      if (playIniciado && el.paused) {
+        const reanudar = el.play();
+        if (reanudar && reanudar.catch) reanudar.catch(() => { if (token === audioRutasToken) audioRutasDetener(); });
+      }
+      vigilar();
+    };
+
+    const posicionar = () => {
+      if (token !== audioRutasToken) return;
+      if (!el.seeking && Math.abs(el.currentTime - inicio) <= 0.05) {
+        confirmarInicio();
+        return;
+      }
+      agregarEscucha('seeked', confirmarInicio);
+      agregarEscucha('timeupdate', () => {
+        if (!el.seeking && Math.abs(el.currentTime - inicio) <= 0.5 && el.currentTime < fin - 0.2) confirmarInicio();
+      });
+      try {
+        el.currentTime = inicio;
+      } catch (e) {
+        if (token === audioRutasToken) audioRutasDetener();
+        return;
+      }
+      if (!el.seeking && Math.abs(el.currentTime - inicio) <= 0.25) confirmarInicio();
+    };
+
+    if (el.readyState >= 1) {
+      el.muted = Math.abs(el.currentTime - inicio) > 0.05;
+      posicionar();
+      playIniciado = true;
+      const promesa = el.play();
+      if (promesa && promesa.catch) promesa.catch(() => { if (token === audioRutasToken) audioRutasDetener(); });
+    } else {
+      el.muted = inicio > 0;
+      const alCargar = () => {
+        if (token !== audioRutasToken) return;
+        limpiarEscuchas();
+        posicionar();
+      };
+      agregarEscucha('loadedmetadata', alCargar);
+      agregarEscucha('canplay', alCargar);
+      playIniciado = true;
+      const promesa = el.play();
+      if (promesa && promesa.catch) promesa.catch(() => { if (token === audioRutasToken) audioRutasDetener(); });
+    }
   }
 
   function audioRutasSincronizarChecks() {
-    document.querySelectorAll('.chk-audio-rutas').forEach((chk) => { chk.checked = audioRutasHabilitado; });
+    document.querySelectorAll('.chk-audio-rutas').forEach((chk) => {
+      chk.checked = audioRutasDisponible && audioRutasHabilitado;
+      chk.disabled = !audioRutasDisponible;
+      if (!audioRutasDisponible && chk.parentElement) {
+        chk.parentElement.title = 'Audio no disponible: no se pudo generar el MP3 de las rutas';
+      }
+    });
   }
   document.querySelectorAll('.chk-audio-rutas').forEach((chk) => {
     chk.addEventListener('change', () => {
-      audioRutasHabilitado = chk.checked;
+      audioRutasHabilitado = audioRutasDisponible && chk.checked;
       try { escribirLocalSeguro(AUDIO_RUTAS_CLAVE, audioRutasHabilitado ? '1' : '0'); } catch (e) { }
       audioRutasSincronizarChecks();
-      if (!audioRutasHabilitado) audioRutasDetener();
+      if (audioRutasHabilitado) audioRutasPrecargar();
+      else audioRutasDetener();
       audioRutasPintarTodas();
     });
   });
+  (function () {
+    const el = document.getElementById('audio-rutas');
+    if (!el) return;
+    el.addEventListener('ended', audioRutasDetener);
+    el.addEventListener('error', () => { if (el.getAttribute('src')) audioRutasNoDisponible(); });
+  })();
   audioRutasSincronizarChecks();
+  audioRutasPrecargar();
   window.addEventListener('beforeunload', audioRutasDetener);
   window.addEventListener('pagehide', audioRutasDetener);
 

@@ -1,13 +1,16 @@
 import argparse
+import asyncio
 import base64
 import json
 import os
 import re
 import sys
+import tempfile
 import importlib.util
 import unicodedata
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from urllib.parse import quote
 try:
     from tkinter import Tk, filedialog
 except ImportError:
@@ -29,6 +32,13 @@ DURACION_SKIMMING_SEG = 5 * 60
 DURACION_DESCANSO_LARGO_SEG = 10 * 60
 DURACION_LECTURA_SEG = 25 * 60
 DURACION_DESCANSO_SEG = 5 * 60
+
+VOZ_RUTAS = "es-AR-TomasNeural"
+VELOCIDAD_VOZ_RUTAS = "-25%"
+PAUSA_ENTRE_RUTAS_MS = 300
+CONCURRENCIA_AUDIO_RUTAS = 4
+REINTENTOS_AUDIO_RUTAS = 3
+CARPETA_VOZ = Path("guardados") / "voz"
 
 STOPWORDS_ES = {
     "el", "la", "los", "las",
@@ -838,7 +848,178 @@ def _escapar_atributo_html(texto):
         .replace(">", "&gt;")
     )
 
-def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash, descripciones_rutas=None, imagen_mapa=None, mapa_rutas_coords=None):
+PATRON_VINETA_INICIAL = re.compile(r"^\s*(?:[\u2022*\u25aa\u25ab\u25e6]+|-(?!>))\s*")
+FLECHAS_ASCII = (
+    ("<->", "flecha doble"),
+    ("=>", "implica"),
+    ("->", "flecha"),
+    ("<-", "flecha izquierda"),
+)
+
+def preparar_linea_audio(linea):
+    linea = linea.strip()
+    if not linea or linea.startswith("IMG:data:image/"):
+        return ""
+    linea = PATRON_VINETA_INICIAL.sub("", linea)
+    for ascii_flecha, nombre in FLECHAS_ASCII:
+        linea = linea.replace(ascii_flecha, f" {nombre} ")
+    salida = []
+    for caracter in linea:
+        if caracter in SIMBOLOS_ESPECIALES:
+            salida.append(f" {SIMBOLOS_ESPECIALES[caracter]} ")
+        else:
+            salida.append(caracter)
+    linea = re.sub(r"\s+", " ", "".join(salida)).strip()
+    linea = re.sub(r"\s+([,.;:!?\u2026])", r"\1", linea)
+    return linea
+
+def preparar_texto_audio_ruta(lineas):
+    partes = [preparar_linea_audio(linea) for linea in lineas if isinstance(linea, str)]
+    texto = " ".join(p for p in partes if p)
+    texto = re.sub(r"\s+([,.;:!?\u2026])", r"\1", texto)
+    return re.sub(r"\s+", " ", texto).strip()
+
+async def _sintetizar_ruta(edge_tts, semaforo, numero, texto, destino):
+    async with semaforo:
+        ultimo_error = None
+        for _ in range(REINTENTOS_AUDIO_RUTAS):
+            try:
+                comunicador = edge_tts.Communicate(texto, VOZ_RUTAS, rate=VELOCIDAD_VOZ_RUTAS)
+                await comunicador.save(str(destino))
+                if destino.is_file() and destino.stat().st_size > 0:
+                    return None
+                ultimo_error = "archivo de audio vacío"
+            except Exception as error:
+                ultimo_error = f"{type(error).__name__}: {error}"
+        return ultimo_error
+
+async def _sintetizar_todas(edge_tts, textos, carpeta):
+    semaforo = asyncio.Semaphore(CONCURRENCIA_AUDIO_RUTAS)
+    numeros = list(textos)
+    destinos = {n: carpeta / f"ruta_{n}.mp3" for n in numeros}
+    resultados = await asyncio.gather(
+        *[_sintetizar_ruta(edge_tts, semaforo, n, textos[n], destinos[n]) for n in numeros]
+    )
+    errores = {n: r for n, r in zip(numeros, resultados) if r is not None}
+    return destinos, errores
+
+TASAS_MP3 = {3: (44100, 48000, 32000), 2: (22050, 24000, 16000), 0: (11025, 12000, 8000)}
+BITRATES_MP3_V1 = (0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320)
+BITRATES_MP3_V2 = (0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160)
+
+def _cabecera_mp3(datos, pos):
+    if pos + 4 > len(datos):
+        return None
+    b0, b1, b2, b3 = datos[pos:pos + 4]
+    if b0 != 0xFF or (b1 & 0xE0) != 0xE0:
+        return None
+    version = (b1 >> 3) & 3
+    capa = (b1 >> 1) & 3
+    idx_bitrate = (b2 >> 4) & 15
+    idx_tasa = (b2 >> 2) & 3
+    relleno = (b2 >> 1) & 1
+    if version == 1 or capa != 1 or idx_bitrate in (0, 15) or idx_tasa == 3:
+        return None
+    tasa = TASAS_MP3[version][idx_tasa]
+    if version == 3:
+        largo = 144 * BITRATES_MP3_V1[idx_bitrate] * 1000 // tasa + relleno
+        muestras = 1152
+    else:
+        largo = 72 * BITRATES_MP3_V2[idx_bitrate] * 1000 // tasa + relleno
+        muestras = 576
+    return largo, muestras, tasa
+
+def _frames_mp3(datos):
+    pos = 0
+    if datos[:3] == b"ID3" and len(datos) >= 10:
+        pos = 10 + ((datos[6] & 0x7F) << 21 | (datos[7] & 0x7F) << 14 | (datos[8] & 0x7F) << 7 | (datos[9] & 0x7F))
+    frames = []
+    while pos + 4 <= len(datos):
+        info = _cabecera_mp3(datos, pos)
+        if info is None or pos + info[0] > len(datos):
+            pos += 1
+            continue
+        frames.append((pos, info))
+        pos += info[0]
+    if not frames:
+        raise ValueError("el audio generado no contiene frames MP3 válidos")
+    cuerpo = b"".join(datos[p:p + i[0]] for p, i in frames)
+    duracion = sum(i[1] / i[2] for _, i in frames)
+    primero = frames[0]
+    return cuerpo, duracion, datos[primero[0]:primero[0] + 4], primero[1]
+
+def ensamblar_mp3_rutas(partes):
+    piezas = []
+    offsets = {}
+    transcurrido = 0.0
+    silencio = b""
+    firma_ref = None
+    duracion_silencio = 0.0
+    for numero, datos in partes:
+        cuerpo, duracion, cabecera, info = _frames_mp3(datos)
+        firma = (cabecera[1] & 0x1E, cabecera[2] & 0xFC, cabecera[3] & 0xC0)
+        if firma_ref is None:
+            firma_ref = firma
+            relleno = (cabecera[2] >> 1) & 1
+            frame_silencio = bytes([cabecera[0], cabecera[1] | 1, cabecera[2] & 0xFD, cabecera[3]]) + bytes(info[0] - relleno - 4)
+            duracion_frame = info[1] / info[2]
+            cantidad = max(1, round(PAUSA_ENTRE_RUTAS_MS / 1000.0 / duracion_frame))
+            silencio = frame_silencio * cantidad
+            duracion_silencio = cantidad * duracion_frame
+        elif firma != firma_ref:
+            raise ValueError(f"la ruta {numero} tiene un formato de audio distinto al resto")
+        offsets[str(numero)] = round(transcurrido, 3)
+        piezas.append(cuerpo)
+        piezas.append(silencio)
+        transcurrido += duracion + duracion_silencio
+    return offsets, transcurrido, b"".join(piezas)
+
+def generar_audio_rutas(rutas, espacio_hash):
+    try:
+        import edge_tts
+
+        textos = {}
+        for numero in sorted(rutas):
+            texto = preparar_texto_audio_ruta(rutas[numero].get("lineas", []))
+            if texto:
+                textos[numero] = texto
+        if not textos:
+            print("AVISO: ninguna ruta tiene texto para leer; el audio en rutas queda deshabilitado.")
+            return {}
+
+        CARPETA_VOZ.mkdir(parents=True, exist_ok=True)
+        destino_mp3 = CARPETA_VOZ / f"{espacio_hash}.mp3"
+        temporal_mp3 = CARPETA_VOZ / f"{espacio_hash}.mp3.tmp"
+
+        print(f"Generando audio de {len(textos)} rutas con {VOZ_RUTAS} (velocidad {VELOCIDAD_VOZ_RUTAS})...")
+        with tempfile.TemporaryDirectory() as carpeta_tmp:
+            carpeta = Path(carpeta_tmp)
+            destinos, errores = asyncio.run(_sintetizar_todas(edge_tts, textos, carpeta))
+            for numero, motivo in sorted(errores.items()):
+                print(f"AVISO: no se pudo generar el audio de la ruta {numero}: {motivo}")
+
+            exitosas = [n for n in sorted(textos) if n not in errores]
+            if not exitosas:
+                print("AVISO: no se generó el audio de ninguna ruta; el audio en rutas queda deshabilitado.")
+                return {}
+
+            partes = [(n, destinos[n].read_bytes()) for n in exitosas]
+            offsets, duracion_total, contenido = ensamblar_mp3_rutas(partes)
+            temporal_mp3.write_bytes(contenido)
+            os.replace(str(temporal_mp3), str(destino_mp3))
+
+        print(f"Audio de rutas creado: {destino_mp3} ({len(offsets)} rutas, {duracion_total:.1f} s)")
+        return offsets
+    except Exception as error:
+        print(f"AVISO: no se pudo generar el audio de las rutas ({type(error).__name__}: {error}).")
+        print("        Se continúa con la generación del evaluador sin audio en rutas.")
+        try:
+            (CARPETA_VOZ / f"{espacio_hash}.mp3.tmp").unlink()
+        except OSError:
+            pass
+        return {}
+
+def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_respuestas, espacio_hash, descripciones_rutas=None, imagen_mapa=None, mapa_rutas_coords=None, audio_offsets=None):
     datos = {"tarjetas": tarjetas, "rutas": rutas, "descripciones_rutas": descripciones_rutas or {}}
     datos_json = json.dumps(datos, ensure_ascii=False)
     coords_json = json.dumps(mapa_rutas_coords or {}, ensure_ascii=False)
@@ -866,6 +1047,8 @@ def generar_html(tarjetas, rutas, fill_color, stroke_color, modo_aleatorio, txt_
     html = html.replace("__SIM_CON_PISTA__", str(SIM_CON_PISTA))
     html = html.replace("__STOPWORDS__", json.dumps(sorted(STOPWORDS_ES)))
     html = html.replace("__SIMBOLOS_ESPECIALES__", json.dumps(SIMBOLOS_ESPECIALES, ensure_ascii=False))
+    html = html.replace("__AUDIO_OFFSETS_JSON__", json.dumps(audio_offsets or {}))
+    html = html.replace("__ESPACIO_HASH__", quote(espacio_hash, safe=""))
     html = html.replace("__ESPACIO__", json.dumps(espacio_hash))
 
     if imagen_mapa:
@@ -5897,6 +6080,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 </div>
 
+<audio id="audio-rutas" preload="metadata" style="display:none"></audio>
+
 <div class="lightbox" id="lightbox">
   <button class="lightbox-cerrar" title="Cerrar">&times;</button>
   <img id="lightbox-img" src="" alt="Imagen ampliada" decoding="async">
@@ -5905,6 +6090,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <script>
   const datos = __DATOS_JSON__;
   const MAPA_RUTAS_COORDS = __MAPA_RUTAS_COORDS__;
+  const AUDIO_RUTAS_OFFSETS = __AUDIO_OFFSETS_JSON__;
+  const AUDIO_RUTAS_SRC = "../voz/__ESPACIO_HASH__.mp3";
   const HAY_MAPA = (__HAY_MAPA__ === 1);
   const tarjetasCompletas = datos.tarjetas;
   const rutasDisp = datos.rutas;   
@@ -21213,7 +21400,7 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
     const id = fila._rutaId;
     const accion = btn.dataset.accion;
     if (accion === 'nota') { abrirModalNotaDudaRuta(id); return; }
-    if (accion === 'audio') { audioRutasLeer(id); return; }
+    if (accion === 'audio') { audioRutasAlternar(id); return; }
     const est = retencionSesionToggles[id] || (retencionSesionToggles[id] = { retenida: false, dificil: false });
     if (accion === 'retenida') est.retenida = !est.retenida;
     else if (accion === 'dificil') est.dificil = !est.dificil;
@@ -21222,31 +21409,48 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   });
 
   const AUDIO_RUTAS_CLAVE = 'audio_rutas_v1';
+  var audioRutasDisponible = Object.keys(AUDIO_RUTAS_OFFSETS).length > 0;
   var audioRutasHabilitado = (function () {
+    if (!audioRutasDisponible) return false;
     try { return localStorage.getItem(AUDIO_RUTAS_CLAVE) === '1'; } catch (e) { return false; }
   })();
+
   var audioRutasLeyendo = null;
   var audioRutasToken = 0;
-  var audioRutasUtterance = null;
+  var audioRutasIntervalo = 0;
   var audioRutasPantalla = null;
+  var audioRutasLimpiar = null;
 
-  function audioRutasLineasTexto(id) {
-    const lineas = (rutasDisp[id] && rutasDisp[id].lineas) || [];
-    return lineas.filter((l) => typeof l === 'string' && !esImagen(l) && l.trim() !== '');
+  function audioRutasSrcResuelto() {
+    const ruta = location.pathname.toLowerCase();
+    return ruta.indexOf('/guardados/antiguos/evaluadores/') !== -1 ? '../' + AUDIO_RUTAS_SRC : AUDIO_RUTAS_SRC;
   }
 
-  function audioRutasNombrarSimbolos(texto) {
-    let salida = '';
-    Array.from(texto).forEach((c) => {
-      if (Object.prototype.hasOwnProperty.call(SIMBOLOS_ESPECIALES, c)) salida += ' ' + SIMBOLOS_ESPECIALES[c] + ' ';
-      else salida += c;
+  function audioRutasPrecargar() {
+    if (!audioRutasDisponible || !audioRutasHabilitado) return;
+    const el = document.getElementById('audio-rutas');
+    if (!el || el.getAttribute('src')) return;
+    el.src = audioRutasSrcResuelto();
+    el.load();
+  }
+
+  function audioRutasInicioDe(id) {
+    const valor = AUDIO_RUTAS_OFFSETS[String(id)];
+    return typeof valor === 'number' ? valor : null;
+  }
+
+  function audioRutasFinDe(inicio) {
+    let fin = Infinity;
+    Object.keys(AUDIO_RUTAS_OFFSETS).forEach((k) => {
+      const v = AUDIO_RUTAS_OFFSETS[k];
+      if (v > inicio && v < fin) fin = v;
     });
-    return salida.replace(/ {2,}/g, ' ').trim();
+    return fin;
   }
 
   function audioRutasPintarBoton(div, id) {
     const r = div._refs;
-    const visible = ttsDisponible && audioRutasHabilitado && pomodoroActivo;
+    const visible = audioRutasDisponible && audioRutasHabilitado && pomodoroActivo;
     if (!visible) {
       if (r.btnAudio) {
         r.toggles.removeChild(r.btnAudio);
@@ -21260,13 +21464,13 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
       r.btnAudio.dataset.accion = 'audio';
       r.toggles.insertBefore(r.btnAudio, r.btnNota || null);
     }
-    const sinTexto = audioRutasLineasTexto(id).length === 0;
+    const sinAudio = audioRutasInicioDe(id) === null;
     const leyendo = audioRutasLeyendo === String(id);
-    r.btnAudio.disabled = sinTexto;
+    r.btnAudio.disabled = sinAudio;
     r.btnAudio.className = 'toggle-retencion' + (leyendo ? ' leyendo' : '');
     r.btnAudio.textContent = leyendo ? '⏹ Leyendo' : '🔊';
-    r.btnAudio.title = sinTexto
-      ? 'Esta ruta no tiene renglones de texto para leer (solo imágenes)'
+    r.btnAudio.title = sinAudio
+      ? 'Esta ruta no tiene audio (solo imágenes o falló su generación)'
       : (leyendo ? 'Detener la lectura' : 'Leer esta ruta en voz alta');
     r.btnAudio.setAttribute('aria-pressed', leyendo ? 'true' : 'false');
   }
@@ -21279,45 +21483,150 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
 
   function audioRutasDetener() {
     audioRutasToken++;
-    if (audioRutasLeyendo === null) return;
+    clearInterval(audioRutasIntervalo);
+    audioRutasIntervalo = 0;
+    if (audioRutasLimpiar) {
+      const fn = audioRutasLimpiar;
+      audioRutasLimpiar = null;
+      fn();
+    }
+    const el = document.getElementById('audio-rutas');
+    if (el) {
+      try { el.pause(); } catch (e) {}
+      el.muted = false;
+    }
+    if (!audioRutasLeyendo) return;
     audioRutasLeyendo = null;
-    audioRutasUtterance = null;
-    if (ttsDisponible) { try { window.speechSynthesis.cancel(); } catch (e) {} }
     audioRutasPintarTodas();
   }
 
-  function audioRutasLeer(id) {
-    if (!ttsDisponible) return;
+  function audioRutasNoDisponible() {
+    audioRutasDetener();
+    audioRutasDisponible = false;
+    audioRutasHabilitado = false;
+    audioRutasSincronizarChecks();
+    audioRutasPintarTodas();
+  }
+
+  function audioRutasAlternar(id) {
+    if (!audioRutasDisponible) return;
     const clave = String(id);
     if (audioRutasLeyendo === clave) { audioRutasDetener(); return; }
-    const trozos = vozPartirTexto(vozPrepararTexto(audioRutasLineasTexto(clave).map(audioRutasNombrarSimbolos)));
-    if (trozos.length === 0) return;
+    const inicio = audioRutasInicioDe(clave);
+    if (inicio === null) return;
     audioRutasDetener();
     detenerLecturaPrimero();
+    const el = document.getElementById('audio-rutas');
+    if (!el) return;
     const token = ++audioRutasToken;
+    const fin = audioRutasFinDe(inicio);
     audioRutasLeyendo = clave;
     audioRutasPintarTodas();
-    vozHablarTrozos(
-      trozos,
-      () => token === audioRutasToken,
-      (u) => { audioRutasUtterance = u; },
-      () => { audioRutasLeyendo = null; audioRutasUtterance = null; audioRutasPintarTodas(); }
-    );
+    if (!el.getAttribute('src')) el.src = audioRutasSrcResuelto();
+
+    let posicionado = false;
+    let playIniciado = false;
+    const escuchas = [];
+    const agregarEscucha = (tipo, fn) => {
+      el.addEventListener(tipo, fn);
+      escuchas.push([tipo, fn]);
+    };
+    const limpiarEscuchas = () => {
+      while (escuchas.length) {
+        const par = escuchas.pop();
+        el.removeEventListener(par[0], par[1]);
+      }
+    };
+    audioRutasLimpiar = limpiarEscuchas;
+
+    const vigilar = () => {
+      clearInterval(audioRutasIntervalo);
+      audioRutasIntervalo = setInterval(() => {
+        if (token !== audioRutasToken) { clearInterval(audioRutasIntervalo); audioRutasIntervalo = 0; return; }
+        if (el.seeking) return;
+        if (el.currentTime >= fin - 0.2) audioRutasDetener();
+      }, 40);
+    };
+
+    const confirmarInicio = () => {
+      if (posicionado || token !== audioRutasToken) return;
+      posicionado = true;
+      limpiarEscuchas();
+      el.muted = false;
+      if (playIniciado && el.paused) {
+        const reanudar = el.play();
+        if (reanudar && reanudar.catch) reanudar.catch(() => { if (token === audioRutasToken) audioRutasDetener(); });
+      }
+      vigilar();
+    };
+
+    const posicionar = () => {
+      if (token !== audioRutasToken) return;
+      if (!el.seeking && Math.abs(el.currentTime - inicio) <= 0.05) {
+        confirmarInicio();
+        return;
+      }
+      agregarEscucha('seeked', confirmarInicio);
+      agregarEscucha('timeupdate', () => {
+        if (!el.seeking && Math.abs(el.currentTime - inicio) <= 0.5 && el.currentTime < fin - 0.2) confirmarInicio();
+      });
+      try {
+        el.currentTime = inicio;
+      } catch (e) {
+        if (token === audioRutasToken) audioRutasDetener();
+        return;
+      }
+      if (!el.seeking && Math.abs(el.currentTime - inicio) <= 0.25) confirmarInicio();
+    };
+
+    if (el.readyState >= 1) {
+      el.muted = Math.abs(el.currentTime - inicio) > 0.05;
+      posicionar();
+      playIniciado = true;
+      const promesa = el.play();
+      if (promesa && promesa.catch) promesa.catch(() => { if (token === audioRutasToken) audioRutasDetener(); });
+    } else {
+      el.muted = inicio > 0;
+      const alCargar = () => {
+        if (token !== audioRutasToken) return;
+        limpiarEscuchas();
+        posicionar();
+      };
+      agregarEscucha('loadedmetadata', alCargar);
+      agregarEscucha('canplay', alCargar);
+      playIniciado = true;
+      const promesa = el.play();
+      if (promesa && promesa.catch) promesa.catch(() => { if (token === audioRutasToken) audioRutasDetener(); });
+    }
   }
 
   function audioRutasSincronizarChecks() {
-    document.querySelectorAll('.chk-audio-rutas').forEach((chk) => { chk.checked = audioRutasHabilitado; });
+    document.querySelectorAll('.chk-audio-rutas').forEach((chk) => {
+      chk.checked = audioRutasDisponible && audioRutasHabilitado;
+      chk.disabled = !audioRutasDisponible;
+      if (!audioRutasDisponible && chk.parentElement) {
+        chk.parentElement.title = 'Audio no disponible: no se pudo generar el MP3 de las rutas';
+      }
+    });
   }
   document.querySelectorAll('.chk-audio-rutas').forEach((chk) => {
     chk.addEventListener('change', () => {
-      audioRutasHabilitado = chk.checked;
+      audioRutasHabilitado = audioRutasDisponible && chk.checked;
       try { escribirLocalSeguro(AUDIO_RUTAS_CLAVE, audioRutasHabilitado ? '1' : '0'); } catch (e) { }
       audioRutasSincronizarChecks();
-      if (!audioRutasHabilitado) audioRutasDetener();
+      if (audioRutasHabilitado) audioRutasPrecargar();
+      else audioRutasDetener();
       audioRutasPintarTodas();
     });
   });
+  (function () {
+    const el = document.getElementById('audio-rutas');
+    if (!el) return;
+    el.addEventListener('ended', audioRutasDetener);
+    el.addEventListener('error', () => { if (el.getAttribute('src')) audioRutasNoDisponible(); });
+  })();
   audioRutasSincronizarChecks();
+  audioRutasPrecargar();
   window.addEventListener('beforeunload', audioRutasDetener);
   window.addEventListener('pagehide', audioRutasDetener);
 
@@ -29197,8 +29506,11 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
             if imagen_mapa:
                 print(f"Imagen del mapa incluida: {ruta_imagen_mapa}")
 
+        audio_offsets = generar_audio_rutas(rutas, Path(respuestas).stem) if respuestas else {}
+
         generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, respuestas, Path(respuestas).stem,
-                     descripciones_rutas, imagen_mapa=imagen_mapa, mapa_rutas_coords=mapa_rutas_coords)
+                     descripciones_rutas, imagen_mapa=imagen_mapa, mapa_rutas_coords=mapa_rutas_coords,
+                     audio_offsets=audio_offsets)
     except Exception as error:
         if propagar:
             raise
