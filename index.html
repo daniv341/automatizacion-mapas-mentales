@@ -5630,7 +5630,7 @@
     vistaMesas.forEach((p) => {
       const chip = minijuegoCrear('div', 'mozo-mesa', p.cara);
       chip.id = 'mozo-mesa-' + p.mesa;
-      chip.appendChild(minijuegoCrear('small', '', 'Mesa ' + p.mesa));
+      chip.appendChild(minijuegoCrear('small', '', 'Mesa X'));
       mesas.appendChild(chip);
     });
     elMozoEscena.appendChild(mesas);
@@ -5655,7 +5655,7 @@
       document.getElementById('mozo-mesa-' + p.mesa).classList.remove('activa');
     });
     document.getElementById('mozo-mesa-' + pedido.mesa).classList.add('activa');
-    elMozoFase.textContent = '¿Qué pidió la mesa ' + pedido.mesa + ' (' + pedido.cara + ')?';
+    elMozoFase.textContent = '¿Qué pidió esta mesa (' + pedido.cara + ')?';
     Array.prototype.forEach.call(elMozoEscena.querySelectorAll('.mozo-plato'), (b) => {
       b.classList.remove('correcto', 'elegido-mal');
     });

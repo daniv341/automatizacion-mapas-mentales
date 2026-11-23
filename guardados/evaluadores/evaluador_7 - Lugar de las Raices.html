@@ -3479,73 +3479,6 @@
   .ordenar-pool-vacio { font-size: 13px; color: var(--texto-tenue); }
   .ordenar-img { pointer-events: auto; -webkit-user-drag: none; user-select: none; }
   body.ordenar-en-arrastre { user-select: none; -webkit-user-select: none; cursor: grabbing; }
-  .orion-ancla { position: relative; height: 0; z-index: 1; pointer-events: none; }
-  .orion-compania {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: clamp(40px, 12vw, 60px);
-    aspect-ratio: 1 / 1;
-    display: none;
-    pointer-events: none;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .orion-compania.visible { display: block; }
-  .orion-compania::after {
-    content: '';
-    position: absolute;
-    left: 12%;
-    right: 12%;
-    bottom: -3px;
-    height: 12%;
-    border-radius: 50%;
-    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.26) 0%, rgba(0, 0, 0, 0) 70%);
-    z-index: 0;
-  }
-  .orion-img {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    opacity: 0;
-    transition: opacity 0.6s ease;
-    pointer-events: none;
-    -webkit-user-drag: none;
-    z-index: 1;
-  }
-  .orion-img.activa { opacity: 1; }
-  .orion-burbuja {
-    position: absolute;
-    right: 100%;
-    top: 40%;
-    margin-right: 6px;
-    transform: translateY(-50%);
-    padding: 3px 10px;
-    border-radius: 12px;
-    border: 1px solid var(--color-borde-medio);
-    background: var(--bg-superficie);
-    color: var(--texto-suave);
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    box-shadow: 0 2px 6px var(--color-sombra);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    pointer-events: none;
-    z-index: 2;
-  }
-  .orion-burbuja.visible { opacity: 1; }
-  .contenedor.orion-activo .nombre-evaluador,
-  .contenedor.orion-activo h1 {
-    padding-left: clamp(44px, 13vw, 64px);
-    padding-right: clamp(44px, 13vw, 64px);
-  }
-  @media (max-width: 600px) { .orion-burbuja { display: none; } }
-  @media (prefers-reduced-motion: reduce) {
-    .orion-img, .orion-burbuja { transition: none; }
-  }
   .slot-jugar { text-align: center; }
   .btn-jugar-enganche {
     display: none;
@@ -3583,7 +3516,6 @@
 <body>
 
 <div class="contenedor">
-  <div class="orion-ancla" aria-hidden="true"><div class="orion-compania" id="orion-compania"><div class="orion-burbuja" id="orion-burbuja"></div></div></div>
   <div class="nombre-evaluador" id="nombre-evaluador"></div>
   <button type="button" class="badge-avisos" id="btn-avisos" title="Avisos"><span>🔔</span><span class="badge-avisos-n" id="badge-avisos-n">0</span></button>
   <h1>Tarjetas de Estudio</h1>
@@ -4161,7 +4093,6 @@
     <button class="boton-secundario" id="btn-pomodoro-repaso-pasivo" style="width:100%; display:none;">👁 Repaso pasivo</button>
     <div class="pomodoro-banner-repaso" id="pomodoro-aviso-repaso"></div>
     <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
-    <label class="enfoque-opcion" title="Un gato que te acompaña mientras estudiás"><input type="checkbox" class="chk-compania-orion"> 🐱 Compañía de Orion</label>
     <label class="enfoque-opcion" title="Ronda de 60–90 s para activar la atención antes de empezar"><input type="checkbox" class="chk-minijuego"> 🎮 Minijuego previo</label>
     <label class="enfoque-opcion" title="Las tarjetas ocultas (🙈) no entran en evaluaciones ni en el Pomodoro"><input type="checkbox" class="chk-excluir-ocultas"> 🙈 Excluir tarjetas ocultas</label>
     <label class="enfoque-opcion" title="Al tocar una ruta en Retención se despliega el recorte del mapa"><input type="checkbox" class="chk-movil"> 📱 Pomodoro móvil</label>
@@ -4854,7 +4785,6 @@
       </button>
     </div>
     <label class="enfoque-opcion"><input type="checkbox" class="chk-enfoque"> 🎯 Vigilar mi enfoque</label>
-    <label class="enfoque-opcion" title="Un gato que te acompaña mientras estudiás"><input type="checkbox" class="chk-compania-orion"> 🐱 Compañía de Orion</label>
     <label class="enfoque-opcion" title="Ronda de 60–90 s para activar la atención antes de empezar"><input type="checkbox" class="chk-minijuego"> 🎮 Minijuego previo</label>
     <label class="enfoque-opcion" title="Las tarjetas ocultas (🙈) no entran en evaluaciones ni en el Pomodoro"><input type="checkbox" class="chk-excluir-ocultas"> 🙈 Excluir tarjetas ocultas</label>
     <button class="boton-principal" id="btn-modo-confirmar">Comenzar</button>
@@ -27774,219 +27704,12 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   });
   minijuegoSincronizarChecks();
 
-  const ORION_CLAVE = 'compania_orion_v1';
-  const ORION_ARCHIVOS = ['orion-leyendo-1.webp', 'orion-leyendo-2.webp', 'orion-leyendo-3.webp'];
-  const ORION_MENSAJES = ['Seguimos', 'Vamos bien', 'Aquí contigo', 'Buen ritmo', 'Un poco más'];
-  const ORION_CAMBIO_MIN_MS = 8000;
-  const ORION_CAMBIO_RANGO_MS = 5000;
-  const ORION_BURBUJA_MIN_MS = 4 * 60 * 1000;
-  const ORION_BURBUJA_RANGO_MS = 4 * 60 * 1000;
-  const ORION_BURBUJA_DUR_MS = 4500;
-
-  let orionHabilitado = (function () {
-    try { return localStorage.getItem(ORION_CLAVE) !== '0'; } catch (e) { return true; }
-  })();
-  const elOrion = document.getElementById('orion-compania');
-  const elOrionBurbuja = document.getElementById('orion-burbuja');
-  const elOrionContenedor = elOrion.closest('.contenedor');
-  let orionImgs = [];
-  let orionCarga = null;
-  let orionEsperando = false;
-  let orionSinImagenes = false;
-  let orionVisible = false;
-  let orionActual = null;
-  let orionCola = [];
-  let orionTimer = 0;
-  let orionProxCambio = 0;
-  let orionProxBurbuja = 0;
-  let orionBurbujaFin = 0;
-  let orionUltimoMensaje = '';
-
-  function orionReducido() {
-    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  }
-
   function orionRutaBase() {
     const ruta = location.pathname.toLowerCase();
     return ruta.indexOf('/guardados/antiguos/evaluadores/') !== -1 ? '../../imagenes/' : '../imagenes/';
   }
 
-  function orionCargar() {
-    if (orionCarga) return orionCarga;
-    orionCarga = new Promise((resolve) => {
-      const iniciar = () => {
-        const base = orionRutaBase();
-        Promise.all(ORION_ARCHIVOS.map((nombre) => new Promise((res) => {
-          try {
-            const img = new Image();
-            img.className = 'orion-img';
-            img.alt = '';
-            img.decoding = 'async';
-            img.draggable = false;
-            img.onload = () => {
-              const fin = () => res(img);
-              if (img.decode) img.decode().then(fin, fin); else fin();
-            };
-            img.onerror = () => res(null);
-            img.src = new URL(base + nombre, location.href).href;
-          } catch (e) { res(null); }
-        }))).then((lista) => {
-          orionImgs = lista.filter(Boolean);
-          if (orionImgs.length === 0) orionSinImagenes = true;
-          orionImgs.forEach((img) => elOrion.insertBefore(img, elOrionBurbuja));
-          resolve();
-        });
-      };
-      if (window.requestIdleCallback) window.requestIdleCallback(iniciar, { timeout: 1500 });
-      else setTimeout(iniciar, 200);
-    });
-    return orionCarga;
-  }
-
-  function orionAleatorioMs(min, rango) {
-    return min + Math.floor(Math.random() * rango);
-  }
-
-  function orionBarajar(lista) {
-    const copia = lista.slice();
-    for (let i = copia.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      const tmp = copia[i];
-      copia[i] = copia[j];
-      copia[j] = tmp;
-    }
-    return copia;
-  }
-
-  function orionSiguienteImagen() {
-    if (orionCola.length === 0) {
-      orionCola = orionBarajar(orionImgs);
-      if (orionImgs.length > 1 && orionCola[0] === orionActual) {
-        const ultimo = orionCola.length - 1;
-        const tmp = orionCola[0];
-        orionCola[0] = orionCola[ultimo];
-        orionCola[ultimo] = tmp;
-      }
-    }
-    return orionCola.shift();
-  }
-
-  function orionMostrarImagen(img) {
-    orionImgs.forEach((otra) => otra.classList.toggle('activa', otra === img));
-    orionActual = img;
-  }
-
-  function orionDebeVerse() {
-    if (!orionHabilitado || orionSinImagenes) return false;
-    if (minijuegoAbierto || enfoqueReto) return false;
-    if (elAreaTarjeta.style.display === 'none' && elPantallaObservador.style.display === 'none' && elPantallaHuerfanas.style.display === 'none') return false;
-    if (pomodoroActivo) {
-      if (pomodoroPausado || pomodoroEnBraindumpFinal || pomodoroFase !== 'retencion') return false;
-      if (elModalNotasEvaluador.classList.contains('abierto')) return false;
-      return true;
-    }
-    if (elAreaTarjeta.style.display === 'none') return false;
-    if (modoObservador || pausaManual || modoJuego === 'examen') return false;
-    return tarjetasSesion.length > 0;
-  }
-
-  function orionOcultarBurbuja() {
-    elOrionBurbuja.classList.remove('visible');
-    orionBurbujaFin = 0;
-  }
-
-  function orionMostrarBurbuja() {
-    const opciones = ORION_MENSAJES.filter((m) => m !== orionUltimoMensaje);
-    orionUltimoMensaje = opciones[Math.floor(Math.random() * opciones.length)];
-    elOrionBurbuja.textContent = orionUltimoMensaje;
-    elOrionBurbuja.classList.add('visible');
-    orionBurbujaFin = Date.now() + ORION_BURBUJA_DUR_MS;
-  }
-
-  function orionProgramar() {
-    clearTimeout(orionTimer);
-    orionTimer = 0;
-    if (!orionVisible || document.hidden) return;
-    let proximo = orionBurbujaFin > 0 ? orionBurbujaFin : orionProxBurbuja;
-    if (!orionReducido() && orionImgs.length > 1) proximo = Math.min(proximo, orionProxCambio);
-    orionTimer = setTimeout(orionTick, Math.max(50, proximo - Date.now()));
-  }
-
-  function orionTick() {
-    orionTimer = 0;
-    if (!orionVisible || document.hidden) return;
-    const ahora = Date.now();
-    if (orionBurbujaFin > 0) {
-      if (ahora >= orionBurbujaFin) {
-        orionOcultarBurbuja();
-        orionProxBurbuja = ahora + orionAleatorioMs(ORION_BURBUJA_MIN_MS, ORION_BURBUJA_RANGO_MS);
-      }
-    } else if (ahora >= orionProxBurbuja) {
-      orionMostrarBurbuja();
-    }
-    if (!orionReducido() && orionImgs.length > 1 && ahora >= orionProxCambio) {
-      orionMostrarImagen(orionSiguienteImagen());
-      orionProxCambio = ahora + orionAleatorioMs(ORION_CAMBIO_MIN_MS, ORION_CAMBIO_RANGO_MS);
-    }
-    orionProgramar();
-  }
-
-  function orionMostrar() {
-    orionVisible = true;
-    const ahora = Date.now();
-    orionCola = [];
-    orionActual = null;
-    orionMostrarImagen(orionSiguienteImagen());
-    orionProxCambio = ahora + orionAleatorioMs(ORION_CAMBIO_MIN_MS, ORION_CAMBIO_RANGO_MS);
-    orionProxBurbuja = ahora + orionAleatorioMs(ORION_BURBUJA_MIN_MS, ORION_BURBUJA_RANGO_MS);
-    orionOcultarBurbuja();
-    elOrion.classList.add('visible');
-    elOrionContenedor.classList.add('orion-activo');
-    orionProgramar();
-  }
-
-  function orionOcultar() {
-    clearTimeout(orionTimer);
-    orionTimer = 0;
-    orionVisible = false;
-    orionOcultarBurbuja();
-    orionImgs.forEach((img) => img.classList.remove('activa'));
-    orionActual = null;
-    elOrion.classList.remove('visible');
-    elOrionContenedor.classList.remove('orion-activo');
-  }
-
-  function orionActualizar() {
-    if (!orionDebeVerse()) {
-      if (orionVisible) orionOcultar();
-      return;
-    }
-    if (orionImgs.length === 0) {
-      if (!orionEsperando) {
-        orionEsperando = true;
-        orionCargar().then(() => { orionEsperando = false; orionActualizar(); });
-      }
-      return;
-    }
-    if (!orionVisible) orionMostrar();
-  }
-
-  function orionSincronizarChecks() {
-    document.querySelectorAll('.chk-compania-orion').forEach((chk) => { chk.checked = orionHabilitado; });
-  }
-  document.querySelectorAll('.chk-compania-orion').forEach((chk) => {
-    chk.addEventListener('change', () => {
-      orionHabilitado = chk.checked;
-      try { escribirLocalSeguro(ORION_CLAVE, orionHabilitado ? '1' : '0'); } catch (e) { }
-      orionSincronizarChecks();
-      if (orionHabilitado) orionCargar();
-      orionActualizar();
-    });
-  });
-  orionSincronizarChecks();
-
-  const orionObservador = new MutationObserver(() => {
-    orionActualizar();
+  const juegoObservador = new MutationObserver(() => {
     if (typeof juegoActualizar === 'function') juegoActualizar();
   });
   [
@@ -27994,31 +27717,8 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     elPantallaHuerfanas, elPantallaMapa, elPantallaTienda, elPantallaHistorial,
     elOverlayPausa, elOverlayEnfoque, elOverlayMinijuego, elPomodoroBadge, elModalNotasEvaluador,
   ].forEach((el) => {
-    if (el) orionObservador.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
+    if (el) juegoObservador.observe(el, { attributes: true, attributeFilter: ['style', 'class'] });
   });
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      clearTimeout(orionTimer);
-      orionTimer = 0;
-      return;
-    }
-    if (!orionVisible) return;
-    const ahora = Date.now();
-    if (orionBurbujaFin > 0) {
-      orionOcultarBurbuja();
-      orionProxBurbuja = ahora + orionAleatorioMs(ORION_BURBUJA_MIN_MS, ORION_BURBUJA_RANGO_MS);
-    }
-    orionProxCambio = ahora + orionAleatorioMs(ORION_CAMBIO_MIN_MS, ORION_CAMBIO_RANGO_MS);
-    orionProgramar();
-  });
-  window.addEventListener('pagehide', () => {
-    clearTimeout(orionTimer);
-    orionTimer = 0;
-  });
-  window.addEventListener('pageshow', (e) => { if (e.persisted) orionActualizar(); });
-
-  if (orionHabilitado) orionCargar();
 
   let minijuegoFinJugado = false;
   let juegoOrigen = null;
