@@ -23,7 +23,8 @@
     var p = new URLSearchParams(location.search);
     if (p.get('minijuego') === '1') {
       var j = p.get('juego');
-      if (['stop', 'cambio', 'mozo', 'luciernagas', 'vigia'].indexOf(j) === -1) j = 'stop';
+      if (j === 'mozo') j = 'foco';
+      if (['stop', 'cambio', 'foco', 'luciernagas', 'engranajes'].indexOf(j) === -1) j = 'stop';
       window.MINIJUEGO_EMBEBIDO = { juego: j, silenciado: p.get('muted') === '1' };
       document.documentElement.classList.add('modo-embebido');
     }
@@ -32,6 +33,9 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mis Evaluadores</title>
+<meta name="description" content="Listado de evaluadores, repasos espaciados (SRS), tienda, mascota Orion y minijuegos cognitivos incluyendo Foco en movimiento y Engranajes numéricos.">
+<meta property="og:title" content="Mis Evaluadores">
+<meta property="og:description" content="Listado de evaluadores, repasos espaciados (SRS), tienda, mascota Orion y minijuegos cognitivos incluyendo Foco en movimiento y Engranajes numéricos.">
 
 <style>
   :root {
@@ -1265,7 +1269,7 @@
 
   #vista-juego [hidden],
   #vista-cambio [hidden],
-  #vista-mozo [hidden] {
+  #vista-foco [hidden] {
     display: none !important;
   }
 
@@ -1527,7 +1531,7 @@
   }
 
   .cambio-fase,
-  .mozo-fase {
+  .foco-fase {
     font-size: 14px;
     font-weight: 600;
     color: var(--texto-cabecera);
@@ -1603,136 +1607,65 @@
     opacity: 0.85;
   }
 
-  .mozo-escena {
+  .foco-escena {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    min-height: clamp(300px, 50vh, 420px);
-    padding: 14px;
-    background: var(--bg-superficie-hover);
-    border: 3px solid var(--color-borde-medio);
-    border-radius: 16px;
+    padding: 16px 12px 18px;
+    border-radius: 18px;
+    background: radial-gradient(circle at 50% 44%, #11192f 0%, #070b16 100%);
+    border: 2px solid #1b2742;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
-  .mozo-pedidos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
-    width: 100%;
-  }
-
-  .mozo-pedido {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    background: var(--bg-superficie);
-    border: 1.5px solid var(--color-borde-medio);
-    border-radius: 12px;
-    padding: 10px 6px;
-    font-size: 30px;
-  }
-
-  .mozo-pedido small {
-    font-size: 12px;
-    color: var(--texto-suave);
-  }
-
-  .mozo-mesas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-  }
-
-  .mozo-mesa {
-    min-width: 66px;
-    text-align: center;
-    background: var(--bg-superficie);
-    border: 2px solid var(--color-borde-medio);
-    border-radius: 12px;
-    padding: 6px 10px;
-    font-size: 28px;
-  }
-
-  .mozo-mesa small {
+  .foco-canvas {
     display: block;
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 100 / 90;
+    cursor: default;
+    touch-action: manipulation;
+  }
+
+  .foco-canvas.respondible {
+    cursor: pointer;
+  }
+
+  .foco-velocidad-wrap {
+    width: 100%;
+    max-width: 280px;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  .foco-velocidad-etiqueta {
     font-size: 11px;
-    color: var(--texto-suave);
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    color: #b7c4dc;
+    margin-bottom: 8px;
   }
 
-  .mozo-mesa.activa {
-    border-color: var(--color-boton);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
-  }
-
-  .mozo-mesa.ok {
-    border-color: #1fa35a;
-    background: rgba(31, 163, 90, 0.18);
-  }
-
-  .mozo-mesa.fallo {
-    border-color: #e0392d;
-    background: rgba(224, 57, 45, 0.18);
-  }
-
-  .mozo-bandeja {
+  .foco-velocidad-barra {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
-    gap: 10px;
-    width: 100%;
-    margin-top: auto;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
   }
 
-  .mozo-plato {
-    aspect-ratio: 1;
-    font-size: clamp(32px, 9vw, 44px);
-    background: var(--bg-superficie);
-    border: 2px solid var(--color-borde-medio);
-    border-radius: 50%;
-    padding: 0;
-    cursor: pointer;
-    font-family: inherit;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+  .foco-velocidad-seg {
+    height: 7px;
+    border-radius: 999px;
+    background: #232d42;
+    transition: background 0.14s ease, box-shadow 0.14s ease;
   }
 
-  .mozo-plato.correcto {
-    border-color: #1fa35a;
-    background: rgba(31, 163, 90, 0.25);
+  .foco-velocidad-seg.activo {
+    background: #53ee49;
+    box-shadow: 0 0 10px rgba(83, 238, 73, 0.8);
   }
-
-  .mozo-plato.elegido-mal {
-    border-color: #e0392d;
-    background: rgba(224, 57, 45, 0.2);
-  }
-
-  .mozo-distractor {
-    position: relative;
-    width: 100%;
-    flex: 1;
-    min-height: 240px;
-    overflow: hidden;
-    border-radius: 12px;
-    background: var(--bg-superficie);
-    touch-action: manipulation;
-  }
-
-  .mozo-circulo {
-    position: absolute;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .mozo-circulo.verde { background: #1fa35a; }
-  .mozo-circulo.rojo { background: #e0392d; }
 
   @media (prefers-reduced-motion: reduce) {
     .juego-tarjeta {
@@ -1803,116 +1736,87 @@
     to { transform: translateY(3px); }
   }
 
-  .vig-medidor {
-    max-width: 380px;
-    margin: 0 auto 10px;
-  }
-  .vig-medidor-etiqueta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--texto-cabecera);
-    margin-bottom: 4px;
-  }
-  .vig-medidor-barra {
-    height: 14px;
-    border-radius: 8px;
-    background: var(--color-borde-medio);
-    overflow: hidden;
-  }
-  .vig-medidor-relleno {
-    height: 100%;
-    width: 100%;
-    border-radius: 8px;
-    background: #1fa35a;
-    transition: width 0.25s, background-color 0.25s;
-  }
-  .vig-medidor-relleno.medio { background: #e0a21d; }
-  .vig-medidor-relleno.bajo { background: #e0392d; }
-  .vig-radar {
+  .eng-escena {
     position: relative;
-    width: min(100%, 360px);
-    aspect-ratio: 1;
+    width: min(100%, 760px);
+    aspect-ratio: 100 / 70;
     margin: 0 auto;
-    border-radius: 50%;
-    border: 3px solid #1d5f3a;
-    background: radial-gradient(circle, #0c2a1c 0%, #06140d 100%);
+    container-type: inline-size;
+    border-radius: 16px;
+    background: radial-gradient(circle at 50% 40%, #151a33 0%, #070914 100%);
     overflow: hidden;
-    cursor: pointer;
     touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
-  .vig-radar::before {
-    content: '';
+  .eng-engranaje {
+    position: absolute;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%) rotate(var(--ang, 0deg));
+    will-change: transform;
+  }
+  .eng-forma {
     position: absolute;
     inset: 0;
-    border-radius: 50%;
-    background: repeating-radial-gradient(circle, transparent 0, transparent 16.5%, rgba(61, 255, 138, 0.18) 16.5%, rgba(61, 255, 138, 0.18) 17.5%);
+    width: 100%;
+    height: 100%;
+    overflow: visible;
     pointer-events: none;
+    filter: drop-shadow(0 0 3px var(--neon)) drop-shadow(0 0 9px var(--neon));
   }
-  .vig-radar::after {
-    content: '';
+  .eng-cuerpo {
+    fill: rgba(8, 10, 24, 0.92);
+    stroke: var(--neon);
+    stroke-width: 3;
+    stroke-linejoin: round;
+  }
+  .eng-guia {
+    fill: none;
+    stroke: var(--neon);
+    stroke-opacity: 0.3;
+    stroke-width: 1.5;
+    stroke-dasharray: 3 5;
+  }
+  .eng-num {
     position: absolute;
-    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    width: 5.6cqw;
+    height: 5.6cqw;
     border-radius: 50%;
-    background: conic-gradient(from 0deg, rgba(61, 255, 138, 0) 0deg, rgba(61, 255, 138, 0.28) 60deg, rgba(61, 255, 138, 0) 60.5deg);
-    animation: vig-barrido 4s linear infinite;
-    pointer-events: none;
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--ang, 0deg)));
+    font-size: 14px;
+    font-size: 3cqw;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: #ffffff;
+    cursor: pointer;
+    transition: color 0.12s;
   }
-  .vig-radar.lapso { border-color: #ffb020; }
-  .vig-blip {
-    position: absolute;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
+  .eng-num.objetivo {
+    color: #ff3b3b;
+    text-shadow: 0 0 8px rgba(255, 59, 59, 0.9);
   }
-  .vig-blip.objetivo {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #3dff8a;
-    box-shadow: 0 0 18px 6px rgba(61, 255, 138, 0.8);
-  }
-  .vig-blip.ruido {
-    width: 26px;
-    height: 26px;
-    border-radius: 5px;
-    background: #8c4a4a;
-    opacity: 0.75;
-    transform: translate(-50%, -50%) rotate(45deg);
-  }
-  .vig-lapso {
-    position: absolute;
-    width: 56px;
-    height: 56px;
-    border: 3px dashed #ffb020;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    animation: vig-lapso 1s ease-out forwards;
-  }
-  @keyframes vig-barrido {
-    to { transform: rotate(360deg); }
-  }
-  @keyframes vig-lapso {
-    from { opacity: 1; }
-    to { opacity: 0; }
+  .eng-num.acierto {
+    color: #3dff8a;
+    text-shadow: 0 0 8px rgba(61, 255, 138, 0.9);
   }
 
   @media (prefers-reduced-motion: reduce) {
     .luc-luciernaga { animation: none; transition: none; }
-    .vig-radar::after { animation: none; }
-    .vig-lapso { animation: none; }
-    .vig-medidor-relleno { transition: none; }
+    .eng-num { transition: none; }
+    .foco-velocidad-seg { transition: none; }
   }
   html.modo-embebido #btn-luc-otra,
   html.modo-embebido #btn-luc-ver-instr,
   html.modo-embebido #btn-luc-menu,
-  html.modo-embebido #btn-vig-otra,
-  html.modo-embebido #btn-vig-ver-instr,
-  html.modo-embebido #btn-vig-menu { display: none !important; }
+  html.modo-embebido #btn-eng-otra,
+  html.modo-embebido #btn-eng-menu { display: none !important; }
   .solo-embebido { display: none; }
   html.modo-embebido .solo-embebido { display: inline-block; }
   html.modo-embebido .encabezado-global,
@@ -1922,9 +1826,9 @@
   html.modo-embebido #btn-cambio-otra,
   html.modo-embebido #btn-cambio-ver-instr,
   html.modo-embebido #btn-cambio-menu,
-  html.modo-embebido #btn-mozo-otra,
-  html.modo-embebido #btn-mozo-ver-instr,
-  html.modo-embebido #btn-mozo-menu { display: none !important; }
+  html.modo-embebido #btn-foco-otra,
+  html.modo-embebido #btn-foco-ver-instr,
+  html.modo-embebido #btn-foco-menu { display: none !important; }
 </style>
 </head>
 
@@ -2103,17 +2007,17 @@
         <span class="juego-tarjeta-icono">🔄</span>
         <span class="juego-tarjeta-texto"><strong>¿Qué cambió?</strong><span>Memorizá la grilla de emojis y encontrá la celda que cambió.</span></span>
       </button>
-      <button type="button" class="juego-tarjeta" id="tarjeta-mozo">
-        <span class="juego-tarjeta-icono">🍽️</span>
-        <span class="juego-tarjeta-texto"><strong>Mozo distraído</strong><span>Recordá los pedidos pese a las distracciones y servilos bien.</span></span>
+      <button type="button" class="juego-tarjeta" id="tarjeta-foco">
+        <span class="juego-tarjeta-icono">👁️</span>
+        <span class="juego-tarjeta-texto"><strong>Foco en movimiento</strong><span>Seguí con la vista la bolita amarilla mientras se mezcla entre las demás.</span></span>
       </button>
       <button type="button" class="juego-tarjeta" id="tarjeta-luciernagas">
         <span class="juego-tarjeta-icono">✨</span>
         <span class="juego-tarjeta-texto"><strong>Secuencia de luciérnagas</strong><span>Mirá la secuencia de luces y repetila, a veces al revés.</span></span>
       </button>
-      <button type="button" class="juego-tarjeta" id="tarjeta-vigia">
-        <span class="juego-tarjeta-icono">📡</span>
-        <span class="juego-tarjeta-texto"><strong>Vigía de consistencia</strong><span>Tocá los blips verdes del radar, ignorá los rojos y mantené un ritmo parejo.</span></span>
+      <button type="button" class="juego-tarjeta" id="tarjeta-engranajes">
+        <span class="juego-tarjeta-icono">⚙️</span>
+        <span class="juego-tarjeta-texto"><strong>Engranajes numéricos</strong><span>Tocá los números del 1 al 30 en orden mientras los engranajes giran cada vez más rápido.</span></span>
       </button>
     </div>
   </div>
@@ -2165,49 +2069,64 @@
     </div>
   </div>
 
-  <div id="vista-mozo" class="vista-secundaria">
-    <button type="button" class="btn-volver" id="btn-mozo-volver">← Volver (Esc)</button>
+  <div id="vista-foco" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-foco-volver">← Volver (Esc)</button>
     <div class="juego-barra">
-      <span class="juego-titulo">🍽️ Mozo distraído</span>
+      <span class="juego-titulo">👁️ Foco en movimiento</span>
       <button type="button" class="boton-icono-circular js-sonido" title="Silenciar o activar sonido">🔊</button>
     </div>
 
-    <div id="mozo-instrucciones" class="juego-panel">
+    <div id="foco-instrucciones" class="juego-panel">
       <h2>Cómo se juega</h2>
-      <p><strong>Objetivo:</strong> recordar qué plato pidió cada mesa y servirlo bien.</p>
+      <p><strong>Objetivo:</strong> seguir con la vista una bolita marcada mientras se mueve entre las demás y tocarla al detenerse.</p>
       <ul>
-        <li><strong>Memorizá:</strong> se muestran de 2 a 4 pedidos (cliente y plato) durante unos 5 segundos.</li>
-        <li><strong>Distracción (20 s):</strong> tocá los círculos verdes e ignorá los rojos. Esta parte no suma ni resta puntos: solo estorba tu memoria.</li>
-        <li><strong>Servir:</strong> las mesas se atienden de a una. Tocá en la bandeja el plato que pidió la mesa resaltada. Hay platos de más que no corresponden a ningún pedido. Cada mesa tiene un solo intento.</li>
-        <li>Según cuántos pedidos aciertes, el siguiente ciclo tendrá más o menos pedidos.</li>
+        <li><strong>Memorización (5 s):</strong> aparecen 15 bolitas quietas dentro del hexágono; una aleatoria está en <strong>amarillo</strong> y el resto en blanco.</li>
+        <li><strong>Movimiento (15 s):</strong> la bolita amarilla vuelve a blanca y todas arrancan de inmediato. La velocidad empieza lenta y cambia al azar durante todo el trayecto.</li>
+        <li><strong>Selección (~5 s):</strong> todo se congela y tenés un solo intento para tocar la bolita original. Si no respondés, cuenta como fallo.</li>
+        <li>Tras 2 aciertos seguidos sube el techo de velocidad y la agitación; tras un fallo, baja.</li>
         <li>La ronda dura 90 segundos; si el tiempo se acaba en medio de un ciclo, ese ciclo se termina. No se guarda nada.</li>
       </ul>
       <div class="juego-acciones">
-        <button type="button" class="juego-boton" id="btn-mozo-comenzar">Comenzar ronda</button>
+        <button type="button" class="juego-boton" id="btn-foco-comenzar">Comenzar ronda</button>
       </div>
     </div>
 
-    <div id="mozo-ronda" hidden>
+    <div id="foco-ronda" hidden>
       <div class="juego-hud">
-        <div class="juego-hud-item"><span class="juego-hud-valor" id="mozo-hud-tiempo">0</span><span class="juego-hud-etiqueta">Segundos</span></div>
-        <div class="juego-hud-item"><span class="juego-hud-valor" id="mozo-hud-correctos">0</span><span class="juego-hud-etiqueta">Correctos</span></div>
-        <div class="juego-hud-item"><span class="juego-hud-valor" id="mozo-hud-racha">0</span><span class="juego-hud-etiqueta">Racha</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="foco-hud-tiempo">90</span><span class="juego-hud-etiqueta">Segundos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="foco-hud-aciertos">0</span><span class="juego-hud-etiqueta">Aciertos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="foco-hud-racha">0</span><span class="juego-hud-etiqueta">Racha</span></div>
       </div>
-      <div class="mozo-fase" id="mozo-fase"></div>
-      <div class="mozo-escena" id="mozo-escena"></div>
-      <div class="juego-feedback linea" id="mozo-feedback" aria-live="polite"></div>
+      <div class="foco-fase" id="foco-fase"></div>
+      <div class="foco-escena" id="foco-escena">
+        <canvas class="foco-canvas" id="foco-canvas"></canvas>
+        <div class="foco-velocidad-wrap">
+          <div class="foco-velocidad-etiqueta">VELOCIDAD</div>
+          <div class="foco-velocidad-barra" id="foco-velocidad-barra">
+            <span class="foco-velocidad-seg"></span>
+            <span class="foco-velocidad-seg"></span>
+            <span class="foco-velocidad-seg"></span>
+            <span class="foco-velocidad-seg"></span>
+            <span class="foco-velocidad-seg"></span>
+            <span class="foco-velocidad-seg"></span>
+            <span class="foco-velocidad-seg"></span>
+            <span class="foco-velocidad-seg"></span>
+          </div>
+        </div>
+      </div>
+      <div class="juego-feedback linea" id="foco-feedback" aria-live="polite"></div>
       <p class="juego-pista">Esc para salir</p>
     </div>
 
-    <div id="mozo-resumen" class="juego-panel" hidden>
+    <div id="foco-resumen" class="juego-panel" hidden>
       <h2>Resumen de la ronda</h2>
-      <div class="juego-metricas" id="mozo-metricas"></div>
+      <div class="juego-metricas" id="foco-metricas"></div>
       <p class="juego-nota">Este resumen no se guarda: se pierde al recargar la página.</p>
       <div class="juego-acciones">
-        <button type="button" class="juego-boton" id="btn-mozo-otra">Jugar otra vez</button>
-        <button type="button" class="juego-boton secundario" id="btn-mozo-ver-instr">Ver instrucciones</button>
-        <button type="button" class="juego-boton solo-embebido js-continuar-estudio" id="btn-mozo-continuar">Continuar al estudio</button>
-        <button type="button" class="juego-boton secundario" id="btn-mozo-menu">Volver al menú</button>
+        <button type="button" class="juego-boton" id="btn-foco-otra">Jugar otra vez</button>
+        <button type="button" class="juego-boton secundario" id="btn-foco-ver-instr">Ver instrucciones</button>
+        <button type="button" class="juego-boton solo-embebido js-continuar-estudio" id="btn-foco-continuar">Continuar al estudio</button>
+        <button type="button" class="juego-boton secundario" id="btn-foco-menu">Volver al menú</button>
       </div>
     </div>
   </div>
@@ -2259,53 +2178,46 @@
     </div>
   </div>
 
-  <div id="vista-vigia" class="vista-secundaria">
-    <button type="button" class="btn-volver" id="btn-vig-volver">← Volver (Esc)</button>
+  <div id="vista-engranajes" class="vista-secundaria">
+    <button type="button" class="btn-volver" id="btn-eng-volver">← Volver (Esc)</button>
     <div class="juego-barra">
-      <span class="juego-titulo">📡 Vigía de consistencia</span>
+      <span class="juego-titulo">⚙️ Engranajes numéricos</span>
       <button type="button" class="boton-icono-circular js-sonido" title="Silenciar o activar sonido">🔊</button>
     </div>
 
-    <div id="vig-instrucciones" class="juego-panel">
+    <div id="eng-instrucciones" class="juego-panel">
       <h2>Cómo se juega</h2>
-      <p><strong>Objetivo:</strong> mantener un tiempo de reacción parejo durante toda la ronda.</p>
+      <p><strong>Objetivo:</strong> tocar los números del 1 al 30 en orden, lo más rápido posible.</p>
       <ul>
-        <li><strong>Blip verde brillante y redondo:</strong> tocalo cuanto antes (clic, barra espaciadora o toque sobre el radar).</li>
-        <li><strong>Blip rojo apagado y en rombo:</strong> es ruido, ignoralo. Se distingue desde que aparece: nunca tenés que frenar una respuesta ya iniciada.</li>
-        <li>Importa más la <strong>regularidad</strong> de tus respuestas que la velocidad. El medidor de estabilidad cae con los lapsos (omisiones o respuestas muy lentas, que se marcan en el radar) y se recupera con respuestas parejas.</li>
-        <li>Tocar cuando no hay ningún punto cuenta como un error leve, sin más castigo.</li>
-        <li>El ritmo se adapta solo: acelera de a poco cuando vas bien y se alivia bastante cuando fallás.</li>
-        <li>La ronda dura 90 segundos. No se guarda nada.</li>
+        <li>Solo el número <strong>1</strong> aparece en <strong>rojo</strong> para ubicarte al comenzar.</li>
+        <li>A partir del 2 debés buscar cada número siguiente con la vista sin señalización; cuando acertás, parpadea en verde.</li>
+        <li>Los tres engranajes giran todo el tiempo, en direcciones alternas, y cada acierto los hace girar más rápido.</li>
+        <li>Tocar un número equivocado no tiene ninguna penalización.</li>
+        <li>La ronda dura 60 segundos. No se guarda nada.</li>
       </ul>
       <div class="juego-acciones">
-        <button type="button" class="juego-boton" id="btn-vig-comenzar">Comenzar ronda</button>
+        <button type="button" class="juego-boton" id="btn-eng-comenzar">Comenzar ronda</button>
       </div>
     </div>
 
-    <div id="vig-ronda" hidden>
+    <div id="eng-ronda" hidden>
       <div class="juego-hud">
-        <div class="juego-hud-item"><span class="juego-hud-valor" id="vig-hud-tiempo">0</span><span class="juego-hud-etiqueta">Segundos</span></div>
-        <div class="juego-hud-item"><span class="juego-hud-valor" id="vig-hud-aciertos">0</span><span class="juego-hud-etiqueta">Aciertos</span></div>
-        <div class="juego-hud-item"><span class="juego-hud-valor" id="vig-hud-racha">0</span><span class="juego-hud-etiqueta">Racha estable</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="eng-hud-tiempo">60</span><span class="juego-hud-etiqueta">Segundos</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="eng-hud-siguiente">1</span><span class="juego-hud-etiqueta">Siguiente</span></div>
+        <div class="juego-hud-item"><span class="juego-hud-valor" id="eng-hud-velocidad">×1.0</span><span class="juego-hud-etiqueta">Velocidad</span></div>
       </div>
-      <div class="vig-medidor">
-        <div class="vig-medidor-etiqueta"><span>Estabilidad</span><span id="vig-estab-valor">100%</span></div>
-        <div class="vig-medidor-barra"><div class="vig-medidor-relleno" id="vig-estab-relleno"></div></div>
-      </div>
-      <div class="vig-radar" id="vig-radar"></div>
-      <div class="juego-feedback linea" id="vig-feedback" aria-live="polite"></div>
-      <p class="juego-pista">Verde brillante: tocá · Rojo apagado: ignorá · Esc para salir</p>
+      <div class="eng-escena" id="eng-escena"></div>
+      <p class="juego-pista">Buscá los números en orden del 1 al 30 · Esc para salir</p>
     </div>
 
-    <div id="vig-resumen" class="juego-panel" hidden>
+    <div id="eng-resumen" class="juego-panel" hidden>
       <h2>Resumen de la ronda</h2>
-      <div class="juego-metricas" id="vig-metricas"></div>
-      <p class="juego-nota">La consistencia pesa más la estabilidad del tiempo de reacción que el porcentaje de aciertos. Este resumen no se guarda.</p>
+      <div class="juego-metricas" id="eng-metricas"></div>
+      <p class="juego-nota">Este resumen no se guarda.</p>
       <div class="juego-acciones">
-        <button type="button" class="juego-boton" id="btn-vig-otra">Jugar otra vez</button>
-        <button type="button" class="juego-boton secundario" id="btn-vig-ver-instr">Ver instrucciones</button>
-        <button type="button" class="juego-boton secundario" id="btn-vig-menu">Volver al menú</button>
-        <button type="button" class="juego-boton solo-embebido js-continuar-estudio" id="btn-vig-continuar">Continuar al estudio</button>
+        <button type="button" class="juego-boton" id="btn-eng-otra">Reiniciar</button>
+        <button type="button" class="juego-boton secundario" id="btn-eng-menu">Volver al menú</button>
+        <button type="button" class="juego-boton solo-embebido js-continuar-estudio" id="btn-eng-continuar">Continuar al estudio</button>
       </div>
     </div>
   </div>
@@ -2730,9 +2642,9 @@
   const elVistaJuego = document.getElementById('vista-juego');
   const elVistaJuegos = document.getElementById('vista-juegos');
   const elVistaCambio = document.getElementById('vista-cambio');
-  const elVistaMozo = document.getElementById('vista-mozo');
+  const elVistaFoco = document.getElementById('vista-foco');
   const elVistaLuc = document.getElementById('vista-luciernagas');
-  const elVistaVig = document.getElementById('vista-vigia');
+  const elVistaEng = document.getElementById('vista-engranajes');
 
   let vistaActual = 'principal';
 
@@ -2749,9 +2661,9 @@
 
     elVistaJuegos.style.display = nombre === 'juegos' ? 'block' : 'none';
     elVistaCambio.style.display = nombre === 'cambio' ? 'block' : 'none';
-    elVistaMozo.style.display = nombre === 'mozo' ? 'block' : 'none';
+    elVistaFoco.style.display = nombre === 'foco' ? 'block' : 'none';
     elVistaLuc.style.display = nombre === 'luciernagas' ? 'block' : 'none';
-    elVistaVig.style.display = nombre === 'vigia' ? 'block' : 'none';
+    elVistaEng.style.display = nombre === 'engranajes' ? 'block' : 'none';
 
     if (nombre === 'juego') {
       inicializarVistaJuego();
@@ -2763,20 +2675,20 @@
     } else {
       cambioDetener();
     }
-    if (nombre === 'mozo') {
-      inicializarVistaMozo();
+    if (nombre === 'foco') {
+      inicializarVistaFoco();
     } else {
-      mozoDetener();
+      focoDetener();
     }
     if (nombre === 'luciernagas') {
       inicializarVistaLuciernagas();
     } else {
       lucDetener();
     }
-    if (nombre === 'vigia') {
-      inicializarVistaVigia();
+    if (nombre === 'engranajes') {
+      inicializarVistaEngranajes();
     } else {
-      vigDetener();
+      engDetener();
     }
     if (nombre === 'juegos') {
       juegoActualizarBotonSonido();
@@ -2807,14 +2719,14 @@
     .addEventListener('click', () => mostrarVista('juegos'));
   document.getElementById('btn-cambio-volver')
     .addEventListener('click', () => mostrarVista('juegos'));
-  document.getElementById('btn-mozo-volver')
+  document.getElementById('btn-foco-volver')
     .addEventListener('click', () => mostrarVista('juegos'));
   document.getElementById('tarjeta-stop')
     .addEventListener('click', () => mostrarVista('juego'));
   document.getElementById('tarjeta-cambio')
     .addEventListener('click', () => mostrarVista('cambio'));
-  document.getElementById('tarjeta-mozo')
-    .addEventListener('click', () => mostrarVista('mozo'));
+  document.getElementById('tarjeta-foco')
+    .addEventListener('click', () => mostrarVista('foco'));
   document.getElementById('btn-abrir-srs')
     .addEventListener('click', () => mostrarVista('srs'));
   document.getElementById('btn-abrir-tienda')
@@ -2864,7 +2776,7 @@
     if (vistaActual === 'tareas') {
       evento.preventDefault();
       mostrarVista('orion');
-    } else if (vistaActual === 'juego' || vistaActual === 'cambio' || vistaActual === 'mozo' || vistaActual === 'luciernagas' || vistaActual === 'vigia') {
+    } else if (vistaActual === 'juego' || vistaActual === 'cambio' || vistaActual === 'foco' || vistaActual === 'luciernagas' || vistaActual === 'engranajes') {
       evento.preventDefault();
       mostrarVista('juegos');
     } else if (vistaActual === 'srs' || vistaActual === 'tienda' || vistaActual === 'orion' || vistaActual === 'storage' || vistaActual === 'juegos') {
@@ -5465,286 +5377,608 @@
   });
   document.getElementById('btn-cambio-menu').addEventListener('click', () => mostrarVista('juegos'));
 
-  const MOZO_DURACION_MS = 90000;
-  const MOZO_MEMORIZAR_MS = 5000;
-  const MOZO_DISTRACTOR_MS = 20000;
-  const MOZO_SENUELOS = 2;
-  const MOZO_MIN = 2;
-  const MOZO_MAX = 4;
-  const MOZO_UMBRAL_SUBE = 0.75;
-  const MOZO_UMBRAL_BAJA = 0.5;
-  const MOZO_CARAS = ['😀', '😎', '🤓', '🥳', '😴', '🤠', '🧐', '😺'];
-  const MOZO_PLATOS = ['🍕', '🍔', '🌮', '🍣', '🍝', '🥗', '🍗', '🥪', '🍜', '🥞', '🍰', '🍟', '🥟', '🍩'];
+  const FOCO_DURACION_MS = 90000;
+  const FOCO_MEMORIZAR_MS = 5000;
+  const FOCO_MOVIMIENTO_MS = 15000;
+  const FOCO_SELECCION_MS = 5000;
+  const FOCO_FEEDBACK_OK_MS = 1100;
+  const FOCO_FEEDBACK_FALLO_MS = 1600;
+  const FOCO_CANTIDAD = 15;
+  const FOCO_ACIERTOS_PARA_SUBIR = 2;
+  const FOCO_W = 420;
+  const FOCO_H = 378;
+  const FOCO_CX = 210;
+  const FOCO_CY = 189;
+  const FOCO_HEX_R = 166;
+  const FOCO_HEX_H = FOCO_HEX_R * Math.sqrt(3) / 2;
+  const FOCO_RADIO = 13.5;
+  const FOCO_ESTELA_MAX = 8;
+  const FOCO_VELOCIDADES = [64, 92, 124, 158, 194, 232, 272, 314];
+  const FOCO_NIVELES = [
+    { techo: 4, agitacion: 0.6, cambioMin: 1600, cambioMax: 2700 },
+    { techo: 5, agitacion: 0.9, cambioMin: 1350, cambioMax: 2350 },
+    { techo: 6, agitacion: 1.25, cambioMin: 1150, cambioMax: 2050 },
+    { techo: 7, agitacion: 1.65, cambioMin: 950, cambioMax: 1750 },
+    { techo: 8, agitacion: 2.05, cambioMin: 800, cambioMax: 1500 }
+  ];
+  const FOCO_NORMALES = Array.from({ length: 6 }, (_, k) => {
+    const a = (k + 0.5) * Math.PI / 3;
+    return { x: Math.cos(a), y: Math.sin(a) };
+  });
 
-  const elMozoFase = document.getElementById('mozo-fase');
-  const elMozoEscena = document.getElementById('mozo-escena');
-  const elMozoFeedback = document.getElementById('mozo-feedback');
-  const elMozoHudTiempo = document.getElementById('mozo-hud-tiempo');
-  const elMozoHudCorrectos = document.getElementById('mozo-hud-correctos');
-  const elMozoHudRacha = document.getElementById('mozo-hud-racha');
+  const elFocoFase = document.getElementById('foco-fase');
+  const elFocoCanvas = document.getElementById('foco-canvas');
+  const elFocoFeedback = document.getElementById('foco-feedback');
+  const elFocoHudTiempo = document.getElementById('foco-hud-tiempo');
+  const elFocoHudAciertos = document.getElementById('foco-hud-aciertos');
+  const elFocoHudRacha = document.getElementById('foco-hud-racha');
+  const elFocoBarraSegs = Array.from(document.querySelectorAll('#foco-velocidad-barra .foco-velocidad-seg'));
+  const focoCtx = elFocoCanvas.getContext('2d');
 
-  let mozoRonda = null;
+  let focoRonda = null;
 
-  function mozoDetener() {
-    if (mozoRonda) {
-      clearTimeout(mozoRonda.timerFase);
-      clearTimeout(mozoRonda.timerSpawn);
-      clearInterval(mozoRonda.timerHud);
-      mozoRonda = null;
-    }
-    elMozoEscena.innerHTML = '';
-    elMozoFase.textContent = '';
-    minijuegoLimpiarFeedback(elMozoFeedback);
+  function focoActualizarMedidor(nivel) {
+    elFocoBarraSegs.forEach((seg, i) => {
+      seg.classList.toggle('activo', i < nivel);
+    });
   }
 
-  function inicializarVistaMozo() {
-    mozoDetener();
+  function focoPrepararCanvas() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.round(FOCO_W * dpr);
+    const h = Math.round(FOCO_H * dpr);
+    if (elFocoCanvas.width !== w || elFocoCanvas.height !== h) {
+      elFocoCanvas.width = w;
+      elFocoCanvas.height = h;
+    }
+    focoCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function focoDetener() {
+    if (focoRonda) {
+      cancelAnimationFrame(focoRonda.rafId);
+      clearTimeout(focoRonda.timerFase);
+      clearTimeout(focoRonda.timerVel);
+      clearInterval(focoRonda.timerHud);
+      focoRonda = null;
+    }
+    elFocoCanvas.classList.remove('respondible');
+    elFocoFase.textContent = '';
+    focoActualizarMedidor(0);
+    minijuegoLimpiarFeedback(elFocoFeedback);
+    if (focoCtx) {
+      focoPrepararCanvas();
+      focoCtx.clearRect(0, 0, FOCO_W, FOCO_H);
+    }
+  }
+
+  function inicializarVistaFoco() {
+    focoDetener();
     juegoActualizarBotonSonido();
-    minijuegoPanel('mozo', 'instrucciones');
+    minijuegoPanel('foco', 'instrucciones');
   }
 
-  function mozoActualizarHud() {
-    const r = mozoRonda;
+  function focoActualizarHud() {
+    const r = focoRonda;
     if (!r) return;
-    elMozoHudTiempo.textContent = String(Math.ceil(Math.max(0, r.fin - performance.now()) / 1000));
-    elMozoHudCorrectos.textContent = String(r.correctos);
-    elMozoHudRacha.textContent = String(r.racha);
-    if (r.fase === 'distractor') {
-      const resto = Math.max(0, Math.ceil((r.finFase - performance.now()) / 1000));
-      elMozoFase.textContent = 'Distracción (' + resto + ' s): tocá los verdes, ignorá los rojos';
+    elFocoHudTiempo.textContent = String(Math.ceil(Math.max(0, r.fin - performance.now()) / 1000));
+    elFocoHudAciertos.textContent = String(r.aciertos);
+    elFocoHudRacha.textContent = String(r.racha);
+  }
+
+  function focoDentroHexagono(x, y, margen) {
+    const lim = FOCO_HEX_H - margen;
+    for (let k = 0; k < 6; k++) {
+      const n = FOCO_NORMALES[k];
+      if ((x - FOCO_CX) * n.x + (y - FOCO_CY) * n.y > lim) return false;
+    }
+    return true;
+  }
+
+  function focoCrearBolitas() {
+    const bolitas = [];
+    let sep = FOCO_RADIO * 2.55;
+    let intentos = 0;
+    while (bolitas.length < FOCO_CANTIDAD) {
+      const x = FOCO_CX + (Math.random() * 2 - 1) * (FOCO_HEX_R - FOCO_RADIO - 10);
+      const y = FOCO_CY + (Math.random() * 2 - 1) * (FOCO_HEX_H - FOCO_RADIO - 10);
+      if (!focoDentroHexagono(x, y, FOCO_RADIO + 10)) continue;
+      const libre = bolitas.every((b) => Math.hypot(b.x - x, b.y - y) >= sep);
+      if (libre) {
+        const ang = Math.random() * Math.PI * 2;
+        bolitas.push({
+          x: x,
+          y: y,
+          dx: Math.cos(ang),
+          dy: Math.sin(ang),
+          giro: (Math.random() - 0.5) * 0.6,
+          estela: []
+        });
+        intentos = 0;
+      } else {
+        intentos += 1;
+        if (intentos > 300) {
+          sep = Math.max(FOCO_RADIO * 2.05, sep - 1);
+          intentos = 0;
+        }
+      }
+    }
+    return bolitas;
+  }
+
+  function focoTrazarHexagono(radio) {
+    focoCtx.beginPath();
+    for (let k = 0; k < 6; k++) {
+      const a = k * Math.PI / 3;
+      const px = FOCO_CX + radio * Math.cos(a);
+      const py = FOCO_CY + radio * Math.sin(a);
+      if (k === 0) focoCtx.moveTo(px, py);
+      else focoCtx.lineTo(px, py);
+    }
+    focoCtx.closePath();
+  }
+
+  function focoDibujarBolita(x, y, tipo, pulso) {
+    let c0 = '#ffffff';
+    let c1 = '#dfe7f5';
+    let c2 = '#99acc8';
+    let glow = 'rgba(255, 255, 255, 0.62)';
+    let blur = 14;
+    if (tipo === 'amarilla') {
+      c0 = '#fffbe0';
+      c1 = '#ffe04d';
+      c2 = '#d49a00';
+      glow = 'rgba(255, 218, 56, 0.92)';
+      blur = 20;
+    } else if (tipo === 'verde') {
+      c0 = '#d9ffea';
+      c1 = '#3dff8a';
+      c2 = '#13994d';
+      glow = 'rgba(61, 255, 138, 0.95)';
+      blur = 22;
+    } else if (tipo === 'roja') {
+      c0 = '#ffd6d9';
+      c1 = '#ff4b55';
+      c2 = '#b31b26';
+      glow = 'rgba(255, 68, 79, 0.92)';
+      blur = 20;
+    }
+
+    if (tipo === 'verde' && pulso > 0) {
+      focoCtx.save();
+      focoCtx.beginPath();
+      focoCtx.arc(x, y, FOCO_RADIO + pulso * 24, 0, Math.PI * 2);
+      focoCtx.strokeStyle = 'rgba(61, 255, 138, ' + Math.max(0, 0.85 * (1 - pulso)).toFixed(3) + ')';
+      focoCtx.lineWidth = 3;
+      focoCtx.stroke();
+      focoCtx.restore();
+    }
+
+    focoCtx.save();
+    focoCtx.shadowColor = glow;
+    focoCtx.shadowBlur = blur;
+    const grad = focoCtx.createRadialGradient(
+      x - FOCO_RADIO * 0.28,
+      y - FOCO_RADIO * 0.28,
+      FOCO_RADIO * 0.12,
+      x,
+      y,
+      FOCO_RADIO
+    );
+    grad.addColorStop(0, c0);
+    grad.addColorStop(0.62, c1);
+    grad.addColorStop(1, c2);
+    focoCtx.fillStyle = grad;
+    focoCtx.beginPath();
+    focoCtx.arc(x, y, FOCO_RADIO, 0, Math.PI * 2);
+    focoCtx.fill();
+    focoCtx.restore();
+  }
+
+  function focoDibujar(ahora) {
+    const r = focoRonda;
+    if (!r || !focoCtx) return;
+    focoPrepararCanvas();
+    focoCtx.clearRect(0, 0, FOCO_W, FOCO_H);
+
+    focoCtx.save();
+    focoTrazarHexagono(FOCO_HEX_R * 0.68);
+    focoCtx.strokeStyle = 'rgba(66, 234, 216, 0.11)';
+    focoCtx.lineWidth = 1;
+    focoCtx.stroke();
+    focoTrazarHexagono(FOCO_HEX_R * 0.36);
+    focoCtx.strokeStyle = 'rgba(66, 234, 216, 0.08)';
+    focoCtx.stroke();
+    focoCtx.restore();
+
+    focoCtx.save();
+    focoTrazarHexagono(FOCO_HEX_R);
+    focoCtx.clip();
+
+    if (r.fase === 'movimiento') {
+      for (let i = 0; i < r.bolitas.length; i++) {
+        const b = r.bolitas[i];
+        const n = b.estela.length;
+        for (let t = 0; t < n; t++) {
+          const p = b.estela[t];
+          const f = (t + 1) / (n + 1);
+          focoCtx.beginPath();
+          focoCtx.arc(p.x, p.y, FOCO_RADIO * (0.76 + f * 0.2), 0, Math.PI * 2);
+          focoCtx.fillStyle = 'rgba(215, 228, 245, ' + (f * 0.22).toFixed(3) + ')';
+          focoCtx.fill();
+        }
+      }
+    }
+
+    const pulso = r.fase === 'feedback' && r.feedbackResultado === 'ok'
+      ? Math.min(1, (ahora - r.feedbackInicio) / 550)
+      : 0;
+
+    for (let i = 0; i < r.bolitas.length; i++) {
+      const b = r.bolitas[i];
+      let tipo = 'blanca';
+      if (r.fase === 'memorizar' && i === r.objetivoIdx) {
+        tipo = 'amarilla';
+      } else if (r.fase === 'feedback') {
+        if (r.feedbackResultado === 'ok' && i === r.objetivoIdx) {
+          tipo = 'verde';
+        } else if (r.feedbackResultado === 'fallo') {
+          if (i === r.objetivoIdx) tipo = 'amarilla';
+          else if (i === r.seleccionIdx) tipo = 'roja';
+        }
+      }
+      focoDibujarBolita(b.x, b.y, tipo, tipo === 'verde' ? pulso : 0);
+    }
+
+    focoCtx.restore();
+
+    focoCtx.save();
+    focoTrazarHexagono(FOCO_HEX_R);
+    focoCtx.strokeStyle = '#42ead8';
+    focoCtx.lineWidth = 2.6;
+    focoCtx.shadowColor = '#2ee6d6';
+    focoCtx.shadowBlur = 14;
+    focoCtx.stroke();
+    focoCtx.restore();
+  }
+
+  function focoNormalizar(b) {
+    const m = Math.hypot(b.dx, b.dy);
+    if (m > 0.0001) {
+      b.dx /= m;
+      b.dy /= m;
+    } else {
+      b.dx = 1;
+      b.dy = 0;
     }
   }
 
-  function mozoIniciar() {
+  function focoActualizarFisica(dt) {
+    const r = focoRonda;
+    if (!r || r.fase !== 'movimiento') return;
+    const cfg = FOCO_NIVELES[r.nivel - 1];
+    r.velActual += (r.velObjetivo - r.velActual) * Math.min(1, dt * 8);
+    const paso = r.velActual * dt;
+    const estelaActiva = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    for (let i = 0; i < r.bolitas.length; i++) {
+      const b = r.bolitas[i];
+      if (estelaActiva) {
+        b.estela.push({ x: b.x, y: b.y });
+        if (b.estela.length > FOCO_ESTELA_MAX) b.estela.shift();
+      }
+      b.giro += (Math.random() - 0.5) * cfg.agitacion * 5.2 * dt;
+      if (b.giro > cfg.agitacion) b.giro = cfg.agitacion;
+      if (b.giro < -cfg.agitacion) b.giro = -cfg.agitacion;
+      const rot = b.giro * dt;
+      const cs = Math.cos(rot);
+      const sn = Math.sin(rot);
+      const ndx = b.dx * cs - b.dy * sn;
+      const ndy = b.dx * sn + b.dy * cs;
+      b.dx = ndx;
+      b.dy = ndy;
+      focoNormalizar(b);
+      b.x += b.dx * paso;
+      b.y += b.dy * paso;
+    }
+
+    const distMin = FOCO_RADIO * 2;
+    for (let i = 0; i < r.bolitas.length; i++) {
+      for (let j = i + 1; j < r.bolitas.length; j++) {
+        const b1 = r.bolitas[i];
+        const b2 = r.bolitas[j];
+        const dx = b2.x - b1.x;
+        const dy = b2.y - b1.y;
+        const dist = Math.hypot(dx, dy);
+        const clave = i * 32 + j;
+        if (dist < distMin) {
+          let modo = r.pares.get(clave);
+          if (!modo) {
+            modo = Math.random() < 0.5 ? 'rebote' : 'cruce';
+            r.pares.set(clave, modo);
+          }
+          if (modo === 'rebote') {
+            const nx = dist > 0.001 ? dx / dist : 1;
+            const ny = dist > 0.001 ? dy / dist : 0;
+            const empuje = (distMin - dist) * 0.52;
+            b1.x -= nx * empuje;
+            b1.y -= ny * empuje;
+            b2.x += nx * empuje;
+            b2.y += ny * empuje;
+            const rvn = (b1.dx - b2.dx) * nx + (b1.dy - b2.dy) * ny;
+            if (rvn > 0) {
+              b1.dx -= rvn * nx;
+              b1.dy -= rvn * ny;
+              b2.dx += rvn * nx;
+              b2.dy += rvn * ny;
+              focoNormalizar(b1);
+              focoNormalizar(b2);
+            }
+          }
+        } else if (dist > distMin + 2) {
+          r.pares.delete(clave);
+        }
+      }
+    }
+
+    const lim = FOCO_HEX_H - FOCO_RADIO - 4;
+    for (let pasada = 0; pasada < 2; pasada++) {
+      for (let i = 0; i < r.bolitas.length; i++) {
+        const b = r.bolitas[i];
+        for (let k = 0; k < 6; k++) {
+          const n = FOCO_NORMALES[k];
+          const proj = (b.x - FOCO_CX) * n.x + (b.y - FOCO_CY) * n.y;
+          if (proj > lim) {
+            const exc = proj - lim;
+            b.x -= exc * n.x;
+            b.y -= exc * n.y;
+            const dot = b.dx * n.x + b.dy * n.y;
+            if (dot > 0) {
+              b.dx -= 2 * dot * n.x;
+              b.dy -= 2 * dot * n.y;
+              focoNormalizar(b);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function focoCuadro(ahora) {
+    const r = focoRonda;
+    if (!r) return;
+    const dt = Math.min(0.05, Math.max(0, (ahora - r.ultimo) / 1000));
+    r.ultimo = ahora;
+    if (r.fase === 'movimiento') {
+      focoActualizarFisica(dt);
+    }
+    focoDibujar(ahora);
+    r.rafId = requestAnimationFrame(focoCuadro);
+  }
+
+  function focoProgramarCambioVelocidad() {
+    const r = focoRonda;
+    if (!r || r.fase !== 'movimiento') return;
+    const cfg = FOCO_NIVELES[r.nivel - 1];
+    const espera = cfg.cambioMin + Math.random() * (cfg.cambioMax - cfg.cambioMin);
+    r.timerVel = setTimeout(() => {
+      if (!focoRonda || focoRonda.fase !== 'movimiento') return;
+      const techo = FOCO_NIVELES[focoRonda.nivel - 1].techo;
+      let nuevo = 1 + Math.floor(Math.random() * techo);
+      if (techo > 1 && nuevo === focoRonda.velNivel) {
+        nuevo = 1 + Math.floor(Math.random() * techo);
+      }
+      focoRonda.velNivel = nuevo;
+      focoRonda.velObjetivo = FOCO_VELOCIDADES[nuevo - 1];
+      focoActualizarMedidor(nuevo);
+      focoProgramarCambioVelocidad();
+    }, espera);
+  }
+
+  function focoIniciar() {
     obtenerAudioCtxJuego();
     if (document.activeElement && document.activeElement.blur) {
       document.activeElement.blur();
     }
-    mozoDetener();
-    mozoRonda = {
-      fin: performance.now() + MOZO_DURACION_MS,
-      k: MOZO_MIN,
-      maxK: MOZO_MIN,
+    focoDetener();
+    const ahora = performance.now();
+    focoRonda = {
+      fin: ahora + FOCO_DURACION_MS,
+      ultimo: ahora,
+      nivel: 1,
+      nivelMax: 1,
+      seguidos: 0,
       fase: '',
-      finFase: 0,
-      ciclo: null,
+      bolitas: [],
+      objetivoIdx: 0,
+      seleccionIdx: -1,
+      feedbackResultado: '',
+      feedbackInicio: 0,
+      velNivel: 0,
+      velActual: FOCO_VELOCIDADES[0],
+      velObjetivo: FOCO_VELOCIDADES[0],
+      pares: new Map(),
+      aciertos: 0,
       ciclos: 0,
-      correctos: 0,
-      servidos: 0,
       racha: 0,
       mejorRacha: 0,
-      bloqueado: false,
+      rafId: 0,
       timerFase: null,
-      timerSpawn: null,
+      timerVel: null,
       timerHud: null
     };
-    minijuegoPanel('mozo', 'ronda');
-    mozoActualizarHud();
-    mozoRonda.timerHud = setInterval(mozoActualizarHud, 200);
-    mozoNuevoCiclo();
+    minijuegoPanel('foco', 'ronda');
+    focoActualizarHud();
+    focoRonda.timerHud = setInterval(focoActualizarHud, 200);
+    focoNuevoCiclo();
+    focoRonda.rafId = requestAnimationFrame(focoCuadro);
   }
 
-  function mozoNuevoCiclo() {
-    const r = mozoRonda;
+  function focoNuevoCiclo() {
+    const r = focoRonda;
     if (!r) return;
     if (performance.now() >= r.fin) {
-      mozoTerminar();
+      focoTerminar();
       return;
     }
-    const k = r.k;
-    if (k > r.maxK) r.maxK = k;
-    const caras = minijuegoMezclar(MOZO_CARAS).slice(0, k);
-    const platos = minijuegoMezclar(MOZO_PLATOS).slice(0, k + MOZO_SENUELOS);
-    const pedidos = caras.map((cara, i) => ({ mesa: i + 1, cara: cara, plato: platos[i] }));
-    const senuelos = platos.slice(k);
-    const orden = minijuegoMezclar(pedidos.map((p, i) => i));
-    r.ciclo = { pedidos: pedidos, senuelos: senuelos, orden: orden, idx: 0, correctos: 0 };
-    minijuegoLimpiarFeedback(elMozoFeedback);
-    mozoMemorizar();
-  }
-
-  function mozoMemorizar() {
-    const r = mozoRonda;
-    if (!r) return;
+    clearTimeout(r.timerFase);
+    clearTimeout(r.timerVel);
+    r.bolitas = focoCrearBolitas();
+    r.objetivoIdx = Math.floor(Math.random() * FOCO_CANTIDAD);
+    r.seleccionIdx = -1;
+    r.feedbackResultado = '';
+    r.pares.clear();
+    r.velNivel = 0;
     r.fase = 'memorizar';
-    elMozoFase.textContent = '🧠 Memorizá los pedidos';
-    elMozoEscena.innerHTML = '';
-    const lista = minijuegoCrear('div', 'mozo-pedidos');
-    r.ciclo.pedidos.forEach((p) => {
-      const caja = minijuegoCrear('div', 'mozo-pedido');
-      caja.appendChild(minijuegoCrear('small', '', 'Mesa ' + p.mesa));
-      caja.appendChild(minijuegoCrear('span', '', p.cara + ' ' + p.plato));
-      lista.appendChild(caja);
-    });
-    elMozoEscena.appendChild(lista);
-    r.timerFase = setTimeout(mozoDistractor, MOZO_MEMORIZAR_MS);
+    elFocoCanvas.classList.remove('respondible');
+    focoActualizarMedidor(0);
+    minijuegoLimpiarFeedback(elFocoFeedback);
+    elFocoFase.textContent = 'Memorizá la bolita amarilla';
+    focoDibujar(performance.now());
+    r.timerFase = setTimeout(focoComenzarMovimiento, FOCO_MEMORIZAR_MS);
   }
 
-  function mozoDistractor() {
-    const r = mozoRonda;
+  function focoComenzarMovimiento() {
+    const r = focoRonda;
     if (!r) return;
-    r.fase = 'distractor';
-    r.finFase = performance.now() + MOZO_DISTRACTOR_MS;
-    elMozoEscena.innerHTML = '';
-    const area = minijuegoCrear('div', 'mozo-distractor');
-    elMozoEscena.appendChild(area);
-    mozoActualizarHud();
-    r.timerFase = setTimeout(() => {
-      clearTimeout(r.timerSpawn);
-      mozoServir();
-    }, MOZO_DISTRACTOR_MS);
-    r.timerSpawn = setTimeout(() => mozoSpawn(area), 400);
+    r.fase = 'movimiento';
+    r.ultimo = performance.now();
+    r.velNivel = 1;
+    r.velActual = FOCO_VELOCIDADES[0];
+    r.velObjetivo = FOCO_VELOCIDADES[0];
+    focoActualizarMedidor(1);
+    elFocoFase.textContent = 'Seguí la bolita con la vista';
+    r.timerVel = setTimeout(() => {
+      if (!focoRonda || focoRonda.fase !== 'movimiento') return;
+      const techo = FOCO_NIVELES[focoRonda.nivel - 1].techo;
+      let nuevo = 1 + Math.floor(Math.random() * techo);
+      if (techo > 1 && nuevo === 1) {
+        nuevo = 2 + Math.floor(Math.random() * (techo - 1));
+      }
+      focoRonda.velNivel = nuevo;
+      focoRonda.velObjetivo = FOCO_VELOCIDADES[nuevo - 1];
+      focoActualizarMedidor(nuevo);
+      focoProgramarCambioVelocidad();
+    }, 1200 + Math.random() * 900);
+    r.timerFase = setTimeout(focoComenzarSeleccion, FOCO_MOVIMIENTO_MS);
   }
 
-  function mozoSpawn(area) {
-    const r = mozoRonda;
-    if (!r || r.fase !== 'distractor') return;
-    const tam = 60;
-    const ancho = Math.max(0, area.clientWidth - tam);
-    const alto = Math.max(0, area.clientHeight - tam);
-    const circulo = minijuegoCrear('button', 'mozo-circulo ' + (Math.random() < 0.6 ? 'verde' : 'rojo'));
-    circulo.type = 'button';
-    circulo.style.left = Math.round(Math.random() * ancho) + 'px';
-    circulo.style.top = Math.round(Math.random() * alto) + 'px';
-    circulo.addEventListener('pointerdown', (evento) => {
-      evento.preventDefault();
-      if (circulo.classList.contains('verde')) circulo.remove();
-    });
-    area.appendChild(circulo);
-    setTimeout(() => circulo.remove(), 1100);
-    r.timerSpawn = setTimeout(() => mozoSpawn(area), 600 + Math.random() * 300);
-  }
-
-  function mozoServir() {
-    const r = mozoRonda;
+  function focoComenzarSeleccion() {
+    const r = focoRonda;
     if (!r) return;
-    r.fase = 'servir';
-    r.bloqueado = false;
-    elMozoEscena.innerHTML = '';
-    const mesas = minijuegoCrear('div', 'mozo-mesas');
-    mesas.id = 'mozo-mesas';
-    let vistaMesas = minijuegoMezclar(r.ciclo.pedidos);
-    for (let intento = 0; intento < 8 && vistaMesas.length > 1 && vistaMesas.every((p, i) => p === r.ciclo.pedidos[i]); intento++) {
-      vistaMesas = minijuegoMezclar(r.ciclo.pedidos);
-    }
-    vistaMesas.forEach((p) => {
-      const chip = minijuegoCrear('div', 'mozo-mesa', p.cara);
-      chip.id = 'mozo-mesa-' + p.mesa;
-      chip.appendChild(minijuegoCrear('small', '', 'Mesa X'));
-      mesas.appendChild(chip);
+    clearTimeout(r.timerVel);
+    r.fase = 'seleccion';
+    r.velNivel = 0;
+    focoActualizarMedidor(0);
+    r.bolitas.forEach((b) => {
+      b.estela.length = 0;
     });
-    elMozoEscena.appendChild(mesas);
-    const bandeja = minijuegoCrear('div', 'mozo-bandeja');
-    const platos = minijuegoMezclar(r.ciclo.pedidos.map((p) => p.plato).concat(r.ciclo.senuelos));
-    platos.forEach((plato) => {
-      const boton = minijuegoCrear('button', 'mozo-plato', plato);
-      boton.type = 'button';
-      boton.dataset.plato = plato;
-      boton.addEventListener('click', () => mozoElegir(boton));
-      bandeja.appendChild(boton);
-    });
-    elMozoEscena.appendChild(bandeja);
-    mozoMarcarActiva();
+    elFocoCanvas.classList.add('respondible');
+    elFocoFase.textContent = 'Tocá la bolita original';
+    r.timerFase = setTimeout(() => focoResolver(-1), FOCO_SELECCION_MS);
   }
 
-  function mozoMarcarActiva() {
-    const r = mozoRonda;
-    if (!r) return;
-    const pedido = r.ciclo.pedidos[r.ciclo.orden[r.ciclo.idx]];
-    r.ciclo.pedidos.forEach((p) => {
-      document.getElementById('mozo-mesa-' + p.mesa).classList.remove('activa');
-    });
-    document.getElementById('mozo-mesa-' + pedido.mesa).classList.add('activa');
-    elMozoFase.textContent = '¿Qué pidió esta mesa (' + pedido.cara + ')?';
-    Array.prototype.forEach.call(elMozoEscena.querySelectorAll('.mozo-plato'), (b) => {
-      b.classList.remove('correcto', 'elegido-mal');
-    });
-  }
-
-  function mozoElegir(boton) {
-    const r = mozoRonda;
-    if (!r || r.fase !== 'servir' || r.bloqueado) return;
-    r.bloqueado = true;
-    const pedido = r.ciclo.pedidos[r.ciclo.orden[r.ciclo.idx]];
-    const mesa = document.getElementById('mozo-mesa-' + pedido.mesa);
-    const acierto = boton.dataset.plato === pedido.plato;
-    r.servidos += 1;
-    mesa.classList.remove('activa');
+  function focoResolver(idx) {
+    const r = focoRonda;
+    if (!r || r.fase !== 'seleccion') return;
+    clearTimeout(r.timerFase);
+    clearTimeout(r.timerVel);
+    r.fase = 'feedback';
+    r.seleccionIdx = idx;
+    r.feedbackInicio = performance.now();
+    r.ciclos += 1;
+    elFocoCanvas.classList.remove('respondible');
     let espera;
-    if (acierto) {
-      r.correctos += 1;
-      r.ciclo.correctos += 1;
+    if (idx === r.objetivoIdx) {
+      r.feedbackResultado = 'ok';
+      r.aciertos += 1;
       r.racha += 1;
       if (r.racha > r.mejorRacha) r.mejorRacha = r.racha;
-      mesa.classList.add('ok');
-      boton.classList.add('correcto');
-      minijuegoFeedback(elMozoFeedback, '✓ ¡Bien servido!', 'ok', 800);
+      r.seguidos += 1;
+      if (r.seguidos >= FOCO_ACIERTOS_PARA_SUBIR) {
+        r.nivel = Math.min(FOCO_NIVELES.length, r.nivel + 1);
+        if (r.nivel > r.nivelMax) r.nivelMax = r.nivel;
+        r.seguidos = 0;
+      }
+      elFocoFase.textContent = '';
+      minijuegoFeedback(elFocoFeedback, '✓ ¡Correcto!', 'ok', 1000);
       juegoSonido('ok');
-      espera = 700;
+      espera = FOCO_FEEDBACK_OK_MS;
     } else {
+      r.feedbackResultado = 'fallo';
       r.racha = 0;
-      mesa.classList.add('fallo');
-      boton.classList.add('elegido-mal');
-      Array.prototype.forEach.call(elMozoEscena.querySelectorAll('.mozo-plato'), (b) => {
-        if (b.dataset.plato === pedido.plato) b.classList.add('correcto');
-      });
-      minijuegoFeedback(elMozoFeedback, '✗ Era ' + pedido.plato, 'fallo', 1300);
+      r.seguidos = 0;
+      r.nivel = Math.max(1, r.nivel - 1);
+      elFocoFase.textContent = '';
+      minijuegoFeedback(
+        elFocoFeedback,
+        idx === -1 ? '✗ Se acabó el tiempo' : '✗ Era la bolita amarilla',
+        'fallo',
+        1500
+      );
       juegoSonido('fallo');
-      espera = 1400;
+      espera = FOCO_FEEDBACK_FALLO_MS;
     }
-    mozoActualizarHud();
-    r.timerFase = setTimeout(mozoSiguienteMesa, espera);
+    focoActualizarHud();
+    r.timerFase = setTimeout(focoNuevoCiclo, espera);
   }
 
-  function mozoSiguienteMesa() {
-    const r = mozoRonda;
-    if (!r) return;
-    r.ciclo.idx += 1;
-    if (r.ciclo.idx < r.ciclo.orden.length) {
-      r.bloqueado = false;
-      mozoMarcarActiva();
-      return;
+  elFocoCanvas.addEventListener('pointerdown', (evento) => {
+    const r = focoRonda;
+    if (vistaActual !== 'foco' || !r || r.fase !== 'seleccion') return;
+    const rect = elFocoCanvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const lx = (evento.clientX - rect.left) * (FOCO_W / rect.width);
+    const ly = (evento.clientY - rect.top) * (FOCO_H / rect.height);
+    let mejorIdx = -1;
+    let mejorDist = FOCO_RADIO * 1.9;
+    for (let i = 0; i < r.bolitas.length; i++) {
+      const d = Math.hypot(r.bolitas[i].x - lx, r.bolitas[i].y - ly);
+      if (d <= mejorDist) {
+        mejorDist = d;
+        mejorIdx = i;
+      }
     }
-    const proporcion = r.ciclo.correctos / r.ciclo.pedidos.length;
-    if (proporcion >= MOZO_UMBRAL_SUBE) {
-      r.k = Math.min(MOZO_MAX, r.k + 1);
-    } else if (proporcion < MOZO_UMBRAL_BAJA) {
-      r.k = Math.max(MOZO_MIN, r.k - 1);
+    if (mejorIdx !== -1) {
+      evento.preventDefault();
+      focoResolver(mejorIdx);
     }
-    r.ciclos += 1;
-    r.fase = '';
-    mozoNuevoCiclo();
-  }
-
-  function mozoTerminar() {
-    const r = mozoRonda;
-    if (!r) return;
-    clearTimeout(r.timerFase);
-    clearTimeout(r.timerSpawn);
-    clearInterval(r.timerHud);
-    mozoRonda = null;
-    elMozoEscena.innerHTML = '';
-    elMozoFase.textContent = '';
-    minijuegoLimpiarFeedback(elMozoFeedback);
-    const pct = r.servidos > 0 ? Math.round((r.correctos / r.servidos) * 100) + '%' : '—';
-    minijuegoMetricas(document.getElementById('mozo-metricas'), [
-      ['Pedidos correctos', pct],
-      ['Total servidos', String(r.servidos)],
-      ['Pedidos correctos (cant.)', String(r.correctos)],
-      ['Mejor racha', String(r.mejorRacha)],
-      ['Máx. pedidos por ciclo', String(r.maxK)],
-      ['Ciclos completados', String(r.ciclos)]
-    ]);
-    minijuegoPanel('mozo', 'resumen');
-  }
-
-  document.getElementById('btn-mozo-comenzar').addEventListener('click', mozoIniciar);
-  document.getElementById('btn-mozo-otra').addEventListener('click', mozoIniciar);
-  document.getElementById('btn-mozo-ver-instr').addEventListener('click', () => {
-    mozoDetener();
-    minijuegoPanel('mozo', 'instrucciones');
   });
-  document.getElementById('btn-mozo-menu').addEventListener('click', () => mostrarVista('juegos'));
+
+  function focoTerminar() {
+    const r = focoRonda;
+    if (!r) return;
+    cancelAnimationFrame(r.rafId);
+    clearTimeout(r.timerFase);
+    clearTimeout(r.timerVel);
+    clearInterval(r.timerHud);
+    focoRonda = null;
+    elFocoCanvas.classList.remove('respondible');
+    elFocoFase.textContent = '';
+    focoActualizarMedidor(0);
+    minijuegoLimpiarFeedback(elFocoFeedback);
+    if (focoCtx) {
+      focoPrepararCanvas();
+      focoCtx.clearRect(0, 0, FOCO_W, FOCO_H);
+    }
+    const pct = r.ciclos > 0 ? Math.round((r.aciertos / r.ciclos) * 100) + '%' : '—';
+    minijuegoMetricas(document.getElementById('foco-metricas'), [
+      ['Precisión', pct],
+      ['Aciertos', String(r.aciertos)],
+      ['Ciclos completados', String(r.ciclos)],
+      ['Mejor racha', String(r.mejorRacha)],
+      ['Nivel máximo', r.nivelMax + ' / ' + FOCO_NIVELES.length]
+    ]);
+    minijuegoPanel('foco', 'resumen');
+  }
+
+  document.getElementById('btn-foco-comenzar').addEventListener('click', focoIniciar);
+  document.getElementById('btn-foco-otra').addEventListener('click', focoIniciar);
+  document.getElementById('btn-foco-ver-instr').addEventListener('click', () => {
+    focoDetener();
+    minijuegoPanel('foco', 'instrucciones');
+  });
+  document.getElementById('btn-foco-menu').addEventListener('click', () => mostrarVista('juegos'));
 
   const LUC_DURACION_MS = 90000;
   const LUC_SPAN_INICIAL = 2;
@@ -6044,307 +6278,247 @@
   document.getElementById('btn-luc-volver').addEventListener('click', () => mostrarVista('juegos'));
   document.getElementById('tarjeta-luciernagas').addEventListener('click', () => mostrarVista('luciernagas'));
 
-  const VIG_DURACION_MS = 90000;
-  const VIG_ISI_MIN_MS = 700;
-  const VIG_ISI_MAX_MS = 1400;
-  const VIG_VENTANA_MS = 1200;
-  const VIG_RUIDO_MS = 900;
-  const VIG_PROB_RUIDO = 0.15;
-  const VIG_LAPSO_TR_MS = 850;
-  const VIG_VEL_INICIAL = 1;
-  const VIG_VEL_MIN = 0.8;
-  const VIG_VEL_MAX = 1.6;
-  const VIG_VEL_ACELERA = 0.04;
-  const VIG_VEL_ALIVIA = 0.12;
-  const VIG_BUENAS_PARA_ACELERAR = 3;
-  const VIG_ESTAB_LAPSO = 20;
-  const VIG_ESTAB_ERROR = 5;
-  const VIG_ESTAB_TOQUE_VACIO = 3;
-  const VIG_ESTAB_SUBE = 5;
-  const VIG_ESTAB_BAJA_SUAVE = 4;
-  const VIG_VENTANA_REF = 8;
+  const ENG_DURACION_MS = 60000;
+  const ENG_TOTAL = 30;
+  const ENG_VEL_BASE = 14;
+  const ENG_VEL_POR_ACIERTO = 0.1;
+  const ENG_DIENTES_GRANDE = 28;
+  const ENG_DIENTES_CHICO = 16;
+  const ENG_R_EXT = 100;
+  const ENG_R_RAIZ = 88;
+  const ENG_ANILLO = 34;
+  const ENG_FLASH_MS = 260;
+  const ENG_ENGRANAJES = [
+    { dientes: ENG_DIENTES_GRANDE, cantidad: 14, color: '#00e5ff', x: 37.4, y: 50, d: 56, dir: 1, contacto: 0 },
+    { dientes: ENG_DIENTES_CHICO, cantidad: 8, color: '#ff2bd6', x: 74.7, y: 24.36, d: 32, dir: -1, contacto: -1 },
+    { dientes: ENG_DIENTES_CHICO, cantidad: 8, color: '#ffe600', x: 74.7, y: 75.64, d: 32, dir: -1, contacto: 1 }
+  ];
 
-  const elVigRadar = document.getElementById('vig-radar');
-  const elVigFeedback = document.getElementById('vig-feedback');
-  const elVigHudTiempo = document.getElementById('vig-hud-tiempo');
-  const elVigHudAciertos = document.getElementById('vig-hud-aciertos');
-  const elVigHudRacha = document.getElementById('vig-hud-racha');
-  const elVigEstabValor = document.getElementById('vig-estab-valor');
-  const elVigEstabRelleno = document.getElementById('vig-estab-relleno');
+  const elEngEscena = document.getElementById('eng-escena');
+  const elEngHudTiempo = document.getElementById('eng-hud-tiempo');
+  const elEngHudSiguiente = document.getElementById('eng-hud-siguiente');
+  const elEngHudVelocidad = document.getElementById('eng-hud-velocidad');
 
-  let vigRonda = null;
+  let engRonda = null;
 
-  function vigMedia(lista) {
-    if (!lista.length) return null;
-    return lista.reduce((a, b) => a + b, 0) / lista.length;
+  function engPunto(radio, angulo) {
+    return (radio * Math.cos(angulo)).toFixed(2) + ' ' + (radio * Math.sin(angulo)).toFixed(2);
   }
 
-  function vigDesvio(lista) {
-    if (lista.length < 2) return null;
-    const m = vigMedia(lista);
-    return Math.sqrt(lista.reduce((a, b) => a + (b - m) * (b - m), 0) / (lista.length - 1));
-  }
-
-  function vigDetener() {
-    if (vigRonda) {
-      clearTimeout(vigRonda.timerIsi);
-      clearTimeout(vigRonda.timerVentana);
-      clearInterval(vigRonda.timerHud);
-      vigRonda = null;
+  function engTrazado(dientes) {
+    const paso = (Math.PI * 2) / dientes;
+    const mitadRaiz = paso * 0.27;
+    const mitadPunta = paso * 0.15;
+    let d = '';
+    for (let i = 0; i < dientes; i++) {
+      const c = i * paso;
+      d += (i === 0 ? 'M' : 'L') + engPunto(ENG_R_RAIZ, c - mitadRaiz);
+      d += 'L' + engPunto(ENG_R_EXT, c - mitadPunta);
+      d += 'L' + engPunto(ENG_R_EXT, c + mitadPunta);
+      d += 'L' + engPunto(ENG_R_RAIZ, c + mitadRaiz);
+      d += 'A' + ENG_R_RAIZ + ' ' + ENG_R_RAIZ + ' 0 0 1 ' + engPunto(ENG_R_RAIZ, c + paso - mitadRaiz);
     }
-    elVigRadar.innerHTML = '';
-    elVigRadar.classList.remove('lapso');
-    minijuegoLimpiarFeedback(elVigFeedback);
+    return d + 'Z';
   }
 
-  function inicializarVistaVigia() {
-    vigDetener();
+  function engFaseInicial(g) {
+    if (!g.contacto) return 0;
+    const pasoGrande = 360 / ENG_DIENTES_GRANDE;
+    const pasoChico = 360 / g.dientes;
+    const haciaGrande = g.contacto * 2 * pasoGrande + 180;
+    return (((haciaGrande - pasoChico / 2) % pasoChico) + pasoChico) % pasoChico;
+  }
+
+  function engCrearSvg(g) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'eng-forma');
+    svg.setAttribute('viewBox', '-104 -104 208 208');
+    const cuerpo = document.createElementNS(ns, 'path');
+    cuerpo.setAttribute('class', 'eng-cuerpo');
+    cuerpo.setAttribute('d', engTrazado(g.dientes));
+    const guia = document.createElementNS(ns, 'circle');
+    guia.setAttribute('class', 'eng-guia');
+    guia.setAttribute('r', String(ENG_ANILLO * 2));
+    svg.appendChild(cuerpo);
+    svg.appendChild(guia);
+    return svg;
+  }
+
+  function engConstruir(r) {
+    elEngEscena.innerHTML = '';
+    r.celdas = {};
+    r.engranajes = [];
+    const numeros = minijuegoMezclar(Array.from({ length: ENG_TOTAL }, (_, i) => i + 1));
+    let cursor = 0;
+    ENG_ENGRANAJES.forEach((g) => {
+      const caja = minijuegoCrear('div', 'eng-engranaje');
+      const fase = engFaseInicial(g);
+      caja.style.left = g.x + '%';
+      caja.style.top = g.y + '%';
+      caja.style.width = g.d + '%';
+      caja.style.setProperty('--neon', g.color);
+      caja.style.setProperty('--ang', fase + 'deg');
+      caja.appendChild(engCrearSvg(g));
+      for (let i = 0; i < g.cantidad; i++) {
+        const n = numeros[cursor++];
+        const angulo = (Math.PI * 2 * i) / g.cantidad;
+        const celda = minijuegoCrear('div', 'eng-num', String(n));
+        celda.dataset.n = String(n);
+        celda.style.left = (50 + ENG_ANILLO * Math.cos(angulo)).toFixed(2) + '%';
+        celda.style.top = (50 + ENG_ANILLO * Math.sin(angulo)).toFixed(2) + '%';
+        caja.appendChild(celda);
+        r.celdas[n] = celda;
+      }
+      elEngEscena.appendChild(caja);
+      r.engranajes.push({ el: caja, dir: g.dir, dientes: g.dientes, ang: fase });
+    });
+  }
+
+  function engDetener() {
+    if (engRonda) {
+      cancelAnimationFrame(engRonda.rafId);
+      clearInterval(engRonda.timerHud);
+      engRonda = null;
+    }
+    elEngEscena.innerHTML = '';
+  }
+
+  function inicializarVistaEngranajes() {
+    engDetener();
     juegoActualizarBotonSonido();
-    minijuegoPanel('vig', 'instrucciones');
+    minijuegoPanel('eng', 'instrucciones');
   }
 
-  function vigActualizarMedidor() {
-    const r = vigRonda;
+  function engVelocidad() {
+    return 1 + ENG_VEL_POR_ACIERTO * engRonda.aciertos;
+  }
+
+  function engActualizarHud() {
+    const r = engRonda;
     if (!r) return;
-    const valor = Math.round(r.estab);
-    elVigEstabValor.textContent = valor + '%';
-    elVigEstabRelleno.style.width = valor + '%';
-    elVigEstabRelleno.className = 'vig-medidor-relleno' + (valor <= 33 ? ' bajo' : (valor <= 66 ? ' medio' : ''));
+    elEngHudTiempo.textContent = String(Math.ceil(Math.max(0, r.fin - performance.now()) / 1000));
+    elEngHudSiguiente.textContent = String(r.siguiente);
+    elEngHudVelocidad.textContent = '×' + engVelocidad().toFixed(1);
   }
 
-  function vigActualizarHud() {
-    const r = vigRonda;
+  function engMarcarObjetivo() {
+    const r = engRonda;
+    if (r.siguiente === 1 && r.celdas[1]) r.celdas[1].classList.add('objetivo');
+  }
+
+  function engCuadro(ahora) {
+    const r = engRonda;
     if (!r) return;
-    elVigHudTiempo.textContent = String(Math.ceil(Math.max(0, r.fin - performance.now()) / 1000));
-    elVigHudAciertos.textContent = String(r.aciertos);
-    elVigHudRacha.textContent = String(r.rachaEstable);
-    vigActualizarMedidor();
+    if (ahora >= r.fin) {
+      engTerminar();
+      return;
+    }
+    const dt = Math.min(0.1, (ahora - r.ultimo) / 1000);
+    r.ultimo = ahora;
+    const velocidad = ENG_VEL_BASE * engVelocidad();
+    const razon = ENG_DIENTES_GRANDE;
+    r.engranajes.forEach((g) => {
+      g.ang += g.dir * velocidad * (razon / g.dientes) * dt;
+      g.el.style.setProperty('--ang', g.ang.toFixed(2) + 'deg');
+    });
+    r.rafId = requestAnimationFrame(engCuadro);
   }
 
-  function vigAjustarEstab(delta) {
-    const r = vigRonda;
-    r.estab = Math.max(0, Math.min(100, r.estab + delta));
-    vigActualizarMedidor();
-  }
-
-  function vigAliviar() {
-    const r = vigRonda;
-    r.vel = Math.min(VIG_VEL_MAX, r.vel + VIG_VEL_ALIVIA);
-    r.buenas = 0;
-  }
-
-  function vigMarcarLapso(x, y) {
-    const marca = minijuegoCrear('div', 'vig-lapso');
-    marca.style.left = x.toFixed(1) + '%';
-    marca.style.top = y.toFixed(1) + '%';
-    elVigRadar.appendChild(marca);
-    setTimeout(() => marca.remove(), 1000);
-    elVigRadar.classList.add('lapso');
-    setTimeout(() => elVigRadar.classList.remove('lapso'), 450);
-  }
-
-  function vigIniciar() {
+  function engIniciar() {
     obtenerAudioCtxJuego();
     if (document.activeElement && document.activeElement.blur) {
       document.activeElement.blur();
     }
-    vigDetener();
-    vigRonda = {
-      fin: performance.now() + VIG_DURACION_MS,
-      vel: VIG_VEL_INICIAL,
-      estab: 100,
-      est: null,
-      timerIsi: null,
-      timerVentana: null,
-      timerHud: null,
-      objetivos: 0,
+    engDetener();
+    const ahora = performance.now();
+    engRonda = {
+      inicio: ahora,
+      fin: ahora + ENG_DURACION_MS,
+      ultimo: ahora,
+      siguiente: 1,
       aciertos: 0,
-      omisiones: 0,
-      comisiones: 0,
-      toquesVacios: 0,
-      rts: [],
-      lapsos: 0,
-      rachaEstable: 0,
-      mejorRacha: 0,
-      buenas: 0
+      errores: 0,
+      celdas: {},
+      engranajes: [],
+      rafId: 0,
+      timerHud: null
     };
-    minijuegoPanel('vig', 'ronda');
-    vigActualizarHud();
-    vigRonda.timerHud = setInterval(vigActualizarHud, 200);
-    vigProgramar();
-  }
-
-  function vigProgramar() {
-    const r = vigRonda;
-    if (!r) return;
-    if (performance.now() >= r.fin) {
-      vigTerminar();
-      return;
-    }
-    const base = VIG_ISI_MIN_MS + Math.random() * (VIG_ISI_MAX_MS - VIG_ISI_MIN_MS);
-    r.timerIsi = setTimeout(vigEstimulo, base * r.vel);
-  }
-
-  function vigEstimulo() {
-    const r = vigRonda;
-    if (!r) return;
-    const tipo = Math.random() < VIG_PROB_RUIDO ? 'ruido' : 'objetivo';
-    const angulo = Math.random() * Math.PI * 2;
-    const radio = Math.sqrt(Math.random()) * 0.78;
-    const x = 50 + Math.cos(angulo) * radio * 50;
-    const y = 50 + Math.sin(angulo) * radio * 50;
-    const blip = minijuegoCrear('div', 'vig-blip ' + tipo);
-    blip.style.left = x.toFixed(1) + '%';
-    blip.style.top = y.toFixed(1) + '%';
-    elVigRadar.appendChild(blip);
-    r.est = { tipo: tipo, t0: performance.now(), el: blip, x: x, y: y };
-    r.timerVentana = setTimeout(vigVencer, tipo === 'objetivo' ? VIG_VENTANA_MS : VIG_RUIDO_MS);
-  }
-
-  function vigCerrarEstimulo() {
-    const r = vigRonda;
-    clearTimeout(r.timerVentana);
-    if (r.est && r.est.el) r.est.el.remove();
-    r.est = null;
-  }
-
-  function vigVencer() {
-    const r = vigRonda;
-    if (!r || !r.est) return;
-    const est = r.est;
-    if (est.tipo === 'objetivo') {
-      r.objetivos += 1;
-      r.omisiones += 1;
-      r.lapsos += 1;
-      r.rachaEstable = 0;
-      vigAjustarEstab(-VIG_ESTAB_LAPSO);
-      vigAliviar();
-      vigMarcarLapso(est.x, est.y);
-      minijuegoFeedback(elVigFeedback, '✗ Se te pasó', 'fallo', 700);
-      juegoSonido('fallo');
-    }
-    vigCerrarEstimulo();
-    vigActualizarHud();
-    vigProgramar();
-  }
-
-  function vigToque() {
-    const r = vigRonda;
-    if (!r) return;
-    const est = r.est;
-    if (!est) {
-      r.toquesVacios += 1;
-      vigAjustarEstab(-VIG_ESTAB_TOQUE_VACIO);
-      minijuegoFeedback(elVigFeedback, '✗ No había nada', 'fallo', 600);
-      juegoSonido('fallo');
-      vigActualizarHud();
-      return;
-    }
-    if (est.tipo === 'ruido') {
-      r.comisiones += 1;
-      r.rachaEstable = 0;
-      vigAjustarEstab(-VIG_ESTAB_ERROR);
-      vigAliviar();
-      minijuegoFeedback(elVigFeedback, '✗ Era ruido', 'fallo', 700);
-      juegoSonido('fallo');
-      vigCerrarEstimulo();
-      vigActualizarHud();
-      vigProgramar();
-      return;
-    }
-    const rt = performance.now() - est.t0;
-    const ref = r.rts.slice(-VIG_VENTANA_REF);
-    const mediaRef = vigMedia(ref);
-    const lapso = rt > VIG_LAPSO_TR_MS;
-    const consistente = !lapso && (ref.length < 3 || Math.abs(rt - mediaRef) <= Math.max(100, mediaRef * 0.3));
-    r.objetivos += 1;
-    r.aciertos += 1;
-    r.rts.push(rt);
-    if (lapso) {
-      r.lapsos += 1;
-      r.rachaEstable = 0;
-      vigAjustarEstab(-VIG_ESTAB_LAPSO);
-      vigAliviar();
-      vigMarcarLapso(est.x, est.y);
-      minijuegoFeedback(elVigFeedback, '✓ Lento: ' + Math.round(rt) + ' ms', 'freno', 700);
-    } else if (consistente) {
-      r.rachaEstable += 1;
-      if (r.rachaEstable > r.mejorRacha) r.mejorRacha = r.rachaEstable;
-      vigAjustarEstab(VIG_ESTAB_SUBE);
-      r.buenas += 1;
-      if (r.buenas % VIG_BUENAS_PARA_ACELERAR === 0) {
-        r.vel = Math.max(VIG_VEL_MIN, r.vel - VIG_VEL_ACELERA);
+    minijuegoPanel('eng', 'ronda');
+    engConstruir(engRonda);
+    engMarcarObjetivo();
+    engActualizarHud();
+    engRonda.timerHud = setInterval(() => {
+      if (engRonda && performance.now() >= engRonda.fin) {
+        engTerminar();
+        return;
       }
-      minijuegoFeedback(elVigFeedback, '✓ ' + Math.round(rt) + ' ms', 'ok', 500);
-    } else {
-      r.rachaEstable = 0;
-      vigAjustarEstab(-VIG_ESTAB_BAJA_SUAVE);
-      minijuegoFeedback(elVigFeedback, '✓ ' + Math.round(rt) + ' ms (irregular)', 'freno', 600);
+      engActualizarHud();
+    }, 200);
+    engRonda.rafId = requestAnimationFrame(engCuadro);
+  }
+
+  function engRondaActiva() {
+    return vistaActual === 'engranajes' && engRonda !== null;
+  }
+
+  function engToque(celda) {
+    const r = engRonda;
+    if (!r || !celda) return;
+    const n = Number(celda.dataset.n);
+    if (n !== r.siguiente) {
+      r.errores += 1;
+      return;
     }
+    celda.classList.remove('objetivo');
+    celda.classList.add('acierto');
+    setTimeout(() => celda.classList.remove('acierto'), ENG_FLASH_MS);
     juegoSonido('ok');
-    vigCerrarEstimulo();
-    vigActualizarHud();
-    vigProgramar();
-  }
-
-  function vigRondaActiva() {
-    return vistaActual === 'vigia' && vigRonda !== null;
-  }
-
-  elVigRadar.addEventListener('pointerdown', (evento) => {
-    if (!vigRondaActiva()) return;
-    evento.preventDefault();
-    vigToque();
-  });
-
-  document.addEventListener('keydown', (evento) => {
-    if (!vigRondaActiva()) return;
-    if (evento.code !== 'Space' && evento.key !== ' ') return;
-    evento.preventDefault();
-    if (evento.repeat) return;
-    vigToque();
-  });
-
-  function vigTerminar() {
-    const r = vigRonda;
-    if (!r) return;
-    clearTimeout(r.timerIsi);
-    clearTimeout(r.timerVentana);
-    clearInterval(r.timerHud);
-    vigRonda = null;
-    elVigRadar.innerHTML = '';
-    elVigRadar.classList.remove('lapso');
-    minijuegoLimpiarFeedback(elVigFeedback);
-    const media = vigMedia(r.rts);
-    const desvio = vigDesvio(r.rts);
-    const pct = r.objetivos > 0 ? Math.round((r.aciertos / r.objetivos) * 100) : null;
-    let consistencia = null;
-    if (r.rts.length >= 5) {
-      const estabilidadTiempo = Math.max(0, 1 - (desvio / media) / 0.6);
-      const precision = r.aciertos / Math.max(1, r.objetivos);
-      consistencia = Math.round(100 * (0.7 * estabilidadTiempo + 0.3 * precision));
+    r.aciertos += 1;
+    r.siguiente += 1;
+    if (r.siguiente > ENG_TOTAL) {
+      engActualizarHud();
+      engTerminar();
+      return;
     }
-    minijuegoMetricas(document.getElementById('vig-metricas'), [
-      ['Consistencia', consistencia === null ? '—' : consistencia + ' / 100'],
-      ['Aciertos', pct === null ? '—' : pct + '%'],
-      ['TR promedio', media === null ? '—' : Math.round(media) + ' ms'],
-      ['Variabilidad (SD)', desvio === null ? '—' : Math.round(desvio) + ' ms'],
-      ['Lapsos', String(r.lapsos)],
-      ['Mejor racha estable', String(r.mejorRacha)],
-      ['Errores de toque', String(r.comisiones + r.toquesVacios)]
-    ]);
-    minijuegoPanel('vig', 'resumen');
+    engMarcarObjetivo();
+    engActualizarHud();
   }
 
-  document.getElementById('btn-vig-comenzar').addEventListener('click', vigIniciar);
-  document.getElementById('btn-vig-otra').addEventListener('click', vigIniciar);
-  document.getElementById('btn-vig-ver-instr').addEventListener('click', () => {
-    vigDetener();
-    minijuegoPanel('vig', 'instrucciones');
+  elEngEscena.addEventListener('pointerdown', (evento) => {
+    if (!engRondaActiva()) return;
+    const celda = evento.target.closest ? evento.target.closest('.eng-num') : null;
+    if (!celda) return;
+    evento.preventDefault();
+    engToque(celda);
   });
-  document.getElementById('btn-vig-menu').addEventListener('click', () => mostrarVista('juegos'));
-  document.getElementById('btn-vig-volver').addEventListener('click', () => mostrarVista('juegos'));
-  document.getElementById('tarjeta-vigia').addEventListener('click', () => mostrarVista('vigia'));
+
+  function engTerminar() {
+    const r = engRonda;
+    if (!r) return;
+    cancelAnimationFrame(r.rafId);
+    clearInterval(r.timerHud);
+    engRonda = null;
+    elEngEscena.innerHTML = '';
+    const completo = r.aciertos >= ENG_TOTAL;
+    const usado = Math.min(performance.now(), r.fin) - r.inicio;
+    const ritmo = usado > 0 ? (r.aciertos / (usado / 60000)) : 0;
+    const velocidadFinal = 1 + ENG_VEL_POR_ACIERTO * r.aciertos;
+    minijuegoMetricas(document.getElementById('eng-metricas'), [
+      ['Números completados', r.aciertos + ' / ' + ENG_TOTAL],
+      ['Tiempo', (usado / 1000).toFixed(1) + ' s' + (completo ? '' : ' (límite)')],
+      ['Ritmo', ritmo.toFixed(1) + ' por min'],
+      ['Velocidad final', '×' + velocidadFinal.toFixed(1)],
+      ['Toques errados', String(r.errores)]
+    ]);
+    minijuegoPanel('eng', 'resumen');
+  }
+
+  document.getElementById('btn-eng-comenzar').addEventListener('click', engIniciar);
+  document.getElementById('btn-eng-otra').addEventListener('click', engIniciar);
+  document.getElementById('btn-eng-menu').addEventListener('click', () => mostrarVista('juegos'));
+  document.getElementById('btn-eng-volver').addEventListener('click', () => mostrarVista('juegos'));
+  document.getElementById('tarjeta-engranajes').addEventListener('click', () => mostrarVista('engranajes'));
 
   const embebido = window.MINIJUEGO_EMBEBIDO || null;
   const embebidoDestino = location.protocol === 'file:' ? '*' : location.origin;
@@ -6360,7 +6534,7 @@
   }
 
   if (embebido) {
-    ['btn-juego-comenzar', 'btn-cambio-comenzar', 'btn-mozo-comenzar', 'btn-luc-comenzar', 'btn-vig-comenzar'].forEach((id) => {
+    ['btn-juego-comenzar', 'btn-cambio-comenzar', 'btn-foco-comenzar', 'btn-luc-comenzar', 'btn-eng-comenzar'].forEach((id) => {
       document.getElementById(id).addEventListener('click', () => {
         if (juegoSonidoActivo) obtenerAudioCtxJuego();
       });

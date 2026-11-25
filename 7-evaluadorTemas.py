@@ -28742,7 +28742,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   ocultasSincronizarChecks();
 
   const MINIJUEGO_CLAVE = 'minijuego_previo_v1';
-  const MINIJUEGO_IDS = ['stop', 'cambio', 'mozo', 'luciernagas', 'vigia'];
+  const MINIJUEGO_IDS = ['stop', 'cambio', 'foco', 'luciernagas', 'engranajes'];
   const MINIJUEGO_TIMEOUT_MS = 7000;
   let minijuegoHabilitado = (function () {
     try { return localStorage.getItem(MINIJUEGO_CLAVE) === '1'; } catch (e) { return false; }
