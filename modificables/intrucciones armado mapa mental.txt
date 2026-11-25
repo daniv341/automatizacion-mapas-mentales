@@ -56,6 +56,7 @@ estilo de diseño para el mapa, nota: deberas seleccionar todos los bordes ir a 
 ]
 
 {
+  
 # ROL Y OBJETIVO
 Actúa como un analizador semántico experto en estructuración de apuntes técnicos de estudio. 
 Te entregaré un archivo o texto en formato `.txt` que ya está resumido, recortado en frases cortas por línea (estilo telegráfico) y separado en bloques mediante saltos de línea en blanco.
@@ -327,7 +328,7 @@ Cada línea debe seguir estrictamente esta sintaxis:
   - **Descriptiva y autocontenida:** Debe hacer referencia explícita al concepto o tema del `subT` para no confundirse con otras unidades o temas.
   - **Longitud estricta:** Máximo **60 caracteres** (incluyendo espacios y el signo `?`).
 - **Palabras clave (después de ` + `):**
-  - Máximo **4 palabras clave** separados por coma y espacio (`, `).
+  - Máximo **4 palabras clave** separados por coma y espacio (`, `), si hay un termino clave entonces ese cuenta por 2 o 3 palabras clave segun corresponda.
   - Deben ser los términos más distintivos, literales e identificables del texto de la ruta para que el usuario reconozca de inmediato la respuesta exacta.
   - Sin tildes.
 - **Trazabilidad (después de ` & `):**
@@ -341,6 +342,17 @@ cual es funcion accion derivativa respecto al error? + mantener, velocidad & 44
 
 subT LIMITACIONES DE UN CONTROL PID
 que afecta a la parte derivativa del PID? + ruido, pequenas & 63
+
+### 4. Caso particular: `recordatorio.txt` adjunto
+- **Si NO se adjunta ningun `recordatorio.txt`:** genera las preguntas desde cero siguiendo las reglas 1 a 3.
+- **Si SI se adjunta un `recordatorio.txt`:** tratalo como base existente e inmutable y genera solo preguntas faltantes.
+  - **Rutas ya cubiertas:** toda ruta que aparezca en cualquier `& N` del recordatorio adjunto (individual o agrupada) queda bloqueada. No la vuelvas a preguntar, ni sola ni agrupada, aunque la redaccion sea distinta.
+  - **Duplicados semanticos:** descarta tambien cualquier pregunta nueva que sea equivalente en contenido a una ya existente, aunque use otras rutas.
+  - Genera unicamente preguntas sobre rutas del archivo de `RUTA N` aun no cubiertas, aplicando intactas las reglas 1, 2 y 3.
+  - **Salida:** devuelve el archivo completo en un unico bloque ```txt```, con todas las lineas del recordatorio original copiadas literalmente (sin corregir, reordenar, renumerar ni reformatear) mas las preguntas nuevas.
+  - **Ubicacion de lo nuevo:** inserta cada pregunta nueva dentro del `subT` que le corresponda, respetando el orden ascendente de los numeros de `RUTA`. Si ese `subT` no existe en el recordatorio, insertalo en la posicion que le corresponda segun el orden del archivo original.
+  - Si no hay ninguna pregunta nueva valida, devuelve el recordatorio original tal cual.
+  - No agregues comentarios, marcas ni indicaciones de cuales preguntas son nuevas.
 
 }
 

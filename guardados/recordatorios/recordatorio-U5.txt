@@ -1,35 +1,58 @@
-subT ANALISIS RESPUESTA UN SISTEMA 2º ORDEN CON POLOS COMPLEJOS 
-se puede generalizar? + orden general & 1
-como describimos su comportamiento dinamico? + terminos & 5
-que es ζ? + angulo & 6
-que es ωn? + no amortiguada, distancia & 7
-que es ωd? + distinto, cero & 8
-que hay que tener en cuenta de estos parametros? porque? + mueven, varian, raices & 9
-otra forma en la que escribir raices? + binomica & 14
+subT ANALISIS RESPUESTA UN SISTEMA 2º ORDEN CON POLOS COMPLEJOS
+que representa y(t) en respuesta transitoria 2do orden? + respuesta transitoria, plano real & 1
+que determinan parametros de y(t) en sistema 2do orden? + estabilidad, tipo comportamiento & 2
+a que sistemas se generaliza analisis de 2do orden? + sistemas, orden general & 3
+por que se analizan sistemas 2do orden y no 1er orden? + susceptibles, tener parametros & 4
+como son polos y amortiguamiento en sistema 1er orden? + polos reales, criticamente, sobreamortiguados & 5, 6
+como se acerca respuesta 1er orden sin sobrepico? + por defecto, valores menores & 7, 8
+que parametros describen dinamica de sistema 2do orden? + zeta, wn & 11
+que es zeta en sistema 2do orden con polos complejos? + amortiguamiento relativo, angulo & 12
+que representa wn en sistema 2do orden polos complejos? + frecuencia natural, distancia origen & 13
+por que wn es periodica en sistema 2do orden? + sinusoidal pura, cosenoidal & 14
+que es wd en sistema 2do orden con polos complejos? + frecuencia angular, oscilacion amortiguada & 15
+por que wd no es periodica en respuesta y(t)? + amortiguada, no repite, ciclica & 16, 17
+que afectan variaciones de zeta y wn en FT 2do orden? + raices, ecuacion caracteristica, denominador & 18
+como se relacionan zeta y angulo phi en polos complejos? + cos phi, origen, polo & 19
+cual es la parte real sigma de un polo complejo 2do orden? + sigma, zeta wn & 21
+cual es parte imaginaria wd de un polo complejo 2do orden? + wd, wn & 22
 
-subT Ubicación Geométrica ζ y su magnitud 
-que ocurre en semiplano izquierdo? + positivo & 15
-que causa amortiguamiento positivo? + constante & 16
-que tipo de amortiguamiento es en semiplano derecho? + negativo & 18
-que causa amortiguamiento negativo? + crece, inestable & 19
-que tipo de amortiguamiento hay en ejeimaginario? + nulo & 20
-que provoca el amortiguamiento nulo? marginalmente, puros & 21
+subT UBICACION GEOMETRICA ζ Y SU MAGNITUD
+a que amortiguamiento corresponde semiplano izquierdo s? + positivo, sigma, zeta & 24
+por que es estable sistema con amortiguamiento positivo? + valor final, exponenciales, cero & 25, 26
+entre que valores esta zeta con polos complejos? + 0, 1, polos complejos & 27
+que ocurre en semiplano derecho del plano s? + amortiguamiento negativo, crece, inestable & 28, 29
+a que amortiguamiento corresponde el eje imaginario s? + nulo & 30
+como es respuesta y estabilidad con amortiguamiento cero? + oscilacion permanente, marginalmente estable & 31
+de que depende la magnitud real en ubicacion de zeta? + cos phi, wn & 32
+que parametros cambian a medida que varia zeta? + varia phi, varia sigma & 33
 
-subT Ubicación Geométrica Raices 1 Sistema 2º Orden conforme varía ζ 
-Si ζ > 1? + sobreamortiguada & 22
-Si ζ = 1? + criticamente amortiguada & 23
-Si ζ = 0? + oscila indefinidamente & 24
-Si 0 < ζ < 1? + subamortiguada & 25
-como evaluo desempeño SC? + escalon, cualquier & 26, 27
+subT UBICACION GEOMETRICA RAICES 1 SISTEMA 2º ORDEN CONFORME VARIA ζ
+por que es importante zeta en sistema 2do orden? + respuesta transitoria, tipo polo & 34
+que forma toma FT si parte real es cero al variar zeta? + s2+wd2, cosenoidal pura & 35
+que sistema tipico tiene polos imaginarios puros? + ON/OFF, banda muerta, permanente & 36
+como es respuesta y polos de sistema 2do orden si zeta > 1? + sobreamortiguada, polos reales, distintos & 37
+como es respuesta y polos de sistema 2do orden si zeta = 1? + criticamente amortiguada, reales iguales & 39
+como son polos y respuesta 2do orden si zeta = 0? + imaginarios puros, eje jw & 40
+por que no decae respuesta transitoria cuando zeta = 0? + sin factor exponencial, amortiguador & 41
+que rango de zeta corresponde a respuesta subamortiguada? + subamortiguada & 42
+por que se estudia respuesta transitoria con escalon? + facil generar, cualquier entrada & 43, 44
 
-subT PARAMETROS RESPUESTA TRANSITORIA 
-Tiempo Retardo tr? + mitad & 29
-Tiempo Crecimiento tc? + respuesta vaya & 30
-Tiempo Pico tp? + primer & 33
-Sobrepico Máximo Sp? + maximo & 34
-Tiempo Establecimiento ts? + alrededor, porcentaje & 36
+subT PARAMETROS RESPUESTA TRANSITORIA
+que es el tiempo de retardo tr en respuesta transitoria? + mitad, valor final, primera & 45
+que es tiempo de crecimiento tc en respuesta transitoria? + valor final & 46
+que rango de tc se usa en sub y sobreamortiguados? + 0%-100% subamortiguado, sobreamortiguado & 47, 48
+que es el tiempo pico tp en respuesta transitoria? + primer pico, sobreimpulso & 49
+por que es importante el maximo absoluto en tiempo pico? + frecuencia resonancia, se rompe & 50
+que es el sobrepico maximo sp en respuesta transitoria? + pico maximo, desde unidad & 51
+cuando se usa el sobreimpulso porcentual maximo? + valor final, difiere unidad & 52
+como se mide magnitud del sobrepico respecto al deseado? + por arriba, valor deseado & 53
+que ocurre en el pico maximo de respuesta transitoria? + amplitud maxima, frecuencia resonancia & 54
+que es tiempo establecimiento ts en respuesta transitoria? + mantenerse, rango, 2%, 5% & 55
+de que depende el criterio de porcentaje de error en ts? + objetivos diseno, sistema & 56
+que es estado transitorio respecto al tiempo ts? + antes, tiempo establecimiento & 57
+como se obtiene porcentaje de error para calcular ts? + valor referencia, no calcula & 58
 
-subT ESPECIFICACIONES RESPUESTA TRANSITORIA 
-que sistema es el mas deseable? + conjugados, amortiguamiento & 38
-porque con 0,4 y 0,8? + sobreimpulso, lentamente & 39
-que requisito debe tener un SC? + rapidez, adecuado & 40, 41
+subT ESPECIFICACIONES RESPUESTA TRANSITORIA
+que caracteristicas tiene respuesta transitoria deseable? + complejos conjugados & 59
+que ocurre si zeta < 0,4 o zeta > 0,8 en especificaciones? + excesivo sobreimpulso, responde lentamente & 60
+cuales son requisitos fundamentales de sistema de control? + rapidez respuesta, adecuado amortiguamiento & 61, 62

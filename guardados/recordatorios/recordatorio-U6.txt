@@ -1,61 +1,68 @@
-subT INTRODUCCIÓN AL CONCEPTO ESTABILIDAD
-cual es un requerimiento importante? + estable, inutil & 1, 2
-como un sistema se define estable? + acotada, salida & 3
-si uso escalon ya es estable? + sola, toda & 5
-como deberia actuar ante impulso unitario? + respuesta, tiende, reposo & 7
-que significa que no tiende a cero ni infinito? + finito, marginalmente & 8
-si es marginalmente estable que implica? + fines, inestables & 9
-que diferencia hay entre impulso y escalon? + extingue, mantiene & 10
+subT INTRODUCCION AL CONCEPTO ESTABILIDAD
+por que es importante la estabilidad en control? + requerimiento, inestable, inutil & 1
+como se define estabilidad ante entrada acotada? + entrada acotada, salida acotada & 2, 3
+como responde sistema estable ante r(t) especifica? + tender, entrada, limite especificado & 4, 5
+que exige estabilidad respecto a entradas escalon? + toda entrada, salidas finitas & 6, 7
+como se determina estabilidad de sistema continuo? + respuesta, entradas, perturbaciones & 8
+como es respuesta al impulso en sistema estable? + tiende, cero, amortiguando, reposo & 9
+cuando un sistema es marginalmente estable? + valor finito, distinto, cero & 10
+como se consideran sistemas marginalmente estables? + fines, estudio, inestables & 11
+como se comporta entrada escalon unitario en tiempo? + no extingue, mantiene, uno & 12
+como se comportan rampa y escalon en mundo real? + no infinita, tiende, escalon & 13, 14, 15
 
 subT ESTUDIO FUNCION
-que son los ceros? + convierte, cero & 16
-que son los polos? + infinita, denominador & 17
-que implica cada cuadrante? + primero, segundo & 18, 19
-eje imaginario implica inestabilidad? + excepto, region & 20
+que son ceros y polos en funcion transferencia? + raices, numerador, denominador & 19, 20
+que representa K en funcion de transferencia? + constante multiplicadora, ganancia & 21
+que hacen los ceros en funcion transferencia? + variable compleja, convierte, cero & 22
+que hacen los polos en funcion transferencia? + infinita, denominador, cero & 23
+como influyen cuadrantes de raices en estabilidad? + inestable, estable & 24, 25
+a que region pertenece eje imaginario excepto origen? + region, inestabilidad & 26
 
 subT ESTUDIO ESTABILIDAD
-que sucede con el sistea si se le aplica impulso? + forma, terminos & 21
-que pasa si solo un termino es creciente? + crecera, tiempo, inestable & 24
-que implica que polos tengan ± jω? + siempre oscilacion & 25, 26, 27
-que pasa si polos estan lado izquierdo? + todos, izquierdo & 28
-que pasa si solo uno esta en lado derecho? + derecho, inestable & 29
-que pasa si esta sobre eje jω? + marginalmente, cero & 30
-que interesa en estudio estabilidad? + valores ubicacion & 31
-que es la estabilidad absoluta? + condicion, respuesta & 34
+que forma tiene salida al impulso con polos reales? + suma, terminos exponenciales & 27
+cuando es inestable sistema con terminos exponenciales? + exponencial creciente, salida, crecera & 30
+que forma tiene salida cuando hay pares polos +-jw? + siempre, oscilacion & 31
+cuando es estable o inestable una oscilacion por polos? + real negativa estable, positiva inestable & 32, 33
+como determina lado del diagrama polos la estabilidad? + izquierdo estable, derecho inestable & 34, 35
+cuando es marginalmente estable segun ubicacion polos? + eje imaginario, real cero & 36
+que relevancia tienen polos y ceros en estabilidad? + polos importantes, ceros irrelevantes & 37
+en que consiste diseno de sistemas control lineal? + manipular localizacion, polos, ceros & 38
+como se clasifica la estabilidad para analisis y diseno? + estabilidad absoluta, estabilidad relativa & 39
+a que se refiere la estabilidad absoluta? + estable, inestable & 40
 
 subT OTROS CONCEPTOS
-que podemos hacer si es estable? + interesante, grado, relativa & 35
-que es respuesta estado cero? + todas condiciones & 36
-que es respuesta entrada cero? + todas entradas & 37
-que es el principio de superposicion? + sujeto, escribe & 38
+que mide la estabilidad relativa en un sistema? + grado, estabilidad, tan estable & 41
+a que se debe la respuesta de estado cero? + entrada unicamente, iniciales cero & 42
+a que se debe la respuesta de entrada cero? + condiciones iniciales, entradas cero & 43
 
 subT CRITERIO ROUTH – HURWITZ
-cual es el problema mas importante? + problema, vuelve, estabiliza & 39, 40
-que representa este metodo? + determinar, semiplano, factorear & 41
-que permite conocer este metodo? + conocer, absoluta & 42
-cuando se puede aplicar? + finita terminos & 43
+que preguntas plantea problema estabilidad en control? + condiciones inestable, como estabiliza & 45, 46
+que permite determinar el criterio de routh-hurwitz? + cantidad polos, semiplano derecho & 47
+que tipo de metodo y estabilidad da routh-hurwitz? + metodo algebraico, estabilidad absoluta & 48
+a que polinomios se aplica criterio routh-hurwitz? + cantidad finita, terminos & 49
+que tipo de polos analiza el criterio de routh? + polos reales, no complejos & 51
+para que grado de polinomio FT se usa criterio routh? + denominador, grado mayor, 3 & 52
 
 subT LIMITACIONES
-cuando es valido este metodo? + ecuacion, semiplano, limite, jω & 44, 45
-que nos facilita este metodo? + general, interesa, grado & 46, 47
+cual es alcance y limite en plano s de routh? + semiplano izquierdo-derecho, eje jw & 54, 55
+que limitacion tiene routh sobre grado estabilidad? + solo general, no grado & 56, 57
+que signo tiene ganancia K en analisis estabilidad? + mayor cero, no negativo & 58, 59
 
 subT CONDICIONES NECESARIAS
-que condiciones tiene el procedimiento? + coeficientes, faltar & 48, 49
-estas condiciones son suficientes? + posible, semiplano & 50
-si ya sabemos estabilidad absoluta continuamos? + absoluta, procedimiento & 51, 52
-cual es una condicion necesaria y suficiente? + raices, negativas & 53
-si esta condicion se cumple que nos asegura?  + respuesta, exponencialmente & 54
+cuales son condiciones necesarias para estabilidad? + mismo signo, ninguno cero & 60, 61
+por que no son suficientes condiciones necesarias? + raices, no semiplano izquierdo & 62
+cuando se continua con procedimiento de tabla routh? + limitar polos, lado derecho & 63, 64
+cual es condicion necesaria y suficiente estabilidad? + partes reales, raices, negativas & 65
+que asegura condicion suficiente del criterio routh? + y(t), disminuya exponencialmente, tiempo & 66
 
 subT PROCEDIMIENTO
-los coeficientes deberian de ordenarse? + orden, tabla & 55
-primer paso + ordenar, primera, segunda & 56, 57, 58
-segundo paso + adicionales, inmediatas, subsecuentes, horizontal & 59, 60
-tercer paso + investigar, signos & 61
-cual es la conclusion del metodo? + elementos, cambios & 62
+como se inicia construccion de la tabla routh? + dos renglones, mayor grado & 67, 68
+que coeficientes van en primera y segunda fila routh? + primero tercero, segundo cuarto & 69, 70
+como se calculan filas adicionales en tabla routh? + filas anteriores, hasta ceros & 71, 72
+que indica primera columna completada de tabla routh? + mismo signo, cambios signo & 73, 74
 
 subT CASOS ESPECIALES
-el metodo es libre de compliaciones? + veces, dificultades & 63
-si primer elemento es cero? + demas, salvar, pequeño & 64, 65
-si aparece fila de ceros? + fila, derivada, reemplazan & 67
-para que otra cosa nos sirve el procedimiento? + cerca inestabilidad & 68
-como debo usarlo para la estabilidad relativa? + moviendo, corrimiento & 69
+como salvar cero en primer elemento de fila routh? + reemplazar cero, positivo, epsilon & 76, 77
+como proceder si aparece fila de ceros en routh? + primera derivada, ecuacion auxiliar & 78, 79
+como medir cercania a inestabilidad con routh? + moviendo eje, izquierda, finita & 80, 81
+que significa inestable respecto a sigma al correr eje? + polos entre 0, sigma & 82, 83

@@ -1,139 +1,290 @@
-=== RUTA 1 a 9 - DEFINICIÓN FUNCIÓN TRANSFERENCIA ===
+== RUTA 1 a 15 - CONCEPTO E INTERPRETACIÓN DEL LUGAR RAÍCES ===
 
-imP la función transferencia 1 sistema,
-imP es 1 modelo matemático en sentido
-imP que es 1 método operacional
-imP que permite
-imP relacionar variable salida
-imP con variable entrada,
-imP mediante transformadas Laplace ecuaciones diferenciales
+imP Es 1 método gráfico
+cuR si bien nosotros luego
+cuR para hacer determinados ejercicios 
+cuR vamos a tener que resolverlo 
+cuR en forma analítica
 
-comP lo que me da FT
-comP es capacidad entender dinámica del sistema,
-comP no cómo está formado
-comP (no me dice nada eso).
-comP Por eso
-comP si analizo salida 
-comP puedo definir si FT
-comP son iguales o
-comP distintas
+imP Me permite determinar
+imP con exactitud cuán estable o inestable es sistema
+imP ubicando dentro del espacio complejos
+imP ya sea en cuadrante dos y tres,
+imP ubicación física polos 
+imP y ya directamente ubicación física real
+imP no relativa a izquierda
 
-comP Si tengo dos sistemas y
-comP aplico misma entrada y
-comP salida es distinta,
-comP FT es distinta
+comP Sino decir físicamente 
+comP polos están ubicados acá
+comP por lo tanto sistema
+comP es estable
+comP es poco estable
+comP es muy estable o
+comP es inestable
 
-comP Pero si yo a misma entrada
-comP tengo igual respuesta
-comP significa 
-comP que FT esos sistemas
-comP son iguales independientemente su naturaleza,
-comP sin importar
-comP cómo están constituidos sistemas
+comP Puedo ubicar polo lazo cerrado,
+comP variando 1 parámetro función transferencia lazo abierto y
+comP parámetros respuesta transitoria
+comP que eran tres:
+comP K, ζ y ωn,
+comP y su modificación 
+comP repercute en ubicación 
+comP polos función transferencia lazo cerrado
 
-cuR Sistemas naturaleza distinta
-cuR pueden tener misma FT
-cuR porque dinámica interna
-cuR hace que se comporten 
-cuR manera similar
+textS en principio
+imP Estrictamente, normalmente y solamente 
+imP K es que me permite 
+imP modificar posición polos lazo cerrado,
+imP que es parámetro más significativo,
+imP tiene una relación 
+imP con todos demás parámetros
 
-imP la FT es 1 propiedad intrínseca 
-imP del sistema y
-imP no depende entrada,
-imP rta depende entrada,
-imP pero FT no
+comP También puedo variar tipo respuesta
+comP que tenga variando K 
+comP podría hacer sobreamortiguado
+comP si consigo polos reales,
+comP críticamente amortiguado
+comP si consigo polos múltiples,
+comP subamortiguado
+comP si consigo polos complejos
 
-caR la función transferencia
-caR incluye unidades necesarias
-caR para relacionar entrada
-caR con salida;
-cuR no obstante,
-cuR no brinda ninguna información respecto
-cuR a estructura física del sistema
-cuR (funciones transferencias muchos sistemas 
-cuR físicamente distintos 
-cuR pueden ser idénticas)
+caR También es importante
+caR obtener estabilidad requerida 
+caR en función variación K
 
-comP Ahora
-comP si no conozco P(s) y
-comP conozco R(s)
-comP lo que puedo hacer es 
-comP excitar a P(s)
-comP con R(s) y
-comP estudiar salida y
-comP obtenerla
-comP porque yo sé que 
-comP P(s) es Y(s) sobre R(s)
+== LUGAR RAÍCES PARA SISTEMAS 2º ORDEN y POLOS DOMINANTES (sin equivalente en TXT - después RUTA 15) ===
 
-caR las ED
-caR deben ser consideradas
-caR con condiciones iniciales 
-caR igual a 0,
-comP en TC entendemos
-comP que sistema viene del reposo o
-comP sea que n condiciones iniciales 
-comP son iguales a 0
-comP porque recién comienza dinámica
-comP desde que mido
+comP Todo sistema segundo orden
+comP es susceptible a ser reducido 
+comP a uno segundo orden,
+comP decimos eso por concepto 
+comP polos dominantes 
+imP polo dominante es que más cerca del origen
+imP (o eje imaginario en caso de
+imP polos con parte imaginaria)
+imP se encuentra y
+imP determina estabilidad o
+imP inestabilidad 
+imP del sistema,
+imP mientras más cerca 
+imP más dominantes son
 
-=== RUTA 24 y 25 - GANANCIA y CÁLCULO GANANCIA ===
+comP Si hay una dominancia razonable
+comP puedo ir eliminando polos 
+comP siempre y cuando relación del polo 
+comP más cercano al origen
+comP con más lejano en su parte real
+comP sea 5 veces más grande
+comP (o próximo a 5),
+comP al eliminar estos polos 
+comP simulo 1 sistema
+comP que se comporta similar al original 
+comP pero no es mismo
 
-comP Para calcular ganancia 
-comP usamos dos conceptos:
-comP concepto estabilidad y
-comP teorema valor final
+imP Si P(s) no es estable entrada no importa,
+imP será 1 sistema inestable
+imP y(t) será inestable
 
-comP Por teorema valor final
-comP cuando en plano real t -> ∞,
-comP s -> 0 en plano complejo
+== RUTA 32 a 37 - REGLA 2: RAMAS DEL LUGAR RAÍCES ===
 
-comP Por eso 
-comP luego vamos a particularizar
-comP para s = 0
+caR las ramas se ubican
+caR entre elementos
+caR (polos y ceros lazo abierto,
+caR también cuenta infinito,
+caR pero este 
+caR no es 1 elemento como tal)
 
-=== RUTA 26 y 27 - EFP MÉTODO GRÁFICO: DIAGRAMA POLOS Y CEROS y RESIDUOS ===
+imP Posible ubicación polos lazo cerrado
+imP está sobre ramas,
+imP solo sobre eje real
 
-clasP Hay 3 tipos polos en denominador:
-caR Simple (como (s+1)),
-caR Múltiple (como (s+1)^5)
-caR y complejos
+== RUTA 44 a 47 - REGLA 4: ASÍNTOTAS ===
 
-imP Para que mi sistema
-imP sea estable solo debo
-imP tener polos negativos en R(s),
-cuR sin embargo Y(s)
-cuR puede tener polos en origen
+imP Asíntotas:
+deF es límite 
+deF físico y
+deF gráfico 
+deF proyección del lugar raíces
+deF hacia plano complejo,
+deF idea es calcular
+deF donde está limitado lugar 
+deF en plano complejo
 
-caR Para diferenciar
-caR que polo es entrada y
-caR no P(s) 
-caR a polos que genera entrada 
-caR se le pone una X (cruz)
+deF σa es punto
+deF donde asíntota corta al eje real y 
+deF también cantidad asíntotas
+deF que se proyectan desde eje real 
+deF hacía plano complejo
 
-comP Si polo R(s) estuviera
-comP donde esta X
-comP (polo entrada)
-comP ahi si seria inestable,
-comP Y(s) si puede tener polos en origen 
-comP sin inestabilizar
+deF el ángulo
+deF es cómo se proyectan asíntotas
+deF sobre eje imaginario,
+deF también es cantidad asíntotas
+deF que se proyectan
+deF hacia eje imaginario
 
-imP y(t) va a depender 
-imP no solo polos y ceros P(s)
-imP si no también entrada
+comP Si ángulo asíntotas se acerca a 0,
+comP entonces asíntotas 
+comP cortan al eje complejo 
+comP en algún punto,
+comP si eso ocurre 
+comP sistema es inestable
+comP (o tienen parte inestables)
 
-=== RUTA 28 a 34 - POLOS COMPLEJOS y ÁNGULOS ===
+== RUTA 48 a 51 - REGLA 5: PUNTOS RUPTURA ===
 
-caR los ángulos en sentido antihorario
-caR son positivos y
-caR en sentido horario 
-caR negativos
-comP Entonces uso angulos suplementarios
+imP Punto ruptura:
+deF es punto proyección del lugar raíces
+deF hacia plano complejo o
+deF también se puede decir
+deF que es ubicación geométrica 
+deF polos complejos
 
-=== RUTA 31 - FORMAS EXPRESAR P(s) y ESTABILIDAD ===
+cuR el punto ruptura también
+cuR es 1 polo propiamente real,
+cuR solo en sistemas 2do orden
+cuR sigma a y punto ruptura
+cuR pueden ser iguales,
+cuR en orden superior
+cuR ya no se cumple esto
 
-imP Si tengo 1 σ ≥ 0 
-imP sistema es inestable
+comP Un sistema 2do orden jamás
+comP pierde 1 polo
+comP (Siempre tendrá dos,
+comP si no no sería 2do orden),
+comP sin embargo
+comP si 1 polo está muy lejos del origen y
+comP por teoría dominancia 
+comP yo tengo permiso borrarlo
 
-cuR lo único que puedo
-cuR permitir en origen
-cuR son R(s) provenientes funciones singularidad
+cuR No conocemos una técnica
+cuR para alejar polos del origen y
+cuR volverlos despreciables
+cuR (o sea moverlos 5 veces más lejos 
+cuR del dominante)
+
+deF el punto ruptura
+deF es último punto o polo
+deF donde existen polos reales,
+deF entonces polos se proyectan
+deF hacia plano complejos,
+
+comP K determina posición física del polo,
+comP y posición física del polo
+comP está relacionada
+comP con una única K,
+comP es decir 
+comP ambas son biunívocas,
+comP ahí es que se usa fórmula K en paso 4
+
+imP En punto ruptura sistema
+imP tiene comportamiento críticamente amortiguado,
+comP para valores K 
+comP mayores o
+comP menores 
+comP al valor ganancia 
+comP en dicho punto (el ruptura) 
+comP yo tengo 2 posibilidades,
+comP sobreamortiguado o
+comP subamortiguado
+
+== RUTA 56 a 59 - REGLA 7: CRUCE DEL LUGAR RAÍCES CON EL EJE IMAGINARIO ===
+
+caR Para que sea marginalmente estable
+caR entonces 1 elemento primera fila
+caR debe ser 0,
+caR si llegara a estar K 
+caR en algún elemento primera fila,
+caR entonces K 
+caR no puede ser igual a 0,
+caR se debe descartarlos 
+caR y tomar valor
+caR que sea positivo
+
+cuR K puede ser 0 analiticamente 
+cuR pero no conceptualmente
+
+comP Si llegara a haber 1 K en primera fila y
+comP este fuera igual a M (M>0) 
+comP en M 
+comP sistema es marginalmente estable,
+comP para mayor que M
+comP es inestable
+
+== RUTA 16 a 18 y 60 a 63 - REGLA 8: CORROBORAR LUGAR CON 1 PUNTO PRUEBA - condiciones ángulo y magnitud (Regla Nº6 en Word) ===
+
+imP Se usa 
+imP condicion angulo y
+imP condición magnitud,
+imP si se cumple una 
+imP pero no otra
+imP entonces punto no pertenece,
+imP deben cumplirse 2 condiciones
+
+imP condicion angulo:
+deF basicamente diferencia angulos ceros y polos 
+deF debe ser multiplo 180 grados
+
+comP aparte condicion angulo
+comP se debe calcular modulo
+comP (para positivizarlo)
+comP GH = 1
+comP reemplazando K en formula,
+comP para ese valor que te dea K,
+comP menor a ese valor
+comP se generan polos reales pero
+comP para valores mayores al K del punto ruptura
+comP se generan polos complejos
+
+imP ENTONCES PODEMOS DECIR QUE 
+imP PARA VALORES MAYORES AL K DEL PUNTO RUPTURA 
+imP ES SUBAMORTIGUADO(genero polos complejos) 
+imP PARA VALORES IGUAL AL K DEL PUNTO RUPTURA 
+imP ES CRITICAMENTE AMORTIGUADO (genero polos multiples) 
+imP Y PARA VALORES MENORES AL K DEL PUNTO RUPTURA 
+imP ES SOBREAMORTIGUADO(genero polos reales) 
+imP ESTE ANALISIS ES IMPORTANTE, 
+imP ES PARA SISTEMAS SEGUNDO ORDEN
+
+== ANÁLISIS DEL LUGAR RAÍCES (sin equivalente en TXT - después RUTA 76) ===
+
+imP K se relaciona
+imP con todos parametros,
+imP osea con K 
+imP puedo tener omega n omega d zeta y
+imP con esos tp tc etc,
+imP K es raiz para obtener todos ellos
+
+deF la formula P(s)
+deF para 1 sistema sobreamortiguado
+deF tiene forma general k/ (s&s1)&(s&s2)
+
+deF la formula P(s)
+deF para 1 sistema criticamente amortiguado
+deF tiene forma general k/ (s&s1)2
+
+deF omega d
+deF es componente imaginaria 
+deF del numero complejo
+
+caR a medida que nos acercamos al punto ruptura
+caR zeta sigue siendo mayor que 1 
+caR pero va disminuyendo valor
+
+cuR K es inversamente proporcional a zeta,
+cuR si bien 
+cuR estas identidades son particulares
+cuR cuando polos son 0 y -1,
+cuR podemos obtenerlas particularizando
+cuR para valor K y b
+cuR (b ecuacion cuadratica (a & b & c))
+
+pasoS para obtener zeta
+pasoS (que es coseno phi)
+pasoS primero debo sacar que phi
+pasoS es arcotangente 
+pasoS del cateto opuesto
+pasoS sobre cateto adyacente,
+pasoS una vez obtenido ese valor
+pasoS recien saco zeta
+pasoS por coseno phi

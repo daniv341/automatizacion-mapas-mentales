@@ -1,22 +1,52 @@
-=== RUTA 1 a 9 - DEFINICIÓN DE FUNCIÓN DE TRANSFERENCIA ===
-La función de transferencia de un sistema, es un modelo matemático en el sentido de que es un método operacional que permite relacionar la variable de salida con la variable de entrada, mediante las transformadas de Laplace de las ecuaciones diferenciales que las describen.
-Lo que me da la F.T es la capacidad de entender la dinámica del sistema, no cómo está formado (no me dice nada de eso). Por eso si analizo la salida puedo definir si las F.T son iguales o distintas. Si tengo dos sistemas y aplico la misma entrada y la salida es distinta, F.T es distinta.
-Pero si yo a la misma entrada tengo igual respuesta significa que la F.T de esos sistemas son iguales independientemente de su naturaleza, sin importar cómo están constituidos los sistemas. Sistemas de naturaleza distinta pueden tener la misma F.T porque la dinámica interna hace que se comporten de manera similar. La F.T es un propiedad intrínseca del sistema y no depende de la entrada, la rta depende de la entrada, pero la F.T no.
-La función de transferencia incluye las unidades necesarias para relacionar la entrada con la salida; no obstante, no brinda ninguna información respecto a la estructura física del sistema (Las funciones de transferencias de muchos sistemas físicamente distintos pueden ser idénticas).
-Ahora si no conozco P(s) y conozco R(s) lo que puedo hacer es excitar a P(s) con R(s) y estudiar la salida y obtenerla porque yo sé que P(s) es Y(s) sobre R(s).
-Las E.D deben ser consideradas con condiciones iniciales igual a 0, en TC entendemos que el sistema viene del reposo o sea que las n condiciones iniciales son iguales a 0 porque recién comienza la dinámica desde que lo mido.
+UNIDAD 7 - INFORMACIÓN DEL WORD AUSENTE EN "7 - Lugar de las Raices.txt"
 
-=== RUTA 24 y 25 - GANANCIA / CÁLCULO DE GANANCIA ===
-Para calcular la ganancia usamos dos conceptos: El concepto de estabilidad y el teorema de valor final.
-Por teorema de valor final cuando en el plano real t -> ∞, s -> 0 en el plano complejo. Por eso luego vamos a particularizar para s = 0.
 
-=== RUTA 26 y 27 - E.F.P. MÉTODO GRÁFICO: DIAGRAMA DE POLOS Y CEROS / RESIDUOS ===
-Hay 3 tipos de polos en el denominador: Simple (como (s+1)), Múltiple (como (s+1)^5) y complejos.
-Para que mi sistema sea estable solo debo tener polos negativos en R(s), sin embargo Y(s) puede tener polos en el origen. Para diferenciar que el polo es de la entrada y no de la P(s) a los polos que genera la entrada se le pone una X (cruz).
-Si el polo de R(s) estuviera donde esta la x (polo de la entrada) ahi si seria inestable, Y(s) si puede tener polos en el origen sin inestabilizar. y(t) va a depender no solo de los polos y ceros de P(s) si no también de los de la entrada.
+=== RUTA 1 a 15 - CONCEPTO E INTERPRETACIÓN DEL LUGAR DE LAS RAÍCES ===
+Es un método gráfico si bien nosotros luego para hacer determinados ejercicios vamos a tener que resolverlo en forma analítica. En este caso el lugar geométrico de las raíces me permite determinar la estabilidad relativa.
+Me permite determinar con exactitud cuán estable o inestable es el sistema ubicando dentro del espacio de los complejos ya sea en el cuadrante dos y tres, la ubicación física de los polos y ya directamente la ubicación física real no relativa a la izquierda. Sino decir físicamente los polos están ubicados acá por lo tanto el sistema es estable es poco estable es muy estable o es inestable
+Cómo puedo ubicar los polo de lazo cerrado, variando un parámetro de la función de transferencia de lazo abierto y los parámetros de la respuesta transitoria que eran tres: K, ζ y ωn, y su modificación repercute en la ubicación de los polos de función de transferencia de lazo cerrado.
+Estrictamente, normalmente y solamente K es el que me permite modificar la posición de los polos de lazo cerrado, que es el parámetro más significativo, tiene una relación con todos los demás parámetros. También puedo variar el tipo de respuesta que tenga variando K. Lo podría hacer sobreamortiguado si consigo polos reales, críticamente amortiguado si consigo polos múltiples, subamortiguado si consigo polos complejos
+También es importante obtener la estabilidad requerida en función de la variación de K.
 
-=== RUTA 28 a 34 - POLOS COMPLEJOS / ÁNGULOS ===
-Los ángulos en sentido antihorario son positivos y en sentido horario negativos. Entonces uso angulos suplementarios.
+=== LUGAR DE LAS RAÍCES PARA SISTEMAS DE 2º ORDEN / POLOS DOMINANTES (sin equivalente en el TXT - después de RUTA 15) ===
+Todo sistema de segundo orden es susceptible a ser reducido a uno de segundo orden, decimos eso por el concepto de polos dominantes el polo dominante es el que más cerca del origen (o eje imaginario en caso de polos con parte imaginaria) se encuentra y determina la estabilidad o inestabilidad del sistema, mientras más cerca más dominantes son. Por eso estudiamos sistemas de segundo orden.
+Si hay una dominancia razonable puedo ir eliminando polos siempre y cuando la relación del polo más cercano al origen con el más lejano en su parte real sea 5 veces más grande (o próximo a 5), al eliminar estos polos simulo un sistema que se comporta similar al original pero no es el mismo. Puedo tener una rta similar.
+Si P(s) no es estable la entrada no importa, será un sistema inestable. y(t) será instable.
 
-=== RUTA 31 - FORMAS DE EXPRESAR P(s) / ESTABILIDAD ===
-Si tengo un σ ≥ 0 el sistema es inestable. Lo único que puedo permitir en el origen son las R(s) provenientes de funciones de singularidad.
+=== RUTA 32 a 37 - REGLA 2: RAMAS DEL LUGAR DE LAS RAÍCES ===
+Las ramas se ubican entre elementos (polos y ceros lazo abierto, también cuenta infinito, pero este no es un elemento como tal)
+Posible ubicación de los polos de lazo cerrado está sobre las ramas, solo sobre el eje real
+
+=== RUTA 44 a 47 - REGLA 4: ASÍNTOTAS ===
+Asíntotas: es el límite físico y gráfico de la proyección del lugar de las raíces hacia el plano complejo, la idea es calcular donde está limitado el lugar en el plano complejo.
+σa es el punto donde la asíntota corta al eje real y también la cantidad de asíntotas que se proyectan desde eje real hacía plano complejo, formula en las diapos (nota: es - la formula, no - en el numerador).
+El ángulo es cómo se proyectan las asíntotas sobre eje imaginario, también es la cantidad de asíntotas que se proyectan hacia el eje imaginario
+Si el ángulo de las asíntotas se acerca a 0, entonces las asíntotas cortan al eje complejo en algún punto, y si eso ocurre el sistema es inestable (o tienen parte inestables)
+
+=== RUTA 48 a 51 - REGLA 5: PUNTOS DE RUPTURA ===
+Punto de ruptura: es el punto de proyección del lugar de las raíces hacia el plano complejo o también se puede decir que es la ubicación geométrica de los polos complejos.
+El punto de ruptura también es un polo propiamente real, solo en sistemas de 2do orden sigma a y el punto de ruptura pueden ser iguales, en orden superior ya no se cumple esto.
+Un sistema de 2do orden jamás pierde un polo (Siempre tendrá dos, si no no sería de 2do orden), sin embargo si un polo está muy lejos del origen y por teoría de la dominancia yo tengo permiso de borrarlo. No conocemos una técnica para alejar polos del origen y volverlos despreciables (o sea moverlos 5 veces más lejos del dominante).
+El punto de ruptura es el último punto o polo donde existen polos reales, entonces los polos se proyectan hacia el plano complejos, en la imagen si veo el ultimo punto donde el sistema tiene polos reales (punto σa o s) en este punto los polos reales son iguales. Para saber si s es un polo real es un polo real puro debo calcular su ganancia
+K determina la posición física del polo, y la posición física del polo está relacionada con una única K, es decir ambas son biunívocas, de ahí es que se usa la fórmula de K en el paso 4
+En el punto de ruptura el sistema tiene comportamiento críticamente amortiguado, para valores de K mayores o menores al valor de ganancia en dicho punto(el de ruptura) yo tengo 2 posibilidades, sobreamortiguado o subamortiguado.
+
+=== RUTA 56 a 59 - REGLA 7: CRUCE DEL LUGAR DE LAS RAÍCES CON EL EJE IMAGINARIO ===
+Para que sea marginalmente estable entonces un elemento de la primera fila debe ser 0, si llegara a estar K en algún elemento de la primera fila, entonces K no puede ser igual a 0, descartarlos, tomar el valor que sea positivo.
+K puede ser 0 analiticamente pero no conceptualmente.
+Si llegara a haber un K en la primera fila y este fuera igual a M (M>0) en M el sistema es marginalmente estable, para mayor que M es inestable
+
+=== RUTA 16 a 18 y 60 a 63 - REGLA 8: CORROBORAR EL LUGAR CON UN PUNTO DE PRUEBA - condiciones de ángulo y magnitud (Regla Nº6 en el Word) ===
+Se usa la condicion de angulo y la condición de magnitud, si se cumple una pero no la otra entonces el punto no pertenece, debe cumplirse las 2 condiciones
+condicion angulo: basicamente la diferencia de los angulos de los ceros y los polos debe ser multiplo de 180 grados
+aparte de la condicion de angulo se debe calcular el modulo (para positivizarlo) GH = 1 reemplazando K en la formula, para ese valor que te dea K, menor a ese valor se generan polos reales pero para valores mayores al K del punto de ruptura se generan polos complejos
+ENTONCES PODEMOS DECIR QUE PARA VALORES MAYORES AL K DEL PUNTO DE RUPTURA ES SUBAMORTIGUADO(genero polos complejos) PARA VALORES IGUAL AL K DEL PUNTO DE RUPTURA ES CRITICAMENTE AMORTIGUADO (genero polos multiples) Y PARA VALORES MENORES AL K DEL PUNTO DE RUPTURA ES SOBREAMORTIGUADO(genero polos reales) ESTE ANALISIS ES IMPORTANTE, ES PARA SISTEMAS DE SEGUNDO ORDEN
+
+=== ANÁLISIS DEL LUGAR DE LAS RAÍCES (sin equivalente en el TXT - después de RUTA 76) ===
+K se relaciona con todos los parametros, osea con K puedo tener omega n omega d zeta y con esos tp tc etc, K es la raiz para obtener todos ellos
+la formula de P(s) para un sistema sobreamortiguado tiene forma general k/ (s+s1)*(s+s2)
+la formula de P(s) para un sistema criticamente amortiguado tiene forma general k/ (s+s1)2
+omega d es la componente imaginaria del numero complejo
+a medida que nos acercamos al punto de ruptura zeta sigue siendo mayor que 1 pero va disminuyendo de valor
+K es inversamente proporcional a zeta, si bien estas identidades son particulares cuando los polos son 0 y -1, podemos obtenerlas particularizando para el valor de K y b (el b de la ecuacion cuadratica (a + b + c))
+para obtener zeta (que es el coseno de phi) primero debo sacar que phi es la arcotangente del cateto opuesto sobre cateto adyacente, una vez obtenido ese valor recien saco zeta por coseno de phi

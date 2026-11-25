@@ -1,48 +1,92 @@
 subT CONCEPTO E INTERPRETACION DEL LUGAR RAICES
-que nos nos indica este diagrama? + graficamente, variar & 1
-que permite estudiar? + relativa, no lineales & 2
-a que esta ligada la respuesta transitoria? + caracteristica, ubicacion & 3
-que pasa si sistema tiene ganancia variable? + ubicacion, elegida, importante, plano & 4, 5
-en que afecta al diseño si se modifica la ganancia? + diseño, ajuste, seleccion, adecuado & 6, 7
-existe un metodo para hallar las raices de un sistema? + trazan, parametro, determinado, K & 9
-que podemos predecir con este metodo? + variacion, adicion & 11
-que dificultades evita el metodo? + tecnicas, presentacion, todos, rapida & 13, 14
-que podemos hacer si tenemos multiples parametros? + construir, variando & 15
+que indica graficamente el diagrama del lugar raices? + raices, ecuacion caracteristica, K & 1
+como se resuelve el lugar raices en ejercicios? + metodo grafico, forma analitica & 2
+que permite determinar el lugar raices con los polos? + ubicacion fisica, estable, inestable & 3, 4
+que otro analisis y sistemas admite el lugar raices? + estabilidad relativa, no lineales & 5
+a que se liga la respuesta transitoria en lugar raices? + ubicacion, polos lazo cerrado & 6
+como afecta variar K a polos lazo cerrado en lugar raices? + ganancia, desplazan, plano s & 7, 8
+que parametros transitorios ubican polos en lugar raices? + K, zeta, wn & 9
+cual parametro modifica posiciones en lugar de raices? + K, mas significativo, relacion & 10
+en que consiste ajustar polos con el lugar de raices? + ajuste ganancia, seleccion, K & 11, 12
+en que consiste el procedimiento del lugar de las raices? + trazan raices, parametro, K & 13, 14, 15
+que efectos predice el lugar de las raices al variar FT? + adicion, polos, ceros, ganancia & 16
+de que parte el lugar de raices para hallar polos? + polos, ceros, lazo abierto & 17
+que ventaja tiene el lugar raices ante tecnicas clasicas? + evita dificultades, presentacion grafica & 18
+para que resulta adecuado el metodo del lugar raices? + resultados aproximados, forma rapida & 19
+como se construye lugar raices con parametros multiples? + variando, 1 parametro, vez & 20
+que polos definen el tipo de respuesta en lugar raices? + reales, multiples, complejos & 21
+que se busca obtener al variar K en el lugar de las raices? + estabilidad requerida, variacion K & 22
+que ocurre en lugar raices si P(s) no es estable? + sistema inestable, y(t) inestable & 23
 
 subT DIAGRAMAS DEL LUGAR RAICES
-como debemos empezar con el metodo? + conocer, ubicacion & 21
+que representa el diagrama del lugar de las raices? + lazo cerrado, cero, infinito & 28
+que se debe conocer para trazar el lugar de raices? + ubicacion, polos, ceros, G(s)H(s) & 29
 
-subT ejemplo practico
-ver primera imagen + G(s)H(s) & 22
-ver segunda imagen + p2, p3, conjugados & 23
-ver tercera imagen + magnitud G(s) & 24
-como estan ubicados los polos y ceros complejos? + simetrica, lugar, construir, dibujar & 25, 26
+subT EJEMPLO PRACTICO
+respecto a que eje es simetrico el lugar de las raices? + eje real, complejos conjugados & 33
+como se dibuja el lugar raices aprovechando su simetria? + porcion superior, imagen espejo & 34
+
+subT DIAGRAMAS DEL LUGAR RAICES
+que define a un polo dominante en diagrama lugar raices? + cerca origen, determina estabilidad & 35
+cuando se eliminan polos por dominancia en lugar raices? + relacion, 5 veces, lejano & 36
 
 subT REGLAS GENERALES PARA CONSTRUIR LUGAR RAICES
-como podemos construir el lugar de las raices de forma general? + ubicando, asintotas, angulos, llegada & 27
+que elementos permiten construir el lugar de las raices? + asintotas, angulos partida, llegada & 37
 
 subT REGLAS
-primer paso + obtiene, reescribe, interes, condicion & 28, 29
-segundo paso + inicio, ramas & 32
-que cantidad de ramas tiene el lugar de las raices? + tener, caracteristica, iguala & 34
-que pasa si tiendo K a infinito? + cero, infinito & 37
-tercer paso + eje real, sobre & 38
-los polos y ceros conjugados tienen efecto sobre eje real? + efecto, ubicacion & 40
-como se extiende cada porcion del lugar de las raices? + eje real, otro & 41
-tercer paso que debemos elegir? + prueba, cantidad, impar & 42, 43
-cuarto paso + asintotas & 44
-cuarto paso que debemos mirar de la ubicacion del punto prueba? + lejos, origen, angulos & 45
-ver imagen ecuacion angulo asintotas + grandes, rectas & 47
-quinto paso + ruptura, llegada & 48
-que es un punto de ruptura + geometricos, convergen 
-donde esta el punto ruptura? + simetria, eje real, pares & 49
-quinto paso que sucede si lugar raices esta entre 1 polo y cero lazo abierto? puede, ruptura & 51
-sexto paso + angulos, partida, complejos & 52
-que debemos hacer para trazar lugar de las raices? + direcciones, sentidos & 53
-septimo paso + cruza, imaginario & 56
-septimo paso como hallamos estos puntos? + Routh, procedimiento, caracteristica & 57, 58, 59
-octavo paso + cualquier, posible, magnitud & 60, 61
-octavo paso que es K(no ganancia)? + cualquier, condicion & 62
-noveno paso + determinar, amplia & 64
-noveno paso cual es la parte mas importante lugar raices? + asintotas, entorno, eje & 65
-que debemos tener en cuenta si cambiamos algo? + configuracion, significaticas, lugar & 66
+que condicion tiene la ganancia K en reglas lugar raices? + parametro interes, mayor 0 & 40
+que ocurre en reglas lugar raices si K es menor a 0? + retroalimentacion positiva, condicion angulo & 41
+que son los puntos del lugar raices cuando K = 0? + polos, lazo abierto, magnitud & 43
+cuantas ramas tiene un diagrama del lugar de raices? + igual, orden del sistema & 44
+entre que elementos se ubican ramas del lugar raices? + polos, ceros, infinito & 45
+a que iguala la cantidad de ramas si polos exceden ceros? + cantidad ramas, iguala, polos & 46
+cuantas ramas del lugar raices terminan en ceros finitos? + igual, m ceros, abierto & 47
+hacia donde tienden ramas lugar raices con K a infinito? + cero, infinito, plano complejo & 48
+donde se ubican posibles polos en reglas lugar raices? + sobre ramas, eje real & 49
+que determina el lugar de raices sobre el eje real? + polos, ceros, lazo abierto & 51
+que efecto tienen polos complejos en lugar raices eje real? + no tienen efecto & 52
+como se extiende cada porcion del lugar raices en eje real? + rango, polo, cero & 53
+cuando un punto prueba en eje real esta en lugar raices? + polos, ceros, derecha, impar & 54, 55
+cuando existen asintotas en lugar raices y cuantas son? + polos supera ceros, n-m & 56
+que pasa con angulos en lugar raices si s esta lejos? + iguales, cada cantidad compleja & 57
+que ocurre entre un polo y cero lazo abierto en asintotas? + cancelan efectos, forma mutua & 58
+que es una asintota en el diagrama del lugar de raices? + limite fisico, grafico, proyeccion & 60
+que representa sigma a en las asintotas del lugar raices? + corta eje real, proyectan & 61, 62
+que indica el angulo de asintotas en el lugar de raices? + proyectan, eje imaginario, cantidad & 63
+que pasa en lugar raices si angulo asintotas se acerca a 0? + cortan eje complejo, inestable & 64
+que es el punto de ruptura en el lugar de las raices? + proyeccion, plano complejo, ubicacion & 66
+cuando coinciden sigma a y punto ruptura en lugar raices? + sistemas, 2do orden, iguales & 67
+que ocurre despues del punto ruptura en lugar de raices? + ultimo punto, polos reales & 68
+donde aparecen puntos de ruptura en el lugar de raices? + eje real, pares conjugados & 69
+cuando hay al menos un punto ruptura en lugar raices? + dos polos, ceros adyacentes & 70
+hay punto ruptura entre un polo y un cero en eje real? + puede, no haber, ruptura & 71
+puede un sistema 2do orden perder un polo en lugar raices? + jamas, siempre dos, dominancia & 72
+hay tecnica para alejar polos del origen en lugar raices? + no conocemos, despreciables & 73
+como se relacionan K y posicion del polo en lugar raices? + biunivocas, unica K & 74
+que amortiguamiento hay en punto ruptura del lugar raices? + criticamente amortiguado, sobreamortiguado, subamortiguado & 75
+para que se hallan angulos en vecindad polos complejos? + direcciones, sentidos, exactitud razonable & 77
+cual es la condicion de angulo en el lugar de las raices? + angulo FT, impar, 180 & 78
+como se calcula angulo partida desde polo complejo? + 180, otros polos, ceros & 79
+como se calcula angulo llegada hacia cero complejo? + 180, otros ceros, polos & 80
+como hallar cruces del lugar raices con eje imaginario? + routh, prueba correccion, s=jw & 82, 83, 84
+que valor toma K en primera fila routh para estabilidad? + elemento 0, K positivo & 85
+puede K ser igual a cero en analisis lugar de raices? + analiticamente si, conceptualmente no & 86
+que ocurre si K en primera fila de routh supera a M? + M marginal, mayor inestable & 87
+cuando un punto del lugar raices es polo de lazo cerrado? + K satisfaga, condicion magnitud & 88, 89
+como se obtiene K para un punto s sobre el lugar raices? + condicion magnitud, punto s & 90
+como hallar polos lazo cerrado si ya dan K en lugar raices? + condicion magnitud, prueba correccion & 91
+que condiciones debe cumplir un punto del lugar raices? + condicion angulo, magnitud, ambas & 92
+como se expresa condicion angulo con ceros y polos? + diferencia angulos, multiplo 180 & 93
+que relacion cumple el modulo GH en la condicion magnitud? + calcular modulo, GH=1 & 94
+como es respuesta en 2do orden segun K respecto ruptura? + subamortiguado, criticamente, sobreamortiguado & 95
+donde esta la parte mas importante del lugar de raices? + entorno, eje jw, origen & 97
+que provoca un leve cambio en polos y ceros lugar raices? + modificaciones significativas, configuraciones & 98
+
+subT ANALISIS DEL LUGAR DE LAS RAICES
+con que parametros se relaciona K en analisis lugar raices? + omega n, d, zeta & 99
+como es P(s) sobreamortiguado en analisis lugar raices? + k, (s+s1)(s+s2) & 100
+como es P(s) criticamente amortiguado en lugar raices? + k, (s+s1)2 & 101
+que representa omega d en el analisis del lugar raices? + componente imaginaria, numero complejo & 102
+como cambia zeta cerca del punto ruptura en lugar raices? + mayor que 1, disminuye & 103
+que proporcion existe entre K y zeta en lugar de raices? + inversamente proporcional, K, b & 104
+como se calcula zeta geometricamente en el lugar raices? + phi arcotangente, coseno phi & 105
