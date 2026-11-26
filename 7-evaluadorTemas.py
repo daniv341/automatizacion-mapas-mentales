@@ -21608,7 +21608,6 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   window.addEventListener('beforeunload', audioRutasDetener);
   window.addEventListener('pagehide', audioRutasDetener);
 
-  // ---- Botón 🔊 en el summary de los acordeones de ruta (reutiliza el único #audio-rutas) ----
   var audioRutasBotonesSummary;
   var audioRutasOrigenSummary;
   var audioRutasTarjetaPrev;

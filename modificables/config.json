@@ -6,7 +6,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\1 - Sistemas de Control.drawio",
       "resaltar": true,
       "colores": "amarilloClaro",
-      "voz_rutas": true,
+      "voz_rutas": false,
       "imagen_mapa": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\1 - Sistemas de Control.jpg"
     },
     {
@@ -15,7 +15,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\2 - Terminologia de los Sistemas de Control.drawio",
       "resaltar": true,
       "colores": "verdeClaro",
-      "voz_rutas": true,
+      "voz_rutas": false,
       "imagen_mapa": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\2 - Terminologia de los Sistemas de Control.jpg"
     },
     {
@@ -24,7 +24,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\3 - Estrategias de Control.drawio",
       "resaltar": true,
       "colores": "bordo",
-      "voz_rutas": true,
+      "voz_rutas": false,
       "imagen_mapa": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\3 - Estrategias de Control.jpg"
     },
     {
@@ -33,7 +33,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\4 - Funcion de Transferencia.drawio",
       "resaltar": false,
       "colores": "verdeOscuro",
-      "voz_rutas": true,
+      "voz_rutas": false,
       "imagen_mapa": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\4 - Funcion de Transferencia.jpg"
     },
     {
@@ -42,7 +42,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\5 - Parametros que caracterizan a Respuesta Transitoria.drawio",
       "resaltar": false,
       "colores": "rosadoClaro",
-      "voz_rutas": true,
+      "voz_rutas": false,
       "imagen_mapa": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\5 - Parametros que caracterizan a Respuesta Transitoria.jpg"
     },
     {
@@ -51,7 +51,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\6 - Estabilidad.drawio",
       "resaltar": false,
       "colores": "rojo",
-      "voz_rutas": true,
+      "voz_rutas": false,
       "imagen_mapa": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\6 - Estabilidad.jpg"
     },
     {
@@ -60,7 +60,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\7 - Lugar de las Raices.drawio",
       "resaltar": false,
       "colores": "amarilloClaro",
-      "voz_rutas": true,
+      "voz_rutas": false,
       "imagen_mapa": "E:\\FACULTAD UTN FRT\\4-CUARTO AÑO\\teoria de control\\mapas mentales\\7 - Lugar de las Raices.jpg"
     },
     {
@@ -69,7 +69,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Desempeño.drawio",
       "resaltar": false,
       "colores": "grisClaro",
-      "voz_rutas": true
+      "voz_rutas": false
     },
     {
       "recordatorio": "../guardados/antiguos/recordatorios/recordatorio Gestion de Operaciones.txt",
@@ -77,7 +77,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Operaciones.drawio",
       "resaltar": false,
       "colores": "azul",
-      "voz_rutas": true,
+      "voz_rutas": false,
       "imagen_mapa":"E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\Gestion de Operaciones.jpg"
     },
     {
@@ -86,7 +86,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\SCOR.drawio",
       "resaltar": false,
       "colores": "rojoClaro",
-      "voz_rutas": true,
+      "voz_rutas": false,
       "imagen_mapa":"E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\sistemas de gestion\\mapas mentales\\SCOR.jpg"
     },
     {
@@ -95,7 +95,7 @@
       "drawio": "E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\introduccion a analisis de datos\\mapas mentales\\1er parcial AD.drawio",
       "resaltar": false,
       "colores": "azulOscuro",
-      "voz_rutas": true,
+      "voz_rutas": false,
       "imagen_mapa":"E:\\FACULTAD UTN FRT\\5-QUINTO AÑO\\introduccion a analisis de datos\\mapas mentales\\1er parcial AD.jpg"
     }
   ]
