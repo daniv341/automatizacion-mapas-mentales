@@ -3689,6 +3689,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .toggle-retencion.activa-nota { background: #FFF3C4; color: #8a6d00; border-color: #e0c860; }
   .toggle-retencion.leyendo { background: #e3f0ff; color: #1d4ed8; border-color: #3b82f6; }
   .toggle-retencion:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-audio-ruta { margin-left: auto; margin-right: 10px; flex: 0 0 auto; padding: 3px 10px; line-height: 1.2; }
+  .btn-audio-ruta[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+  .ordenar-ruta-titulo.con-audio { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .ordenar-ruta-titulo .btn-audio-ruta { margin-right: 0; text-transform: none; letter-spacing: normal; }
 
   .retencion-entrada {
     border: 1.5px solid var(--color-borde-suave);
@@ -9128,6 +9132,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       fila.appendChild(titulo);
 
       sum.appendChild(fila);
+      audioRutasAgregarBotonSummary(det, sum, numeroRuta);
 
       det.appendChild(sum);
 
@@ -11805,6 +11810,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const sum = document.createElement('summary');
       sum.textContent = 'Ruta ' + id;
       det.appendChild(sum);
+      if (audioRutasPermitidoEnJuego(d.evaluada)) audioRutasAgregarBotonSummary(det, sum, id);
 
       det.addEventListener('toggle', () => {
         if (det.open) abiertas.add(id);
@@ -12679,6 +12685,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const sum = document.createElement('summary');
       sum.textContent = 'Ruta ' + id;
       det.appendChild(sum);
+      if (audioRutasPermitidoEnJuego(d.evaluada)) audioRutasAgregarBotonSummary(det, sum, id);
 
       det.addEventListener('toggle', () => {
         if (det.open) d.abiertas.add(id);
@@ -12925,7 +12932,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         numRuta--;
         return;
       }
-      estructura.push({ t: 'h', r: numRuta });
+      estructura.push({ t: 'h', r: numRuta, id: id });
       parcial.forEach((e) => estructura.push(e));
     });
     if (lineas.length < 2) return null;
@@ -12998,6 +13005,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         const h = document.createElement('div');
         h.className = 'ordenar-ruta-titulo';
         h.textContent = 'Ruta ' + e.r;
+        if (e.id !== undefined && audioRutasPermitidoEnJuego(revelar) && audioRutasAgregarBotonSummary(null, h, e.id)) {
+          h.classList.add('con-audio');
+        }
         slots.appendChild(h);
         return;
       }
@@ -13691,6 +13701,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const sum = document.createElement('summary');
       sum.textContent = 'Ruta #';
       det.appendChild(sum);
+      if (audioRutasPermitidoEnJuego(ronda.completada)) audioRutasAgregarBotonSummary(det, sum, idRuta);
 
       prepararDetallesLazy(det, () => {
         const contenido = document.createElement('div');
@@ -21406,12 +21417,14 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   }
 
   function audioRutasPintarTodas() {
+    audioRutasPintarSummary();
     const lista = document.getElementById('retencion-sesion-lista');
     if (!lista) return;
     lista.querySelectorAll('.fila-retencion-ruta').forEach((fila) => pintarFilaRetencionSesion(fila, fila._rutaId));
   }
 
   function audioRutasDetener() {
+    audioRutasOrigenSummary = false;
     audioRutasToken++;
     clearInterval(audioRutasIntervalo);
     audioRutasIntervalo = 0;
@@ -21559,6 +21572,86 @@ const elModalNotaDudaRuta = document.getElementById('modal-nota-duda-ruta');
   audioRutasPrecargar();
   window.addEventListener('beforeunload', audioRutasDetener);
   window.addEventListener('pagehide', audioRutasDetener);
+
+  // ---- Botón 🔊 en el summary de los acordeones de ruta (reutiliza el único #audio-rutas) ----
+  var audioRutasBotonesSummary;
+  var audioRutasOrigenSummary;
+  var audioRutasTarjetaPrev;
+
+  function audioRutasHayMp3() {
+    return Object.keys(AUDIO_RUTAS_OFFSETS).length > 0 && audioRutasDisponible !== false;
+  }
+
+  function audioRutasPermitidoEnJuego(evaluada) {
+    return modoJuego !== 'examen' && !!evaluada;
+  }
+
+  function audioRutasPintarBotonSummary(btn) {
+    const id = btn._rutaAudioId;
+    const sinAudio = audioRutasInicioDe(id) === null;
+    const leyendo = audioRutasLeyendo === String(id);
+    btn.className = 'toggle-retencion btn-audio-ruta' + (leyendo ? ' leyendo' : '');
+    btn.textContent = leyendo ? '⏹ Leyendo' : '🔊';
+    btn.title = sinAudio
+      ? 'Esta ruta no tiene audio (solo imágenes o falló su generación)'
+      : (leyendo ? 'Detener la lectura' : 'Leer esta ruta en voz alta');
+    btn.setAttribute('aria-label', btn.title);
+    btn.setAttribute('aria-pressed', leyendo ? 'true' : 'false');
+    btn.setAttribute('aria-disabled', sinAudio ? 'true' : 'false');
+    btn.style.display = '';
+  }
+
+  function audioRutasPintarSummary() {
+    const lista = audioRutasBotonesSummary;
+    if (!lista) return;
+    const hay = audioRutasHayMp3();
+    for (let i = lista.length - 1; i >= 0; i--) {
+      const b = lista[i];
+      if (!b.isConnected) { lista.splice(i, 1); continue; }
+      if (!hay) { b.style.display = 'none'; continue; }
+      audioRutasPintarBotonSummary(b);
+    }
+  }
+
+  function audioRutasCortarSiOrigenSummary() {
+    if (audioRutasOrigenSummary) audioRutasDetener();
+  }
+
+  function audioRutasAgregarBotonSummary(det, sum, id) {
+    if (!audioRutasHayMp3() || !sum) return null;
+    const previo = sum.querySelector('.btn-audio-ruta');
+    if (previo) return previo;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn._rutaAudioId = id;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (btn.getAttribute('aria-disabled') === 'true') return;
+      audioRutasAlternar(id);
+      audioRutasOrigenSummary = (audioRutasLeyendo === String(id));
+    });
+    sum.appendChild(btn);
+    (audioRutasBotonesSummary || (audioRutasBotonesSummary = [])).push(btn);
+    audioRutasPintarBotonSummary(btn);
+    if (det) {
+      det.addEventListener('toggle', () => {
+        if (!det.open && audioRutasOrigenSummary && audioRutasLeyendo === String(id)) audioRutasDetener();
+      });
+    }
+    return btn;
+  }
+
+  function audioRutasAlRenderTarjeta() {
+    let ref = null;
+    try {
+      ref = [indiceActual, tarjetasSesion, modoEspecial === 'matching' ? rondasMatching : null];
+    } catch (e) { ref = null; }
+    const prev = audioRutasTarjetaPrev;
+    audioRutasTarjetaPrev = ref;
+    if (!audioRutasOrigenSummary) return;
+    if (!ref || !prev || prev[0] !== ref[0] || prev[1] !== ref[1] || prev[2] !== ref[2]) audioRutasDetener();
+  }
 
   const RETENCION_POR_PAGINA = 15;
   let retencionHistorialPaginaActual = 1;
@@ -24236,6 +24329,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
   }
 
   function renderTarjeta() {
+    audioRutasAlRenderTarjeta();
     actualizarBateriaMental();
     if (hookInicioRenderTarjeta()) { ocultarControlesEdicion(); return; }
     if (tarjetasSesion.length === 0) {
@@ -24471,6 +24565,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
         const sum = document.createElement('summary');
         sum.textContent = 'Ruta ' + id;
         det.appendChild(sum);
+        if (audioRutasPermitidoEnJuego(clozeData.evaluada)) audioRutasAgregarBotonSummary(det, sum, id);
 
         det.addEventListener('toggle', () => {
           if (det.open) clozeData.abiertas.add(id);
@@ -24539,6 +24634,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
     }
 
     if (!rutasVisibles[indiceActual]) {
+      audioRutasCortarSiOrigenSummary();
       elRutasContenedor.style.display = 'none';
       return;
     }
@@ -24558,6 +24654,7 @@ function obtenerCirculoMasCercanoEnSvg(svg, clientX) {
       const sum = document.createElement('summary');
       sum.textContent = 'Ruta ' + id;
       det.appendChild(sum);
+      if (audioRutasPermitidoEnJuego(true)) audioRutasAgregarBotonSummary(det, sum, id);
 
       prepararDetallesLazy(det, () => {
         const contenido = document.createElement('div');
@@ -29161,7 +29258,56 @@ def preguntar_resaltado(raiz):
     
     return eleccion["aplicar"]
 
-def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_imagen_mapa=None, propagar=False):
+def preguntar_voz_rutas(raiz):
+    eleccion = {"generar": False}
+
+    def confirmar(valor):
+        eleccion["generar"] = valor
+        vent.destroy()
+
+    vent = Toplevel(raiz)
+    vent.title("Audio de rutas")
+    vent.resizable(False, False)
+    vent.configure(bg="#f0f0f0")
+    vent.protocol("WM_DELETE_WINDOW", lambda: confirmar(False))
+
+    Label(
+        vent, text="¿Deseas generar el audio de las rutas\ncon edge-tts?",
+        bg="#f0f0f0", fg="#222222", font=("Segoe UI", 12, "bold"),
+        justify="center"
+    ).pack(pady=(20, 20))
+
+    marco_botones = Frame(vent, bg="#f0f0f0")
+    marco_botones.pack(pady=(0, 20))
+
+    Button(
+        marco_botones, text="Sí, generar", bg="#d4edda", fg="#155724",
+        activebackground="#c3e6cb", activeforeground="#155724",
+        width=14, bd=1, relief="raised", font=("Segoe UI", 10, "bold"),
+        cursor="hand2", command=lambda: confirmar(True)
+    ).grid(row=0, column=0, padx=10, sticky="nsew")
+
+    Button(
+        marco_botones, text="No, omitir", bg="#f8d7da", fg="#721c24",
+        activebackground="#f5c6cb", activeforeground="#721c24",
+        width=14, bd=1, relief="raised", font=("Segoe UI", 10, "bold"),
+        cursor="hand2", command=lambda: confirmar(False)
+    ).grid(row=0, column=1, padx=10, sticky="nsew")
+
+    vent.update_idletasks()
+    x = (vent.winfo_screenwidth() - vent.winfo_reqwidth()) // 2
+    y = (vent.winfo_screenheight() - vent.winfo_reqheight()) // 2
+    vent.geometry(f"+{x}+{y}")
+    vent.deiconify()
+    vent.lift()
+    vent.focus_force()
+    vent.wait_visibility()
+    vent.grab_set()
+    raiz.wait_window(vent)
+
+    return eleccion["generar"]
+
+def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_imagen_mapa=None, propagar=False, voz_rutas=True):
     try:
         if colores in PALETA_COLORES:
             fill_color = PALETA_COLORES[colores][0]
@@ -29206,7 +29352,12 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
             if imagen_mapa:
                 print(f"Imagen del mapa incluida: {ruta_imagen_mapa}")
 
-        audio_offsets = generar_audio_rutas(rutas, Path(respuestas).stem) if respuestas else {}
+        if respuestas and voz_rutas:
+            audio_offsets = generar_audio_rutas(rutas, Path(respuestas).stem)
+        else:
+            audio_offsets = {}
+            if respuestas:
+                print("Audio de rutas omitido: no se genera el MP3 ni se llama a edge-tts.")
 
         generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, respuestas, Path(respuestas).stem,
                      descripciones_rutas, imagen_mapa=imagen_mapa, mapa_rutas_coords=mapa_rutas_coords,
@@ -29222,6 +29373,7 @@ CAMPOS_CONFIG = {
     "respuestas": str,
     "drawio": str,
     "resaltar": bool,
+    "voz_rutas": bool,
     "colores": str,
 }
 CAMPOS_RUTA = ("recordatorio", "respuestas", "drawio")
@@ -29427,6 +29579,7 @@ def ejecutar_config(ruta_config):
             str(r["recordatorio"]), str(r["respuestas"]), str(r["drawio"]),
             r["resaltar"], r["colores"],
             ruta_imagen_mapa=str(r["imagen_mapa"]) if "imagen_mapa" in r else None,
+            voz_rutas=r["voz_rutas"],
         )
         resultados[pos] = (etiqueta, ok, motivo)
 
@@ -29484,8 +29637,12 @@ def main_interactivo():
     aplicar_resaltado = preguntar_resaltado(raiz)
     print(f"Resaltado en drawio: {'Sí' if aplicar_resaltado else 'No'}")
 
+    generar_voz_rutas = preguntar_voz_rutas(raiz)
+    print(f"Audio de rutas: {'Sí' if generar_voz_rutas else 'No'}")
+
     generar_evaluador(txt, txt_respuestas, ruta_drawio, aplicar_resaltado, opciones,
-                       ruta_imagen_mapa=ruta_imagen_mapa or None, propagar=True)
+                       ruta_imagen_mapa=ruta_imagen_mapa or None, propagar=True,
+                       voz_rutas=generar_voz_rutas)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -29496,7 +29653,8 @@ def main():
     parser.add_argument(
         "--config", metavar="RUTA",
         help="JSON con la forma {\"entradas\": [...]} (obligatorio, aunque sea 1 solo evaluador); cada entrada: "
-             "recordatorio, respuestas, drawio, resaltar, colores (todos obligatorios); imagen_mapa (opcional, "
+             "recordatorio, respuestas, drawio, resaltar, voz_rutas, colores (todos obligatorios; resaltar y "
+             "voz_rutas son true/false); imagen_mapa (opcional, "
              "ruta a un .png/.jpg/.jpeg para el botón 🗺️ del modo observador).",
     )
     args = parser.parse_args()
