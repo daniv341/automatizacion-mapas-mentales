@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import base64
+import hashlib
 import json
 import os
 import re
@@ -974,15 +975,42 @@ def ensamblar_mp3_rutas(partes):
         transcurrido += duracion + duracion_silencio
     return offsets, transcurrido, b"".join(piezas)
 
+def _textos_audio_rutas(rutas):
+    textos = {}
+    for numero in sorted(rutas):
+        texto = preparar_texto_audio_ruta(rutas[numero].get("lineas", []))
+        if texto:
+            textos[numero] = texto
+    return textos
+
+def _firma_textos_audio(textos):
+    base = json.dumps({str(k): v for k, v in textos.items()}, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha1(base.encode("utf-8")).hexdigest()
+
+def cargar_audio_rutas_existente(rutas, espacio_hash):
+    destino_mp3 = CARPETA_VOZ / f"{espacio_hash}.mp3"
+    destino_json = CARPETA_VOZ / f"{espacio_hash}.json"
+    if not destino_mp3.is_file():
+        print(f"AVISO: no existe {destino_mp3}; el audio en rutas queda deshabilitado (generá una vez con voz_rutas=true).")
+        return {}
+    try:
+        datos = json.loads(destino_json.read_text(encoding="utf-8"))
+        offsets = {str(k): float(v) for k, v in datos["offsets"].items()}
+        firma = datos["firma"]
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        print(f"AVISO: no hay offsets guardados válidos en {destino_json}; el audio en rutas queda deshabilitado (generá una vez con voz_rutas=true).")
+        return {}
+    if firma != _firma_textos_audio(_textos_audio_rutas(rutas)):
+        print("AVISO: las rutas cambiaron desde que se generó el MP3; el audio en rutas queda deshabilitado (generá de nuevo con voz_rutas=true).")
+        return {}
+    print(f"Audio de rutas reutilizado: {destino_mp3} ({len(offsets)} rutas)")
+    return offsets
+
 def generar_audio_rutas(rutas, espacio_hash):
     try:
         import edge_tts
 
-        textos = {}
-        for numero in sorted(rutas):
-            texto = preparar_texto_audio_ruta(rutas[numero].get("lineas", []))
-            if texto:
-                textos[numero] = texto
+        textos = _textos_audio_rutas(rutas)
         if not textos:
             print("AVISO: ninguna ruta tiene texto para leer; el audio en rutas queda deshabilitado.")
             return {}
@@ -1007,6 +1035,13 @@ def generar_audio_rutas(rutas, espacio_hash):
             offsets, duracion_total, contenido = ensamblar_mp3_rutas(partes)
             temporal_mp3.write_bytes(contenido)
             os.replace(str(temporal_mp3), str(destino_mp3))
+            try:
+                (CARPETA_VOZ / f"{espacio_hash}.json").write_text(
+                    json.dumps({"offsets": offsets, "firma": _firma_textos_audio(textos)}),
+                    encoding="utf-8",
+                )
+            except OSError as error_json:
+                print(f"AVISO: no se pudieron guardar los offsets del audio ({error_json}).")
 
         print(f"Audio de rutas creado: {destino_mp3} ({len(offsets)} rutas, {duracion_total:.1f} s)")
         return offsets
@@ -29354,10 +29389,11 @@ def generar_evaluador(recordatorio, respuestas, drawio, resaltar, colores, ruta_
 
         if respuestas and voz_rutas:
             audio_offsets = generar_audio_rutas(rutas, Path(respuestas).stem)
+        elif respuestas:
+            print("Generación de audio omitida (voz_rutas=false): se reutiliza el MP3 existente, sin llamar a edge-tts.")
+            audio_offsets = cargar_audio_rutas_existente(rutas, Path(respuestas).stem)
         else:
             audio_offsets = {}
-            if respuestas:
-                print("Audio de rutas omitido: no se genera el MP3 ni se llama a edge-tts.")
 
         generar_html(tarjetas, rutas, fill_color, stroke_color, modo == 2, respuestas, Path(respuestas).stem,
                      descripciones_rutas, imagen_mapa=imagen_mapa, mapa_rutas_coords=mapa_rutas_coords,
